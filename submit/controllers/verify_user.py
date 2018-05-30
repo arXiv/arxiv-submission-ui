@@ -31,7 +31,7 @@ Response = Tuple[Dict[str, Any], int, Dict[str, Any]]
 
 
 def verify_user(request_params: dict) -> Response:
-    form = VerifyUserForm()
+    form = VerifyUserForm(request_params)
 
     response_data = dict()
     response_data['form'] = form

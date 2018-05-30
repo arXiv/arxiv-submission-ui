@@ -1,7 +1,6 @@
 [run]
 omit =
     app.py
-    setup.py
     docs/*
     test*
     */app.py

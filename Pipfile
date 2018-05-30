@@ -1,0 +1,27 @@
+[[source]]
+
+url = "https://pypi.python.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+
+arxiv-base = "==0.7.1"
+arxiv-submission-events = "*"
+flask = "*"
+uwsgi = "*"
+
+# TODO: remove [pyyaml, pytz] after fixing ARXIVNG-882
+pyyaml = "*"
+pytz = "*"
+
+[dev-packages]
+
+"nose2" = "*"
+coverage = "*"
+coveralls = "*"
+pylint = "*"
+pydocstyle = "*"
+mypy = "*"
+mimesis = "*"
+

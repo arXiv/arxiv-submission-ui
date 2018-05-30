@@ -18,7 +18,8 @@ def verify_user():
     
     rendered = render_template(
         "submit/verify_user.html",
-        pagetitle='Verify User Information'
+        pagetitle='Verify User Information',
+        **response
     )
     response = make_response(rendered, status.HTTP_200_OK)
     return response

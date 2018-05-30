@@ -2,7 +2,7 @@
 
 from flask import Blueprint, render_template, make_response
 from arxiv import status
-# from submit.controllers import verify
+import submit.controllers as controllers
 
 blueprint = Blueprint('ui', __name__, url_prefix='/')
 
@@ -10,16 +10,18 @@ blueprint = Blueprint('ui', __name__, url_prefix='/')
 # templates, initial setup is for testing purposes and to get started.
 
 
-@blueprint.route('/', methods=['GET'])
+@blueprint.route('/', methods=['GET', 'POST'])
+@blueprint.route('verify_user', methods=['GET', 'POST'])
 def verify_user():
     """Render the submit start page. Foreshortened validation for testing."""
+    response, code, headers = controllers.verify_user(request.args)
+
     rendered = render_template(
         "submit/verify_user.html",
         pagetitle='Verify User Information'
     )
     response = make_response(rendered, status.HTTP_200_OK)
     return response
-
 
 @blueprint.route('authorship', methods=['GET'])
 def authorship():

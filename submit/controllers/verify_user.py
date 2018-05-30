@@ -29,6 +29,7 @@ from arxiv import status
 
 Response = Tuple[Dict[str, Any], int, Dict[str, Any]]
 
+
 def verify_user(request_params: dict) -> Response:
     form = VerifyUserForm()
 
@@ -37,8 +38,10 @@ def verify_user(request_params: dict) -> Response:
 
     return response_data, status.HTTP_200_OK, {}
 
+
 class VerifyUserForm(Form):
     verify_user = BooleanField(
         'By checking this box, I verify that my user information is correct.',
-        validators=[DataRequired(), ]
+        [DataRequired(),
+            'Please check the box after reviewing your information']
     )

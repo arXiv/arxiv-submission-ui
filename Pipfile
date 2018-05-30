@@ -10,6 +10,7 @@ arxiv-base = "==0.7.1"
 arxiv-submission-events = "*"
 flask = "*"
 uwsgi = "*"
+WTForms = "==2.1"
 
 # TODO: remove [pyyaml, pytz] after fixing ARXIVNG-882
 pyyaml = "*"

@@ -37,7 +37,8 @@ def verify_user(request_params: dict) -> Response:
 
     return response_data, status.HTTP_200_OK, {}
 
-    
-
 class VerifyUserForm(Form):
-    verify_user = BooleanField('By checking this box, I verify that my user information is correct.', validators=[DataRequired(), ])
+    verify_user = BooleanField(
+        'By checking this box, I verify that my user information is correct.',
+        validators=[DataRequired(), ]
+    )

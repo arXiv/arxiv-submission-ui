@@ -23,6 +23,7 @@ def verify_user():
     response = make_response(rendered, status.HTTP_200_OK)
     return response
 
+
 @blueprint.route('authorship', methods=['GET'])
 def authorship():
     """Render step 2, authorship. Foreshortened validation for testing."""

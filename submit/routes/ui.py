@@ -1,7 +1,7 @@
 """Provides routes for the submission user interface."""
 
 from flask import (Blueprint, make_response, redirect, request,
-    render_template, url_for)
+                   render_template, url_for)
 from arxiv import status
 import submit.controllers as controllers
 

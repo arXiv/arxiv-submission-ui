@@ -6,7 +6,7 @@ Creates an event of type `core.events.event.VerifyContactInformation`
 
 from typing import Tuple, Dict, Any, Optional
 
-from wtforms import Form, BooleanField, ValidationError
+from wtforms import Form, BooleanField
 from wtforms.validators import InputRequired
 
 from arxiv import status
@@ -20,7 +20,7 @@ Response = Tuple[Dict[str, Any], int, Dict[str, Any]]
 
 
 def verify_user(request_params: dict) -> Response:
-    """Processing for verify user form."""
+    """Check that user has confirmed info and select next path."""
     form = VerifyUserForm(request_params)
 
     response_data = dict()

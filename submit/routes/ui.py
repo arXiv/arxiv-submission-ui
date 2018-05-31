@@ -1,6 +1,7 @@
 """Provides routes for the submission user interface."""
 
-from flask import Blueprint, make_response, request, render_template, url_for
+from flask import (Blueprint, make_response, redirect, request,
+    render_template, url_for)
 from arxiv import status
 import submit.controllers as controllers
 
@@ -15,14 +16,17 @@ blueprint = Blueprint('ui', __name__, url_prefix='/')
 def verify_user():
     """Render the submit start page. Foreshortened validation for testing."""
     response, code, headers = controllers.verify_user(request.args)
-    
-    rendered = render_template(
-        "submit/verify_user.html",
-        pagetitle='Verify User Information',
-        **response
-    )
-    response = make_response(rendered, status.HTTP_200_OK)
-    return response
+
+    if code == status.HTTP_200_OK:
+        rendered = render_template(
+            "submit/verify_user.html",
+            pagetitle='Verify User Information',
+            **response
+        )
+        response = make_response(rendered, status.HTTP_200_OK)
+        return response
+    elif code == status.HTTP_303_SEE_OTHER:
+        return redirect(headers['Location'], code=code)
 
 
 @blueprint.route('authorship', methods=['GET'])

@@ -16,6 +16,9 @@
       {{ form.verify_user }}
       {{ form.verify_user.label }}
     </div>
+    {% for error in form.verify_user.errors %}
+      <p class="help is-warning">{{ error }}</p>
+    {% endfor %}
   </div>
 </div>
 

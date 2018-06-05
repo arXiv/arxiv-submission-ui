@@ -7,7 +7,7 @@ Creates an event of type `core.events.event.VerifyContactInformation`
 from typing import Tuple, Dict, Any, Optional
 
 from wtforms import Form, BooleanField
-from wtforms.validators import DataRequired
+from wtforms.validators import InputRequired
 
 from arxiv import status
 from arxiv.base import logging
@@ -20,13 +20,14 @@ Response = Tuple[Dict[str, Any], int, Dict[str, Any]]
 
 
 def verify_user(request_params: dict) -> Response:
+    """Check that user has confirmed info and select next path."""
     form = VerifyUserForm(request_params)
 
     response_data = dict()
     response_data['form'] = form
     logger.debug(f'verify_user data: {form}')
 
-    if request_params.get('next') == '':
+    if request_params.get('next') == '' and form.validate():
         # TODO: Fix location header using url_for function
         return {}, status.HTTP_303_SEE_OTHER,\
             {'Location': f'http://127.0.0.1:5000/authorship'}
@@ -35,8 +36,9 @@ def verify_user(request_params: dict) -> Response:
 
 
 class VerifyUserForm(Form):
+    """Generates form with single checkbox to confirm user information."""
+
     verify_user = BooleanField(
         'By checking this box, I verify that my user information is correct.',
-        [DataRequired(),
-            'Please check the box after reviewing your information']
+        [InputRequired('Please confirm your user information')]
     )

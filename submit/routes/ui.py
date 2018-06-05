@@ -11,11 +11,11 @@ blueprint = Blueprint('ui', __name__, url_prefix='/')
 # templates, initial setup is for testing purposes and to get started.
 
 
-@blueprint.route('/', methods=['GET', 'POST'])
-@blueprint.route('verify_user', methods=['GET', 'POST'])
-def verify_user():
+@blueprint.route('/create', methods=['GET', 'POST'])
+@blueprint.route('/<int:submission_id>/verify_user', methods=['GET', 'POST'])
+def verify_user(submission_id=None):
     """Render the submit start page. Foreshortened validation for testing."""
-    response, code, headers = controllers.verify_user(request.args)
+    response, code, headers = controllers.verify_user(request.args, submission_id)
 
     if code == status.HTTP_200_OK:
         rendered = render_template(

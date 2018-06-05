@@ -23,8 +23,6 @@ Response = Tuple[Dict[str, Any], int, Dict[str, Any]]
 def verify_user(request_params: dict, submission_id: Optional[int]) -> Response:
     form = VerifyUserForm(request_params)
 
-    <button name="action" value="next"></button>
-
     # Process event if go to next page
     if request_params.get('next') == '' and form.validate():
         # TODO: Create a concrete User event from cookie info. 
@@ -33,7 +31,6 @@ def verify_user(request_params: dict, submission_id: Optional[int]) -> Response:
 
         # Create submission if it does not yet exist
         # TODO: Fix database glue then uncomment:
-        """
         if submission_id is None:
             submission, stack = events.save(
                 events.CreateSubmission(creator=submitter)
@@ -45,7 +42,6 @@ def verify_user(request_params: dict, submission_id: Optional[int]) -> Response:
             events.VerifyContactInformation(creator=submitter),
             submission_id=submission_id
         )
-        """
 
         # TODO: Fix location header using url_for function
         return {}, status.HTTP_303_SEE_OTHER,\

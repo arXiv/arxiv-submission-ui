@@ -6,6 +6,7 @@ Creates an event of type `core.events.event.VerifyContactInformation`
 
 from typing import Tuple, Dict, Any, Optional
 
+from flask import url_for
 from wtforms import Form, BooleanField
 from wtforms.validators import InputRequired
 
@@ -47,9 +48,8 @@ def verify_user(request_params: dict, submission_id: Optional[int]) -> Response:
             submission_id=submission_id
         )
 
-        # TODO: Fix location header using url_for function
         return {}, status.HTTP_303_SEE_OTHER,\
-            {'Location': f'http://127.0.0.1:5000/{submission_id}/authorship'}
+            {'Location': url_for('ui.authorship', submission_id=submission_id)}
 
     # build response form
     response_data = dict()

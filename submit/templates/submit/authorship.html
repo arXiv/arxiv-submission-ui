@@ -4,7 +4,7 @@
 
 {% block within_content %}
 <h2 class="is-size-4">Confirm authorship or proxy approval</h2>
-<form method="GET" action="{{ url_for('ui.authorship') }}">
+<form method="GET" action="{{ url_for('ui.authorship',submission_id=submission_id) }}">
 {% for field in form.authorship %}
   <div class="field">
     <div class="control">
@@ -14,6 +14,11 @@
       </div>
     </div>
   </div>
+  {% if form.authorship.errors %}
+    {% for error in form.authorship.errors %}
+      <p class="help is-warning">{{ error }}</p>
+    {% endfor %}
+  {% endif %}
 {% endfor %}
 
 <div class="field">
@@ -22,20 +27,11 @@
       {{ form.proxy }}
       {{ form.proxy.label }}
     </div>
-    {% if form.authorship.proxy.errors %}
-      {% for error in form.authorship.proxy.errors %}
+    {% if form.proxy.errors %}
+      {% for error in form.proxy.errors %}
         <p class="help is-warning">{{ error }}</p>
       {% endfor %}
     {% endif %}
-  </div>
-</div>
-
-<div class="field">
-  <div class="control" style="margin-left: 1.25em">
-    <label class="checkbox">
-    <input type="checkbox">
-    By checking this box, I certify that I have received authorization from
-    arXiv to submit papers on behalf of the authors.</label>
   </div>
 </div>
 

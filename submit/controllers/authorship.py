@@ -15,9 +15,9 @@ import events
 
 # from arxiv-submission-core.events.event import VerifyContactInformation
 
-logger = logging.getLogger(__name__) #pylint: disable=C0103
+logger = logging.getLogger(__name__)  # pylint: disable=C0103
 
-Response = Tuple[Dict[str, Any], int, Dict[str, Any]] #pylint: disable=C0103
+Response = Tuple[Dict[str, Any], int, Dict[str, Any]]  # pylint: disable=C0103
 
 
 def authorship(request_params: dict, submission_id: int) -> Response:
@@ -32,7 +32,7 @@ def authorship(request_params: dict, submission_id: int) -> Response:
                                        forename='Ima', surname='Nauthor')
 
         # Create AssertAuthorship event
-        submission, stack = events.save( #pylint: disable=W0612
+        submission, stack = events.save(  # pylint: disable=W0612
             events.AssertAuthorship(creator=submitter),
             submission_id=submission_id
         )
@@ -53,6 +53,7 @@ def authorship(request_params: dict, submission_id: int) -> Response:
     response_data = dict()
     response_data['form'] = form
     logger.debug(f'verify_user data: {form}')
+    response_data['submission_id'] = submission_id
 
     return response_data, status.HTTP_200_OK, {}
 
@@ -60,9 +61,11 @@ def authorship(request_params: dict, submission_id: int) -> Response:
 class AuthorshipForm(Form):
     """Generate form with radio button to confirm authorship information."""
 
-    authorship = RadioField(choices=[('I am an author of this paper', 'y'),
-                            ('I am not an author of this paper', 'n')],
-                            validators=InputRequired)
+    authorship = RadioField(choices=[('y', 'I am an author of this paper'),
+                            ('n', 'I am not an author of this paper')],
+                            validators=[InputRequired('Please choose one')])
     proxy = BooleanField('By checking this box, I certify that I have received \
                          authorization from arXiv to submit papers on behalf \
-                         of the author(s).')
+                         of the author(s).',
+                         [InputRequired('Please confirm your proxy \
+                         authorization')])

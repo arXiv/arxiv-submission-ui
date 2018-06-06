@@ -6,9 +6,9 @@ from flask import Flask
 
 from arxiv.base import Base
 from arxiv.base.middleware import wrap, request_logs
-from submit.routes import ui
 from events.services import classic
 
+from submit.routes import ui
 
 def create_ui_web_app() -> Flask:
     """Initialize an instance of the search frontend UI web application."""

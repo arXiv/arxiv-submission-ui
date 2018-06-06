@@ -21,6 +21,13 @@ Response = Tuple[Dict[str, Any], int, Dict[str, Any]]
 
 
 def verify_user(request_params: dict, submission_id: Optional[int]) -> Response:
+    """
+    Converts the verify_user form data and converts it to a
+    `VerifyContactInfromation` event.
+
+    If a submission has not yet been created, the `CreateSubmission` event is
+    raised to yield a submission_id.
+    """
     form = VerifyUserForm(request_params)
 
     # Process event if go to next page

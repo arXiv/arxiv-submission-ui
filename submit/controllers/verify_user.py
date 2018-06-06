@@ -31,8 +31,8 @@ def verify_user(request_params: dict, submission_id: Optional[int]) -> Response:
     form = VerifyUserForm(request_params)
 
     # Process event if go to next page
-    if request_params.get('next') == '' and form.validate():
-        # TODO: Create a concrete User event from cookie info. 
+    if request_params.get('action') == 'next' and form.validate():
+        # TODO: Create a concrete User event from cookie info.
         submitter = events.domain.User(1, email='ian413@cornell.edu',
                                        forename='Ima', surname='Nauthor')
 

@@ -62,3 +62,5 @@ If the application does not occupy a whole domain or subdomain this can be set
 to the path where the application is configured to live. This is for session
 cookie as path value. If domains are used, this should be None.
 """
+
+CLASSIC_DATABASE_URI = os.environ.get('CLASSIC_DATABASE_URI', 'sqlite:///')

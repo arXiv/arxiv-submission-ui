@@ -4,7 +4,7 @@ Controller for verify_user action.
 Creates an event of type `core.events.event.VerifyContactInformation`
 """
 
-from typing import Tuple, Dict, Any, Optional
+from typing import Tuple, Dict, Any
 
 from wtforms import Form, BooleanField
 from wtforms.validators import InputRequired
@@ -15,9 +15,9 @@ import events
 
 # from arxiv-submission-core.events.event import VerifyContactInformation
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger(__name__) #pylint: disable=C0103
 
-Response = Tuple[Dict[str, Any], int, Dict[str, Any]]
+Response = Tuple[Dict[str, Any], int, Dict[str, Any]] #pylint: disable=C0103
 
 
 def authorship(request_params: dict, submission_id: int) -> Response:
@@ -35,7 +35,7 @@ def authorship(request_params: dict, submission_id: int) -> Response:
                                        forename='Ima', surname='Nauthor')
 
         # Create AssertAuthorship event
-        submission, stack = events.save(
+        submission, stack = events.save( #pylint: disable=W0612
             events.AssertAuthorship(creator=submitter),
             submission_id=submission_id
         )
@@ -51,8 +51,7 @@ def authorship(request_params: dict, submission_id: int) -> Response:
             # TODO: correct with user portal page
             return {}, status.HTTP_303_SEE_OTHER,\
                 {'Location': f'http://127.0.0.1:5000/'}
-            
-    
+
     # build response form
     response_data = dict()
     response_data['form'] = form

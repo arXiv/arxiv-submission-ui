@@ -3,7 +3,7 @@
 from flask import (Blueprint, make_response, redirect, request,
                    render_template, url_for)
 from arxiv import status
-import submit.controllers as controllers
+from submit import controllers
 
 blueprint = Blueprint('ui', __name__, url_prefix='/')
 

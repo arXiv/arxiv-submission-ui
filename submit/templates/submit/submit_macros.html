@@ -1,9 +1,9 @@
 {% macro submit_nav() %}
 
   <div class="buttons submit-nav" role="navigation">
-      <button id="previous" name="previous" class="button">Previous</button>
-      <button id="save_exit" name="save_exit" class="button">Save and Exit</button>
-      <button id="next" name="next" class="button is-link">Next</button>
+      <button name="action" class="button" value="previous" aria-label="Previous">Previous</button>
+      <button name="action" class="button" value="save_exit" aria-label="Save and Exit">Save and Exit</button>
+      <button name="action" class="button is-link" value="next" aria-label="Next">Next</button>
   </div>
 
 {% endmacro %}

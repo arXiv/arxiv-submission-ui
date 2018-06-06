@@ -31,8 +31,8 @@ def verify_user(request_params: dict, submission_id: Optional[int]) -> Response:
     form = VerifyUserForm(request_params)
 
     # Process event if go to next page
-    if request_params.get('next') == '' and form.validate():
-        # TODO: Create a concrete User event from cookie info. 
+    if request_params.get('action') == 'next' and form.validate():
+        # TODO: Create a concrete User event from cookie info.
         submitter = events.domain.User(1, email='ian413@cornell.edu',
                                        forename='Ima', surname='Nauthor')
 
@@ -53,7 +53,7 @@ def verify_user(request_params: dict, submission_id: Optional[int]) -> Response:
         # TODO: Fix location header using url_for function
         return {}, status.HTTP_303_SEE_OTHER,\
             {'Location': f'http://127.0.0.1:5000/authorship'}
-    
+
     # build response form
     response_data = dict()
     response_data['form'] = form

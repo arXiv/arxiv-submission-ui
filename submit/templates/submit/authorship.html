@@ -4,6 +4,7 @@
 
 {% block within_content %}
 <h2 class="is-size-4">Confirm authorship or proxy approval</h2>
+<form method="GET" action="{{ url_for('ui.authorship') }}">
 {% for field in form.authorship %}
   <div class="field">
     <div class="control">
@@ -39,4 +40,5 @@
 </div>
 
 {{ submit_macros.submit_nav() }}
+</form>
 {% endblock within_content %}

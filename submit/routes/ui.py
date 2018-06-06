@@ -29,8 +29,8 @@ def verify_user(submission_id=None):
         return redirect(headers['Location'], code=code)
 
 
-@blueprint.route('authorship', methods=['GET'])
-def authorship():
+@blueprint.route('/<int:submission_id>/authorship', methods=['GET', 'POST'])
+def authorship(submission_id):
     """Render step 2, authorship. Foreshortened validation for testing."""
     rendered = render_template(
         "submit/authorship.html",

@@ -52,7 +52,7 @@ def verify_user(request_params: dict, submission_id: Optional[int]) -> Response:
 
         # TODO: Fix location header using url_for function
         return {}, status.HTTP_303_SEE_OTHER,\
-            {'Location': f'http://127.0.0.1:5000/authorship'}
+            {'Location': f'http://127.0.0.1:5000/{submission_id}/authorship'}
     
     # build response form
     response_data = dict()

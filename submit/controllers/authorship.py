@@ -6,7 +6,7 @@ Creates an event of type `core.events.event.VerifyContactInformation`
 
 from typing import Tuple, Dict, Any, Optional
 
-from wtforms import Form, BooleanField
+from wtforms import Form, BooleanField, RadioField
 from wtforms.validators import InputRequired
 
 from arxiv import status
@@ -21,10 +21,7 @@ Response = Tuple[Dict[str, Any], int, Dict[str, Any]]
 
 
 def authorship(request_params: dict, submission_id: int) -> Response:
-    """
-    Converts the authorship form data and converts it to an
-    `AssertAuthorship` event.
-    """
+    """Convert authorship form data into an `AssertAuthorship` event."""
     form = AuthorshipForm(request_params)
 
     # Process event if go to next page
@@ -51,8 +48,7 @@ def authorship(request_params: dict, submission_id: int) -> Response:
             # TODO: correct with user portal page
             return {}, status.HTTP_303_SEE_OTHER,\
                 {'Location': f'http://127.0.0.1:5000/'}
-            
-    
+
     # build response form
     response_data = dict()
     response_data['form'] = form
@@ -62,5 +58,11 @@ def authorship(request_params: dict, submission_id: int) -> Response:
 
 
 class AuthorshipForm(Form):
-    """Generates form with radio button to confirm authorship information."""
-    pass
+    """Generate form with radio button to confirm authorship information."""
+
+    authorship = RadioField(choices=[('I am an author of this paper', 'y'),
+                            ('I am not an author of this paper', 'n')],
+                            validators=InputRequired)
+    proxy = BooleanField('By checking this box, I certify that I have received \
+                         authorization from arXiv to submit papers on behalf \
+                         of the author(s).')

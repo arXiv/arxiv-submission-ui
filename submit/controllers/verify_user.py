@@ -13,11 +13,9 @@ from arxiv import status
 from arxiv.base import logging
 import events
 
-# from arxiv-submission-core.events.event import VerifyContactInformation
+logger = logging.getLogger(__name__) #pylint: disable=C0103
 
-logger = logging.getLogger(__name__)
-
-Response = Tuple[Dict[str, Any], int, Dict[str, Any]]
+Response = Tuple[Dict[str, Any], int, Dict[str, Any]] #pylint: disable=C0103
 
 
 def verify_user(request_params: dict, submission_id: Optional[int]) -> Response:
@@ -37,15 +35,14 @@ def verify_user(request_params: dict, submission_id: Optional[int]) -> Response:
                                        forename='Ima', surname='Nauthor')
 
         # Create submission if it does not yet exist
-        # TODO: Fix database glue then uncomment:
         if submission_id is None:
-            submission, stack = events.save(
+            submission, _ = events.save(
                 events.CreateSubmission(creator=submitter)
             )
             submission_id = submission.submission_id
 
         # Create VerifyContactInformation event
-        submission, stack = events.save(
+        submission, _ = events.save(
             events.VerifyContactInformation(creator=submitter),
             submission_id=submission_id
         )
@@ -53,7 +50,7 @@ def verify_user(request_params: dict, submission_id: Optional[int]) -> Response:
         # TODO: Fix location header using url_for function
         return {}, status.HTTP_303_SEE_OTHER,\
             {'Location': f'http://127.0.0.1:5000/{submission_id}/authorship'}
-    
+
     # build response form
     response_data = dict()
     response_data['form'] = form

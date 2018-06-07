@@ -6,8 +6,9 @@ from flask import Flask
 
 from arxiv.base import Base
 from arxiv.base.middleware import wrap, request_logs
-from submit.routes import ui
+from events.services import classic
 
+from submit.routes import ui
 
 def create_ui_web_app() -> Flask:
     """Initialize an instance of the search frontend UI web application."""
@@ -16,6 +17,7 @@ def create_ui_web_app() -> Flask:
 #    logging.getLogger('botocore').setLevel(logging.ERROR)
 
     app = Flask('submit', static_folder='static', template_folder='templates')
+    classic.init_app(app)
     app.config.from_pyfile('config.py')
 
 #    submit.init_app(app)

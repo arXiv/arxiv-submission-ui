@@ -1,22 +1,25 @@
 [[source]]
-
 url = "https://pypi.python.org/simple"
 verify_ssl = true
 name = "pypi"
 
 
 [packages]
-
 arxiv-base = "==0.7.1"
 arxiv-submission-events = "*"
+dataclasses = "*"
 flask = "*"
+jsonschema = "*"
 uwsgi = "*"
+WTForms = "==2.1"
+# TODO: remove [pyyaml, pytz] after fixing ARXIVNG-882
 pyyaml = "*"
 pytz = "*"
+dev = "*"
+sqlalchemy = "*"
 
 
 [dev-packages]
-
 "nose2" = "*"
 pylint = "*"
 pydocstyle = "*"

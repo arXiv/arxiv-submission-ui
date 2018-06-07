@@ -25,7 +25,7 @@
   <div class="control" style="margin-left: 1.25em">
     <div class="checkbox">
       {{ form.proxy }}
-      {{ form.proxy.label }}
+      {{ form.proxy.label }} <a href="help link as modal"><i class="fa fa-question-circle is-info"></i></a>
     </div>
     {% if form.proxy.errors %}
       {% for error in form.proxy.errors %}

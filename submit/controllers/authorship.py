@@ -6,6 +6,7 @@ Creates an event of type `core.events.event.VerifyContactInformation`
 
 from typing import Tuple, Dict, Any
 
+from flask import url_for
 from wtforms import Form, BooleanField, RadioField
 from wtforms.validators import InputRequired, ValidationError
 
@@ -40,14 +41,15 @@ def authorship(request_params: dict, submission_id: int) -> Response:
         # TODO: Fix location header using url_for function
         if action == 'next':
             return {}, status.HTTP_303_SEE_OTHER,\
-                {'Location': f'http://127.0.0.1:5000/license'}
+                {'Location': url_for('ui.license')}
         elif action == 'previous':
             return {}, status.HTTP_303_SEE_OTHER,\
-                {'Location': f'http://127.0.0.1:5000/{submission_id}/verify_user'}
+                {'Location': url_for('ui.verify_user',
+                 submission_id=submission_id)}
         elif action == 'save_exit':
             # TODO: correct with user portal page
             return {}, status.HTTP_303_SEE_OTHER,\
-                {'Location': f'http://127.0.0.1:5000/'}
+                {'Location': url_for('ui.user')}
 
     # build response form
     response_data = dict()
@@ -61,15 +63,18 @@ def authorship(request_params: dict, submission_id: int) -> Response:
 class AuthorshipForm(Form):
     """Generate form with radio button to confirm authorship information."""
 
-    authorship = RadioField(choices=[('y', 'I am an author of this paper'),
-                            ('n', 'I am not an author of this paper')],
+    YES = 'y'
+    NO = 'n'
+
+    authorship = RadioField(choices=[(YES, 'I am an author of this paper'),
+                            (NO, 'I am not an author of this paper')],
                             validators=[InputRequired('Please choose one')])
-    proxy = BooleanField('By checking this box, I certify that I have received \
-                         authorization from arXiv to submit papers on behalf \
-                         of the author(s).')
+    proxy = BooleanField('By checking this box, I certify that I have '
+                         'received authorization from arXiv to submit papers '
+                         'on behalf of the author(s).')
 
     def validate_authorship(self, field):
         """Require proxy field if submitter is not author."""
-        if field.data == 'n' and not self.data.get('proxy'):
-                raise ValidationError('You must get prior approval to submit \
-                                        on behalf of authors')
+        if field.data == self.NO and not self.data.get('proxy'):
+                raise ValidationError('You must get prior approval to submit '
+                                      'on behalf of authors')

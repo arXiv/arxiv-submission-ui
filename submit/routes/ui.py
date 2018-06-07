@@ -11,6 +11,12 @@ blueprint = Blueprint('ui', __name__, url_prefix='/')
 # templates, initial setup is for testing purposes and to get started.
 
 
+@blueprint.route('/user')
+def user():
+    """Give save and exit button a place to go."""
+    return redirect('https://www.arxiv.org/user')
+
+
 @blueprint.route('/create', methods=['GET', 'POST'])
 @blueprint.route('/<int:submission_id>/verify_user', methods=['GET', 'POST'])
 def verify_user(submission_id=None):

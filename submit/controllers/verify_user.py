@@ -13,7 +13,7 @@ from wtforms.validators import InputRequired
 from arxiv import status
 from arxiv.base import logging
 import events
-from events.exceptions import InvalidEvent, InvalidStack, SaveError
+from events.exceptions import InvalidEvent, SaveError
 
 logger = logging.getLogger(__name__) #pylint: disable=C0103
 
@@ -53,7 +53,7 @@ def verify_user(request_params: dict, submission_id: Optional[int]) -> Response:
                 events.VerifyContactInformation(creator=submitter),
                 submission_id=submission_id
             )
-        except InvalidEvent, InvalidStack:
+        except InvalidEvent:
             # TODO: Pass along the errors better
             return {}, status.HTTP_400_BAD_REQUEST, {}
 

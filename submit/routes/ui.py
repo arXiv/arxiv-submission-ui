@@ -3,7 +3,7 @@
 from flask import (Blueprint, make_response, redirect, request,
                    render_template, url_for)
 from arxiv import status
-import submit.controllers as controllers
+from submit import controllers
 
 blueprint = Blueprint('ui', __name__, url_prefix='/')
 
@@ -32,12 +32,18 @@ def verify_user(submission_id=None):
 @blueprint.route('/<int:submission_id>/authorship', methods=['GET', 'POST'])
 def authorship(submission_id):
     """Render step 2, authorship. Foreshortened validation for testing."""
-    rendered = render_template(
-        "submit/authorship.html",
-        pagetitle='Confirm Authorship'
-    )
-    response = make_response(rendered, status.HTTP_200_OK)
-    return response
+    response, code, headers = controllers.authorship(request.args, submission_id)
+
+    if code == status.HTTP_200_OK:
+        rendered = render_template(
+            "submit/authorship.html",
+            pagetitle='Confirm Authorship',
+            **response
+        )
+        response = make_response(rendered, status.HTTP_200_OK)
+        return response
+    elif code == status.HTTP_303_SEE_OTHER:
+        return redirect(headers['Location'], code=code)
 
 
 @blueprint.route('/<int:submission_id>/license', methods=['GET', 'POST'])

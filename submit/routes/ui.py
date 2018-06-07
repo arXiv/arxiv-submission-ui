@@ -46,8 +46,8 @@ def authorship(submission_id):
         return redirect(headers['Location'], code=code)
 
 
-@blueprint.route('license', methods=['GET'])
-def license():
+@blueprint.route('/<int:submission_id>/license', methods=['GET', 'POST'])
+def license(submission_id):
     """Render step 3, select license. Foreshortened validation for testing."""
     rendered = render_template(
         "submit/license.html",
@@ -57,8 +57,8 @@ def license():
     return response
 
 
-@blueprint.route('policy_ack', methods=['GET'])
-def policy_ack():
+@blueprint.route('/<int:submission_id>/policy_ack', methods=['GET'])
+def policy_ack(submission_id):
     """Render step 4, policy agreement."""
     rendered = render_template(
         "submit/policy.html",
@@ -68,8 +68,8 @@ def policy_ack():
     return response
 
 
-@blueprint.route('classification', methods=['GET'])
-def classification():
+@blueprint.route('/<int:submission_id>/classification', methods=['GET'])
+def classification(submission_id):
     """Render step 5, choose classification."""
     rendered = render_template(
         "submit/classification.html",
@@ -79,8 +79,8 @@ def classification():
     return response
 
 
-@blueprint.route('cross', methods=['GET'])
-def secondary_class():
+@blueprint.route('/<int:submission_id>/cross', methods=['GET'])
+def secondary_class(submission_id):
     """Render step 6, secondary classes."""
     rendered = render_template(
         "submit/secondary_class.html",
@@ -90,8 +90,8 @@ def secondary_class():
     return response
 
 
-@blueprint.route('file_upload', methods=['GET'])
-def file_upload():
+@blueprint.route('/<int:submission_id>/file_upload', methods=['GET'])
+def file_upload(submission_id):
     """Render step 7, file add or edit."""
     rendered = render_template(
         "submit/file_upload.html",
@@ -101,8 +101,8 @@ def file_upload():
     return response
 
 
-@blueprint.route('file_process', methods=['GET'])
-def file_process():
+@blueprint.route('/<int:submission_id>/file_process', methods=['GET'])
+def file_process(submission_id):
     """Render step 8, file processing."""
     rendered = render_template(
         "submit/file_process.html",
@@ -112,8 +112,8 @@ def file_process():
     return response
 
 
-@blueprint.route('add_metadata', methods=['GET'])
-def add_metadata():
+@blueprint.route('/<int:submission_id>/add_metadata', methods=['GET'])
+def add_metadata(submission_id):
     """Render step 9, metadata."""
     rendered = render_template(
         "submit/add_metadata.html",
@@ -123,8 +123,8 @@ def add_metadata():
     return response
 
 
-@blueprint.route('add_optional_metadata', methods=['GET'])
-def add_optional_metadata():
+@blueprint.route('/<int:submission_id>/add_optional_metadata', methods=['GET'])
+def add_optional_metadata(submission_id):
     """Render step 9, metadata."""
     rendered = render_template(
         "submit/add_optional_metadata.html",
@@ -134,8 +134,8 @@ def add_optional_metadata():
     return response
 
 
-@blueprint.route('final_preview', methods=['GET'])
-def final_preview():
+@blueprint.route('/<int:submission_id>/final_preview', methods=['GET'])
+def final_preview(submission_id):
     """Render step 10, preview."""
     rendered = render_template(
         "submit/final_preview.html",
@@ -145,8 +145,8 @@ def final_preview():
     return response
 
 
-@blueprint.route('confirm_submit', methods=['GET'])
-def confirm_submit():
+@blueprint.route('/<int:submission_id>/confirm_submit', methods=['GET'])
+def confirm_submit(submission_id):
     """Render the final confirmation page."""
     rendered = render_template(
         "submit/confirm_submit.html",

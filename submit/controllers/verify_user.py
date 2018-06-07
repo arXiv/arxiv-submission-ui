@@ -13,6 +13,7 @@ from wtforms.validators import InputRequired
 from arxiv import status
 from arxiv.base import logging
 import events
+from events.exceptions import InvalidEvent, InvalidStack, SaveError
 
 logger = logging.getLogger(__name__) #pylint: disable=C0103
 
@@ -36,17 +37,25 @@ def verify_user(request_params: dict, submission_id: Optional[int]) -> Response:
                                        forename='Ima', surname='Nauthor')
 
         # Create submission if it does not yet exist
-        if submission_id is None:
-            submission, _ = events.save(
-                events.CreateSubmission(creator=submitter)
-            )
-            submission_id = submission.submission_id
+        try:
+            if submission_id is None:
+                submission, _ = events.save(
+                    events.CreateSubmission(creator=submitter)
+                )
+                submission_id = submission.submission_id
+        except SaveError:
+            # TODO: review exception raising for 5XX errors.
+            return {}, status.HTTP_503_SERVICE_UNAVAILABLE, {}
 
-        # Create VerifyContactInformation event
-        submission, _ = events.save(
-            events.VerifyContactInformation(creator=submitter),
-            submission_id=submission_id
-        )
+        try:
+            # Create VerifyContactInformation event
+            submission, _ = events.save(
+                events.VerifyContactInformation(creator=submitter),
+                submission_id=submission_id
+            )
+        except InvalidEvent, InvalidStack:
+            # TODO: Pass along the errors better
+            return {}, status.HTTP_400_BAD_REQUEST, {}
 
         return {}, status.HTTP_303_SEE_OTHER,\
             {'Location': url_for('ui.authorship', submission_id=submission_id)}

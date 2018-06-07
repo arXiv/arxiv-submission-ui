@@ -14,12 +14,12 @@
       </div>
     </div>
   </div>
-  {% if form.authorship.errors %}
-    {% for error in form.authorship.errors %}
-      <p class="help is-warning">{{ error }}</p>
-    {% endfor %}
-  {% endif %}
 {% endfor %}
+{% if form.authorship.errors %}
+  {% for error in form.authorship.errors %}
+    <p class="help is-warning">{{ error }}</p>
+  {% endfor %}
+{% endif %}
 
 <div class="field">
   <div class="control" style="margin-left: 1.25em">

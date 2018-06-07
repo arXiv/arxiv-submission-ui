@@ -7,7 +7,7 @@ Creates an event of type `core.events.event.VerifyContactInformation`
 from typing import Tuple, Dict, Any
 
 from wtforms import Form, BooleanField, RadioField
-from wtforms.validators import InputRequired
+from wtforms.validators import InputRequired, ValidationError
 
 from arxiv import status
 from arxiv.base import logging
@@ -66,6 +66,10 @@ class AuthorshipForm(Form):
                             validators=[InputRequired('Please choose one')])
     proxy = BooleanField('By checking this box, I certify that I have received \
                          authorization from arXiv to submit papers on behalf \
-                         of the author(s).',
-                         [InputRequired('Please confirm your proxy \
-                         authorization')])
+                         of the author(s).')
+
+    def validate_authorship(self, field):
+        """Require proxy field if submitter is not author."""
+        if field.data == 'n' and not self.data.get('proxy'):
+                raise ValidationError('You must get prior approval to submit \
+                                        on behalf of authors')

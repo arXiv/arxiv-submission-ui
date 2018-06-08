@@ -85,7 +85,7 @@ def classification(submission_id):
     return response
 
 
-@blueprint.route('/<int:submission_id>/cross', methods=['GET'])
+@blueprint.route('/<int:submission_id>/crosslist', methods=['GET'])
 def secondary_class(submission_id):
     """Render step 6, secondary classes."""
     rendered = render_template(

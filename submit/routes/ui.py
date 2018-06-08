@@ -63,7 +63,7 @@ def license(submission_id):
     return response
 
 
-@blueprint.route('/<int:submission_id>/policy_ack', methods=['GET'])
+@blueprint.route('/<int:submission_id>/policy', methods=['GET'])
 def policy_ack(submission_id):
     """Render step 4, policy agreement."""
     rendered = render_template(

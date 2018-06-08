@@ -1,7 +1,7 @@
 """
-Controller for verify_user action.
+Controller for authorship action.
 
-Creates an event of type `core.events.event.VerifyContactInformation`
+Creates an event of type `core.events.event.AssertAuthorship`
 """
 
 from typing import Tuple, Dict, Any

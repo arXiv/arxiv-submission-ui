@@ -34,10 +34,10 @@ def classification(request_params: dict, submission_id: int) -> Response:
 
         if action == 'next':
             return {}, status.HTTP_303_SEE_OTHER,\
-                {'Location': url_for('ui.classification')}
+                {'Location': url_for('ui.crosslist')}
         elif action == 'previous':
             return {}, status.HTTP_303_SEE_OTHER,\
-                {'Location': url_for('ui.license',
+                {'Location': url_for('ui.policy',
                  submission_id=submission_id)}
         elif action == 'save_exit':
             # TODO: correct with user portal page
@@ -67,10 +67,10 @@ def crosslist(request_params: dict, submission_id: int) -> Response:
 
         if action == 'next':
             return {}, status.HTTP_303_SEE_OTHER,\
-                {'Location': url_for('ui.classification')}
+                {'Location': url_for('ui.upload')}
         elif action == 'previous':
             return {}, status.HTTP_303_SEE_OTHER,\
-                {'Location': url_for('ui.license',
+                {'Location': url_for('ui.classification',
                  submission_id=submission_id)}
         elif action == 'save_exit':
             # TODO: correct with user portal page

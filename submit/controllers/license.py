@@ -53,4 +53,4 @@ def license(request_params: dict, submission_id: int) -> Response:
 
 
 class LicenseForm(Form):
-    """Generate form with radio button to confirm authorship information."""
+    """Generate form to select license."""

@@ -1,4 +1,4 @@
-"
+"""
 Controller for policy action.
 
 Creates an event of type `core.events.event.AcceptPolicy`

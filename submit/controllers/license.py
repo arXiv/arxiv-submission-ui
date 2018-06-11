@@ -1,4 +1,4 @@
-"
+"""
 Controller for license action.
 
 Creates an event of type `core.events.event.SelectLicense`

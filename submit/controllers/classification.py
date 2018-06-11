@@ -1,4 +1,4 @@
-"
+"""
 Controller for classification actinos.
 
 Creates an event of type `core.events.event.SetPrimaryClassification`

@@ -12,6 +12,7 @@ from wtforms import Form
 from arxiv import status
 from arxiv.base import logging
 import events
+from .util import flow_control
 
 # from arxiv-submission-core.events.event import VerifyContactInformation
 
@@ -20,42 +21,28 @@ logger = logging.getLogger(__name__)  # pylint: disable=C0103
 Response = Tuple[Dict[str, Any], int, Dict[str, Any]]  # pylint: disable=C0103
 
 
+@flow_control('ui.policy', 'ui.crosslist', 'ui.user')
 def classification(request_params: dict, submission_id: int) -> Response:
-    """Convert primary classification form data into a 
-    `SetPrimaryClassification` event."""
+    """Generate a `SetPrimaryClassification` event."""
     form = PrimaryClassificationForm(request_params)
+    response_data = {'submission_id': submission_id}
 
     # Process event if go to next page
     action = request_params.get('action')
     if action in ['previous', 'save_exit', 'next'] and form.validate():
         # TODO: Write submission info
-        pass
-
-
-        if action == 'next':
-            return {}, status.HTTP_303_SEE_OTHER,\
-                {'Location': url_for('ui.crosslist')}
-        elif action == 'previous':
-            return {}, status.HTTP_303_SEE_OTHER,\
-                {'Location': url_for('ui.policy',
-                 submission_id=submission_id)}
-        elif action == 'save_exit':
-            # TODO: correct with user portal page
-            return {}, status.HTTP_303_SEE_OTHER,\
-                {'Location': url_for('ui.user')}
+        return response_data, status.HTTP_303_SEE_OTHER, {}
 
     # build response form
-    response_data = dict()
-    response_data['form'] = form
+    response_data.update({'form': form})
     logger.debug(f'verify_user data: {form}')
-    response_data['submission_id'] = submission_id
 
     return response_data, status.HTTP_200_OK, {}
 
 
+@flow_control('ui.classification', 'ui.upload', 'ui.user')
 def crosslist(request_params: dict, submission_id: int) -> Response:
-    """Convert secondary classification form data into an 
-    `AddSecondaryClassification` event."""
+    """Generate a `AddSecondaryClassification` event."""
     form = SecondaryClassificationForm(request_params)
 
     # Process event if go to next page
@@ -64,24 +51,9 @@ def crosslist(request_params: dict, submission_id: int) -> Response:
         # TODO: Write submission info
         pass
 
-
-        if action == 'next':
-            return {}, status.HTTP_303_SEE_OTHER,\
-                {'Location': url_for('ui.upload')}
-        elif action == 'previous':
-            return {}, status.HTTP_303_SEE_OTHER,\
-                {'Location': url_for('ui.classification',
-                 submission_id=submission_id)}
-        elif action == 'save_exit':
-            # TODO: correct with user portal page
-            return {}, status.HTTP_303_SEE_OTHER,\
-                {'Location': url_for('ui.user')}
-
     # build response form
-    response_data = dict()
-    response_data['form'] = form
+    response_data = {'form': form, 'submission_id': submission_id}
     logger.debug(f'verify_user data: {form}')
-    response_data['submission_id'] = submission_id
 
     return response_data, status.HTTP_200_OK, {}
 
@@ -92,5 +64,3 @@ class PrimaryClassificationForm(Form):
 
 class SecondaryClassificationForm(Form):
     """Form for secondary classification selection"""
-
-

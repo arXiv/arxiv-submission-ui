@@ -15,20 +15,23 @@ from arxiv.base import logging
 import events
 from events.exceptions import InvalidEvent, SaveError
 
+from .util import flow_control
+
 logger = logging.getLogger(__name__) #pylint: disable=C0103
 
 Response = Tuple[Dict[str, Any], int, Dict[str, Any]] #pylint: disable=C0103
 
 
+@flow_control('ui.user', 'ui.authorship', 'ui.user')
 def verify_user(request_params: dict, submission_id: Optional[int]) -> Response:
     """
-    Converts the verify_user form data and converts it to a
-    `VerifyContactInfromation` event.
+    Generate a `VerifyContactInformation` event.
 
     If a submission has not yet been created, the `CreateSubmission` event is
     raised to yield a submission_id.
     """
     form = VerifyUserForm(request_params)
+    response_data = {'submission_id': submission_id}
 
     # Process event if go to next page
     if request_params.get('action') == 'next' and form.validate():
@@ -56,13 +59,11 @@ def verify_user(request_params: dict, submission_id: Optional[int]) -> Response:
         except InvalidEvent:
             # TODO: Pass along the errors better
             return {}, status.HTTP_400_BAD_REQUEST, {}
-
-        return {}, status.HTTP_303_SEE_OTHER,\
-            {'Location': url_for('ui.authorship', submission_id=submission_id)}
+        response_data.update({'submission_id': submission_id})
+        return response_data, status.HTTP_303_SEE_OTHER, {}
 
     # build response form
-    response_data = dict()
-    response_data['form'] = form
+    response_data.update({'form': form})
     logger.debug(f'verify_user data: {form}')
 
     return response_data, status.HTTP_200_OK, {}

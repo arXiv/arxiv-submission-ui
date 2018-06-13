@@ -14,6 +14,8 @@ from arxiv import status
 from arxiv.base import logging
 import events
 
+from .util import flow_control
+
 # from arxiv-submission-core.events.event import VerifyContactInformation
 
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
@@ -21,9 +23,11 @@ logger = logging.getLogger(__name__)  # pylint: disable=C0103
 Response = Tuple[Dict[str, Any], int, Dict[str, Any]]  # pylint: disable=C0103
 
 
+@flow_control('ui.verify_user', 'ui.license', 'ui.user')
 def authorship(request_params: dict, submission_id: int) -> Response:
     """Convert authorship form data into an `AssertAuthorship` event."""
     form = AuthorshipForm(request_params)
+    response_data = {'submission_id': submission_id}
 
     # Process event if go to next page
     action = request_params.get('action')
@@ -37,26 +41,11 @@ def authorship(request_params: dict, submission_id: int) -> Response:
             events.AssertAuthorship(creator=submitter),
             submission_id=submission_id
         )
-
-        # TODO: Fix location header using url_for function
-        if action == 'next':
-            return {}, status.HTTP_303_SEE_OTHER,\
-                {'Location': url_for('ui.license')}
-        elif action == 'previous':
-            return {}, status.HTTP_303_SEE_OTHER,\
-                {'Location': url_for('ui.verify_user',
-                 submission_id=submission_id)}
-        elif action == 'save_exit':
-            # TODO: correct with user portal page
-            return {}, status.HTTP_303_SEE_OTHER,\
-                {'Location': url_for('ui.user')}
+        return response_data, status.HTTP_303_SEE_OTHER, {}
 
     # build response form
-    response_data = dict()
-    response_data['form'] = form
+    response_data.update({'form': form})
     logger.debug(f'verify_user data: {form}')
-    response_data['submission_id'] = submission_id
-
     return response_data, status.HTTP_200_OK, {}
 
 

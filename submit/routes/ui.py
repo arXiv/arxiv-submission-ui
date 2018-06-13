@@ -22,7 +22,7 @@ def user():
 def verify_user(submission_id=None):
     """Render the submit start page. Foreshortened validation for testing."""
     response, code, headers = controllers.verify_user(request.args, submission_id)
-
+    print(response, code, headers)
     if code == status.HTTP_200_OK:
         rendered = render_template(
             "submit/verify_user.html",

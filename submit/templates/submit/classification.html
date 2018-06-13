@@ -4,25 +4,21 @@
 
 {% block within_content %}
 <h2 class="is-size-4">Choose a primary classification</h2>
+<form method="GET" action="{{ url_for('ui.classification',submission_id=submission_id) }}">
 <div class="field">
   <label class="label">Archive <span class="icon has-text-link"><i class="fa fa-question-circle"></i></span></label>
   <div class="control">
     <div class="select">
-      <select>
-        <option>archive1</option>
-        <option>archive2</option>
-      </select>
+    {{form.archive}}
     </div>
   </div>
 </div>
+
 <div class="field">
   <label class="label">Subject <span class="icon has-text-link"><i class="fa fa-question-circle"></i></span></label>
   <div class="control">
     <div class="select">
-      <select>
-        <option>subject1</option>
-        <option>subject2</option>
-      </select>
+      {{form.subject}}
     </div>
   </div>
 </div>
@@ -35,4 +31,5 @@
 </div>
 
 {{ submit_macros.submit_nav() }}
+</form>
 {% endblock within_content %}

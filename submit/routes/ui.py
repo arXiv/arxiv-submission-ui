@@ -38,7 +38,10 @@ def verify_user(submission_id=None):
 @blueprint.route('/<int:submission_id>/authorship', methods=['GET', 'POST'])
 def authorship(submission_id):
     """Render step 2, authorship. Foreshortened validation for testing."""
-    response, code, headers = controllers.authorship(request.args, submission_id)
+    response, code, headers = controllers.authorship(
+        request.args,
+        submission_id
+    )
 
     if code == status.HTTP_200_OK:
         rendered = render_template(
@@ -83,12 +86,21 @@ def policy(submission_id):
 @blueprint.route('/<int:submission_id>/classification', methods=['GET'])
 def classification(submission_id):
     """Render step 5, choose classification."""
-    rendered = render_template(
-        "submit/classification.html",
-        pagetitle='Choose a Primary Classification'
+    response, code, headers = controllers.classification(
+        request.args,
+        submission_id
     )
-    response = make_response(rendered, status.HTTP_200_OK)
-    return response
+
+    if code == status.HTTP_200_OK:
+        rendered = render_template(
+            "submit/classification.html",
+            pagetitle='Choose a Primary Classification',
+            **response
+        )
+        response = make_response(rendered, status.HTTP_200_OK)
+        return response
+    elif code == status.HTTP_303_SEE_OTHER:
+        return redirect(headers['Location'], code=code)
 
 
 @blueprint.route('/<int:submission_id>/crosslist', methods=['GET'])

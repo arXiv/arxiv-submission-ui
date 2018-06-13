@@ -8,8 +8,11 @@ from typing import Tuple, Dict, Any
 
 from flask import url_for
 from wtforms import Form
+from wtforms.fields import SelectField
 
 from arxiv import status
+from arxiv.taxonomy import ARCHIVES_ACTIVE as ARCHIVES,\
+    CATEGORIES_ACTIVE as CATEGORIES
 from arxiv.base import logging
 import events
 from .util import flow_control
@@ -60,6 +63,13 @@ def crosslist(request_params: dict, submission_id: int) -> Response:
 
 class PrimaryClassificationForm(Form):
     """Form for primary classification selection"""
+    archive = SelectField('Select an Archive',
+        choices=[(key, f'({key}) {archive["name"]}')
+                     for key, archive in ARCHIVES.items()])
+    subject = SelectField('Select a Subject',
+        choices=[(key, f'({key}) {cat["name"]}')
+                     for key, cat in CATEGORIES.items()
+                         if cat['in_archive'] == 'cs'])
 
 
 class SecondaryClassificationForm(Form):

@@ -14,16 +14,19 @@
   <li>For third-party submissions, I have obtained pre-authorization from arXiv
     to submit as a third-party submitter.</li>
 </ul>
-
+<form method="GET" action="{{ url_for('ui.policy',submission_id=submission_id) }}">
 <div class="field">
   <div class="control">
-    <label class="checkbox">
-      <input type="checkbox" id="policy_ack" name="policy_ack" value="y">
-      By checking this box, I agree to the above policies.
-    </label>
+    <div class="checkbox">
+      {{ form.policy }}
+      {{ form.policy.label }}
+    </div>
+    {% for error in form.policy.errors %}
+      <p class="help is-warning">{{ error }}</p>
+    {% endfor %}
   </div>
 </div>
 
 {{ submit_macros.submit_nav() }}
-
+</form>
 {% endblock within_content %}

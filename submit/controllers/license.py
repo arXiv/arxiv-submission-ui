@@ -35,7 +35,6 @@ def license(request_params: dict, submission_id: int) -> Response:
         submitter = events.domain.User(1, email='ian413@cornell.edu',
                                        forename='Ima', surname='Nauthor')
 
-
         # Create SelectLicense event
         submission, stack = events.save(  # pylint: disable=W0612
             events.SelectLicense(

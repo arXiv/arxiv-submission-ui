@@ -5,6 +5,7 @@
 {% block within_content %}
 <h2 class="is-size-4">Select a license</h2>
 
+<form method="GET" action="{{ url_for('ui.license',submission_id=submission_id) }}">
 <div class="field">
 {% for subfield in form.license %}
   <div class="control">
@@ -21,4 +22,5 @@
 </div>
 
 {{ submit_macros.submit_nav() }}
+</form>
 {% endblock within_content %}

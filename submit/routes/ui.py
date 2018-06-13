@@ -22,7 +22,7 @@ def user():
 def verify_user(submission_id=None):
     """Render the submit start page. Foreshortened validation for testing."""
     response, code, headers = controllers.verify_user(request.args, submission_id)
-
+    print(response, code, headers)
     if code == status.HTTP_200_OK:
         rendered = render_template(
             "submit/verify_user.html",
@@ -63,7 +63,7 @@ def license(submission_id):
     return response
 
 
-@blueprint.route('/<int:submission_id>/policy_ack', methods=['GET'])
+@blueprint.route('/<int:submission_id>/policy', methods=['GET'])
 def policy_ack(submission_id):
     """Render step 4, policy agreement."""
     rendered = render_template(
@@ -85,8 +85,8 @@ def classification(submission_id):
     return response
 
 
-@blueprint.route('/<int:submission_id>/cross', methods=['GET'])
-def secondary_class(submission_id):
+@blueprint.route('/<int:submission_id>/crosslist', methods=['GET'])
+def crosslist(submission_id):
     """Render step 6, secondary classes."""
     rendered = render_template(
         "submit/secondary_class.html",

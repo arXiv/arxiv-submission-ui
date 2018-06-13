@@ -21,6 +21,12 @@
 {% endfor %}
 </div>
 
+{% if form.license.errors %}
+  {% for error in form.license.errors %}
+    <p class="help is-warning">{{ error }}</p>
+  {% endfor %}
+{% endif %}
+
 {{ submit_macros.submit_nav() }}
 </form>
 {% endblock within_content %}

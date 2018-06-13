@@ -56,7 +56,7 @@ class AuthorshipForm(Form):
     NO = 'n'
 
     authorship = RadioField(choices=[(YES, 'I am an author of this paper'),
-                            (NO, 'I am not an author of this paper')],
+                                     (NO, 'I am not an author of this paper')],
                             validators=[InputRequired('Please choose one')])
     proxy = BooleanField('By checking this box, I certify that I have '
                          'received authorization from arXiv to submit papers '

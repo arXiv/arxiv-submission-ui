@@ -64,14 +64,20 @@ def license(submission_id):
 
 
 @blueprint.route('/<int:submission_id>/policy', methods=['GET'])
-def policy_ack(submission_id):
+def policy(submission_id):
     """Render step 4, policy agreement."""
-    rendered = render_template(
-        "submit/policy.html",
-        pagetitle='Acknowledge Policy Statement'
-    )
-    response = make_response(rendered, status.HTTP_200_OK)
-    return response
+    response, code, headers = controllers.policy(request.args, submission_id)
+
+    if code == status.HTTP_200_OK:
+        rendered = render_template(
+            "submit/policy.html",
+            pagetitle='Acknowledge Policy Statement',
+            **response
+        )
+        response = make_response(rendered, status.HTTP_200_OK)
+        return response
+    elif code == status.HTTP_303_SEE_OTHER:
+        return redirect(headers['Location'], code=code)
 
 
 @blueprint.route('/<int:submission_id>/classification', methods=['GET'])

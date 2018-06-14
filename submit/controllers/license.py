@@ -13,6 +13,7 @@ from wtforms.validators import InputRequired
 
 from arxiv import status
 from arxiv.base import logging
+from arxiv.license import LICENSES
 import events
 from .util import flow_control
 
@@ -56,19 +57,7 @@ class LicenseForm(Form):
     """Generate form to select license."""
     license = RadioField(
         u'Select a license',
-        choices=[
-            ('http://arxiv.org/licenses/nonexclusive-distrib/1.0/', 
-                'arXiv.org perpetual, non-exclusive license to distribute this'
-                'article'),
-            ('http://creativecommons.org/licenses/by-nc-sa/4.0/',
-                'Creative Commons Attribution-Noncommercial-ShareAlike license '
-                '(CC BY-NC-SA 4.0)'),
-            ('http://creativecommons.org/licenses/by-sa/4.0/',
-                'Creative Commons Attribution-ShareAlike license (CC BY-SA 4.0)'),
-            ('http://creativecommons.org/licenses/by/4.0/', 
-                'Creative Commons Attribution license (CC BY 4.0)'),
-            ('http://creativecommons.org/publicdomain/zero/1.0/',
-                'Creative Commons Public Domain Declaration (CC0 1.0)'),
-            ('',  'None of the above licenses apply')
-        ],
+        choices=[(license, data['label']) 
+                    for license, data in LICENSES.items() if data['is_current']]
+                + [('',  'None of the above licenses apply')],
         validators=[InputRequired('Please select a license')])

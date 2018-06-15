@@ -91,4 +91,5 @@ class LicenseForm(Form):
     license = RadioField(
         u'Select a license',
         choices=LICENSE_CHOICES,
-        validators=[InputRequired('Please select a license')])
+        validators=[InputRequired('Please select a license')]
+    )

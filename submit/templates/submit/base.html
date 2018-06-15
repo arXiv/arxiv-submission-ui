@@ -12,6 +12,15 @@
   </div>
   </div>
   <content>
+    {% if form and form.errors %}
+      {% if form.errors.events %}
+      <div class="notification is-warning">
+        {% for error in form.errors.events %}
+        <li>{{ error }}</li>
+        {% endfor %}
+      </div>
+      {% endif %}
+    {% endif %}
     {% block within_content %}
       Specific content here
     {% endblock within_content %}

@@ -2,9 +2,10 @@
 
 from typing import Callable, Any, Dict, Tuple, Optional
 from werkzeug import MultiDict
-from werkzeug.exceptions import InternalServerError
+from werkzeug.exceptions import InternalServerError, NotFound
 from flask import url_for
 from arxiv import status
+import events
 
 Response = Tuple[Dict[str, Any], int, Dict[str, Any]]  # pylint: disable=C0103
 
@@ -45,3 +46,28 @@ def flow_control(prev_page: str, next_page: str, exit_page: str) -> Callable:
             return data, status_code, headers
         return wrapper
     return deco
+
+
+def load_submission(submission_id: int) -> events.domain.Submission:
+    """
+    Load a submission by ID.
+
+    Parameters
+    ----------
+    submission_id : int
+
+    Returns
+    -------
+    :class:`events.domain.Submission`
+
+    Raises
+    ------
+    :class:`werkzeug.exceptions.NotFound`
+        Raised when there is no submission with the specified ID.
+
+    """
+    try:
+        submission, _ = events.load(submission_id)
+    except events.exceptions.NoSuchSubmission as e:
+        raise NotFound('No such submission.') from e
+    return submission

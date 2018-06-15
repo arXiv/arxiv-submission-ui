@@ -4,16 +4,6 @@
 
 {% block within_content %}
 
-{% if form.errors %}
-  {% if form.errors.events %}
-  <div class="notification is-warning">
-    {% for error in form.errors.events %}
-    <li>{{ error }}</li>
-    {% endfor %}
-  </div>
-  {% endif %}
-{% endif %}
-
 <h2 class="is-size-4">Verify your contact information</h2>
 <p><span class="label">Forename:</span> Ima</p>
 <p><span class="label">Surname:</span> Nauthor</p>

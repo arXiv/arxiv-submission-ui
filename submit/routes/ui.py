@@ -1,5 +1,6 @@
 """Provides routes for the submission user interface."""
 
+from typing import Optional
 from flask import (Blueprint, make_response, redirect, request,
                    render_template, url_for)
 from arxiv import status
@@ -19,15 +20,15 @@ def user():
 
 @blueprint.route('/create', methods=['GET', 'POST'])
 @blueprint.route('/<int:submission_id>/verify_user', methods=['GET', 'POST'])
-def verify_user(submission_id=None):
+def verify_user(submission_id: Optional[int] = None):
     """Render the submit start page. Foreshortened validation for testing."""
-    response, code, headers = controllers.verify_user(request.args, submission_id)
-    print(response, code, headers)
-    if code == status.HTTP_200_OK:
+    data, code, headers = controllers.verify_user(request.method, request.form,
+                                                  submission_id)
+    if code in [status.HTTP_200_OK, status.HTTP_400_BAD_REQUEST]:
         rendered = render_template(
             "submit/verify_user.html",
             pagetitle='Verify User Information',
-            **response
+            **data
         )
         response = make_response(rendered, status.HTTP_200_OK)
         return response

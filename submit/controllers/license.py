@@ -8,9 +8,12 @@ from typing import Tuple, Dict, Any
 
 from flask import url_for
 from wtforms import Form
+from wtforms.fields import RadioField
+from wtforms.validators import InputRequired
 
 from arxiv import status
 from arxiv.base import logging
+from arxiv.license import LICENSES
 import events
 from .util import flow_control
 
@@ -30,7 +33,18 @@ def license(request_params: dict, submission_id: int) -> Response:
     # Process event if go to next page
     action = request_params.get('action')
     if action in ['previous', 'save_exit', 'next'] and form.validate():
-        # TODO: Write submission info
+        # TODO: Create a concrete User event from cookie info.
+        submitter = events.domain.User(1, email='ian413@cornell.edu',
+                                       forename='Ima', surname='Nauthor')
+
+        # Create SelectLicense event
+        submission, stack = events.save(  # pylint: disable=W0612
+            events.SelectLicense(
+                creator=submitter,
+                license_uri=form.license.data
+            ),
+            submission_id=submission_id
+        )
         return response_data, status.HTTP_303_SEE_OTHER, {}
 
     # build response form
@@ -41,3 +55,9 @@ def license(request_params: dict, submission_id: int) -> Response:
 
 class LicenseForm(Form):
     """Generate form to select license."""
+    license = RadioField(
+        u'Select a license',
+        choices=[(license, data['label']) 
+                    for license, data in LICENSES.items() if data['is_current']]
+                + [('',  'None of the above licenses apply')],
+        validators=[InputRequired('Please select a license')])

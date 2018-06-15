@@ -9,7 +9,7 @@ import events
 from submit.controllers.license import license, LicenseForm
 
 
-class TestVerifyUser(TestCase):
+class TestSelectLicense(TestCase):
     """Test behavior of :func:`.license` controller."""
 
     @mock.patch('events.load')

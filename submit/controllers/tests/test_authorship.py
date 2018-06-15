@@ -9,7 +9,7 @@ import events
 from submit.controllers.authorship import authorship, AuthorshipForm
 
 
-class TestVerifyUser(TestCase):
+class TestVerifyAuthorship(TestCase):
     """Test behavior of :func:`.authorship` controller."""
 
     @mock.patch('events.load')

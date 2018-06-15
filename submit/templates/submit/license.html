@@ -5,28 +5,28 @@
 {% block within_content %}
 <h2 class="is-size-4">Select a license</h2>
 
-<form method="GET" action="{{ url_for('ui.license',submission_id=submission_id) }}">
-<div class="field">
-{% for subfield in form.license %}
-  <div class="control">
-    <label class="radio">
-    {{subfield}}
-    {% if subfield.data %}
-        <a href="{{subfield.data}}">{{subfield.label}}</a>
-    {% else %}
-        {{subfield.label}}
-    {% endif %}
-    </label>
-  </div>
-{% endfor %}
-</div>
-
-{% if form.license.errors %}
-  {% for error in form.license.errors %}
-    <p class="help is-warning">{{ error }}</p>
+<form method="POST" action="{{ url_for('ui.license',submission_id=submission_id) }}">
+  <div class="field">
+  {% for subfield in form.license %}
+    <div class="control">
+      <label class="radio">
+      {{subfield}}
+      {% if subfield.data %}
+          <a href="{{subfield.data}}">{{subfield.label}}</a>
+      {% else %}
+          {{subfield.label}}
+      {% endif %}
+      </label>
+    </div>
   {% endfor %}
-{% endif %}
+  </div>
 
-{{ submit_macros.submit_nav() }}
+  {% if form.license.errors %}
+    {% for error in form.license.errors %}
+      <p class="help is-warning">{{ error }}</p>
+    {% endfor %}
+  {% endif %}
+
+  {{ submit_macros.submit_nav() }}
 </form>
 {% endblock within_content %}

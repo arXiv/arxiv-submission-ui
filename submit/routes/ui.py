@@ -60,13 +60,15 @@ def authorship(submission_id):
 @blueprint.route('/<int:submission_id>/license', methods=['GET', 'POST'])
 def license(submission_id):
     """Render step 3, select license."""
-    response, code, headers = controllers.license(request.args, submission_id)
+    request_data = MultiDict(request.form.items(multi=True))
+    data, code, headers = controllers.license(request.method, request_data,
+                                              submission_id)
 
-    if code == status.HTTP_200_OK:
+    if code in [status.HTTP_200_OK, status.HTTP_400_BAD_REQUEST]:
         rendered = render_template(
             "submit/license.html",
             pagetitle='Select a License',
-            **response
+            **data
         )
         response = make_response(rendered, status.HTTP_200_OK)
         return response

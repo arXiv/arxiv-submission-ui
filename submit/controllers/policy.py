@@ -13,7 +13,7 @@ from wtforms.validators import InputRequired
 from arxiv import status
 from arxiv.base import logging
 import events
-from .util import flow_control
+from .util import flow_control, load_submission
 
 # from arxiv-submission-core.events.event import AcceptPolicy
 
@@ -23,28 +23,43 @@ Response = Tuple[Dict[str, Any], int, Dict[str, Any]]  # pylint: disable=C0103
 
 
 @flow_control('ui.license', 'ui.classification', 'ui.user')
-def policy(request_params: dict, submission_id: int) -> Response:
+def policy(method: str, params: dict, submission_id: int) -> Response:
     """Convert policy form data into an `AcceptPolicy` event."""
-    form = PolicyForm(request_params)
-    response_data = {'submission_id': submission_id}
+    logger.debug(f'method: {method}, submission: {submission_id}. {params}')
+    submission = load_submission(submission_id)
+    form = PolicyForm(params)
+    response_data = {'submission_id': submission_id, 'form': form}
 
-    # Process event if go to next page
-    action = request_params.get('action')
-    if action in ['previous', 'save_exit', 'next'] and form.validate():
-        # TODO: Create a concrete User event from cookie info.
-        submitter = events.domain.User(1, email='ian413@cornell.edu',
-                                       forename='Ima', surname='Nauthor')
+    # TODO: Create a concrete User event from cookie info.
+    submitter = events.domain.User(1, email='ian413@cornell.edu',
+                                   forename='Ima', surname='Nauthor')
 
-        # Create AcceptPolicy event
-        submission, stack = events.save(  # pylint: disable=W0612
-            events.AcceptPolicy(creator=submitter),
-            submission_id=submission_id
-        )
-        return response_data, status.HTTP_303_SEE_OTHER, {}
+    if method == 'GET':
+        params['policy'] = submission.submitter_accepts_policy
 
-    # build response form
-    response_data.update({'form': form})
-    logger.debug(f'policy data: {form}')
+    if method == 'POST':
+        if form.validate():
+            logger.debug('Form is valid, with data: %s', str(form.data))
+            accept_policy = form.policy.data
+            if accept_policy and not submission.submitter_accepts_policy:
+                try:
+                    # Create AcceptPolicy event
+                    submission, stack = events.save(  # pylint: disable=W0612
+                        events.AcceptPolicy(creator=submitter),
+                        submission_id=submission_id
+                    )
+                except events.exceptions.InvalidStack as e:
+                    logger.error('Could not AssertAuthorship: %s', str(e))
+                    form.errors     # Causes the form to initialize errors.
+                    form._errors['events'] = [ie.message for ie
+                                              in e.event_exceptions]
+                    return response_data, status.HTTP_400_BAD_REQUEST, {}
+                if params.get('action') in ['previous', 'save_exit', 'next']:
+                    return response_data, status.HTTP_303_SEE_OTHER, {}
+
+        else:   # Form data were invalid.
+            return response_data, status.HTTP_400_BAD_REQUEST, {}
+
     return response_data, status.HTTP_200_OK, {}
 
 

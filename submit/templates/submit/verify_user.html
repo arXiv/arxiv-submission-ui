@@ -3,23 +3,25 @@
 {% import "submit/submit_macros.html" as submit_macros %}
 
 {% block within_content %}
+
 <h2 class="is-size-4">Verify your contact information</h2>
 <p><span class="label">Forename:</span> Ima</p>
 <p><span class="label">Surname:</span> Nauthor</p>
 <p><span class="label">Suffix:</span></p>
 <p><span class="label">Affiliation:</span> Cornell University</p>
 <p><span class="label">E-mail:</span> ian413@cornell.edu</p>
-<form method="GET" action="{{ url_for('ui.verify_user') }}">
-<div class="field">
-  <div class="control">
-    <div class="checkbox">
-      {{ form.verify_user }}
-      {{ form.verify_user.label }}
+
+<form method="POST" action="{{ url_for('ui.verify_user') }}">
+  <div class="field">
+    <div class="control">
+      <div class="checkbox">
+        {{ form.verify_user }}
+        {{ form.verify_user.label }}
+      </div>
+      {% for error in form.verify_user.errors %}
+        <p class="help is-warning">{{ error }}</p>
+      {% endfor %}
     </div>
-    {% for error in form.verify_user.errors %}
-      <p class="help is-warning">{{ error }}</p>
-    {% endfor %}
-  </div>
 </div>
 
 {{ submit_macros.submit_nav() }}

@@ -2,6 +2,6 @@
 omit =
     app.py
     docs/*
-    test*
+    */test*
     */app.py
     */wsgi.py

@@ -4,36 +4,36 @@
 
 {% block within_content %}
 <h2 class="is-size-4">Confirm authorship or proxy approval</h2>
-<form method="GET" action="{{ url_for('ui.authorship',submission_id=submission_id) }}">
-{% for field in form.authorship %}
-  <div class="field">
-    <div class="control">
-      <div class="radio">
-        {{ field|safe }}
-        {{ field.label }}
+<form method="POST" action="{{ url_for('ui.authorship',submission_id=submission_id) }}">
+  {% for field in form.authorship %}
+    <div class="field">
+      <div class="control">
+        <div class="radio">
+          {{ field|safe }}
+          {{ field.label }}
+        </div>
       </div>
     </div>
-  </div>
-{% endfor %}
-{% if form.authorship.errors %}
-  {% for error in form.authorship.errors %}
-    <p class="help is-warning">{{ error }}</p>
   {% endfor %}
-{% endif %}
+  {% if form.authorship.errors %}
+    {% for error in form.authorship.errors %}
+      <p class="help is-warning">{{ error }}</p>
+    {% endfor %}
+  {% endif %}
 
-<div class="field">
-  <div class="control" style="margin-left: 1.25em">
-    <div class="checkbox">
-      {{ form.proxy }}
-      {{ form.proxy.label }} <a href="help link as modal"><i class="fa fa-question-circle is-info"></i></a>
+  <div class="field">
+    <div class="control" style="margin-left: 1.25em">
+      <div class="checkbox">
+        {{ form.proxy }}
+        {{ form.proxy.label }} <a href="help link as modal"><i class="fa fa-question-circle is-info"></i></a>
+      </div>
+      {% if form.proxy.errors %}
+        {% for error in form.proxy.errors %}
+          <p class="help is-warning">{{ error }}</p>
+        {% endfor %}
+      {% endif %}
     </div>
-    {% if form.proxy.errors %}
-      {% for error in form.proxy.errors %}
-        <p class="help is-warning">{{ error }}</p>
-      {% endfor %}
-    {% endif %}
   </div>
-</div>
 
 {{ submit_macros.submit_nav() }}
 </form>

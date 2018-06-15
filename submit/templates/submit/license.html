@@ -9,10 +9,11 @@
   <div class="field">
   {% for subfield in form.license %}
     <div class="control">
+
       <label class="radio">
-      {{subfield}}
+        {{subfield}}
       {% if subfield.data %}
-          <a href="{{subfield.data}}">{{subfield.label}}</a>
+          <a href="{{subfield.data}}">{{ subfield.label.text }}</a>
       {% else %}
           {{subfield.label}}
       {% endif %}

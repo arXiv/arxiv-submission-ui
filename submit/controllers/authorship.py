@@ -86,6 +86,11 @@ def authorship(method: str, params: dict, submission_id: int,
                     form._errors['events'] = [ie.message for ie
                                               in e.event_exceptions]
                     return response_data, status.HTTP_400_BAD_REQUEST, {}
+                except events.exceptions.SaveError as e:
+                    logger.error('Could not save primary event')
+                    raise InternalServerError(
+                        'There was a problem saving this operation'
+                    ) from e
 
             if params.get('action') in ['previous', 'save_exit', 'next']:
                 return response_data, status.HTTP_303_SEE_OTHER, {}

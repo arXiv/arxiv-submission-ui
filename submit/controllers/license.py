@@ -7,6 +7,7 @@ Creates an event of type `core.events.event.SelectLicense`
 from typing import Tuple, Dict, Any
 
 from werkzeug import MultiDict
+from werkzeug.exceptions import InternalServerError
 from flask import url_for
 from wtforms import Form
 from wtforms.fields import RadioField
@@ -72,12 +73,20 @@ def license(method: str, params: MultiDict, submission_id: int) -> Response:
                     form.errors     # Causes the form to initialize errors.
                     form._errors['events'] = [ie.message for ie
                                               in e.event_exceptions]
+                    logger.debug('InvalidStack; return bad request')
                     return response_data, status.HTTP_400_BAD_REQUEST, {}
-                if params.get('action') in ['previous', 'save_exit', 'next']:
-                    return response_data, status.HTTP_303_SEE_OTHER, {}
+                except events.exceptions.SaveError as e:
+                    logger.error('Could not save primary event')
+                    raise InternalServerError(
+                        'There was a problem saving this operation'
+                    ) from e
         else:   # Form data were invalid.
+            logger.debug('Invalid form data; return bad request')
             return response_data, status.HTTP_400_BAD_REQUEST, {}
-
+    if params.get('action') in ['previous', 'save_exit', 'next']:
+        logger.debug('Redirect to %s', params.get('action'))
+        return response_data, status.HTTP_303_SEE_OTHER, {}
+    logger.debug('Nothing to do, return 200')
     return response_data, status.HTTP_200_OK, {}
 
 

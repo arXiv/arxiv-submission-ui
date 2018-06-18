@@ -4,35 +4,36 @@
 
 {% block within_content %}
 <h2 class="is-size-4">Choose a primary classification</h2>
-<div class="field">
-  <label class="label">Archive <span class="icon has-text-link"><i class="fa fa-question-circle"></i></span></label>
+<form method="POST" action="{{ url_for('ui.classification', submission_id=submission_id) }}">
+  {% with field = form.category %}
   <div class="control">
-    <div class="select">
-      <select>
-        <option>archive1</option>
-        <option>archive2</option>
-      </select>
+    {{ field.label }}
+    {% if field.errors %}
+      {{ field(class="input is-warning")|safe }}
+    {% else %}
+      {{ field(class="input")|safe }}
+    {% endif %}
+    {% if field.errors %}
+      <div class="help is-warning">
+        {% for error in field.errors %}
+            {{ error }}
+        {% endfor %}
+      </div>
+    {% endif %}
+    {% if field.description %}
+    <p class="help has-text-grey">
+      {{ field.description|safe }}
+    </p>
+    {% endif %}
+  </div>
+  {% endwith %}
+
+  <div class="message is-link is-inline-block submit-nav">
+    <div class="message-body">
+      <p><span class="icon has-text-link"><i class="fa fa-info-circle"></i></span>
+      You may add archives to the list and change defaults in your <a href="#">user account settings</a>.</p>
     </div>
   </div>
-</div>
-<div class="field">
-  <label class="label">Subject <span class="icon has-text-link"><i class="fa fa-question-circle"></i></span></label>
-  <div class="control">
-    <div class="select">
-      <select>
-        <option>subject1</option>
-        <option>subject2</option>
-      </select>
-    </div>
-  </div>
-</div>
-
-<div class="message is-link is-inline-block submit-nav">
-  <div class="message-body">
-    <p><span class="icon has-text-link"><i class="fa fa-info-circle"></i></span>
-    You may add archives to the list and change defaults in your <a href="#">user account settings</a>.</p>
-</div>
-</div>
-
-{{ submit_macros.submit_nav() }}
+  {{ submit_macros.submit_nav() }}
+</form>
 {% endblock within_content %}

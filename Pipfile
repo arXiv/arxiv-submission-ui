@@ -1,27 +1,21 @@
 [[source]]
-
 url = "https://pypi.python.org/simple"
 verify_ssl = true
 name = "pypi"
 
-
 [packages]
-
 arxiv-base = "==0.7.1"
-arxiv-submission-events = "==0.2"
 dataclasses = "*"
-flask = "*"
+Flask = "*"
 jsonschema = "*"
-uwsgi = "*"
-wtforms = "==2.1"
-pyyaml = "*"
+uWSGI = "*"
+WTForms = "==2.1"
+PyYAML = "*"
 pytz = "*"
-dev = "*"
-sqlalchemy = "*"
-
+SQLAlchemy = "*"
+arxiv-submission-events = "==0.2.2"
 
 [dev-packages]
-
 "nose2" = "*"
 pylint = "*"
 pydocstyle = "*"

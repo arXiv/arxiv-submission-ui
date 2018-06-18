@@ -6,6 +6,8 @@ Creates an event of type `core.events.event.AcceptPolicy`
 
 from typing import Tuple, Dict, Any
 
+from werkzeug import MultiDict
+from werkzeug.exceptions import InternalServerError
 from flask import url_for
 from wtforms import Form, BooleanField
 from wtforms.validators import InputRequired
@@ -23,7 +25,7 @@ Response = Tuple[Dict[str, Any], int, Dict[str, Any]]  # pylint: disable=C0103
 
 
 @flow_control('ui.license', 'ui.classification', 'ui.user')
-def policy(method: str, params: dict, submission_id: int) -> Response:
+def policy(method: str, params: MultiDict, submission_id: int) -> Response:
     """Convert policy form data into an `AcceptPolicy` event."""
     logger.debug(f'method: {method}, submission: {submission_id}. {params}')
     submission = load_submission(submission_id)
@@ -54,6 +56,11 @@ def policy(method: str, params: dict, submission_id: int) -> Response:
                     form._errors['events'] = [ie.message for ie
                                               in e.event_exceptions]
                     return response_data, status.HTTP_400_BAD_REQUEST, {}
+                except events.exceptions.SaveError as e:
+                    logger.error('Could not save primary event')
+                    raise InternalServerError(
+                        'There was a problem saving this operation'
+                    ) from e
                 if params.get('action') in ['previous', 'save_exit', 'next']:
                     return response_data, status.HTTP_303_SEE_OTHER, {}
 

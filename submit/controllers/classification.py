@@ -109,7 +109,7 @@ class PrimaryClassificationForm(Form):
 
     CATEGORIES = [
         (archive['name'], [
-            (category_id, category['name'])
+            (category_id, f"{category['name']} ({category_id})")
             for category_id, category in taxonomy.CATEGORIES.items()
             if category['is_active'] and category['in_archive'] == archive_id
         ])

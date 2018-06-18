@@ -8,27 +8,31 @@
 
 <div class="message is-info is-inline-block submit-nav">
   <div class="message-body">
-    <p>
-      <span class="tag is-small is-link">{{ primary.id }}</span> {{ primary.name }}
+    <p class="has-text-weight-bold">
+      <span class="tag is-link">{{ primary.id }}</span> {{ primary.name }}
     </p>
 
     {% for category, (display, subform) in formset.items() %}
 
     <form method="POST" class="form form-margin" action="{{ url_for('ui.cross_list', submission_id=submission_id) }}">
-      {{ subform.operation }}
-      {{ subform.category()|safe }}
-      <span class="tag is-small is-dark">{{ subform.category.data }}</span> <span>{{ display }}</span>
-
-      <button class="button is-link is-danger is-small">&#xf1f8;</button>
+      <p style="margin-bottom: .5em">
+        {{ subform.operation }}
+        {{ subform.category()|safe }}
+          <span class="tag" style="border: 1px solid #999;">{{ subform.category.data }}</span> <span>{{ display }}</span>
+        <button class="button is-outlined is-link is-small" style="border: 0" aria-label="remove">
+          <span class="icon"><i class="fa fa-trash"></i>
+        </button>
+      </p>
     </form>
     {% endfor %}
+
   </div>
 </div>
 
 <form method="POST" action="{{ url_for('ui.cross_list', submission_id=submission_id) }}">
   {{ form.operation }}
   {% with field = form.category %}
-  <label>Add another cross-list category</label>
+  <label>Add a cross-list category</label>
   <div class="field has-addons">
     <div class="control">
       <div class="select">

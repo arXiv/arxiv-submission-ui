@@ -14,6 +14,7 @@ PyYAML = "*"
 pytz = "*"
 SQLAlchemy = "*"
 "3a3786f" = {path = "./../arxiv-submission-core/core"}
+arxiv-submission-events = "==0.2.3"
 
 [dev-packages]
 "nose2" = "*"

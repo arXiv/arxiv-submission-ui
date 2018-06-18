@@ -5,14 +5,17 @@
 {% block within_content %}
 <h2 class="is-size-4">Choose cross-list classifications (optional)</h2>
 
+<div class="message is-info is-inline-block submit-nav">
+  <div class="message-body">
+
 {% for category, (display, subform) in formset.items() %}
 
 <form method="POST" class="form form-margin" action="{{ url_for('ui.cross_list', submission_id=submission_id) }}">
   {{ subform.operation }}
   <div class="field has-addons">
-    <div class="control is-expanded">
+    <div class="control">
       {{ subform.category()|safe }}
-      <input name="display" type="text" class="input" value="{{ display }}" readonly=True />
+      <span class=""></span>{{ subform.category.data }} <span class="input">{{ display }}</span>
     </div>
     <div class="control">
       <button class="button is-link is-danger">Remove</button>
@@ -20,18 +23,22 @@
   </div>
 </form>
 {% endfor %}
+  </div>
+</div>
 
 <form method="POST" action="{{ url_for('ui.cross_list', submission_id=submission_id) }}">
   {{ form.operation }}
   {% with field = form.category %}
   <label>Add another cross-list category</label>
   <div class="field has-addons">
-    <div class="control is-expanded">
+    <div class="control">
+      <div class="select">
       {% if field.errors %}
-        {{ field(class="input is-warning")|safe }}
+        {{ field(class="is-warning")|safe }}
       {% else %}
-        {{ field(class="input")|safe }}
+        {{ field()|safe }}
       {% endif %}
+      </div>
       {% if field.errors %}
         <div class="help is-warning">
           {% for error in field.errors %}
@@ -50,23 +57,20 @@
     </div>
   </div>
     {% endwith %}
-  <div class="field">
-    <div class="control">
-      <button class="button">
-        <span class="icon"><i class="fa fa-plus"></i></span>
-        <span>Add Another Classification</span>
-      </button>
+
+    <div class="message is-info is-inline-block submit-nav">
+      <div class="message-body">
+        <p>
+          <span class="icon has-text-link"><i class="fa fa-info-circle"></i></span>
+          Adding more than three cross-list classifications will result in a delay
+          in the acceptance of your submission.
+        </p>
+      </div>
     </div>
-  </div>
+
+    {{ submit_macros.submit_nav() }}
 </form>
 
 
-<div class="message is-info is-inline-block submit-nav">
-  <div class="message-body">
-    <p><span class="icon has-text-link"><i class="fa fa-info-circle"></i></span>
-    More than three cross-list classifications will result in a delay in the acceptance of your submission.</p>
-  </div>
-</div>
 
-{{ submit_macros.submit_nav() }}
 {% endblock within_content %}

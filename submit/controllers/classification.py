@@ -145,7 +145,7 @@ def classification(method: str, params: MultiDict,
     return response_data, status.HTTP_200_OK, {}
 
 
-@flow_control('ui.classification', 'ui.upload', 'ui.user')
+@flow_control('ui.classification', 'ui.file_upload', 'ui.user')
 def cross_list(method: str, params: MultiDict, submission_id: int) -> Response:
     """Generate an `AddSecondaryClassification` event."""
     # TODO: Create a concrete User from cookie info.

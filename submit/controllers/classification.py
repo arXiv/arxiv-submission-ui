@@ -26,7 +26,7 @@ def _data_from_submission(params: MultiDict,
                           submission: events.domain.Submission) -> MultiDict:
     if submission.primary_classification \
             and submission.primary_classification.category:
-        params['category'] = submission.primary_classification
+        params['category'] = submission.primary_classification.category
     return params
 
 
@@ -58,12 +58,14 @@ def classification(method: str, params: MultiDict,
             if not submission.primary_classification \
                     or submission.primary_classification.category != category:
                 try:
+                    logger.debug('Setting new primary: %s', category)
                     # Create SelectLicense event
                     submission, stack = events.save(  # pylint: disable=W0612
                         events.SetPrimaryClassification(creator=submitter,
                                                         category=category),
                         submission_id=submission_id
                     )
+                    print(submission.primary_classification)
                 except events.exceptions.InvalidStack as e:
                     logger.error('Could not set primary: %s', str(e))
                     form.errors     # Causes the form to initialize errors.
@@ -79,9 +81,9 @@ def classification(method: str, params: MultiDict,
         else:   # Form data were invalid.
             logger.debug('Invalid form data; return bad request')
             return response_data, status.HTTP_400_BAD_REQUEST, {}
-    if params.get('action') in ['previous', 'save_exit', 'next']:
-        logger.debug('Redirect to %s', params.get('action'))
-        return response_data, status.HTTP_303_SEE_OTHER, {}
+        if params.get('action') in ['previous', 'save_exit', 'next']:
+            logger.debug('Redirect to %s', params.get('action'))
+            return response_data, status.HTTP_303_SEE_OTHER, {}
     logger.debug('Nothing to do, return 200')
     return response_data, status.HTTP_200_OK, {}
 

@@ -5,24 +5,23 @@
 {% block within_content %}
 <h2 class="is-size-4">Choose cross-list classifications (optional)</h2>
 
+
 <div class="message is-info is-inline-block submit-nav">
   <div class="message-body">
+    <p>
+      <span class="tag is-small is-link">{{ primary.id }}</span> {{ primary.name }}
+    </p>
 
-{% for category, (display, subform) in formset.items() %}
+    {% for category, (display, subform) in formset.items() %}
 
-<form method="POST" class="form form-margin" action="{{ url_for('ui.cross_list', submission_id=submission_id) }}">
-  {{ subform.operation }}
-  <div class="field has-addons">
-    <div class="control">
+    <form method="POST" class="form form-margin" action="{{ url_for('ui.cross_list', submission_id=submission_id) }}">
+      {{ subform.operation }}
       {{ subform.category()|safe }}
-      <span class=""></span>{{ subform.category.data }} <span class="input">{{ display }}</span>
-    </div>
-    <div class="control">
-      <button class="button is-link is-danger">Remove</button>
-    </div>
-  </div>
-</form>
-{% endfor %}
+      <span class="tag is-small is-dark">{{ subform.category.data }}</span> <span>{{ display }}</span>
+
+      <button class="button is-link is-danger is-small">&#xf1f8;</button>
+    </form>
+    {% endfor %}
   </div>
 </div>
 

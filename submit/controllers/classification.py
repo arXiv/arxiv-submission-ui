@@ -106,7 +106,10 @@ def classification(method: str, params: MultiDict,
     params['operation'] = ClassificationForm.ADD     # Always add a primary.
 
     form = ClassificationForm(params)
-    response_data = {'submission_id': submission_id, 'form': form}
+    response_data = {
+        'submission_id': submission_id,
+        'form': form
+    }
 
     if method == 'POST':
         if form.validate():
@@ -164,8 +167,15 @@ def cross_list(method: str, params: MultiDict, submission_id: int) -> Response:
     form = ClassificationForm(params)
     form.operation._value = lambda: form.operation.data
     _filter_choices(form, submission)
-    response_data = {'submission_id': submission_id, 'form': form,
-                     'formset': formset}
+    response_data = {
+        'submission_id': submission_id,
+        'form': form,
+        'formset': formset,
+        'primary': {
+            'id': submission.primary_classification.category,
+            'name': taxonomy.CATEGORIES[submission.primary_classification.category]['name']
+        }
+    }
 
     if method == 'POST':
         if form.validate():

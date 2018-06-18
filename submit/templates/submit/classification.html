@@ -8,11 +8,13 @@
   {% with field = form.category %}
   <div class="control">
     {{ field.label }}
+    <div class="select">
     {% if field.errors %}
-      {{ field(class="input is-warning")|safe }}
+      {{ field(class="is-warning")|safe }}
     {% else %}
-      {{ field(class="input")|safe }}
+      {{ field()|safe }}
     {% endif %}
+    </div>
     {% if field.errors %}
       <div class="help is-warning">
         {% for error in field.errors %}

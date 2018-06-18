@@ -29,8 +29,6 @@ def policy(method: str, params: MultiDict, submission_id: int) -> Response:
     """Convert policy form data into an `AcceptPolicy` event."""
     logger.debug(f'method: {method}, submission: {submission_id}. {params}')
     submission = load_submission(submission_id)
-    form = PolicyForm(params)
-    response_data = {'submission_id': submission_id, 'form': form}
 
     # TODO: Create a concrete User event from cookie info.
     submitter = events.domain.User(1, email='ian413@cornell.edu',
@@ -38,6 +36,9 @@ def policy(method: str, params: MultiDict, submission_id: int) -> Response:
 
     if method == 'GET':
         params['policy'] = submission.submitter_accepts_policy
+
+    form = PolicyForm(params)
+    response_data = {'submission_id': submission_id, 'form': form}
 
     if method == 'POST':
         if form.validate():
@@ -61,9 +62,8 @@ def policy(method: str, params: MultiDict, submission_id: int) -> Response:
                     raise InternalServerError(
                         'There was a problem saving this operation'
                     ) from e
-                if params.get('action') in ['previous', 'save_exit', 'next']:
-                    return response_data, status.HTTP_303_SEE_OTHER, {}
-
+            if params.get('action') in ['previous', 'save_exit', 'next']:
+                return response_data, status.HTTP_303_SEE_OTHER, {}
         else:   # Form data were invalid.
             return response_data, status.HTTP_400_BAD_REQUEST, {}
 

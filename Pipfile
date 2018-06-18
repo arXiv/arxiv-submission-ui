@@ -13,7 +13,7 @@ WTForms = "==2.1"
 PyYAML = "*"
 pytz = "*"
 SQLAlchemy = "*"
-arxiv-submission-events = "==0.2.2"
+"3a3786f" = {path = "./../arxiv-submission-core/core"}
 
 [dev-packages]
 "nose2" = "*"

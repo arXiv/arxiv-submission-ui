@@ -109,3 +109,6 @@ class OptGroupSelectField(SelectField):
                 if value == self.data:
                     return
         raise ValueError(self.gettext('Not a valid choice'))
+
+    def _value(self):
+        return self.data

@@ -115,12 +115,16 @@ def classification(submission_id):
         return redirect(headers['Location'], code=code)
 
 
-@blueprint.route('/<int:submission_id>/crosslist', methods=['GET'])
-def crosslist(submission_id):
+@blueprint.route('/<int:submission_id>/cross_list', methods=['GET', 'POST'])
+def cross_list(submission_id):
     """Render step 6, secondary classes."""
+    request_data = MultiDict(request.form.items(multi=True))
+    data, code, headers = controllers.cross_list(request.method, request_data,
+                                                 submission_id)
     rendered = render_template(
-        "submit/secondary_class.html",
-        pagetitle='Choose Secondary Classifications'
+        "submit/cross_list.html",
+        pagetitle='Choose Secondary Classifications',
+        **data
     )
     response = make_response(rendered, status.HTTP_200_OK)
     return response

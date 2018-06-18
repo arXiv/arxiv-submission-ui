@@ -6,7 +6,8 @@ from werkzeug.exceptions import InternalServerError, NotFound
 from wtforms import Form
 from arxiv import status
 import events
-from submit.controllers.classification import classification, PrimaryClassificationForm
+from submit.controllers.classification import classification, \
+    ClassificationForm
 
 
 class TestSetPrimaryClassification(TestCase):

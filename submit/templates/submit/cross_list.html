@@ -5,44 +5,61 @@
 {% block within_content %}
 <h2 class="is-size-4">Choose cross-list classifications (optional)</h2>
 
-<div class="message is-info is-inline-block">
-  <div class="message-body">
-    <p class="is-subtitle"><strong>Primary: Classification Here</strong></p>
-    <p>Any cross-list classes would go here also.</p>
-  </div>
-</div>
+{% for category, (display, subform) in formset.items() %}
 
-<div class="field">
-  <div class="control">
-    <label class="label">Archive <span class="icon has-text-link"><i class="fa fa-question-circle"></i></span></label>
-    <div class="select">
-      <select>
-        <option>archive1</option>
-        <option>archive2</option>
-      </select>
+<form method="POST" class="form form-margin" action="{{ url_for('ui.cross_list', submission_id=submission_id) }}">
+  {{ subform.operation }}
+  <div class="field has-addons">
+    <div class="control is-expanded">
+      {{ subform.category()|safe }}
+      <input name="display" type="text" class="input" value="{{ display }}" readonly=True />
+    </div>
+    <div class="control">
+      <button class="button is-link is-danger">Remove</button>
     </div>
   </div>
-</div>
-<div class="field">
-  <div class="control">
-    <label class="label">Subject <span class="icon has-text-link"><i class="fa fa-question-circle"></i></span></label>
-    <div class="select">
-      <select>
-        <option>subject1</option>
-        <option>subject2</option>
-      </select>
+</form>
+{% endfor %}
+
+<form method="POST" action="{{ url_for('ui.cross_list', submission_id=submission_id) }}">
+  {{ form.operation }}
+  {% with field = form.category %}
+  <label>Add another cross-list category</label>
+  <div class="field has-addons">
+    <div class="control is-expanded">
+      {% if field.errors %}
+        {{ field(class="input is-warning")|safe }}
+      {% else %}
+        {{ field(class="input")|safe }}
+      {% endif %}
+      {% if field.errors %}
+        <div class="help is-warning">
+          {% for error in field.errors %}
+              {{ error }}
+          {% endfor %}
+        </div>
+      {% endif %}
+      {% if field.description %}
+      <p class="help has-text-grey">
+        {{ field.description|safe }}
+      </p>
+      {% endif %}
+    </div>
+    <div class="control">
+      <button class="button is-link">Add</button>
     </div>
   </div>
-</div>
-
-<div class="field">
-  <div class="control">
-    <button class="button">
-      <span class="icon"><i class="fa fa-plus"></i></span>
-      <span>Add Another Classification</span>
-    </button>
+    {% endwith %}
+  <div class="field">
+    <div class="control">
+      <button class="button">
+        <span class="icon"><i class="fa fa-plus"></i></span>
+        <span>Add Another Classification</span>
+      </button>
+    </div>
   </div>
-</div>
+</form>
+
 
 <div class="message is-info is-inline-block submit-nav">
   <div class="message-body">

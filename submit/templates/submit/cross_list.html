@@ -8,14 +8,14 @@
 
 <div class="message is-info is-inline-block submit-nav">
   <div class="message-body">
-    <p class="has-text-weight-bold">
+    <p class="has-text-weight-bold" style="margin-bottom: .5em">
       <span class="tag is-link">{{ primary.id }}</span> {{ primary.name }}
     </p>
 
     {% for category, (display, subform) in formset.items() %}
 
     <form method="POST" class="form form-margin" action="{{ url_for('ui.cross_list', submission_id=submission_id) }}">
-      <p style="margin-bottom: .5em">
+      <p>
         {{ subform.operation }}
         {{ subform.category()|safe }}
           <span class="tag" style="border: 1px solid #999;">{{ subform.category.data }}</span> <span>{{ display }}</span>

@@ -11,7 +11,7 @@
 <p><span class="label">Affiliation:</span> Cornell University</p>
 <p><span class="label">E-mail:</span> ian413@cornell.edu</p>
 
-<form method="POST" action="{{ url_for('ui.verify_user') }}">
+<form method="POST" action="{% if submission_id %}{{ url_for('ui.verify_user', submission_id=submission_id) }}{% else %}{{ url_for('ui.verify_user') }}{% endif %}">
   <div class="field">
     <div class="control">
       <div class="checkbox">

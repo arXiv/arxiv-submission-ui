@@ -27,6 +27,7 @@ def verify_user(submission_id: Optional[int] = None):
     data, code, headers = controllers.verify_user(request.method, request_data,
                                                   submission_id)
     if code in [status.HTTP_200_OK, status.HTTP_400_BAD_REQUEST]:
+        print(data)
         rendered = render_template(
             "submit/verify_user.html",
             pagetitle='Verify User Information',

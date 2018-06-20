@@ -2,28 +2,28 @@
 
   <div class="buttons submit-nav" role="navigation">
       <button name="action" class="button" value="previous" aria-label="Previous">Previous</button>
-      <button name="action" class="button" value="save_exit" aria-label="Save and Exit">Save and Exit</button>
+      <button name="action" type="submit" class="button" value="save_exit" aria-label="Save and Exit">Save and Exit</button>
       <button name="action" class="button is-link" value="next" aria-label="Next">Next</button>
   </div>
 
 {% endmacro %}
 
-{% macro progress_bar() %}
+{% macro progress_bar(submission_id) %}
 {# TODO: make this into a real navigation mechanism, with variables to relate
    tooltips, page name, template, and page order. Also real routenames instead
    of this initial hack. #}
 
-  <span><a class="button" title="Verify user info" href="http://127.0.0.1:5000/">1</a></span>
-  <span><a class="button" title="Authorship" href="http://127.0.0.1:5000/authorship">2</a></span>
-  <span><a class="button" title="Choose license" href="http://127.0.0.1:5000/license">3</a></span>
-  <span><a class="button" title="Acknowledge policy" href="http://127.0.0.1:5000/policy_ack">4</a></span>
-  <span><a class="button" title="Primary class" href="http://127.0.0.1:5000/classification">5</a></span>
-  <span><a class="button" title="Secondary class" href="http://127.0.0.1:5000/cross">6</a></span>
-  <span><a class="button" title="File upload" href="http://127.0.0.1:5000/file_upload">7</a></span>
-  <span><a class="button" title="File process" href="http://127.0.0.1:5000/file_process">8</a></span>
-  <span><a class="button" title="Add metadata" href="http://127.0.0.1:5000/add_metadata">9</a></span>
-  <span><a class="button" title="Add optional metadata" href="http://127.0.0.1:5000/add_optional_metadata">10</a></span>
-  <span><a class="button" title="Final preview" href="http://127.0.0.1:5000/final_preview">11</a></span>
-  <span><a class="button" title="Submission confirmed" href="http://127.0.0.1:5000/confirm_submit">12</a></span>
+  <span><a class="button" title="Verify user info" href="{% if submission_id %}{{ url_for('ui.verify_user', submission_id=submission_id) }}{% endif %}">1</a></span>
+  <span><a class="button" title="Authorship" href="{% if submission_id %}{{ url_for('ui.authorship', submission_id=submission_id) }}{% else %}{{ url_for('ui.verify_user') }}{% endif %}">2</a></span>
+  <span><a class="button" title="Choose license" href="{% if submission_id %}{{ url_for('ui.license', submission_id=submission_id) }}{% else %}{{ url_for('ui.verify_user') }}{% endif %}">3</a></span>
+  <span><a class="button" title="Acknowledge policy" href="{% if submission_id %}{{ url_for('ui.policy', submission_id=submission_id) }}{% else %}{{ url_for('ui.verify_user') }}{% endif %}">4</a></span>
+  <span><a class="button" title="Primary class" href="{% if submission_id %}{{ url_for('ui.classification', submission_id=submission_id) }}{% else %}{{ url_for('ui.verify_user') }}{% endif %}">5</a></span>
+  <span><a class="button" title="Secondary class" href="{% if submission_id %}{{ url_for('ui.crosslist', submission_id=submission_id) }}{% else %}{{ url_for('ui.verify_user') }}{% endif %}">6</a></span>
+  <span><a class="button" title="File upload" href="{% if submission_id %}{{ url_for('ui.file_upload', submission_id=submission_id) }}{% else %}{{ url_for('ui.verify_user') }}{% endif %}">7</a></span>
+  <span><a class="button" title="File process" href="{% if submission_id %}{{ url_for('ui.file_process', submission_id=submission_id) }}{% else %}{{ url_for('ui.verify_user') }}{% endif %}">8</a></span>
+  <span><a class="button" title="Add metadata" href="{% if submission_id %}{{ url_for('ui.add_metadata', submission_id=submission_id) }}{% else %}{{ url_for('ui.verify_user') }}{% endif %}">9</a></span>
+  <span><a class="button" title="Add optional metadata" href="{% if submission_id %}{{ url_for('ui.add_optional_metadata', submission_id=submission_id) }}{% else %}{{ url_for('ui.verify_user') }}{% endif %}">10</a></span>
+  <span><a class="button" title="Final preview" href="{% if submission_id %}{{ url_for('ui.final_preview', submission_id=submission_id) }}{% else %}{{ url_for('ui.verify_user') }}{% endif %}">11</a></span>
+  <span><a class="button" title="Submission confirmed" href="{% if submission_id %}{{ url_for('ui.confirm_submit', submission_id=submission_id) }}{% else %}{{ url_for('ui.verify_user') }}{% endif %}">12</a></span>
 
 {% endmacro %}

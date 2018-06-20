@@ -112,6 +112,11 @@ def verify_user(method: str, params: MultiDict,
                     form._errors['events'] = [ie.message for ie
                                               in e.event_exceptions]
                     return response_data, status.HTTP_400_BAD_REQUEST, {}
+                except events.exceptions.SaveError as e:
+                    logger.error('Could not save primary event')
+                    raise InternalServerError(
+                        'There was a problem saving this operation'
+                    ) from e
 
         # Either the form data were invalid, or the user did not check the
         # "verify" box.

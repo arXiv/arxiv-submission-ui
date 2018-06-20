@@ -27,12 +27,13 @@ def verify_user(submission_id: Optional[int] = None):
     data, code, headers = controllers.verify_user(request.method, request_data,
                                                   submission_id)
     if code in [status.HTTP_200_OK, status.HTTP_400_BAD_REQUEST]:
+        print(data)
         rendered = render_template(
             "submit/verify_user.html",
             pagetitle='Verify User Information',
             **data
         )
-        response = make_response(rendered, status.HTTP_200_OK)
+        response = make_response(rendered, code)
         return response
     elif code == status.HTTP_303_SEE_OTHER:
         return redirect(headers['Location'], code=code)
@@ -51,7 +52,7 @@ def authorship(submission_id):
             pagetitle='Confirm Authorship',
             **data
         )
-        response = make_response(rendered, status.HTTP_200_OK)
+        response = make_response(rendered, code)
         return response
     elif code == status.HTTP_303_SEE_OTHER:
         return redirect(headers['Location'], code=code)
@@ -70,38 +71,49 @@ def license(submission_id):
             pagetitle='Select a License',
             **data
         )
-        response = make_response(rendered, status.HTTP_200_OK)
+        response = make_response(rendered, code)
         return response
     elif code == status.HTTP_303_SEE_OTHER:
         return redirect(headers['Location'], code=code)
 
 
-@blueprint.route('/<int:submission_id>/policy', methods=['GET'])
+@blueprint.route('/<int:submission_id>/policy', methods=['GET', 'POST'])
 def policy(submission_id):
     """Render step 4, policy agreement."""
-    response, code, headers = controllers.policy(request.args, submission_id)
+    request_data = MultiDict(request.form.items(multi=True))
+    data, code, headers = controllers.policy(request.method, request_data,
+                                             submission_id)
 
-    if code == status.HTTP_200_OK:
+    if code in [status.HTTP_200_OK, status.HTTP_400_BAD_REQUEST]:
         rendered = render_template(
             "submit/policy.html",
             pagetitle='Acknowledge Policy Statement',
-            **response
+            **data
         )
-        response = make_response(rendered, status.HTTP_200_OK)
+        response = make_response(rendered, code)
         return response
     elif code == status.HTTP_303_SEE_OTHER:
         return redirect(headers['Location'], code=code)
 
 
-@blueprint.route('/<int:submission_id>/classification', methods=['GET'])
+@blueprint.route('/<int:submission_id>/classification',
+                 methods=['GET', 'POST'])
 def classification(submission_id):
     """Render step 5, choose classification."""
-    rendered = render_template(
-        "submit/classification.html",
-        pagetitle='Choose a Primary Classification'
-    )
-    response = make_response(rendered, status.HTTP_200_OK)
-    return response
+    request_data = MultiDict(request.form.items(multi=True))
+    data, code, headers = controllers.classification(request.method,
+                                                     request_data,
+                                                     submission_id)
+    if code in [status.HTTP_200_OK, status.HTTP_400_BAD_REQUEST]:
+        rendered = render_template(
+            "submit/classification.html",
+            pagetitle='Choose a Primary Classification',
+            **data
+        )
+        response = make_response(rendered, code)
+        return response
+    elif code == status.HTTP_303_SEE_OTHER:
+        return redirect(headers['Location'], code=code)
 
 
 @blueprint.route('/<int:submission_id>/crosslist', methods=['GET'])

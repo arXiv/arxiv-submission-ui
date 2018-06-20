@@ -128,7 +128,7 @@ def cross_list(submission_id: int) -> Response:
             pagetitle='Choose Secondary Classifications',
             **data
         )
-        response = make_response(rendered, status.HTTP_200_OK)
+        response = make_response(rendered, code)
     elif code == status.HTTP_303_SEE_OTHER:
         return redirect(headers['Location'], code=code)
     return response
@@ -137,44 +137,61 @@ def cross_list(submission_id: int) -> Response:
 @blueprint.route('/<int:submission_id>/file_upload', methods=['GET'])
 def file_upload(submission_id: int) -> Response:
     """Render step 7, file add or edit."""
+    code = status.HTTP_200_OK
     rendered = render_template(
         "submit/file_upload.html",
         pagetitle='Add or Edit Files'
     )
-    response = make_response(rendered, status.HTTP_200_OK)
+    response = make_response(rendered, code)
     return response
 
 
 @blueprint.route('/<int:submission_id>/file_process', methods=['GET'])
 def file_process(submission_id: int) -> Response:
     """Render step 8, file processing."""
+    code = status.HTTP_200_OK
     rendered = render_template(
         "submit/file_process.html",
         pagetitle='Process Files'
     )
-    response = make_response(rendered, status.HTTP_200_OK)
+    response = make_response(rendered, code)
     return response
 
 
-@blueprint.route('/<int:submission_id>/add_metadata', methods=['GET'])
+@blueprint.route('/<int:submission_id>/add_metadata', methods=['GET', 'POST'])
 def add_metadata(submission_id: int) -> Response:
     """Render step 9, metadata."""
-    rendered = render_template(
-        "submit/add_metadata.html",
-        pagetitle='Add or Edit Metadata'
+    request_data = MultiDict(request.form.items(multi=True))
+    data, code, headers = controllers.metadata(request.method, request_data,
+                                               submission_id)
+    if code in [status.HTTP_200_OK, status.HTTP_400_BAD_REQUEST]:
+        rendered = render_template(
+            "submit/add_metadata.html",
+            pagetitle='Add or Edit Metadata',
+            **data
         )
-    response = make_response(rendered, status.HTTP_200_OK)
+        response = make_response(rendered, code)
+    elif code == status.HTTP_303_SEE_OTHER:
+        return redirect(headers['Location'], code=code)
     return response
 
 
-@blueprint.route('/<int:submission_id>/add_optional_metadata', methods=['GET'])
+@blueprint.route('/<int:submission_id>/add_optional_metadata',
+                 methods=['GET', 'POST'])
 def add_optional_metadata(submission_id: int) -> Response:
     """Render step 9, metadata."""
-    rendered = render_template(
-        "submit/add_optional_metadata.html",
-        pagetitle='Add or Edit Metadata'
-        )
-    response = make_response(rendered, status.HTTP_200_OK)
+    request_data = MultiDict(request.form.items(multi=True))
+    data, code, headers = controllers.optional(request.method, request_data,
+                                               submission_id)
+    if code in [status.HTTP_200_OK, status.HTTP_400_BAD_REQUEST]:
+        rendered = render_template(
+            "submit/add_optional_metadata.html",
+            pagetitle='Add or Edit Metadata',
+            **data
+            )
+        response = make_response(rendered, code)
+    elif code == status.HTTP_303_SEE_OTHER:
+        response = redirect(headers['Location'], code=code)
     return response
 
 
@@ -185,7 +202,8 @@ def final_preview(submission_id: int) -> Response:
         "submit/final_preview.html",
         pagetitle='Preview and Approve'
     )
-    response = make_response(rendered, status.HTTP_200_OK)
+    code = status.HTTP_200_OK
+    response = make_response(rendered, code)
     return response
 
 
@@ -196,5 +214,6 @@ def confirm_submit(submission_id: int) -> Response:
         "submit/confirm_submit.html",
         pagetitle='Submission Confirmed'
     )
-    response = make_response(rendered, status.HTTP_200_OK)
+    code = status.HTTP_200_OK
+    response = make_response(rendered, code)
     return response

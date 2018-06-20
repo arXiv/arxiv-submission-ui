@@ -8,7 +8,7 @@ from typing import Tuple, Dict, Any, List
 from werkzeug import MultiDict
 from werkzeug.exceptions import InternalServerError
 from flask import url_for
-from wtforms import Form, SelectField, widgets, HiddenField
+from wtforms import Form, SelectField, widgets, HiddenField, validators
 
 from arxiv import status, taxonomy
 from arxiv.base import logging
@@ -42,7 +42,7 @@ class ClassificationForm(Form):
         (ADD, 'Add'),
         (REMOVE, 'Remove')
     ]
-    operation = HiddenField(default=ADD)
+    operation = HiddenField(default=ADD, validators=[validators.optional()])
     category = OptGroupSelectField('Category', choices=CATEGORIES, default='')
 
 
@@ -106,6 +106,7 @@ def classification(method: str, params: MultiDict,
     params['operation'] = ClassificationForm.ADD     # Always add a primary.
 
     form = ClassificationForm(params)
+    _filter_choices(form, submission)
     response_data = {
         'submission_id': submission_id,
         'form': form
@@ -127,7 +128,6 @@ def classification(method: str, params: MultiDict,
                                                         category=category),
                         submission_id=submission_id
                     )
-                    print(submission.primary_classification)
                 except events.exceptions.InvalidStack as e:
                     logger.error('Could not set primary: %s', str(e))
                     form.errors     # Causes the form to initialize errors.
@@ -167,61 +167,72 @@ def cross_list(method: str, params: MultiDict, submission_id: int) -> Response:
     form = ClassificationForm(params)
     form.operation._value = lambda: form.operation.data
     _filter_choices(form, submission)
+    _primary = taxonomy.CATEGORIES[submission.primary_classification.category]
     response_data = {
         'submission_id': submission_id,
         'form': form,
         'formset': formset,
         'primary': {
             'id': submission.primary_classification.category,
-            'name': taxonomy.CATEGORIES[submission.primary_classification.category]['name']
+            'name': _primary['name']
         }
     }
 
-    if method == 'POST':
-        if form.validate():
-            logger.debug('Form is valid, with data: %s', str(form.data))
-            category = form.category.data
-            operation = form.operation.data
-            try:
-                if operation == ClassificationForm.REMOVE:
-                    submission, stack = events.save(  # pylint: disable=W0612
-                        events.RemoveSecondaryClassification(
-                            creator=submitter,
-                            category=category
-                        ),
-                        submission_id=submission_id
-                    )
-                elif operation == ClassificationForm.ADD:
-                    submission, stack = events.save(  # pylint: disable=W0612
-                        events.AddSecondaryClassification(creator=submitter,
-                                                          category=category),
-                        submission_id=submission_id
-                    )
-            except events.exceptions.InvalidStack as e:
-                logger.error('Could not add secondary: %s', str(e))
-                form.errors     # Causes the form to initialize errors.
-                form._errors['events'] = [ie.message for ie
-                                          in e.event_exceptions]
-                logger.debug('InvalidStack; return bad request')
-                return response_data, status.HTTP_400_BAD_REQUEST, {}
-            except events.exceptions.SaveError as e:
-                logger.error('Could not save primary event')
-                raise InternalServerError(
-                    'There was a problem saving this operation'
-                ) from e
+    action = params.get('action')
 
-            # Re-build the formset, to reflect changes that we just made.
-            response_data['formset'] = _formset_from_submission(submission)
-            # We want a fresh form here, since the POSTed data should now
-            # be reflected in the formset.
-            form = ClassificationForm()
-            form.operation._value = lambda: form.operation.data
-            _filter_choices(form, submission)
-            response_data['form'] = form
-        else:   # Form data were invalid.
-            logger.debug('Invalid form data; return bad request')
-            return response_data, status.HTTP_400_BAD_REQUEST, {}
-    if params.get('action') in ['previous', 'save_exit', 'next']:
+    if method == 'POST':
+        # Since the interface provides an "add" button to add cross-list
+        # categories, we only want to handle the form data if the user is not
+        # attempting to move to a different step.
+        if not action:
+            if form.validate():
+                logger.debug('Form is valid, with data: %s', str(form.data))
+                category = form.category.data
+                operation = form.operation.data
+                try:
+                    if operation == ClassificationForm.REMOVE:
+                        submission, _ = events.save(  # pylint: disable=W0612
+                            events.RemoveSecondaryClassification(
+                                creator=submitter,
+                                category=category
+                            ),
+                            submission_id=submission_id
+                        )
+                    elif operation == ClassificationForm.ADD:
+                        submission, _ = events.save(  # pylint: disable=W0612
+                            events.AddSecondaryClassification(
+                                creator=submitter,
+                                category=category
+                            ),
+                            submission_id=submission_id
+                        )
+                except events.exceptions.InvalidStack as e:
+                    logger.error('Could not add secondary: %s', str(e))
+                    form.errors     # Causes the form to initialize errors.
+                    form._errors['events'] = [ie.message for ie
+                                              in e.event_exceptions]
+                    logger.debug('InvalidStack; return bad request')
+                    return response_data, status.HTTP_400_BAD_REQUEST, {}
+                except events.exceptions.SaveError as e:
+                    logger.error('Could not save primary event')
+                    raise InternalServerError(
+                        'There was a problem saving this operation'
+                    ) from e
+
+                # Re-build the formset, to reflect changes that we just made.
+                response_data['formset'] = _formset_from_submission(submission)
+                # We want a fresh form here, since the POSTed data should now
+                # be reflected in the formset.
+                form = ClassificationForm()
+                form.operation._value = lambda: form.operation.data
+                _filter_choices(form, submission)
+                response_data['form'] = form
+
+            else:   # Form data were invalid.
+                logger.debug('Invalid form data; return bad request')
+                return response_data, status.HTTP_400_BAD_REQUEST, {}
+
+    if action in ['previous', 'save_exit', 'next']:
         logger.debug('Redirect to %s', params.get('action'))
         return response_data, status.HTTP_303_SEE_OTHER, {}
     logger.debug('Nothing to do, return 200')

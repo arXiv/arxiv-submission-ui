@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "2b2cc009fbf1fa3b7666e6ac39db01fbc8247ce9e014c3ccc48322f446f7e1e6"
+            "sha256": "701c9d6f390e33303dd02024dfef6bb9bfe47faea04ec1357e3cd2af37e5ae59"
         },
         "pipfile-spec": 6,
         "requires": {},
@@ -14,9 +14,6 @@
         ]
     },
     "default": {
-        "3a3786f": {
-            "path": "./../arxiv-submission-core/core"
-        },
         "arxiv-base": {
             "hashes": [
                 "sha256:e386f771296d2971d0435640a732dc3c77c4f7856ddabfe0daba9e3bafbd6dfb"

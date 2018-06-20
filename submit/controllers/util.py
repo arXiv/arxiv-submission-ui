@@ -38,8 +38,10 @@ def flow_control(prev_page: str, next_page: str, exit_page: str) -> Callable:
 
             def _get_target(page: str) -> str:
                 if submission_id:
-                    return url_for(page, submission_id=submission_id)
-                return url_for(page)
+                    url: str = url_for(page, submission_id=submission_id)
+                else:
+                    url = url_for(page)
+                return url
 
             if action == 'next':
                 headers.update({'Location': _get_target(next_page)})
@@ -80,7 +82,7 @@ def load_submission(submission_id: int) -> events.domain.Submission:
 class OptGroupSelectWidget(Select):
     """Select widget with optgroups."""
 
-    def __call__(self, field: SelectField, **kwargs: Dict) -> HTMLString:
+    def __call__(self, field: SelectField, **kwargs: Any) -> HTMLString:
         """Render the `select` element with `optgroup`s."""
         kwargs.setdefault('id', field.id)
         if self.multiple:
@@ -110,5 +112,6 @@ class OptGroupSelectField(SelectField):
                     return
         raise ValueError(self.gettext('Not a valid choice'))
 
-    def _value(self):
-        return self.data
+    def _value(self) -> str:
+        data: str = self.data
+        return data

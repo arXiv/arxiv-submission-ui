@@ -79,7 +79,8 @@ def _filter_choices(form: ClassificationForm,
     form.category.choices = [
         (archive, [
             (category, display) for category, display in archive_choices
-            if (category != submission.primary_classification.category
+            if ((not submission.primary_classification
+                 or category != submission.primary_classification.category)
                 and category not in secondaries)
             or category == selected
         ])

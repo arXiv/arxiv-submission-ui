@@ -18,7 +18,7 @@
   <span><a class="button" title="Choose license" href="{% if submission_id %}{{ url_for('ui.license', submission_id=submission_id) }}{% else %}{{ url_for('ui.verify_user') }}{% endif %}">3</a></span>
   <span><a class="button" title="Acknowledge policy" href="{% if submission_id %}{{ url_for('ui.policy', submission_id=submission_id) }}{% else %}{{ url_for('ui.verify_user') }}{% endif %}">4</a></span>
   <span><a class="button" title="Primary class" href="{% if submission_id %}{{ url_for('ui.classification', submission_id=submission_id) }}{% else %}{{ url_for('ui.verify_user') }}{% endif %}">5</a></span>
-  <span><a class="button" title="Secondary class" href="{% if submission_id %}{{ url_for('ui.cross_list', submission_id=submission_id) }}{% else %}{{ url_for('ui.verify_user') }}{% endif %}">6</a></span>
+  <span><a class="button" title="Cross-list" href="{% if submission_id %}{{ url_for('ui.cross_list', submission_id=submission_id) }}{% else %}{{ url_for('ui.verify_user') }}{% endif %}">6</a></span>
   <span><a class="button" title="File upload" href="{% if submission_id %}{{ url_for('ui.file_upload', submission_id=submission_id) }}{% else %}{{ url_for('ui.verify_user') }}{% endif %}">7</a></span>
   <span><a class="button" title="File process" href="{% if submission_id %}{{ url_for('ui.file_process', submission_id=submission_id) }}{% else %}{{ url_for('ui.verify_user') }}{% endif %}">8</a></span>
   <span><a class="button" title="Add metadata" href="{% if submission_id %}{{ url_for('ui.add_metadata', submission_id=submission_id) }}{% else %}{{ url_for('ui.verify_user') }}{% endif %}">9</a></span>

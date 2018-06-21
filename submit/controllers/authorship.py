@@ -42,7 +42,7 @@ def _data_from_submission(params: MultiDict,
 
 
 @flow_control('ui.verify_user', 'ui.license', 'ui.user')
-def authorship(method: str, params: dict, submission_id: int,
+def authorship(method: str, params: MultiDict, submission_id: int,
                user: Optional[events.domain.User] = None,
                client: Optional[events.domain.Client] = None) -> Response:
     """Convert authorship form data into an `AssertAuthorship` event."""
@@ -114,7 +114,7 @@ class AuthorshipForm(Form):
                          'on behalf of the author(s).',
                          validators=[optional()])
 
-    def validate_authorship(self, field):
+    def validate_authorship(self, field: RadioField) -> None:
         """Require proxy field if submitter is not author."""
         if field.data == self.NO and not self.data.get('proxy'):
                 raise ValidationError('You must get prior approval to submit '

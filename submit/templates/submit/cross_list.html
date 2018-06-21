@@ -5,51 +5,75 @@
 {% block within_content %}
 <h2 class="is-size-4">Choose cross-list classifications (optional)</h2>
 
-<div class="message is-info is-inline-block">
-  <div class="message-body">
-    <p class="is-subtitle"><strong>Primary: Classification Here</strong></p>
-    <p>Any cross-list classes would go here also.</p>
-  </div>
-</div>
-
-<div class="field">
-  <div class="control">
-    <label class="label">Archive <span class="icon has-text-link"><i class="fa fa-question-circle"></i></span></label>
-    <div class="select">
-      <select>
-        <option>archive1</option>
-        <option>archive2</option>
-      </select>
-    </div>
-  </div>
-</div>
-<div class="field">
-  <div class="control">
-    <label class="label">Subject <span class="icon has-text-link"><i class="fa fa-question-circle"></i></span></label>
-    <div class="select">
-      <select>
-        <option>subject1</option>
-        <option>subject2</option>
-      </select>
-    </div>
-  </div>
-</div>
-
-<div class="field">
-  <div class="control">
-    <button class="button">
-      <span class="icon"><i class="fa fa-plus"></i></span>
-      <span>Add Another Classification</span>
-    </button>
-  </div>
-</div>
 
 <div class="message is-info is-inline-block submit-nav">
   <div class="message-body">
-    <p><span class="icon has-text-link"><i class="fa fa-info-circle"></i></span>
-    More than three cross-list classifications will result in a delay in the acceptance of your submission.</p>
+    <p class="has-text-weight-bold" style="margin-bottom: .5em">
+      <span class="tag is-link">{{ primary.id }}</span> {{ primary.name }}
+    </p>
+
+    {% for category, (display, subform) in formset.items() %}
+
+    <form method="POST" class="form form-margin" action="{{ url_for('ui.cross_list', submission_id=submission_id) }}">
+      <p>
+        {{ subform.operation }}
+        {{ subform.category()|safe }}
+          <span class="tag" style="border: 1px solid #999;">{{ subform.category.data }}</span> <span>{{ display }}</span>
+        <button class="button is-outlined is-link is-small" style="border: 0" aria-label="remove">
+          <span class="icon"><i class="fa fa-trash"></i>
+        </button>
+      </p>
+    </form>
+    {% endfor %}
+
   </div>
 </div>
 
-{{ submit_macros.submit_nav() }}
+<form method="POST" action="{{ url_for('ui.cross_list', submission_id=submission_id) }}">
+  {{ form.operation }}
+  {% with field = form.category %}
+  <label>Add a cross-list category</label>
+  <div class="field has-addons">
+    <div class="control">
+      <div class="select">
+      {% if field.errors %}
+        {{ field(class="is-warning")|safe }}
+      {% else %}
+        {{ field()|safe }}
+      {% endif %}
+      </div>
+      {% if field.errors %}
+        <div class="help is-warning">
+          {% for error in field.errors %}
+              {{ error }}
+          {% endfor %}
+        </div>
+      {% endif %}
+      {% if field.description %}
+      <p class="help has-text-grey">
+        {{ field.description|safe }}
+      </p>
+      {% endif %}
+    </div>
+    <div class="control">
+      <button class="button is-link">Add</button>
+    </div>
+  </div>
+    {% endwith %}
+
+    <div class="message is-info is-inline-block submit-nav">
+      <div class="message-body">
+        <p>
+          <span class="icon has-text-link"><i class="fa fa-info-circle"></i></span>
+          Adding more than three cross-list classifications will result in a delay
+          in the acceptance of your submission.
+        </p>
+      </div>
+    </div>
+
+    {{ submit_macros.submit_nav() }}
+</form>
+
+
+
 {% endblock within_content %}

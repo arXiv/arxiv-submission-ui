@@ -1,20 +1,19 @@
 """Provides a controller for updating metadata on a submission."""
 
-from typing import Tuple, Dict, Any
+from typing import Tuple, Dict, Any, List
 
 from werkzeug import MultiDict
 from werkzeug.exceptions import InternalServerError
 from flask import url_for
 from wtforms import Form
 from wtforms.fields import TextField, TextAreaField, Field
-from wtforms.fields.core import UnboundField
 from wtforms import validators
 
 from arxiv import status
 from arxiv.base import logging
 import events
 
-from .util import flow_control, load_submission
+from .util import flow_control, load_submission, SubmissionMixin, FieldMixin
 
 # from arxiv-submission-core.events.event import VerifyContactInformation
 
@@ -23,23 +22,12 @@ logger = logging.getLogger(__name__)  # pylint: disable=C0103
 Response = Tuple[Dict[str, Any], int, Dict[str, Any]]  # pylint: disable=C0103
 
 
-class FieldMixin:
-    """Provide a convenience classmethod for field names."""
-
-    @classmethod
-    def fields(cls):
-        """Convenience accessor for form field names."""
-        return [key for key in dir(cls)
-                if isinstance(getattr(cls, key), UnboundField)]
-
-
-class CoreMetadataForm(Form, FieldMixin):
+class CoreMetadataForm(Form, FieldMixin, SubmissionMixin):
     """Handles core metadata fields on a submission."""
 
-    title = TextField('Title', validators=[validators.Length(min=6, max=255)])
+    title = TextField('Title')
     authors_display = TextField(
         'Authors',
-        validators=[validators.Length(min=6)],
         description=(
             "use <code>Forename Surname</code> or <code>I. "
             "Surname</code>; separate individual authors with "
@@ -47,7 +35,6 @@ class CoreMetadataForm(Form, FieldMixin):
         )
     )
     abstract = TextAreaField('Abstract',
-                             validators=[validators.Length(min=6, max=1920)],
                              description='Limit of 1920 characters')
     comments = TextField('Comments',
                          validators=[validators.optional()],
@@ -56,8 +43,53 @@ class CoreMetadataForm(Form, FieldMixin):
                             "or figures, conference information."
                          ))
 
+    def validate_title(form: Form, field: Field) -> None:
+        """Validate title input using core events."""
+        if field.data == form.submission.metadata.title:     # Nothing to do.
+            return
+        ev = events.SetTitle(creator=form.creator, title=field.data)
+        form._add_event(ev)
+        try:
+            ev.validate(form.submission)
+        except events.InvalidEvent as e:
+            raise validators.ValidationError(e.message) from e
 
-class OptionalMetadataForm(Form, FieldMixin):
+    def validate_abstract(form: Form, field: Field) -> None:
+        """Validate abstract input using core events."""
+        if field.data == form.submission.metadata.abstract:    # Nothing to do.
+            return
+        ev = events.SetAbstract(creator=form.creator, abstract=field.data)
+        form._add_event(ev)
+        try:
+            ev.validate(form.submission)
+        except events.InvalidEvent as e:
+            raise validators.ValidationError(e.message) from e
+
+    def validate_comments(form: Form, field: Field) -> None:
+        """Validate comments input using core events."""
+        if field.data == form.submission.metadata.comments:    # Nothing to do.
+            return
+        ev = events.SetComments(creator=form.creator, comments=field.data)
+        form._add_event(ev)
+        try:
+            ev.validate(form.submission)
+        except events.InvalidEvent as e:
+            raise validators.ValidationError(e.message) from e
+
+    def validate_authors_display(form: Form, field: Field) -> None:
+        """Validate authors input using core events."""
+        if field.data == form.submission.metadata.authors:     # Nothing to do.
+            return
+        ev = events.UpdateAuthors(creator=form.creator,
+                                  authors_display=field.data)
+        form._add_event(ev)
+        try:
+            ev.validate(form.submission)
+        except events.InvalidEvent as e:
+            raise validators.ValidationError(e.message) from e
+
+
+class OptionalMetadataForm(Form, FieldMixin, SubmissionMixin):
     """Handles optional metadata fields on a submission."""
 
     doi = TextField('DOI',
@@ -84,6 +116,65 @@ class OptionalMetadataForm(Form, FieldMixin):
                           description=("example: 14J60 (Primary), 14F05, "
                                        "14J26 (Secondary)"))
 
+    def validate_doi(form: Form, field: Field) -> None:
+        """Validate DOI input using core events."""
+        if field.data == form.submission.metadata.doi:     # Nothing to do.
+            return
+        ev = events.SetDOI(creator=form.creator, doi=field.data)
+        form._add_event(ev)
+        try:
+            ev.validate(form.submission)
+        except events.InvalidEvent as e:
+            raise validators.ValidationError(e.message) from e
+
+    def validate_journal_ref(form: Form, field: Field) -> None:
+        """Validate journal reference input using core events."""
+        if field.data == form.submission.metadata.journal_ref:
+            return
+        ev = events.SetJournalReference(creator=form.creator,
+                                        journal_ref=field.data)
+        form._add_event(ev)
+        try:
+            ev.validate(form.submission)
+        except events.InvalidEvent as e:
+            raise validators.ValidationError(e.message) from e
+
+    def validate_report_num(form: Form, field: Field) -> None:
+        """Validate report number input using core events."""
+        if field.data == form.submission.metadata.report_num:
+            return
+        ev = events.SetReportNumber(creator=form.creator,
+                                    report_num=field.data)
+        form._add_event(ev)
+        try:
+            ev.validate(form.submission)
+        except events.InvalidEvent as e:
+            raise validators.ValidationError(e.message) from e
+
+    def validate_acm_class(form: Form, field: Field) -> None:
+        """Validate ACM classification input using core events."""
+        if field.data == form.submission.metadata.acm_class:
+            return
+        ev = events.SetACMClassification(creator=form.creator,
+                                         acm_class=field.data)
+        form._add_event(ev)
+        try:
+            ev.validate(form.submission)
+        except events.InvalidEvent as e:
+            raise validators.ValidationError(e.message) from e
+
+    def validate_msc_class(form: Form, field: Field) -> None:
+        """Validate MSC classification input using core events."""
+        if field.data == form.submission.metadata.msc_class:
+            return
+        ev = events.SetMSCClassification(creator=form.creator,
+                                         msc_class=field.data)
+        form._add_event(ev)
+        try:
+            ev.validate(form.submission)
+        except events.InvalidEvent as e:
+            raise validators.ValidationError(e.message) from e
+
 
 def _data_from_submission(params: MultiDict, submission: events.Submission,
                           form_class: type) -> MultiDict:
@@ -92,21 +183,6 @@ def _data_from_submission(params: MultiDict, submission: events.Submission,
     for field in form_class.fields():
         params[field] = getattr(submission.metadata, field, '')
     return params
-
-
-def _get_fields_to_update(form: CoreMetadataForm,
-                          submission: events.Submission) -> dict:
-    """
-    Determine which fields to update on the submission.
-
-    There is nothing to do if a value has not changed.
-    """
-    to_update = {}
-    for field in form.fields():
-        form_value = getattr(getattr(form, field), 'data', '')
-        if form_value != getattr(submission.metadata, field):
-            to_update[field] = form_value
-    return to_update
 
 
 @flow_control('ui.file_process', 'ui.add_optional_metadata', 'ui.user')
@@ -126,6 +202,8 @@ def metadata(method: str, params: MultiDict, submission_id: int) -> Response:
         params = _data_from_submission(params, submission, CoreMetadataForm)
 
     form = CoreMetadataForm(params)
+    form.submission = submission
+    form.creator = submitter
     response_data = {'submission_id': submission_id, 'form': form}
 
     if method == 'POST':
@@ -137,15 +215,11 @@ def metadata(method: str, params: MultiDict, submission_id: int) -> Response:
 
         # We only want to apply an UpdateMetadata if the metadata has
         # actually changed.
-        to_update = _get_fields_to_update(form, submission)
-        if to_update:   # Metadata has changed.
+        if form.events:   # Metadata has changed.
             try:
-                # Create UpdateMetadata event
-                submission, stack = events.save(  # pylint: disable=W0612
-                    events.UpdateMetadata(
-                        creator=submitter,
-                        metadata=list(to_update.items())
-                    ),
+                # Save the events created during form validation.
+                submission, stack = events.save(
+                    *form.events,
                     submission_id=submission_id
                 )
             except events.exceptions.InvalidStack as e:
@@ -185,6 +259,8 @@ def optional(method: str, params: MultiDict, submission_id: int) -> Response:
                                        OptionalMetadataForm)
 
     form = OptionalMetadataForm(params)
+    form.submission = submission
+    form.creator = submitter
     response_data = {'submission_id': submission_id, 'form': form}
 
     if method == 'POST':
@@ -196,15 +272,11 @@ def optional(method: str, params: MultiDict, submission_id: int) -> Response:
 
         # We only want to apply an UpdateMetadata if the metadata has
         # actually changed.
-        to_update = _get_fields_to_update(form, submission)
-        if to_update:   # Metadata has changed.
+        if form.events:   # Metadata has changed.
             try:
                 # Create UpdateMetadata event
-                submission, stack = events.save(  # pylint: disable=W0612
-                    events.UpdateMetadata(
-                        creator=submitter,
-                        metadata=list(to_update.items())
-                    ),
+                submission, stack = events.save(
+                    *form.events,
                     submission_id=submission_id
                 )
             except events.exceptions.InvalidStack as e:

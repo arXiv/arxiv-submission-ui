@@ -26,7 +26,7 @@ class CoreMetadataForm(Form, FieldMixin, SubmissionMixin):
     """Handles core metadata fields on a submission."""
 
     title = TextField('Title', validators=[validators.DataRequired()])
-    authors_display = TextField(
+    authors_display = TextAreaField(
         'Authors',
         validators=[validators.DataRequired()],
         description=(

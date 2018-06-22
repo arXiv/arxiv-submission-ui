@@ -151,7 +151,7 @@ class SubmissionMixin:
        ...     def validate_title(self, field):
        ...         if self.submission.metadata.title == field.data:
        ...             return
-       ...         self._validate_with_event(SetTitle, title=field.data)
+       ...         self._validate_event(SetTitle, title=field.data)
        ...
        >>> form = FooForm(data)
        >>> form.submission = submission

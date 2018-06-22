@@ -47,25 +47,25 @@ class CoreMetadataForm(Form, FieldMixin, SubmissionMixin):
         """Validate title input using core events."""
         if field.data == form.submission.metadata.title:     # Nothing to do.
             return
-        form._validate_with_event(events.SetTitle, title=field.data)
+        form._validate_event(events.SetTitle, title=field.data)
 
     def validate_abstract(form: Form, field: Field) -> None:
         """Validate abstract input using core events."""
         if field.data == form.submission.metadata.abstract:    # Nothing to do.
             return
-        form._validate_with_event(events.SetAbstract, abstract=field.data)
+        form._validate_event(events.SetAbstract, abstract=field.data)
 
     def validate_comments(form: Form, field: Field) -> None:
         """Validate comments input using core events."""
         if field.data == form.submission.metadata.comments:    # Nothing to do.
             return
-        form._validate_with_event(events.SetComments, comments=field.data)
+        form._validate_event(events.SetComments, comments=field.data)
 
     def validate_authors_display(form: Form, field: Field) -> None:
         """Validate authors input using core events."""
         if field.data == form.submission.metadata.authors:     # Nothing to do.
             return
-        form._validate_with_event(events.UpdateAuthors,
+        form._validate_event(events.UpdateAuthors,
                                   authors_display=field.data)
 
 
@@ -100,34 +100,34 @@ class OptionalMetadataForm(Form, FieldMixin, SubmissionMixin):
         """Validate DOI input using core events."""
         if field.data == form.submission.metadata.doi:     # Nothing to do.
             return
-        form._validate_with_event(events.SetDOI, doi=field.data)
+        form._validate_event(events.SetDOI, doi=field.data)
 
     def validate_journal_ref(form: Form, field: Field) -> None:
         """Validate journal reference input using core events."""
         if field.data == form.submission.metadata.journal_ref:
             return
-        form._validate_with_event(events.SetJournalReference,
+        form._validate_event(events.SetJournalReference,
                                   journal_ref=field.data)
 
     def validate_report_num(form: Form, field: Field) -> None:
         """Validate report number input using core events."""
         if field.data == form.submission.metadata.report_num:
             return
-        form._validate_with_event(events.SetReportNumber,
+        form._validate_event(events.SetReportNumber,
                                   report_num=field.data)
 
     def validate_acm_class(form: Form, field: Field) -> None:
         """Validate ACM classification input using core events."""
         if field.data == form.submission.metadata.acm_class:
             return
-        form._validate_with_event(events.SetACMClassification,
+        form._validate_event(events.SetACMClassification,
                                   acm_class=field.data)
 
     def validate_msc_class(form: Form, field: Field) -> None:
         """Validate MSC classification input using core events."""
         if field.data == form.submission.metadata.msc_class:
             return
-        form._validate_with_event(events.SetACMClassification,
+        form._validate_event(events.SetACMClassification,
                                   msc_class=field.data)
 
 

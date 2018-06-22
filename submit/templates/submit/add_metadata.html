@@ -7,10 +7,9 @@
 
 <form method="POST" action="{{ url_for('ui.add_metadata', submission_id=submission_id) }}">
   {% for field in form %}
-
   <div class="field">
     <div class="control">
-      <label class="label">*{{ field.label.text }} <span class="icon has-text-link"><i class="fa fa-question-circle"></i></span></label>
+      <label class="label">{{ field.label.text }} <span class="icon has-text-link"><i class="fa fa-question-circle"></i></span></label>
       {% if field.errors %}
         {{ field(class="input is-warning")|safe }}
       {% else %}

@@ -28,6 +28,7 @@ class CoreMetadataForm(Form, FieldMixin, SubmissionMixin):
     title = TextField('Title', validators=[validators.DataRequired()])
     authors_display = TextField(
         'Authors',
+        validators=[validators.DataRequired()],
         description=(
             "use <code>Forename Surname</code> or <code>I. "
             "Surname</code>; separate individual authors with "
@@ -35,8 +36,10 @@ class CoreMetadataForm(Form, FieldMixin, SubmissionMixin):
         )
     )
     abstract = TextAreaField('Abstract',
+                             validators=[validators.DataRequired()],
                              description='Limit of 1920 characters')
     comments = TextField('Comments',
+                         default='',
                          validators=[validators.optional()],
                          description=(
                             "Supplemental information such as number of pages "
@@ -61,12 +64,12 @@ class CoreMetadataForm(Form, FieldMixin, SubmissionMixin):
         """Validate comments input using core events."""
         if field.data == form.submission.metadata.comments:    # Nothing to do.
             return
-        if field.data:
+        if field.data is not None:
             form._validate_event(events.SetComments, comments=field.data)
 
     def validate_authors_display(form: Form, field: Field) -> None:
         """Validate authors input using core events."""
-        if field.data == form.submission.metadata.authors:     # Nothing to do.
+        if field.data == form.submission.metadata.authors_display:
             return
         if field.data:
             form._validate_event(events.UpdateAuthors,
@@ -136,7 +139,7 @@ class OptionalMetadataForm(Form, FieldMixin, SubmissionMixin):
         if field.data == form.submission.metadata.msc_class:
             return
         if field.data:
-            form._validate_event(events.SetACMClassification,
+            form._validate_event(events.SetMSCClassification,
                                  msc_class=field.data)
 
 

@@ -1,15 +1,15 @@
 {% extends "submit/base.html" %}
 
-{% import "submit/submit_macros.html" as submit_macros %}
+
 
 {% block within_content %}
 
 <h2 class="is-size-4">Verify your contact information</h2>
-<p><span class="label">Forename:</span> Ima</p>
-<p><span class="label">Surname:</span> Nauthor</p>
-<p><span class="label">Suffix:</span></p>
-<p><span class="label">Affiliation:</span> Cornell University</p>
-<p><span class="label">E-mail:</span> ian413@cornell.edu</p>
+<p><span class="label">Forename:</span> {{ user.name.forename }}</p>
+<p><span class="label">Surname:</span> {{ user.name.surname }}</p>
+<p><span class="label">Suffix:</span> {{ user.name.suffix }}</p>
+<p><span class="label">Affiliation:</span> {{ user.profile.affiliation }}</p>
+<p><span class="label">E-mail:</span> {{ user.email }}</p>
 
 <form method="POST" action="{% if submission_id %}{{ url_for('ui.verify_user', submission_id=submission_id) }}{% else %}{{ url_for('ui.verify_user') }}{% endif %}">
   <div class="field">

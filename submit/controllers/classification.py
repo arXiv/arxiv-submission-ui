@@ -4,7 +4,7 @@ Controller for classification actinos.
 Creates an event of type `core.events.event.SetPrimaryClassification`
 Creates an event of type `core.events.event.AddSecondaryClassification`
 """
-from typing import Tuple, Dict, Any, List
+from typing import Tuple, Dict, Any, List, Optional
 from werkzeug import MultiDict
 from werkzeug.exceptions import InternalServerError
 from flask import url_for
@@ -12,8 +12,10 @@ from wtforms import Form, SelectField, widgets, HiddenField, validators
 
 from arxiv import status, taxonomy
 from arxiv.base import logging
+from arxiv.users.domain import Session
 import events
-from .util import flow_control, OptGroupSelectField, load_submission
+from ..util import load_submission
+from . import util
 
 # from arxiv-submission-core.events.event import VerifyContactInformation
 
@@ -43,7 +45,32 @@ class ClassificationForm(Form):
         (REMOVE, 'Remove')
     ]
     operation = HiddenField(default=ADD, validators=[validators.optional()])
-    category = OptGroupSelectField('Category', choices=CATEGORIES, default='')
+    category = util.OptGroupSelectField('Category', choices=CATEGORIES,
+                                        default='')
+
+    def filter_choices(self, submission: events.domain.Submission,
+                       session: Session, allowed: Optional[List[str]] = None) \
+            -> None:
+        """Remove redundant choices, and limit to endorsed categories."""
+        selected = self.category.data
+        secondaries = [kls.category for kls
+                       in submission.secondary_classification]
+        primary = submission.primary_classification
+
+        choices = [
+            (archive, [
+                (category, display) for category, display in archive_choices
+                if (allowed is None or category in allowed
+                    and (primary is None or category != primary.category)
+                    and category not in secondaries)
+                or category == selected
+            ])
+            for archive, archive_choices in self.category.choices
+        ]
+        self.category.choices = [
+            (archive, _choices) for archive, _choices in choices
+            if len(_choices) > 0
+        ]
 
 
 def _data_from_submission(params: MultiDict,
@@ -70,31 +97,11 @@ def _formset_from_submission(submission: events.domain.Submission) \
     return formset
 
 
-def _filter_choices(form: ClassificationForm,
-                    submission: events.domain.Submission) -> None:
-    """Remove primaries and secondaries from category choices."""
-    selected = form.category.data
-    secondaries = [kls.category for kls in submission.secondary_classification]
-
-    form.category.choices = [
-        (archive, [
-            (category, display) for category, display in archive_choices
-            if ((not submission.primary_classification
-                 or category != submission.primary_classification.category)
-                and category not in secondaries)
-            or category == selected
-        ])
-        for archive, archive_choices in form.category.choices
-    ]
-
-
-@flow_control('ui.policy', 'ui.cross_list', 'ui.user')
-def classification(method: str, params: MultiDict,
+@util.flow_control('ui.policy', 'ui.cross_list', 'ui.user')
+def classification(method: str, params: MultiDict, session: Session,
                    submission_id: int) -> Response:
     """Generate a `SetPrimaryClassification` event."""
-    # TODO: Create a concrete User from cookie info.
-    submitter = events.domain.User(1, email='ian413@cornell.edu',
-                                   forename='Ima', surname='Nauthor')
+    submitter, client = util.user_and_client_from_session(session)
 
     # Will raise NotFound if there is no such submission.
     submission = load_submission(submission_id)
@@ -103,11 +110,15 @@ def classification(method: str, params: MultiDict,
     # submission.
     if method == 'GET':
         params = _data_from_submission(params, submission)
+        if 'category' not in params:
+            params['category'] = session.user.profile.default_category.compound
 
     params['operation'] = ClassificationForm.ADD     # Always add a primary.
 
     form = ClassificationForm(params)
-    _filter_choices(form, submission)
+    # We want categories in dot-delimited "compound" format.
+    endorsed = [cat.compound for cat in session.authorizations.endorsements]
+    form.filter_choices(submission, session, endorsed)
     response_data = {
         'submission_id': submission_id,
         'form': form
@@ -151,12 +162,11 @@ def classification(method: str, params: MultiDict,
     return response_data, status.HTTP_200_OK, {}
 
 
-@flow_control('ui.classification', 'ui.file_upload', 'ui.user')
-def cross_list(method: str, params: MultiDict, submission_id: int) -> Response:
+@util.flow_control('ui.classification', 'ui.file_upload', 'ui.user')
+def cross_list(method: str, params: MultiDict, session: Session,
+               submission_id: int) -> Response:
     """Generate an `AddSecondaryClassification` event."""
-    # TODO: Create a concrete User from cookie info.
-    submitter = events.domain.User(1, email='ian413@cornell.edu',
-                                   forename='Ima', surname='Nauthor')
+    submitter, client = util.user_and_client_from_session(session)
 
     # Will raise NotFound if there is no such submission.
     submission = load_submission(submission_id)
@@ -167,7 +177,7 @@ def cross_list(method: str, params: MultiDict, submission_id: int) -> Response:
     # This form handles additions and removals.
     form = ClassificationForm(params)
     form.operation._value = lambda: form.operation.data
-    _filter_choices(form, submission)
+    form.filter_choices(submission, session)
     _primary = taxonomy.CATEGORIES[submission.primary_classification.category]
     response_data = {
         'submission_id': submission_id,
@@ -226,7 +236,7 @@ def cross_list(method: str, params: MultiDict, submission_id: int) -> Response:
                 # be reflected in the formset.
                 form = ClassificationForm()
                 form.operation._value = lambda: form.operation.data
-                _filter_choices(form, submission)
+                form.filter_choices(submission, session)
                 response_data['form'] = form
 
             else:   # Form data were invalid.

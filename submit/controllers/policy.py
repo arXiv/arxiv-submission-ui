@@ -14,28 +14,27 @@ from wtforms.validators import InputRequired
 
 from arxiv import status
 from arxiv.base import logging
+from arxiv.users.domain import Session
 import events
-from .util import flow_control, load_submission
-
-# from arxiv-submission-core.events.event import AcceptPolicy
+from ..util import load_submission
+from . import util
 
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 
 Response = Tuple[Dict[str, Any], int, Dict[str, Any]]  # pylint: disable=C0103
 
 
-@flow_control('ui.license', 'ui.classification', 'ui.user')
-def policy(method: str, params: MultiDict, submission_id: int) -> Response:
+@util.flow_control('ui.license', 'ui.classification', 'ui.user')
+def policy(method: str, params: MultiDict, session: Session,
+           submission_id: int) -> Response:
     """Convert policy form data into an `AcceptPolicy` event."""
+    submitter, client = util.user_and_client_from_session(session)
+
     logger.debug(f'method: {method}, submission: {submission_id}. {params}')
     submission = load_submission(submission_id)
 
-    # TODO: Create a concrete User event from cookie info.
-    submitter = events.domain.User(1, email='ian413@cornell.edu',
-                                   forename='Ima', surname='Nauthor')
-
-    if method == 'GET':
-        params['policy'] = submission.submitter_accepts_policy
+    if method == 'GET' and submission.submitter_accepts_policy:
+        params['policy'] = 'true'
 
     form = PolicyForm(params)
     response_data = {'submission_id': submission_id, 'form': form}

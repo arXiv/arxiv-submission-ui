@@ -6,39 +6,75 @@ from werkzeug.exceptions import InternalServerError
 from wtforms import Form
 from arxiv import status
 from submit.controllers import metadata, optional
-import events
+import arxiv.submission as events
+
+from pytz import timezone
+from datetime import timedelta, datetime
+from arxiv.users import auth, domain
 
 
 class TestOptional(TestCase):
     """Tests for :func:`.optional`."""
 
-    @mock.patch('events.load')
+    def setUp(self):
+        """Create an authenticated session."""
+        # Specify the validity period for the session.
+        start = datetime.now(tz=timezone('US/Eastern'))
+        end = start + timedelta(seconds=36000)
+        self.session = domain.Session(
+            session_id='123-session-abc',
+            start_time=start, end_time=end,
+            user=domain.User(
+                user_id='235678',
+                email='foo@foo.com',
+                username='foouser',
+                name=domain.UserFullName("Jane", "Bloggs", "III"),
+                profile=domain.UserProfile(
+                    affiliation="FSU",
+                    rank=3,
+                    country="de",
+                    default_category=domain.Category('astro-ph', 'GA'),
+                    submission_groups=['grp_physics']
+                )
+            ),
+            authorizations=domain.Authorizations(
+                scopes=[auth.scopes.CREATE_SUBMISSION,
+                        auth.scopes.EDIT_SUBMISSION,
+                        auth.scopes.VIEW_SUBMISSION],
+                endorsements=[domain.Category('astro-ph', 'CO'),
+                              domain.Category('astro-ph', 'GA')]
+            )
+        )
+
+    @mock.patch('arxiv.submission.load')
     def test_get_request_with_submission(self, mock_load):
         """GET request with a submission ID."""
         submission_id = 2
         mock_load.return_value = (
             mock.MagicMock(submission_id=submission_id), []
         )
-        data, code, headers = optional('GET', MultiDict(), submission_id)
+        data, code, headers = optional('GET', MultiDict(), self.session,
+                                       submission_id)
         self.assertEqual(code, status.HTTP_200_OK, "Returns 200 OK")
         self.assertIsInstance(data['form'], Form,
                               "Response data includes a form")
 
-    @mock.patch('events.load')
+    @mock.patch('arxiv.submission.load')
     def test_post_request_with_no_data(self, mock_load):
         """POST request has no form data."""
         submission_id = 2
         mock_load.return_value = (
             mock.MagicMock(submission_id=submission_id), []
         )
-        data, code, headers = optional('POST', MultiDict(), submission_id)
+        data, code, headers = optional('POST', MultiDict(), self.session,
+                                       submission_id)
         self.assertEqual(code, status.HTTP_200_OK, "Returns 200 OK")
 
         self.assertIsInstance(data['form'], Form,
                               "Response data includes a form")
 
-    @mock.patch('events.save')
-    @mock.patch('events.load')
+    @mock.patch('arxiv.submission.save')
+    @mock.patch('arxiv.submission.load')
     def test_invalid_stack_is_raised(self, mock_load, mock_save):
         """POST request results in an InvalidStack exception."""
         submission_id = 2
@@ -60,12 +96,13 @@ class TestOptional(TestCase):
             'acm_class': 'F.2.2; I.2.7',
             'msc_class': '14J26'
         })
-        data, code, headers = optional('POST', request_data, submission_id)
+        data, code, headers = optional('POST', request_data, self.session,
+                                       submission_id)
         self.assertEqual(code, status.HTTP_400_BAD_REQUEST,
                          "Returns 400 bad request")
 
-    @mock.patch('events.save')
-    @mock.patch('events.load')
+    @mock.patch('arxiv.submission.save')
+    @mock.patch('arxiv.submission.load')
     def test_save_error_is_raised(self, mock_load, mock_save):
         """POST request results in an SaveError exception."""
         submission_id = 2
@@ -88,10 +125,10 @@ class TestOptional(TestCase):
             'msc_class': '14J26'
         })
         with self.assertRaises(InternalServerError):
-            optional('POST', request_data, submission_id)
+            optional('POST', request_data, self.session, submission_id)
 
-    @mock.patch('events.save')
-    @mock.patch('events.load')
+    @mock.patch('arxiv.submission.save')
+    @mock.patch('arxiv.submission.load')
     def test_post_request_with_required_data(self, mock_load, mock_save):
         """POST request with all fields."""
         submission_id = 2
@@ -109,7 +146,8 @@ class TestOptional(TestCase):
             'acm_class': 'F.2.2; I.2.7',
             'msc_class': '14J26'
         })
-        data, code, headers = optional('POST', request_data, submission_id)
+        data, code, headers = optional('POST', request_data, self.session,
+                                       submission_id)
         self.assertEqual(code, status.HTTP_200_OK, "Returns 200 OK")
         event_types = [type(ev) for ev in mock_save.call_args[0]]
         self.assertIn(events.SetDOI, event_types, "Sets submission DOI")
@@ -122,8 +160,8 @@ class TestOptional(TestCase):
         self.assertIn(events.SetMSCClassification, event_types,
                       "Sets MSC classification")
 
-    @mock.patch('events.save')
-    @mock.patch('events.load')
+    @mock.patch('arxiv.submission.save')
+    @mock.patch('arxiv.submission.load')
     def test_post_request_with_unchanged_data(self, mock_load, mock_save):
         """POST request with valid but unchanged data."""
         submission_id = 2
@@ -147,12 +185,13 @@ class TestOptional(TestCase):
             'acm_class': 'F.2.2; I.2.7',
             'msc_class': '14J26'
         })
-        data, code, headers = optional('POST', request_data, submission_id)
+        data, code, headers = optional('POST', request_data, self.session,
+                                       submission_id)
         self.assertEqual(code, status.HTTP_200_OK, "Returns 200 OK")
         self.assertEqual(mock_save.call_count, 0, "No events are generated")
 
-    @mock.patch('events.save')
-    @mock.patch('events.load')
+    @mock.patch('arxiv.submission.save')
+    @mock.patch('arxiv.submission.load')
     def test_post_request_with_some_changes(self, mock_load, mock_save):
         """POST request with only some changed data."""
         submission_id = 2
@@ -176,7 +215,8 @@ class TestOptional(TestCase):
             'acm_class': 'F.2.2; I.2.7',
             'msc_class': '14J27'
         })
-        data, code, headers = optional('POST', request_data, submission_id)
+        data, code, headers = optional('POST', request_data, self.session,
+                                       submission_id)
         self.assertEqual(code, status.HTTP_200_OK, "Returns 200 OK")
         self.assertEqual(mock_save.call_count, 1, "Events are generated")
         event_types = [type(ev) for ev in mock_save.call_args[0]]
@@ -190,33 +230,65 @@ class TestOptional(TestCase):
 class TestMetadata(TestCase):
     """Tests for :func:`.metadata`."""
 
-    @mock.patch('events.load')
+    def setUp(self):
+        """Create an authenticated session."""
+        # Specify the validity period for the session.
+        start = datetime.now(tz=timezone('US/Eastern'))
+        end = start + timedelta(seconds=36000)
+        self.session = domain.Session(
+            session_id='123-session-abc',
+            start_time=start, end_time=end,
+            user=domain.User(
+                user_id='235678',
+                email='foo@foo.com',
+                username='foouser',
+                name=domain.UserFullName("Jane", "Bloggs", "III"),
+                profile=domain.UserProfile(
+                    affiliation="FSU",
+                    rank=3,
+                    country="de",
+                    default_category=domain.Category('astro-ph', 'GA'),
+                    submission_groups=['grp_physics']
+                )
+            ),
+            authorizations=domain.Authorizations(
+                scopes=[auth.scopes.CREATE_SUBMISSION,
+                        auth.scopes.EDIT_SUBMISSION,
+                        auth.scopes.VIEW_SUBMISSION],
+                endorsements=[domain.Category('astro-ph', 'CO'),
+                              domain.Category('astro-ph', 'GA')]
+            )
+        )
+
+    @mock.patch('arxiv.submission.load')
     def test_get_request_with_submission(self, mock_load):
         """GET request with a submission ID."""
         submission_id = 2
         mock_load.return_value = (
             mock.MagicMock(submission_id=submission_id), []
         )
-        data, code, headers = metadata('GET', MultiDict(), submission_id)
+        data, code, headers = metadata('GET', MultiDict(), self.session,
+                                       submission_id)
         self.assertEqual(code, status.HTTP_200_OK, "Returns 200 OK")
         self.assertIsInstance(data['form'], Form,
                               "Response data includes a form")
 
-    @mock.patch('events.load')
+    @mock.patch('arxiv.submission.load')
     def test_post_request_with_no_data(self, mock_load):
         """POST request has no form data."""
         submission_id = 2
         mock_load.return_value = (
             mock.MagicMock(submission_id=submission_id), []
         )
-        data, code, headers = metadata('POST', MultiDict(), submission_id)
+        data, code, headers = metadata('POST', MultiDict(), self.session,
+                                       submission_id)
         self.assertEqual(code, status.HTTP_400_BAD_REQUEST,
                          "Returns 400 bad request")
         self.assertIsInstance(data['form'], Form,
                               "Response data includes a form")
 
-    @mock.patch('events.save')
-    @mock.patch('events.load')
+    @mock.patch('arxiv.submission.save')
+    @mock.patch('arxiv.submission.load')
     def test_post_request_with_required_data(self, mock_load, mock_save):
         """POST request with title, abstract, and author names."""
         submission_id = 2
@@ -236,7 +308,8 @@ class TestMetadata(TestCase):
             'abstract': 'this abstract is at least twenty characters long',
             'authors_display': 'j doe, j bloggs'
         })
-        data, code, headers = metadata('POST', request_data, submission_id)
+        data, code, headers = metadata('POST', request_data, self.session,
+                                       submission_id)
         self.assertEqual(code, status.HTTP_200_OK, "Returns 200 OK")
         event_types = [type(ev) for ev in mock_save.call_args[0]]
         self.assertIn(events.SetTitle, event_types, "Sets submission title")
@@ -245,8 +318,8 @@ class TestMetadata(TestCase):
         self.assertIn(events.UpdateAuthors, event_types,
                       "Sets submission authors")
 
-    @mock.patch('events.save')
-    @mock.patch('events.load')
+    @mock.patch('arxiv.submission.save')
+    @mock.patch('arxiv.submission.load')
     def test_post_request_with_unchanged_data(self, mock_load, mock_save):
         """POST request with valid but unaltered data."""
         submission_id = 2
@@ -266,12 +339,13 @@ class TestMetadata(TestCase):
             'abstract': 'not the abstract that you are looking for',
             'authors_display': 'bloggs, j'
         })
-        data, code, headers = metadata('POST', request_data, submission_id)
+        data, code, headers = metadata('POST', request_data, self.session,
+                                       submission_id)
         self.assertEqual(code, status.HTTP_200_OK, "Returns 200 OK")
         self.assertEqual(mock_save.call_count, 0, "No events are generated")
 
-    @mock.patch('events.save')
-    @mock.patch('events.load')
+    @mock.patch('arxiv.submission.save')
+    @mock.patch('arxiv.submission.load')
     def test_post_request_some_changed_data(self, mock_load, mock_save):
         """POST request with valid data; only the title has changed."""
         submission_id = 2
@@ -291,14 +365,15 @@ class TestMetadata(TestCase):
             'abstract': 'not the abstract that you are looking for',
             'authors_display': 'bloggs, j'
         })
-        data, code, headers = metadata('POST', request_data, submission_id)
+        data, code, headers = metadata('POST', request_data, self.session,
+                                       submission_id)
         self.assertEqual(code, status.HTTP_200_OK, "Returns 200 OK")
         self.assertEqual(mock_save.call_count, 1, "One event is generated")
         self.assertIsInstance(mock_save.call_args[0][0], events.SetTitle,
                               "SetTitle event is generated")
 
-    @mock.patch('events.save')
-    @mock.patch('events.load')
+    @mock.patch('arxiv.submission.save')
+    @mock.patch('arxiv.submission.load')
     def test_post_request_invalid_data(self, mock_load, mock_save):
         """POST request with invalid data."""
         submission_id = 2
@@ -318,7 +393,8 @@ class TestMetadata(TestCase):
             'abstract': 'too short',
             'authors_display': 'bloggs, j'
         })
-        data, code, headers = metadata('POST', request_data, submission_id)
+        data, code, headers = metadata('POST', request_data, self.session,
+                                       submission_id)
         self.assertEqual(code, status.HTTP_400_BAD_REQUEST,
                          "Returns 400 bad request")
         self.assertIsInstance(data['form'], Form,
@@ -326,8 +402,8 @@ class TestMetadata(TestCase):
         self.assertIn('abstract', data['form'].errors,
                       'Validation errors are added to the form')
 
-    @mock.patch('events.save')
-    @mock.patch('events.load')
+    @mock.patch('arxiv.submission.save')
+    @mock.patch('arxiv.submission.load')
     def test_invalid_stack_is_raised(self, mock_load, mock_save):
         """POST request results in an InvalidStack exception."""
         submission_id = 2
@@ -352,12 +428,13 @@ class TestMetadata(TestCase):
             'abstract': 'this abstract is at least twenty characters long',
             'authors_display': 'j doe, j bloggs'
         })
-        data, code, headers = metadata('POST', request_data, submission_id)
+        data, code, headers = metadata('POST', request_data, self.session,
+                                       submission_id)
         self.assertEqual(code, status.HTTP_400_BAD_REQUEST,
                          "Returns 400 bad request")
 
-    @mock.patch('events.save')
-    @mock.patch('events.load')
+    @mock.patch('arxiv.submission.save')
+    @mock.patch('arxiv.submission.load')
     def test_save_error_is_raised(self, mock_load, mock_save):
         """POST request results in an SaveError exception."""
         submission_id = 2
@@ -382,4 +459,4 @@ class TestMetadata(TestCase):
             'authors_display': 'j doe, j bloggs'
         })
         with self.assertRaises(InternalServerError):
-            metadata('POST', request_data, submission_id)
+            metadata('POST', request_data, self.session, submission_id)

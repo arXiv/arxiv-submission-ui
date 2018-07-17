@@ -7,7 +7,7 @@ from flask import Flask
 from arxiv.base import Base
 from arxiv.users import auth
 from arxiv.base.middleware import wrap, request_logs
-from events.services import classic
+from arxiv.submission.services import classic
 
 from submit.routes import ui
 

@@ -1,7 +1,7 @@
 """Utilities and helpers for the :mod:`submit` application."""
 
 from werkzeug.exceptions import NotFound
-import events
+import arxiv.submission as events
 
 
 def load_submission(submission_id: int) -> events.domain.Submission:

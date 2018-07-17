@@ -14,7 +14,7 @@ from wtforms.fields.core import UnboundField
 
 from arxiv import status
 from arxiv.users.domain import Session
-import events
+import arxiv.submission as events
 
 Response = Tuple[Dict[str, Any], int, Dict[str, Any]]  # pylint: disable=C0103
 
@@ -119,7 +119,7 @@ class SubmissionMixin:
 
        >>> from wtforms import Form, TextField, validators
        >>> from submit.controllers.util import SubmissionMixin
-       >>> import events
+       >>> import arxiv.submission as events
        >>>
        >>> class FooForm(Form, SubmissionMixin):
        ...     title = TextField('Title')
@@ -199,6 +199,7 @@ def user_and_client_from_session(session: Session) \
         email=session.user.email,
         forename=getattr(session.user.name, 'forename', None),
         surname=getattr(session.user.name, 'surname', None),
-        suffix=getattr(session.user.name, 'suffix', None)
+        suffix=getattr(session.user.name, 'suffix', None),
+        endorsements=[c.compound for c in session.authorizations.endorsements]
     )
     return user, None

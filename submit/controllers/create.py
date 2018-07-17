@@ -9,7 +9,7 @@ from arxiv import status
 from arxiv.base import logging
 from arxiv.users.domain import Session, User
 
-import events
+import arxiv.submission as events
 from . import util
 
 Response = Tuple[Dict[str, Any], int, Dict[str, Any]]   # pylint: disable=C0103

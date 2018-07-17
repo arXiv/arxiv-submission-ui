@@ -16,7 +16,7 @@ from wtforms.validators import InputRequired, ValidationError, optional
 from arxiv import status
 from arxiv.base import logging
 from arxiv.users.domain import Session
-import events
+import arxiv.submission as events
 
 from ..util import load_submission
 from . import util

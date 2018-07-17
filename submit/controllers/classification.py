@@ -13,7 +13,7 @@ from wtforms import Form, SelectField, widgets, HiddenField, validators
 from arxiv import status, taxonomy
 from arxiv.base import logging
 from arxiv.users.domain import Session
-import events
+import arxiv.submission as events
 from ..util import load_submission
 from . import util
 
@@ -117,8 +117,8 @@ def classification(method: str, params: MultiDict, session: Session,
 
     form = ClassificationForm(params)
     # We want categories in dot-delimited "compound" format.
-    endorsed = [cat.compound for cat in session.authorizations.endorsements]
-    form.filter_choices(submission, session, endorsed)
+
+    form.filter_choices(submission, session, submitter.endorsements)
     response_data = {
         'submission_id': submission_id,
         'form': form

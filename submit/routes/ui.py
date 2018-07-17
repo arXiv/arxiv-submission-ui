@@ -9,7 +9,7 @@ from arxiv import status
 from submit import controllers
 from arxiv.users import auth
 from .auth import can_edit_submission
-import events
+import arxiv.submission as events
 
 blueprint = Blueprint('ui', __name__, url_prefix='/')
 

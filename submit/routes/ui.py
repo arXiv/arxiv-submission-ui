@@ -217,3 +217,15 @@ def confirm_submit(submission_id: int) -> Response:
     code = status.HTTP_200_OK
     response = make_response(rendered, code)
     return response
+
+
+@blueprint.route('/<int:submission_id>/confirm_delete', methods=['GET'])
+def confirm_delete(submission_id: int) -> Response:
+    """Confirm user initiated file deletion."""
+    rendered = render_template(
+        "submit/confirm_delete.html",
+        pagetitle='Delete Files'
+    )
+    code = status.HTTP_200_OK
+    response = make_response(rendered, code)
+    return response

@@ -8,8 +8,8 @@
   <h1 class="title">{% block title %}Submit an Article{% endblock title %}</h1>
   <div class="message">
     <div class="message-body">
-    {{ submit_macros.progress_bar(submission_id) }}
-  </div>
+      {{ submit_macros.progress_bar(submission_id) }}
+    </div>
   </div>
   <content>
     {% if form and form.errors %}

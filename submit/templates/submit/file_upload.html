@@ -17,6 +17,18 @@
   </div>
 </div>
 
+<div class="message is-danger">
+  <div class="message-body">
+    <button class="delete is-small is-pulled-right"></button>
+    <div class="is-pulled-left">
+      <span class="icon has-text-danger"><i class="fa fa-warning"></i></span>
+    </div>
+    <div class="content">
+      <p>This is where an error message goes</p>
+    </div>
+  </div>
+</div>
+
 <div class="message is-info">
   <div class="message-body">
     <div class="is-pulled-left">
@@ -78,7 +90,7 @@
         </label>
       </div>
     </div>
-    <div class="control">
+    <div class="control is-centered-vertically">
       <label class="checkbox">
         <input type="checkbox"> Ancillary <span class="icon has-text-link"><i class="fa fa-info-circle"></i></span>
     </div>
@@ -89,7 +101,7 @@
 </form>
 
 <h3>Files currently attached to this submission</h3>
-    <table class="table is-hoverable table-footer">
+    <table class="table is-hoverable is-marginless">
       <thead>
         <tr>
           <th style="width:45%;">File Name</th>
@@ -99,17 +111,40 @@
           <th style="width:5%;">Actions</th>
         </tr>
       </thead>
-      <tr>
-        <td>file1.file</td>
-        <td>TeX auxiliary</td>
+      <tfoot>
+        <th class="is-paddingless"></th>
+        <th class="is-paddingless"></th>
+        <th class="is-paddingless"></th>
+        <th class="is-paddingless"></th>
+        <th class="is-paddingless"></th>
+      </tfoot>
+      <tr class="is-danger">
+        <td><div class="help has-text-weight-bold is-danger">File type unknown - delete or move to /anc.</div>
+            file1.file</td>
+        <td>Unknown</td>
         <td>32KB</td>
         <td>2018-07-23 2:32pm EDT</td>
         <td class="has-text-centered"><a href="#"><span class="icon"><i class="fa fa-trash" aria-label="Delete"></i></span></a></td>
       </tr>
-      <tr>
-        <td>file2.file</td>
+      <tr class="is-warning">
+        <td><div class="help has-text-weight-bold is-warning">This is a warning about this file</div>
+          file2.tex</td>
         <td>LaTeX2e</td>
         <td>119KB</td>
+        <td>2018-07-23 2:32pm EDT</td>
+        <td class="has-text-centered"><a href="#"><span class="icon"><i class="fa fa-trash" aria-label="Delete"></i></span></a></td>
+      </tr>
+      <tr>
+        <td>/anc <i class="fa fa-angle-down" aria-label="Expand subdirectory"></a></td>
+        <td></td>
+        <td class="has-text-weight-bold">2KB</td>
+        <td>2018-07-23 2:32pm EDT</td>
+        <td class="has-text-centered"><a href="#"><span class="icon"><i class="fa fa-trash" aria-label="Delete"></i></span></a></td>
+      </tr>
+      <tr>
+        <td><span class="is-subdirectory">file3.txt</span></td>
+        <td>Plain text</td>
+        <td>2KB</td>
         <td>2018-07-23 2:32pm EDT</td>
         <td class="has-text-centered"><a href="#"><span class="icon"><i class="fa fa-trash" aria-label="Delete"></i></span></a></td>
       </tr>

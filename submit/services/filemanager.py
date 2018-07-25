@@ -42,6 +42,10 @@ class BadRequest(RequestFailed):
     """The request was malformed or otherwise improper."""
 
 
+class Oversize(BadRequest):
+    """The upload was too large."""
+
+
 class BadResponse(RequestFailed):
     """The response from the file management service was malformed."""
 
@@ -70,7 +74,7 @@ class FileManagementService(object):
     """Encapsulates a connection with the file management service."""
 
     def __init__(self, endpoint: str, verify_cert: bool = True,
-                 scheme: str = 'https://') -> None:
+                 headers: dict = {}) -> None:
         """
         Initialize an HTTP session.
 
@@ -82,6 +86,9 @@ class FileManagementService(object):
             endpoints for each call.
         verify_cert : bool
             Whether or not SSL certificate verification should enforced.
+        headers : dict
+            Headers to be included on all requests.
+
         """
         self._session = requests.Session()
         self._verify_cert = verify_cert
@@ -97,30 +104,34 @@ class FileManagementService(object):
         if not endpoint.endswith('/'):
             endpoint += '/'
         self._endpoint = endpoint
+        self._session.headers.update(headers)
 
     def _path(self, path: str, query: dict = {}) -> str:
         o = urlparse(self._endpoint)
+        path = path.lstrip('/')
         return urlunparse((
-            o.scheme, o.netloc, f"{o.path}/{path}",
+            o.scheme, o.netloc, f"{o.path}{path}",
             None, urlencode(query), None
         ))
 
     def _make_request(self, method: str, path: str, expected_code: int = 200,
                       **kw) -> requests.Response:
         try:
-            resp = getattr(requests, method)(self._path(path), **kw)
+            resp = getattr(self._session, method)(self._path(path), **kw)
         except requests.exceptions.SSLError as e:
             raise SecurityException('SSL failed: %s' % e) from e
         except requests.exceptions.ConnectionError as e:
             raise ConnectionFailed('Could not connect: %s' % e) from e
         if resp.status_code >= status.HTTP_500_INTERNAL_SERVER_ERROR:
-            raise RequestFailed('Status: {resp.status_code}; {resp.content}')
+            raise RequestFailed(f'Status: {resp.status_code}; {resp.content}')
         elif resp.status_code == status.HTTP_401_UNAUTHORIZED:
-            raise RequestUnauthorized('Not authorized: {resp.content}')
+            raise RequestUnauthorized(f'Not authorized: {resp.content}')
         elif resp.status_code == status.HTTP_403_FORBIDDEN:
-            raise RequestForbidden('Forbidden: {resp.content}')
+            raise RequestForbidden(f'Forbidden: {resp.content}')
+        elif resp.status_code == status.HTTP_413_REQUEST_ENTITY_TOO_LARGE:
+            raise Oversize(f'Too large: {resp.content}')
         elif resp.status_code >= status.HTTP_400_BAD_REQUEST:
-            raise BadRequest('Bad request: {resp.content}',
+            raise BadRequest(f'Bad request: {resp.content}',
                              data=resp.json())
         elif resp.status_code is not expected_code:
             raise RequestFailed(f'Unexpected status code: {resp.status_code}')
@@ -171,7 +182,9 @@ class FileManagementService(object):
         dict
             Response headers.
         """
-        return self.request('post', '/', files={'file': pointer})
+        files = {'file': (pointer.filename, pointer, pointer.mimetype)}
+        return self.request('post', '/', files=files,
+                            expected_code=status.HTTP_201_CREATED)
 
     def get_upload_status(self, upload_id: str) -> Tuple[dict, dict]:
         """

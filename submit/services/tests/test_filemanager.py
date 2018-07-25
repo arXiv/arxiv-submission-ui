@@ -1,3 +1,5 @@
+"""Tests for :mod:`submit.services.filemanager`."""
+
 from unittest import TestCase, mock
 import io
 import tempfile
@@ -9,59 +11,13 @@ from flask import Blueprint, jsonify, Flask, request
 from arxiv import status
 from .. import filemanager
 
-blueprint = Blueprint('filemanager', __name__)
-
-
-class ResponseWrapper(object):
-    """Provide a :class:`requests.Response`-like API for Flask responses."""
-
-    def __init__(self, resp):
-        self.resp = resp
-
-    def json(self):
-        return self.resp.json
-
-    @property
-    def status_code(self):
-        return self.resp.status_code
-
-    @property
-    def headers(self):
-        return self.resp.headers
-
-    @property
-    def content(self):
-        return self.resp.data
-
-
-@blueprint.route('/status')
-def service_status():
-    """Mock implementation of service status route."""
-    return jsonify({'status': 'ok'})
-
-
-@blueprint.route('/', methods=['POST'])
-def upload_package():
-    """Mock implementation of upload route."""
-    if 'file' not in request.files:
-        raise BadRequest('No file')
-    if len(request.files['file'].read()) > 80:  # Arbitrary limit.
-        raise RequestEntityTooLarge('Nope!')
-    if 'Authorization' not in request.headers:
-        raise Unauthorized('Nope!')
-    if request.headers['Authorization'] != '!':     # Arbitrary value.
-        raise Forbidden('No sir!')
-    # Not sure what the response will look like yet.
-    return jsonify({'upload': True}), status.HTTP_201_CREATED
-
 
 class TestGetStatus(TestCase):
     """Get the file management service status."""
 
     def setUp(self):
         """Initialize a mock file management service."""
-        self.service = Flask('filemanager')
-        self.service.register_blueprint(blueprint)
+        self.service = create_fm_app()
         self.client = self.service.test_client()
 
     def get(self, path, *args, **kwargs):
@@ -84,8 +40,7 @@ class TestUploadPackage(TestCase):
 
     def setUp(self):
         """Initialize a mock file management service."""
-        self.service = Flask('filemanager')
-        self.service.register_blueprint(blueprint)
+        self.service = create_fm_app()
         self.client = self.service.test_client()
         self.headers = {}
 
@@ -170,3 +125,53 @@ class TestUploadPackage(TestCase):
                               content_type='application/tar+gz')
         with self.assertRaises(filemanager.Oversize):
             data, headers = fm.upload_package(pointer)
+
+
+class ResponseWrapper(object):
+    """Provide a :class:`requests.Response`-like API for Flask responses."""
+
+    def __init__(self, resp):
+        self.resp = resp
+
+    def json(self):
+        return self.resp.json
+
+    @property
+    def status_code(self):
+        return self.resp.status_code
+
+    @property
+    def headers(self):
+        return self.resp.headers
+
+    @property
+    def content(self):
+        return self.resp.data
+
+
+def create_fm_app():
+    """Generate a mock file management app."""
+    blueprint = Blueprint('filemanager', __name__)
+
+    @blueprint.route('/status')
+    def service_status():
+        """Mock implementation of service status route."""
+        return jsonify({'status': 'ok'})
+
+    @blueprint.route('/', methods=['POST'])
+    def upload_package():
+        """Mock implementation of upload route."""
+        if 'file' not in request.files:
+            raise BadRequest('No file')
+        if len(request.files['file'].read()) > 80:  # Arbitrary limit.
+            raise RequestEntityTooLarge('Nope!')
+        if 'Authorization' not in request.headers:
+            raise Unauthorized('Nope!')
+        if request.headers['Authorization'] != '!':     # Arbitrary value.
+            raise Forbidden('No sir!')
+        # Not sure what the response will look like yet.
+        return jsonify({'upload': True}), status.HTTP_201_CREATED
+
+    app = Flask('filemanager')
+    app.register_blueprint(blueprint)
+    return app

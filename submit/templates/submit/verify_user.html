@@ -5,8 +5,8 @@
 {% block within_content %}
 
 <h2 class="is-size-4">Verify your contact information</h2>
-<p><span class="label">Forename:</span> Ima</p>
-<p><span class="label">Surname:</span> Nauthor</p>
+<p><span class="label">First or given name:</span> Ima</p>
+<p><span class="label">Last or family name:</span> Nauthor</p>
 <p><span class="label">Suffix:</span></p>
 <p><span class="label">Affiliation:</span> Cornell University</p>
 <p><span class="label">E-mail:</span> ian413@cornell.edu</p>
@@ -19,7 +19,7 @@
         {{ form.verify_user.label }}
       </div>
       {% for error in form.verify_user.errors %}
-        <p class="help is-warning">{{ error }}</p>
+        <p class="help is-danger">{{ error }}</p>
       {% endfor %}
     </div>
 </div>

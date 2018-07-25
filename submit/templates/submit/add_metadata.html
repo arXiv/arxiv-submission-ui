@@ -11,21 +11,21 @@
     <div class="control">
       <label class="label">{{ field.label.text }} <span class="icon has-text-link"><i class="fa fa-question-circle"></i></span></label>
       {% if field.errors %}
-        {{ field(class="input is-warning")|safe }}
-      {% else %}
-        {{ field(class="input")|safe }}
-      {% endif %}
-      {% if field.errors %}
-        <div class="help is-warning">
+        <div class="help is-danger">
           {% for error in field.errors %}
               {{ error }}
           {% endfor %}
         </div>
       {% endif %}
       {% if field.description %}
-      <p class="help has-text-grey">
+      <p class="help has-text-grey is-marginless">
         {{ field.description|safe }}
       </p>
+      {% endif %}
+      {% if field.errors %}
+        {{ field(class="input is-danger")|safe }}
+      {% else %}
+        {{ field(class="input")|safe }}
       {% endif %}
     </div>
   </div>

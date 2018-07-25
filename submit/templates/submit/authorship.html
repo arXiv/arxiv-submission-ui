@@ -3,7 +3,7 @@
 {% import "submit/submit_macros.html" as submit_macros %}
 
 {% block within_content %}
-<h2 class="is-size-4">Confirm authorship or proxy approval</h2>
+<h2 class="is-size-4">Confirm authorship</h2>
 <form method="POST" action="{{ url_for('ui.authorship',submission_id=submission_id) }}">
   {% for field in form.authorship %}
     <div class="field">
@@ -17,19 +17,19 @@
   {% endfor %}
   {% if form.authorship.errors %}
     {% for error in form.authorship.errors %}
-      <p class="help is-warning">{{ error }}</p>
+      <p class="help is-danger">{{ error }}</p>
     {% endfor %}
   {% endif %}
 
   <div class="field">
-    <div class="control" style="margin-left: 1.25em">
+    <div class="control" style="margin-left: 2em">
       <div class="checkbox">
         {{ form.proxy }}
         {{ form.proxy.label }} <a href="help link as modal"><i class="fa fa-question-circle is-info"></i></a>
       </div>
       {% if form.proxy.errors %}
         {% for error in form.proxy.errors %}
-          <p class="help is-warning">{{ error }}</p>
+          <p class="help is-danger">{{ error }}</p>
         {% endfor %}
       {% endif %}
     </div>

@@ -9,13 +9,11 @@
   <div class="field">
   {% for subfield in form.license %}
     <div class="control">
-
       <label class="radio">
         {{subfield}}
+        {{ subfield.label.text }}
       {% if subfield.data %}
-          <a href="{{subfield.data}}">{{ subfield.label.text }}</a>
-      {% else %}
-          {{subfield.label.text }}
+          <a href="{{subfield.data}}" title="license info"><i class="fa fa-question-circle is-info"></i></a>
       {% endif %}
       </label>
     </div>
@@ -24,7 +22,7 @@
 
   {% if form.license.errors %}
     {% for error in form.license.errors %}
-      <p class="help is-warning">{{ error }}</p>
+      <p class="help is-danger">{{ error }}</p>
     {% endfor %}
   {% endif %}
 

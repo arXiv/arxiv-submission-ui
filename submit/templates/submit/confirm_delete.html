@@ -1,0 +1,22 @@
+{% extends "submit/base.html" %}
+
+{% import "submit/submit_macros.html" as submit_macros %}
+
+{% block within_content %}
+<h2 class="is-size-4">Delete Files</h2>
+<div class="container" style="max-width: 640px">
+  <div class="message is-danger is-inline-block">
+    <div class="message-body">
+      <h3 class="is-size-5 has-text-weight-bold has-text-primary">This action will remove the following files from arXiv:</h3>
+      <ul>
+        <li>file-to-be-deleted</li>
+      </ul>
+      <div class="buttons is-centered">
+          <a class="button" href="#">Keep these files</a>
+          <a class="button is-primary" href="#">Delete these files</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock within_content %}

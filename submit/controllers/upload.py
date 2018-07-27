@@ -120,7 +120,16 @@ def _post_upload(params: MultiDict, files: MultiDict, session: Session,
 @util.flow_control('ui.cross_list', 'ui.file_process', 'ui.user')
 def upload(method: str, params: MultiDict, files: MultiDict, session: Session,
            submission_id: int) -> Response:
-    """Handle a file upload request."""
+    """
+    Handle a file upload request.
+
+    GET requests are treated as a request for information about the current
+    state of the submission upload.
+
+    POST requests are treated either as package upload or a request to replace
+    a file. If a submission upload workspace does not already exist, the upload
+    is treated as the former.
+    """
     submission = load_submission(submission_id)
     if method == 'GET':
         return _get_upload(params, session, submission)
@@ -133,6 +142,18 @@ def upload(method: str, params: MultiDict, files: MultiDict, session: Session,
 
 def delete(method: str, params: MultiDict, session: Session,
            submission_id: int) -> Response:
+    """
+    Handle a request to delete a file.
+
+    The file will only be deleted if a POST request is made that also contains
+    the ``confirmed`` parameter.
+
+    The process can be initiated with a GET request that contains the
+    ``file_path`` (key) for the file to be deleted. For example, a button on
+    the upload interface may link to the deletion route with the file path
+    as a query parameter. This will generate a deletion confirmation form,
+    which can be POSTed to complete the action.
+    """
     submission = load_submission(submission_id)
     upload_id = submission.source_content.identifier
     response_data = {
@@ -140,6 +161,10 @@ def delete(method: str, params: MultiDict, session: Session,
         'submission_id': submission.submission_id
     }
     if method == 'GET':
+        # The only thing that we want to get from the request params on a GET
+        # request is the file path. This way there is no way for a GET request
+        # to trigger actual deletion. The user must explicitly indicate via
+        # a valid POST that the file should in fact be deleted.
         form = DeleteFileForm(MultiDict({'file_path': params['file_path']}))
         response_data.update({'form': form})
         return response_data, status.HTTP_200_OK, {}

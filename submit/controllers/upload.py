@@ -25,8 +25,8 @@ Response = Tuple[Dict[str, Any], int, Dict[str, Any]]  # pylint: disable=C0103
 def _update_submission(submission: Submission, upload_status: UploadStatus,
                        submitter: User, client: Optional[Client] = None) \
         -> Submission:
-    if submission.source_content is not None and \
-            submission.source_content.identifier == upload_status.identifier:
+    existing_upload = getattr(submission.source_content, 'identifier', None)
+    if existing_upload == upload_status.identifier:
         return None
     try:
         submission, stack = save(  # pylint: disable=W0612
@@ -42,7 +42,7 @@ def _update_submission(submission: Submission, upload_status: UploadStatus,
         raise BadRequest('Whoops') from e
     except SaveError as e:      # TODO: get more specific
         raise InternalServerError('Whoops!') from e
-    return None
+    return submission
 
 
 def _get_upload(params: MultiDict, session: Session, submission: Submission) \

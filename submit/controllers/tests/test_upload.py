@@ -51,18 +51,18 @@ class TestUpload(TestCase):
     def test_get_no_upload(self, mock_load):
         """GET request for submission with no upload package."""
         submission_id = 2
+        mock_submission = mock.MagicMock(
+            submission_id=submission_id,
+            source_content=None
+        )
         mock_load.return_value = (
-            mock.MagicMock(
-                submission_id=submission_id,
-                source_content=None
-            ), []
+            mock_submission, []
         )
         params = MultiDict({})
         files = MultiDict({})
         response_data, code, headers = upload.upload(
             'GET', params, files, self.session, submission_id
         )
-        self.assertEqual(response_data, {}, 'No data to return')
         self.assertEqual(code, status.HTTP_200_OK, 'Returns 200 OK')
         self.assertIn('submission', response_data, 'Submission is in response')
         self.assertIn('submission_id', response_data, 'ID is in response')
@@ -114,8 +114,8 @@ class TestUpload(TestCase):
         self.assertIn('submission_id', response_data, 'ID is in response')
 
     @mock.patch(f'{upload.__name__}.filemanager')
-    @mock.patch('arxiv.submission.save')
-    @mock.patch('arxiv.submission.load')
+    @mock.patch(f'{upload.__name__}.save')
+    @mock.patch(f'arxiv.submission.load')
     def test_post_upload(self, mock_load, mock_save, mock_filemanager):
         """POST request for submission with an existing upload package."""
         mock_filemanager.RequestFailed = filemanager.RequestFailed
@@ -131,7 +131,7 @@ class TestUpload(TestCase):
         )
         mock_load.return_value = (mock_submission, [])
         mock_save.return_value = (mock_submission, [])
-        mock_filemanager.upload_package.return_value = (
+        mock_filemanager.add_file.return_value = (
             UploadStatus(
                 identifier=25,
                 checksum='a1s2d3f4',
@@ -155,9 +155,9 @@ class TestUpload(TestCase):
             'POST', params, files, self.session, submission_id
         )
         self.assertEqual(code, status.HTTP_200_OK, 'Returns 200 OK')
-        self.assertEqual(mock_filemanager.upload_package.call_count, 1,
+        self.assertEqual(mock_filemanager.add_file.call_count, 1,
                          'Calls the file management service')
         self.assertIn('status', response_data, 'Upload status is in response')
         self.assertIn('submission', response_data, 'Submission is in response')
         self.assertIn('submission_id', response_data, 'ID is in response')
-        self.assertTrue(mock_filemanager.upload_package.called_with(mock_file))
+        self.assertTrue(mock_filemanager.add_file.called_with(mock_file))

@@ -2,6 +2,8 @@
 
 from unittest import TestCase, mock
 import time
+import json
+from datetime import datetime
 from threading import Thread, Event
 import requests
 import io
@@ -61,13 +63,30 @@ class TestUploadPackage(TestCase):
         t.start()
         time.sleep(2)    # Wait for app to be available.
 
+        cls.mock_data = json.dumps(dict(
+            checksum='a1s2d3f4',
+            size=593920,
+            file_list=[
+                dict(
+                    path='',
+                    name='thebestfile.pdf',
+                    file_type='PDF',
+                    added=datetime.now().isoformat(),
+                    size=20505,
+                    ancillary=False,
+                    errors=[]
+                )
+            ],
+            errors=[]
+        ))
+
     def test_upload_package(self):
         """Create a new file upload package/workspace."""
         fm = filemanager.FileManagementService(self.service_endpoint,
                                                headers={'Authorization': '!'})
         _, fname = tempfile.mkstemp()
         with open(fname, 'w') as f:
-            f.write('foo content')
+            f.write(self.mock_data)
 
         pointer = FileStorage(open(fname, 'rb'), filename=fname,
                               content_type='application/tar+gz')
@@ -80,7 +99,7 @@ class TestUploadPackage(TestCase):
                                                headers={})
         _, fname = tempfile.mkstemp()
         with open(fname, 'w') as f:
-            f.write('foo content')
+            f.write(self.mock_data)
 
         pointer = FileStorage(open(fname, 'rb'), filename=fname,
                               content_type='application/tar+gz')
@@ -93,7 +112,7 @@ class TestUploadPackage(TestCase):
                                                headers={'Authorization': '?'})
         _, fname = tempfile.mkstemp()
         with open(fname, 'w') as f:
-            f.write('foo content')
+            f.write(self.mock_data)
 
         pointer = FileStorage(open(fname, 'rb'), filename=fname,
                               content_type='application/tar+gz')
@@ -106,7 +125,7 @@ class TestUploadPackage(TestCase):
                                                headers={'Authorization': '!'})
         _, fname = tempfile.mkstemp()
         with open(fname, 'w') as f:
-            f.write('foo content' * 50)   # Bigger than arbitrary limit, above.
+            f.write(self.mock_data * 5000)   # Bigger than arbitrary limit.
 
         pointer = FileStorage(open(fname, 'rb'), filename=fname,
                               content_type='application/tar+gz')
@@ -133,13 +152,23 @@ class TestUploadFile(TestCase):
         t.start()
         time.sleep(2)    # Wait for app to be available.
 
-    def test_upload_package(self):
+        cls.mock_data = json.dumps(dict(
+            path='',
+            name='thebestfile.pdf',
+            file_type='PDF',
+            added=datetime.now().isoformat(),
+            size=20505,
+            ancillary=False,
+            errors=[]
+        ))
+
+    def test_upload_file(self):
         """Upload a file to an upload package/workspace."""
         fm = filemanager.FileManagementService(self.service_endpoint,
                                                headers={'Authorization': '!'})
         _, fname = tempfile.mkstemp()
         with open(fname, 'w') as f:
-            f.write('foo content')
+            f.write(self.mock_data)
 
         pointer = FileStorage(open(fname, 'rb'), filename=fname,
                               content_type='application/tar+gz')
@@ -152,7 +181,7 @@ class TestUploadFile(TestCase):
                                                headers={})
         _, fname = tempfile.mkstemp()
         with open(fname, 'w') as f:
-            f.write('foo content')
+            f.write(self.mock_data)
 
         pointer = FileStorage(open(fname, 'rb'), filename=fname,
                               content_type='application/tar+gz')
@@ -165,7 +194,7 @@ class TestUploadFile(TestCase):
                                                headers={'Authorization': '?'})
         _, fname = tempfile.mkstemp()
         with open(fname, 'w') as f:
-            f.write('foo content')
+            f.write(self.mock_data)
 
         pointer = FileStorage(open(fname, 'rb'), filename=fname,
                               content_type='application/tar+gz')
@@ -178,7 +207,7 @@ class TestUploadFile(TestCase):
                                                headers={'Authorization': '!'})
         _, fname = tempfile.mkstemp()
         with open(fname, 'w') as f:
-            f.write('foo content' * 50)   # Bigger than arbitrary limit, above.
+            f.write(self.mock_data * 50000)   # Bigger than arbitrary limit, above.
 
         pointer = FileStorage(open(fname, 'rb'), filename=fname,
                               content_type='application/tar+gz')

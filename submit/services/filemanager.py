@@ -125,7 +125,7 @@ class FileManagementService(object):
                     message=error_data['message'],
                     more_info=error_data['more_info']
                 ) for error_data in file_data['errors']]
-            ) for file_data in data['files']],
+            ) for file_data in data['file_list']],
             errors=[Error(
                 type=error_data['type'],
                 message=error_data['message'],
@@ -159,7 +159,7 @@ class FileManagementService(object):
             raise Oversize(f'Too large: {resp.content}')
         elif resp.status_code >= status.HTTP_400_BAD_REQUEST:
             raise BadRequest(f'Bad request: {resp.content}',
-                             data=resp.json())
+                             data=resp.content)
         elif resp.status_code is not expected_code:
             raise RequestFailed(f'Unexpected status code: {resp.status_code}')
         return resp
@@ -260,8 +260,14 @@ class FileManagementService(object):
             Response headers.
 
         """
-        return self.request('post', f'/{upload_id}', files={'file': pointer},
-                            expected_code=status.HTTP_201_CREATED)
+        print('add file', upload_id)
+        data, headers = self.request('post', f'/{upload_id}',
+                                     files={'file': pointer},
+                                     expected_code=status.HTTP_201_CREATED)
+        print('::', data, headers)
+        upload_status = self._parse_upload_status(data)
+        print('::', upload_status)
+        return upload_status, headers
 
     def delete_workspace(self, upload_id: str) -> Tuple[dict, dict]:
         """

@@ -1,7 +1,7 @@
 """Mock file management app for testing and development."""
 
 from datetime import datetime
-
+import json
 from flask import Flask, Blueprint, jsonify, request
 from werkzeug.exceptions import RequestEntityTooLarge, BadRequest, \
     Unauthorized, Forbidden, NotFound
@@ -9,6 +9,51 @@ from werkzeug.exceptions import RequestEntityTooLarge, BadRequest, \
 from arxiv import status
 
 blueprint = Blueprint('filemanager', __name__)
+
+UPLOADS = {
+    1: dict(
+        checksum='a1s2d3f4',
+        size=593920,
+        file_list={
+            'thebestfile.pdf': dict(
+                path='',
+                name='thebestfile.pdf',
+                file_type='PDF',
+                added=datetime.now().isoformat(),
+                size=20505,
+                ancillary=False,
+                errors=[]
+            )
+        },
+        errors=[]
+    ),
+    2: dict(checksum='4f3d2s1a', size=0, file_list={}, errors=[])
+}
+
+
+def _set_upload(upload_id, payload):
+    upload_status = dict(payload)
+    upload_status['file_list'] = {
+        f'{f["path"]}{f["name"]}': f for f in upload_status['file_list']
+    }
+    UPLOADS[upload_id] = upload_status
+    return _get_upload(upload_id)
+
+
+def _get_upload(upload_id):
+    try:
+        status = dict(UPLOADS[upload_id])
+    except KeyError:
+        raise NotFound('Nope')
+    if type(status['file_list']) is dict:
+        status['file_list'] = list(status['file_list'].values())
+    status['identifier'] = upload_id
+    return status
+
+
+def _add_file(upload_id, file_data):
+    UPLOADS[upload_id]['file_list'][f'{file_data["path"]}{file_data["name"]}'] = file_data
+    return _get_upload(upload_id)
 
 
 @blueprint.route('/status')
@@ -22,60 +67,38 @@ def upload_package():
     """Mock implementation of upload route."""
     if 'file' not in request.files:
         raise BadRequest('No file')
-    if len(request.files['file'].read()) > 80:  # Arbitrary limit.
+    content = request.files['file'].read()
+    if len(content) > 80000:  # Arbitrary limit.
         raise RequestEntityTooLarge('Nope!')
     if 'Authorization' not in request.headers:
         raise Unauthorized('Nope!')
     if request.headers['Authorization'] != '!':     # Arbitrary value.
         raise Forbidden('No sir!')
+
+    payload = json.loads(content)    # This is specific to the mock.
     # Not sure what the response will look like yet.
-    upload_status = dict(
-        identifier=25,
-        checksum='a1s2d3f4',
-        size=593920,
-        file_list=[dict(
-            path='',
-            name='thebestfile.pdf',
-            file_type='PDF',
-            added=datetime.now().isoformat(),
-            size=20505,
-            ancillary=False,
-            errors=[]
-        )],
-        errors=[]
-    )
+    upload_id = max(UPLOADS.keys()) + 1
+    upload_status = _set_upload(upload_id, payload)
     return jsonify(upload_status), status.HTTP_201_CREATED
 
 
-@blueprint.route('/<upload_id>', methods=['POST'])
+@blueprint.route('/<int:upload_id>', methods=['POST'])
 def add_file(upload_id):
     """Mock implementation of file upload route."""
-    if int(upload_id) >= 25:
-        raise NotFound('No such upload')
+    upload_status = _get_upload(upload_id)
     if 'file' not in request.files:
-        raise BadRequest('No file')
-    if len(request.files['file'].read()) > 80:  # Arbitrary limit.
-        raise RequestEntityTooLarge('Nope!')
+        raise BadRequest('{"error": "No file"}')
+    content = request.files['file'].read()
+    if len(content) > 80000:  # Arbitrary limit.
+        raise RequestEntityTooLarge('{"error": "Nope!"}')
     if 'Authorization' not in request.headers:
-        raise Unauthorized('Nope!')
+        raise Unauthorized('{"error": "No chance"}')
     if request.headers['Authorization'] != '!':     # Arbitrary value.
-        raise Forbidden('No sir!')
+        raise Forbidden('{"error": "No sir!"}')
+
     # Not sure what the response will look like yet.
-    upload_status = dict(
-        identifier=25,
-        checksum='a1s2d3f4',
-        size=593920,
-        file_list=[dict(
-            path='',
-            name='thebestfile.pdf',
-            file_type='PDF',
-            added=datetime.now().isoformat(),
-            size=20505,
-            ancillary=False,
-            errors=[]
-        )],
-        errors=[]
-    )
+    payload = json.loads(content)
+    upload_status = _add_file(upload_id, payload)
     return jsonify(upload_status), status.HTTP_201_CREATED
 
 

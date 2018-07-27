@@ -6,18 +6,20 @@
 <h2 class="is-size-4">Choose a primary classification</h2>
 <form method="POST" action="{{ url_for('ui.classification', submission_id=submission_id) }}">
   {% with field = form.category %}
-  <div class="field">
+  <div class="field breathe-vertical">
     <div class="control">
-      {{ field.label }}
+      <div class="is-block">
+      {{ field.label(class_="label is-inline-block") }} <a href="help link as modal"><i class="fa fa-question-circle is-info"></i></a>
+    </div>
       <div class="select">
       {% if field.errors %}
-        {{ field(class="is-warning")|safe }}
+        {{ field(class="is-danger")|safe }}
       {% else %}
         {{ field()|safe }}
       {% endif %}
       </div>
       {% if field.errors %}
-        <div class="help is-warning">
+        <div class="help is-danger">
           {% for error in field.errors %}
               {{ error }}
           {% endfor %}
@@ -35,7 +37,7 @@
   <div class="message is-link is-inline-block submit-nav">
     <div class="message-body">
       <p><span class="icon has-text-link"><i class="fa fa-info-circle"></i></span>
-      You may add archives to the list and change defaults in your <a href="#">user account settings</a>.</p>
+      You may add categories to the list and change defaults in your <a href="#">user account settings</a>.</p>
     </div>
   </div>
   {{ submit_macros.submit_nav() }}

@@ -4,4 +4,11 @@
 .form-margin {
   margin: 0.4em 0; }
 
+/* overrides for this form only? may move to base */
+.field:not(:last-child) {
+  margin-bottom: 1.25em; }
+
+.label:not(:last-child) {
+  margin-bottom: 0.25em; }
+
 /*# sourceMappingURL=submit.css.map */

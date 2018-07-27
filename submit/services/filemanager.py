@@ -260,13 +260,10 @@ class FileManagementService(object):
             Response headers.
 
         """
-        print('add file', upload_id)
         data, headers = self.request('post', f'/{upload_id}',
                                      files={'file': pointer},
                                      expected_code=status.HTTP_201_CREATED)
-        print('::', data, headers)
         upload_status = self._parse_upload_status(data)
-        print('::', upload_status)
         return upload_status, headers
 
     def delete_workspace(self, upload_id: str) -> Tuple[dict, dict]:

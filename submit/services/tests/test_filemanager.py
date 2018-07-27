@@ -173,7 +173,7 @@ class TestUploadFile(TestCase):
         pointer = FileStorage(open(fname, 'rb'), filename=fname,
                               content_type='application/tar+gz')
         data, headers = fm.add_file(2, pointer)
-        self.assertIn('identifier', data)
+        self.assertEqual(data.identifier, 2)
 
     def test_upload_unauthorized(self):
         """An auth header is not included in the request."""

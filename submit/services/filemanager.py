@@ -13,12 +13,14 @@ the file management service as they are being received by this UI application.
 from typing import Tuple
 import json
 from urllib.parse import urlparse, urlunparse, urlencode
-
+import dateutil.parser
 import requests
 from requests.packages.urllib3.util.retry import Retry
 
 from arxiv import status
 from werkzeug.datastructures import FileStorage
+
+from submit.domain import UploadStatus, FileStatus, Error
 
 
 class RequestFailed(IOError):
@@ -106,6 +108,31 @@ class FileManagementService(object):
         self._endpoint = endpoint
         self._session.headers.update(headers)
 
+    def _parse_upload_status(self, data: dict) -> UploadStatus:
+        return UploadStatus(
+            identifier=data['identifier'],
+            checksum=data['checksum'],
+            size=data['size'],
+            file_list=[FileStatus(
+                path=file_data['path'],
+                name=file_data['name'],
+                file_type=file_data['file_type'],
+                added=dateutil.parser.parse(file_data['added']),
+                size=int(file_data['size']),
+                ancillary=bool(file_data['ancillary']),
+                errors=[Error(
+                    type=error_data['type'],
+                    message=error_data['message'],
+                    more_info=error_data['more_info']
+                ) for error_data in file_data['errors']]
+            ) for file_data in data['files']],
+            errors=[Error(
+                type=error_data['type'],
+                message=error_data['message'],
+                more_info=error_data['more_info']
+            ) for error_data in data['errors']]
+        )
+
     def _path(self, path: str, query: dict = {}) -> str:
         o = urlparse(self._endpoint)
         path = path.lstrip('/')
@@ -186,7 +213,7 @@ class FileManagementService(object):
         return self.request('post', '/', files=files,
                             expected_code=status.HTTP_201_CREATED)
 
-    def get_upload_status(self, upload_id: str) -> Tuple[dict, dict]:
+    def get_upload_status(self, upload_id: str) -> Tuple[UploadStatus, dict]:
         """
         Retrieve metadata about an accepted and processed upload package.
 
@@ -203,9 +230,11 @@ class FileManagementService(object):
             Response headers.
 
         """
-        return self.request('get', f'/{upload_id}')
+        data, headers = self.request('get', f'/{upload_id}')
+        upload_status = self._parse_upload_status(data)
+        return upload_status, headers
 
-    def add_files_to_package(self, upload_id: str, pointer: FileStorage) \
+    def add_file(self, upload_id: str, pointer: FileStorage) \
             -> Tuple[dict, dict]:
         """
         Upload a file or package to an existing upload workspace.
@@ -231,7 +260,8 @@ class FileManagementService(object):
             Response headers.
 
         """
-        return self.request('post', f'/{upload_id}', files={'file': pointer})
+        return self.request('post', f'/{upload_id}', files={'file': pointer},
+                            expected_code=status.HTTP_201_CREATED)
 
     def delete_workspace(self, upload_id: str) -> Tuple[dict, dict]:
         """

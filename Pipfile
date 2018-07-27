@@ -15,7 +15,7 @@ pytz = "*"
 SQLAlchemy = "*"
 bleach = "*"
 arxiv-auth = "==0.0.4"
-arxiv-submission-core = "==0.4.2rc0"
+arxiv-submission-core = "==0.4.2rc1"
 
 [dev-packages]
 "nose2" = "*"

@@ -7,6 +7,10 @@ from werkzeug.exceptions import InternalServerError, BadRequest,\
     MethodNotAllowed
 from werkzeug.datastructures import FileStorage
 
+from wtforms import Form, SelectMultipleField, StringField, BooleanField, \
+    widgets, validators
+from flask import url_for
+
 from arxiv import status
 from arxiv.submission import save
 from arxiv.submission.domain import Submission, User, Client
@@ -125,3 +129,33 @@ def upload(method: str, params: MultiDict, files: MultiDict, session: Session,
     elif method == 'POST':
         return _post_upload(params, files, session, submission)
     raise MethodNotAllowed('Nope')
+
+
+def delete(method: str, params: MultiDict, session: Session,
+           submission_id: int) -> Response:
+    submission = load_submission(submission_id)
+    upload_id = submission.source_content.identifier
+    response_data = {
+        'submission': submission,
+        'submission_id': submission.submission_id
+    }
+    if method == 'GET':
+        form = DeleteFileForm(MultiDict({'file_path': params['file_path']}))
+        response_data.update({'form': form})
+        return response_data, status.HTTP_200_OK, {}
+    elif method == 'POST':
+        form = DeleteFileForm(params)
+        if form.validate() and form.confirmed.data:
+            filemanager.delete_file(upload_id, form.file_path)
+            redirect = url_for('ui.upload_files', submission_id=submission_id)
+            return {}, status.HTTP_303_SEE_OTHER, {'Location': redirect}
+        response_data.update({'form': form})
+        return response_data, status.HTTP_400_BAD_REQUEST, {}
+
+
+class DeleteFileForm(Form):
+    """Form for deleting individual files."""
+
+    file_path = StringField('File', validators=[validators.DataRequired()])
+    confirmed = BooleanField('Confirmed',
+                             validators=[validators.DataRequired()])

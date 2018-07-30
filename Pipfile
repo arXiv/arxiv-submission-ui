@@ -4,7 +4,7 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-arxiv-base = "==0.7.1"
+arxiv-base = {git = "https://github.com/cul-it/arxiv-base.git", editable = true, ref = "develop"}
 dataclasses = "*"
 Flask = "*"
 jsonschema = "*"

@@ -125,7 +125,7 @@ def cross_list(submission_id: int) -> Response:
     if code in [status.HTTP_200_OK, status.HTTP_400_BAD_REQUEST]:
         rendered = render_template(
             "submit/cross_list.html",
-            pagetitle='Choose Secondary Classifications',
+            pagetitle='Choose Cross-List Classifications',
             **data
         )
         response = make_response(rendered, code)
@@ -136,11 +136,11 @@ def cross_list(submission_id: int) -> Response:
 
 @blueprint.route('/<int:submission_id>/file_upload', methods=['GET'])
 def file_upload(submission_id: int) -> Response:
-    """Render step 7, file add or edit."""
+    """Render step 7, file upload."""
     code = status.HTTP_200_OK
     rendered = render_template(
         "submit/file_upload.html",
-        pagetitle='Add or Edit Files'
+        pagetitle='Upload Files'
     )
     response = make_response(rendered, code)
     return response

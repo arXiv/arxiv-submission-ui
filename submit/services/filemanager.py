@@ -265,7 +265,8 @@ class FileManagementService(object):
         upload_id : str
             Unique long-lived identifier for the upload.
         file_path : str
-            Path-like key for individual file in upload workspace.
+            Path-like key for individual file in upload workspace. This is the
+            path relative to the root of the workspace.
 
         Returns
         -------
@@ -285,7 +286,8 @@ class FileManagementService(object):
         upload_id : str
             Unique long-lived identifier for the upload.
         file_path : str
-            Path-like key for individual file in upload workspace.
+            Path-like key for individual file in upload workspace. This is the
+            path relative to the root of the workspace.
 
         Returns
         -------

@@ -1,16 +1,20 @@
 {%- extends "base/base.html" %}
 
+{% import "submit/submit_macros.html" as submit_macros %}
+
 {% block addl_head %}
  <link rel="stylesheet" href="{{ url_for('static', filename='css/submit.css')}}" />
 {% endblock addl_head %}
 
 {% block content %}
   <h1 class="title">{% block title %}Submit an Article{% endblock title %}</h1>
+  {% if submission_id %}
   <div class="message">
     <div class="message-body">
-      {{ submit_macros.progress_bar(submission_id) }}
+    {{ submit_macros.progress_bar(submission_id) }}
     </div>
   </div>
+  {% endif %}
   <content>
     {% if form and form.errors %}
       {% if form.errors.events %}

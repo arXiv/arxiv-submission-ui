@@ -1,7 +1,7 @@
 """Provides application for development purposes."""
 
 from submit.factory import create_ui_web_app
-from events.services import classic
+from arxiv.submission.services import classic
 
 app = create_ui_web_app()
 

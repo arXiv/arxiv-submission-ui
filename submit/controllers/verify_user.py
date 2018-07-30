@@ -14,85 +14,52 @@ from wtforms.validators import InputRequired
 
 from arxiv import status
 from arxiv.base import logging
-import events
+from arxiv.users.domain import Session
+import arxiv.submission as events
 
-from .util import flow_control, load_submission
-
-logger = logging.getLogger(__name__)    #pylint: disable=C0103
-
-Response = Tuple[Dict[str, Any], int, Dict[str, Any]]    #pylint: disable=C0103
+from ..util import load_submission
+from . import util
 
 
-def _create_submission(user: events.domain.User,
-                       client: Optional[events.domain.Client] = None) \
-        -> events.domain.Submission:
-    """
-    Create a new submission.
+logger = logging.getLogger(__name__)    # pylint: disable=C0103
 
-    Parameters
-    ----------
-    user : :class:`events.domain.User`
-    client : :class:`events.domain.Client`
-
-    Returns
-    -------
-    :class:`events.domain.Submission`
-
-    Raises
-    ------
-    :class:`werkzeug.exceptions.NotFound`
-        Raised when there is no submission with the specified ID.
-
-    """
-    try:
-        submission, _ = events.save(
-            events.CreateSubmission(creator=user, client=client)
-        )
-    except events.exceptions.InvalidStack as e:
-        logger.error('Could not create submission: %s', e)
-        # Creation requires basically no information, so this is
-        # likely unrecoverable.
-        raise InternalServerError('Creation failed') from e
-    return submission
+Response = Tuple[Dict[str, Any], int, Dict[str, Any]]   # pylint: disable=C0103
 
 
-@flow_control('ui.user', 'ui.authorship', 'ui.user')
-def verify_user(method: str, params: MultiDict,
-                submission_id: Optional[int] = None) -> Response:
+@util.flow_control('ui.user', 'ui.authorship', 'ui.user')
+def verify_user(method: str, params: MultiDict, session: Session,
+                submission_id: int) -> Response:
     """
     Prompt the user to verify their contact information.
 
     Generates a `VerifyContactInformation` event when valid data are POSTed.
-
-    If a submission has not yet been created, the `CreateSubmission` event is
-    raised to yield a submission_id.
     """
     logger.debug(f'method: {method}, submission: {submission_id}. {params}')
+    submitter, client = util.user_and_client_from_session(session)
 
     if submission_id:
         # Will raise NotFound if there is no such submission.
         submission = load_submission(submission_id)
 
-        # Initialize the form with the current state of the submission.
-        if method == 'GET':
-            params['verify_user'] = submission.submitter_contact_verified
+    # Initialize the form with the current state of the submission.
+    if method == 'GET':
+        if submission.submitter_contact_verified:
+            params['verify_user'] = 'true'
 
     form = VerifyUserForm(params)
-    response_data = {'submission_id': submission_id, 'form': form}
+    response_data = {
+        'submission_id': submission_id,
+        'form': form,
+        'submission': submission,
+        'user': session.user,   # We want the most up-to-date representation.
+    }
 
     # Process event if go to next page.
     if method == 'POST':
+        if not form.validate():
+            logger.debug(f'Form is invalid: {form.errors}')
         if form.validate() and form.verify_user.data:
             logger.debug(f'Form is valid: {form.verify_user.data}')
-            # TODO: Create a concrete User from cookie info.
-            submitter = events.domain.User(1, email='ian413@cornell.edu',
-                                           forename='Ima', surname='Nauthor')
-
-            # Create submission if it does not yet exist.
-            if submission_id is None:
-                logger.debug('No submission ID; creating a new submission')
-                submission = _create_submission(submitter)
-                submission_id = submission.submission_id
 
             # Now that we have a submission, we can verify the user's contact
             # information.
@@ -122,7 +89,10 @@ def verify_user(method: str, params: MultiDict,
         # "verify" box.
         else:
             return response_data, status.HTTP_400_BAD_REQUEST, {}
-        response_data.update({'submission_id': submission_id})
+        response_data.update({
+            'submission_id': submission_id,
+            'submission': submission
+        })
         return response_data, status.HTTP_303_SEE_OTHER, {}
     return response_data, status.HTTP_200_OK, {}
 
@@ -132,5 +102,5 @@ class VerifyUserForm(Form):
 
     verify_user = BooleanField(
         'By checking this box, I verify that my user information is correct.',
-        [InputRequired('Please confirm your user information')]
+        [InputRequired('Please confirm your user information')],
     )

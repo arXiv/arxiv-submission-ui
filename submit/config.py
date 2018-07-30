@@ -64,3 +64,5 @@ cookie as path value. If domains are used, this should be None.
 """
 
 CLASSIC_DATABASE_URI = os.environ.get('CLASSIC_DATABASE_URI', 'sqlite:///')
+
+JWT_SECRET = os.environ.get('JWT_SECRET', 'foosecret')

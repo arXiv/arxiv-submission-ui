@@ -14,7 +14,8 @@ PyYAML = "*"
 pytz = "*"
 SQLAlchemy = "*"
 bleach = "*"
-arxiv-submission-events = "==0.3.1"
+arxiv-auth = "==0.0.4"
+arxiv-submission-core = "==0.4.2rc0"
 
 [dev-packages]
 "nose2" = "*"

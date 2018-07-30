@@ -15,9 +15,11 @@ from wtforms.validators import InputRequired, ValidationError, optional
 
 from arxiv import status
 from arxiv.base import logging
-import events
+from arxiv.users.domain import Session
+import arxiv.submission as events
 
-from .util import flow_control, load_submission
+from ..util import load_submission
+from . import util
 
 # from arxiv-submission-core.events.event import VerifyContactInformation
 
@@ -41,16 +43,12 @@ def _data_from_submission(params: MultiDict,
     return params
 
 
-@flow_control('ui.verify_user', 'ui.license', 'ui.user')
-def authorship(method: str, params: MultiDict, submission_id: int,
-               user: Optional[events.domain.User] = None,
-               client: Optional[events.domain.Client] = None) -> Response:
+@util.flow_control('ui.verify_user', 'ui.license', 'ui.user')
+def authorship(method: str, params: MultiDict, session: Session,
+               submission_id: int) -> Response:
     """Convert authorship form data into an `AssertAuthorship` event."""
     logger.debug(f'method: {method}, submission: {submission_id}. {params}')
-
-    # TODO: Create a concrete User from cookie info.
-    user = events.domain.User(1, email='ian413@cornell.edu',
-                              forename='Ima', surname='Nauthor')
+    user, client = util.user_and_client_from_session(session)
 
     # Will raise NotFound if there is no such submission.
     submission = load_submission(submission_id)

@@ -13,7 +13,8 @@ from wtforms import StringField, PasswordField, SelectField, \
 from wtforms.fields.core import UnboundField
 
 from arxiv import status
-import events
+from arxiv.users.domain import Session
+import arxiv.submission as events
 
 Response = Tuple[Dict[str, Any], int, Dict[str, Any]]  # pylint: disable=C0103
 
@@ -56,31 +57,6 @@ def flow_control(prev_page: str, next_page: str, exit_page: str) -> Callable:
             return data, status_code, headers
         return wrapper
     return deco
-
-
-def load_submission(submission_id: int) -> events.domain.Submission:
-    """
-    Load a submission by ID.
-
-    Parameters
-    ----------
-    submission_id : int
-
-    Returns
-    -------
-    :class:`events.domain.Submission`
-
-    Raises
-    ------
-    :class:`werkzeug.exceptions.NotFound`
-        Raised when there is no submission with the specified ID.
-
-    """
-    try:
-        submission, _ = events.load(submission_id)
-    except events.exceptions.NoSuchSubmission as e:
-        raise NotFound('No such submission.') from e
-    return submission
 
 
 class OptGroupSelectWidget(Select):
@@ -143,7 +119,7 @@ class SubmissionMixin:
 
        >>> from wtforms import Form, TextField, validators
        >>> from submit.controllers.util import SubmissionMixin
-       >>> import events
+       >>> import arxiv.submission as events
        >>>
        >>> class FooForm(Form, SubmissionMixin):
        ...     title = TextField('Title')
@@ -204,3 +180,26 @@ class FieldMixin:
         """Convenience accessor for form field names."""
         return [key for key in dir(cls)
                 if isinstance(getattr(cls, key), UnboundField)]
+
+
+# TODO: currently this does nothing with the client. We will need to add that
+# bit once we have a plan for handling client information in this interface.
+def user_and_client_from_session(session: Session) \
+        -> Tuple[events.User, Optional[events.Client]]:
+    """
+    Get submission user/client representations from a :class:`.Session`.
+
+    When we're building submission-related events, we frequently need a
+    submission-friendly representation of the user or client responsible for
+    those events. This function generates those event-domain representations
+    from a :class:`arxiv.users.domain.Submission` object.
+    """
+    user = events.domain.User(
+        session.user.user_id,
+        email=session.user.email,
+        forename=getattr(session.user.name, 'forename', None),
+        surname=getattr(session.user.name, 'surname', None),
+        suffix=getattr(session.user.name, 'suffix', None),
+        endorsements=[c.compound for c in session.authorizations.endorsements]
+    )
+    return user, None

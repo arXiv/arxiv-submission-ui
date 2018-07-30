@@ -11,18 +11,18 @@ from wtforms import validators
 
 from arxiv import status
 from arxiv.base import logging
-import events
+from arxiv.users.domain import Session
+import arxiv.submission as events
 
-from .util import flow_control, load_submission, SubmissionMixin, FieldMixin
-
-# from arxiv-submission-core.events.event import VerifyContactInformation
+from ..util import load_submission
+from . import util
 
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 
 Response = Tuple[Dict[str, Any], int, Dict[str, Any]]  # pylint: disable=C0103
 
 
-class CoreMetadataForm(Form, FieldMixin, SubmissionMixin):
+class CoreMetadataForm(Form, util.FieldMixin, util.SubmissionMixin):
     """Handles core metadata fields on a submission."""
 
     title = TextField('*Title', validators=[validators.DataRequired()])
@@ -76,7 +76,7 @@ class CoreMetadataForm(Form, FieldMixin, SubmissionMixin):
                                  authors_display=field.data)
 
 
-class OptionalMetadataForm(Form, FieldMixin, SubmissionMixin):
+class OptionalMetadataForm(Form, util.FieldMixin, util.SubmissionMixin):
     """Handles optional metadata fields on a submission."""
 
     doi = TextField('DOI',
@@ -152,14 +152,12 @@ def _data_from_submission(params: MultiDict, submission: events.Submission,
     return params
 
 
-@flow_control('ui.file_process', 'ui.add_optional_metadata', 'ui.user')
-def metadata(method: str, params: MultiDict, submission_id: int) -> Response:
+@util.flow_control('ui.file_process', 'ui.add_optional_metadata', 'ui.user')
+def metadata(method: str, params: MultiDict, session: Session,
+             submission_id: int) -> Response:
     """Update metadata on the submission."""
+    submitter, client = util.user_and_client_from_session(session)
     logger.debug(f'method: {method}, submission: {submission_id}. {params}')
-
-    # TODO: Create a concrete User from cookie info.
-    submitter = events.domain.User(1, email='ian413@cornell.edu',
-                                   forename='Ima', surname='Nauthor')
 
     # Will raise NotFound if there is no such submission.
     submission = load_submission(submission_id)
@@ -208,14 +206,13 @@ def metadata(method: str, params: MultiDict, submission_id: int) -> Response:
     return response_data, status.HTTP_200_OK, {}
 
 
-@flow_control('ui.add_metadata', 'ui.confirm_submit', 'ui.user')
-def optional(method: str, params: MultiDict, submission_id: int) -> Response:
+@util.flow_control('ui.add_metadata', 'ui.confirm_submit', 'ui.user')
+def optional(method: str, params: MultiDict, session: Session,
+             submission_id: int) -> Response:
     """Update optional metadata on the submission."""
-    logger.debug(f'method: {method}, submission: {submission_id}. {params}')
+    submitter, client = util.user_and_client_from_session(session)
 
-    # TODO: Create a concrete User from cookie info.
-    submitter = events.domain.User(1, email='ian413@cornell.edu',
-                                   forename='Ima', surname='Nauthor')
+    logger.debug(f'method: {method}, submission: {submission_id}. {params}')
 
     # Will raise NotFound if there is no such submission.
     submission = load_submission(submission_id)

@@ -16,10 +16,11 @@ from wtforms.validators import InputRequired
 from arxiv import status
 from arxiv.base import logging
 from arxiv.license import LICENSES
-import events
-from .util import flow_control, load_submission
+from arxiv.users.domain import Session
+import arxiv.submission as events
+from ..util import load_submission
+from . import util
 
-# from arxiv-submission-core.events.event import VerifyContactInformation
 
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 
@@ -34,14 +35,13 @@ def _data_from_submission(params: MultiDict,
     return params
 
 
-@flow_control('ui.authorship', 'ui.policy', 'ui.user')
-def license(method: str, params: MultiDict, submission_id: int) -> Response:
+@util.flow_control('ui.authorship', 'ui.policy', 'ui.user')
+def license(method: str, params: MultiDict, session: Session,
+            submission_id: int) -> Response:
     """Convert license form data into a `SelectLicense` event."""
-    logger.debug(f'method: {method}, submission: {submission_id}. {params}')
+    submitter, client = util.user_and_client_from_session(session)
 
-    # TODO: Create a concrete User from cookie info.
-    submitter = events.domain.User(1, email='ian413@cornell.edu',
-                                   forename='Ima', surname='Nauthor')
+    logger.debug(f'method: {method}, submission: {submission_id}. {params}')
 
     # Will raise NotFound if there is no such submission.
     submission = load_submission(submission_id)

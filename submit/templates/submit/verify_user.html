@@ -5,11 +5,36 @@
 {% block within_content %}
 
 <h2 class="is-size-4">Verify your contact information</h2>
-<p><span class="label">Forename:</span> Ima</p>
-<p><span class="label">Surname:</span> Nauthor</p>
-<p><span class="label">Suffix:</span></p>
-<p><span class="label">Affiliation:</span> Cornell University</p>
-<p><span class="label">E-mail:</span> ian413@cornell.edu</p>
+<div class="field is-horizontal">
+    <div class="field-label">
+      <span class="has-text-weight-semibold">First or given name(s):</span>
+    </div>
+    <div class="field-body"><span class="is-expanded">Ima</span></div>
+</div>
+<div class="field is-horizontal">
+  <div class="field-label">
+    <span class="has-text-weight-semibold">Last or family name(s):</span>
+  </div>
+   <div class="field-body">Nauthor</div>
+</div>
+<div class="field is-horizontal">
+  <div class="field-label">
+    <span class="has-text-weight-semibold">Suffix:</span>
+  </div>
+  <div class="field-body">&nbsp;</div>
+</div>
+<div class="field is-horizontal">
+  <div class="field-label">
+    <span class="has-text-weight-semibold">Affiliation:</span>
+  </div>
+  <div class="field-body">Cornell University</div>
+</div>
+<div class="field is-horizontal">
+  <div class="field-label">
+    <span class="has-text-weight-semibold">E-mail:</span>
+  </div>
+  <div class="field-body">ian413@cornell.edu</div>
+</div>
 
 <form method="POST" action="{% if submission_id %}{{ url_for('ui.verify_user', submission_id=submission_id) }}{% else %}{{ url_for('ui.verify_user') }}{% endif %}">
   <div class="field">
@@ -19,7 +44,7 @@
         {{ form.verify_user.label }}
       </div>
       {% for error in form.verify_user.errors %}
-        <p class="help is-warning">{{ error }}</p>
+        <p class="help is-danger">{{ error }}</p>
       {% endfor %}
     </div>
 </div>

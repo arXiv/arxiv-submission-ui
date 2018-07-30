@@ -266,25 +266,6 @@ class FileManagementService(object):
         upload_status = self._parse_upload_status(data)
         return upload_status, headers
 
-    def delete_workspace(self, upload_id: str) -> Tuple[dict, dict]:
-        """
-        Delete the entire workspace.
-
-        Parameters
-        ----------
-        upload_id : str
-            Unique long-lived identifier for the upload.
-
-        Returns
-        -------
-        dict
-            An empty dict.
-        dict
-            Response headers.
-
-        """
-        return self.request('delete', f'/{upload_id}', expected_code=204)
-
     def delete_all(self, upload_id: str) -> Download:
         """
         Delete all files in the workspace.
@@ -317,7 +298,8 @@ class FileManagementService(object):
         upload_id : str
             Unique long-lived identifier for the upload.
         file_path : str
-            Path-like key for individual file in upload workspace.
+            Path-like key for individual file in upload workspace. This is the
+            path relative to the root of the workspace.
 
         Returns
         -------
@@ -337,7 +319,8 @@ class FileManagementService(object):
         upload_id : str
             Unique long-lived identifier for the upload.
         file_path : str
-            Path-like key for individual file in upload workspace.
+            Path-like key for individual file in upload workspace. This is the
+            path relative to the root of the workspace.
 
         Returns
         -------
@@ -367,69 +350,6 @@ class FileManagementService(object):
 
         """
         return self.request_file(f'/{upload_id}/content')
-
-    def lock_upload(self, upload_id: str) -> Tuple[dict, dict]:
-        """
-        Lock workspace (read-only mode) while other services are processing.
-
-        Parameters
-        ----------
-        upload_id : str
-            Unique long-lived identifier for the upload.
-
-        Returns
-        -------
-        dict
-            A description of the upload package.
-        dict
-            Response headers.
-
-        """
-        return self.request('post', f'/{upload_id}/lock',
-                            expected_code=status.HTTP_201_CREATED)
-
-    def unlock_upload(self, upload_id: str) -> Tuple[dict, dict]:
-        """
-         Unlock workspace and enable write mode.
-
-        Parameters
-        ----------
-        upload_id : str
-            Unique long-lived identifier for the upload.
-
-        Returns
-        -------
-        dict
-            A description of the upload package.
-        dict
-            Response headers.
-
-        """
-        return self.request('post', f'/{upload_id}/unlock',
-                            expected_code=status.HTTP_201_CREATED)
-
-    def release_upload(self, upload_id: str) -> Tuple[dict, dict]:
-        """
-        Release workspace.
-
-        File management service is free to remove uploaded files, or schedule
-        files for removal at later time.
-
-        Parameters
-        ----------
-        upload_id : str
-            Unique long-lived identifier for the upload.
-
-        Returns
-        -------
-        dict
-            A description of the upload package.
-        dict
-            Response headers.
-
-        """
-        return self.request('post', f'/{upload_id}/release',
-                            expected_code=status.HTTP_201_CREATED)
 
     def get_logs(self, upload_id: str) -> Tuple[dict, dict]:
         """

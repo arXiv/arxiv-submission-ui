@@ -30,8 +30,8 @@ class CoreMetadataForm(Form, util.FieldMixin, util.SubmissionMixin):
         '*Authors',
         validators=[validators.DataRequired()],
         description=(
-            "use <code>Forename Surname</code> or <code>I. "
-            "Surname</code>; separate individual authors with "
+            "use <code>GivenName(s) FamilyName(s)</code> or <code>I. "
+            "FamilyName</code>; separate individual authors with "
             "a comma or 'and'."
         )
     )

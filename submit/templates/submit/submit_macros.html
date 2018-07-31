@@ -1,9 +1,10 @@
 {% macro submit_nav() %}
 
   <div class="buttons submit-nav" role="navigation">
-      <button name="action" class="button" value="previous" aria-label="Previous">Previous</button>
+      <button name="cancel" class="button has-text-grey is-light is-outlined" style="border:0" value="cancel" aria-label="Cancel submission" title="Cancel submission"><span class="icon"><i class="fa fa-trash fa-lg"></i></button>
+      <button name="action" class="button" value="previous" aria-label="Go back one step">Go Back</button>
       <button name="action" type="submit" class="button" value="save_exit" aria-label="Save and Exit">Save and Exit</button>
-      <button name="action" class="button is-link" value="next" aria-label="Next">Next</button>
+      <button name="action" class="button is-link" value="next" aria-label="Save and continue">Save and Continue</button>
   </div>
 
 {% endmacro %}

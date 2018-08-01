@@ -10,3 +10,8 @@
 
 .label:not(:last-child) {
   margin-bottom: 0.25em; }
+
+.buttons .button:not(:last-child) {
+  margin-right: 0.75rem; }
+
+/*# sourceMappingURL=submit.css.map */

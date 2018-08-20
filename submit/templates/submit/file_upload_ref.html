@@ -17,6 +17,18 @@
   </div>
 </div>
 
+<div class="message is-danger">
+  <div class="message-body">
+    <button class="delete is-small is-pulled-right"></button>
+    <div class="is-pulled-left">
+      <span class="icon has-text-danger"><i class="fa fa-warning"></i></span>
+    </div>
+    <div class="content">
+      <p>This is where an error message goes</p>
+    </div>
+  </div>
+</div>
+
 <div class="message is-info">
   <div class="message-body">
     <div class="is-pulled-left">
@@ -60,17 +72,21 @@
   </div>
 </div>
 
-<form class="form" action="{{ url_for('ui.file_upload', submission_id=submission_id) }}" method="POST" enctype="multipart/form-data">
+<form>
   <div class="field is-grouped breathe-vertical">
     <div class="control">
       <div class="file has-name">
         <label class="file-label">
-          <input class="file-input" type="file" name="file" id="file">
+          <input class="file-input" type="file" name="resume">
           <span class="file-cta">
             <span class="file-icon"><i class="fa fa-upload"></i></span>
-            <span class="file-label">Choose a file…</span>
+            <span class="file-label">
+              Choose a file…
+            </span>
           </span>
-          <span id="filename" class="file-name is-fullwidth">Select a file to upload</span>
+          <span class="file-name is-fullwidth">
+            sample-archive-pr27x.tar.gz
+          </span>
         </label>
       </div>
     </div>
@@ -79,11 +95,10 @@
         <input type="checkbox"> Ancillary <span class="icon has-text-link"><i class="fa fa-info-circle"></i></span>
     </div>
     <div class="control">
-      <button type="submit" class="button is-link">Upload</button>
+      <button type="button" class="button is-link">Upload</button>
     </div>
   </div>
 </form>
-
 
 <h3>Files currently attached to this submission</h3>
     <table class="table is-hoverable is-marginless">
@@ -103,21 +118,36 @@
         <th class="is-paddingless"></th>
         <th class="is-paddingless"></th>
       </tfoot>
-      {% for file in status.files %}
-      <tr>
-        <td><span class="is-subdirectory">{{ file.name }}</span></td>
-        <td>{{ file.file_type }}</td>
-        <td>{{ file.size|filesizeformat }}</td>
-        <td></td>
-        <td class="has-text-centered">
-          <a href="{{ url_for('ui.file_delete', submission_id=submission_id) }}?name={{ file.name }}">
-            <span class="icon">
-              <i class="fa fa-trash" aria-label="Delete"></i>
-            </span>
-          </a>
-        </td>
+      <tr class="is-danger">
+        <td><div class="help has-text-weight-bold is-danger">File type unknown - delete or move to /anc.</div>
+            file1.file</td>
+        <td>Unknown</td>
+        <td>32KB</td>
+        <td>2018-07-23 2:32pm EDT</td>
+        <td class="has-text-centered"><a href="#"><span class="icon"><i class="fa fa-trash" aria-label="Delete"></i></span></a></td>
       </tr>
-      {% endfor %}
+      <tr class="is-warning">
+        <td><div class="help has-text-weight-bold is-warning">This is a warning about this file</div>
+          file2.tex</td>
+        <td>LaTeX2e</td>
+        <td>119KB</td>
+        <td>2018-07-23 2:32pm EDT</td>
+        <td class="has-text-centered"><a href="#"><span class="icon"><i class="fa fa-trash" aria-label="Delete"></i></span></a></td>
+      </tr>
+      <tr>
+        <td>/anc <i class="fa fa-angle-down" aria-label="Expand subdirectory"></a></td>
+        <td></td>
+        <td class="has-text-weight-bold">2KB</td>
+        <td>2018-07-23 2:32pm EDT</td>
+        <td class="has-text-centered"><a href="#"><span class="icon"><i class="fa fa-trash" aria-label="Delete"></i></span></a></td>
+      </tr>
+      <tr>
+        <td><span class="is-subdirectory">file3.txt</span></td>
+        <td>Plain text</td>
+        <td>2KB</td>
+        <td>2018-07-23 2:32pm EDT</td>
+        <td class="has-text-centered"><a href="#"><span class="icon"><i class="fa fa-trash" aria-label="Delete"></i></span></a></td>
+      </tr>
     </table>
     <p class="help is-pulled-right"><a href="#"><span class="icon"><i class="fa fa-trash" aria-label="Delete all"></i></span>remove all</a></p>
 

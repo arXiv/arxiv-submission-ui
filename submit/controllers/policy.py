@@ -1,7 +1,7 @@
 """
 Controller for policy action.
 
-Creates an event of type `core.events.event.AcceptPolicy`
+Creates an event of type `core.events.event.ConfirmPolicy`
 """
 
 from typing import Tuple, Dict, Any
@@ -27,7 +27,7 @@ Response = Tuple[Dict[str, Any], int, Dict[str, Any]]  # pylint: disable=C0103
 @util.flow_control('ui.license', 'ui.classification', 'ui.user')
 def policy(method: str, params: MultiDict, session: Session,
            submission_id: int) -> Response:
-    """Convert policy form data into an `AcceptPolicy` event."""
+    """Convert policy form data into an `ConfirmPolicy` event."""
     submitter, client = util.user_and_client_from_session(session)
 
     logger.debug(f'method: {method}, submission: {submission_id}. {params}')
@@ -45,13 +45,13 @@ def policy(method: str, params: MultiDict, session: Session,
             accept_policy = form.policy.data
             if accept_policy and not submission.submitter_accepts_policy:
                 try:
-                    # Create AcceptPolicy event
+                    # Create ConfirmPolicy event
                     submission, stack = events.save(  # pylint: disable=W0612
-                        events.AcceptPolicy(creator=submitter),
+                        events.ConfirmPolicy(creator=submitter),
                         submission_id=submission_id
                     )
                 except events.exceptions.InvalidStack as e:
-                    logger.error('Could not AssertAuthorship: %s', str(e))
+                    logger.error('Could not ConfirmAuthorship: %s', str(e))
                     form.errors     # Causes the form to initialize errors.
                     form._errors['events'] = [ie.message for ie
                                               in e.event_exceptions]

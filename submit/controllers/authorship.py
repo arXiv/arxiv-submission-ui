@@ -1,7 +1,7 @@
 """
 Controller for authorship action.
 
-Creates an event of type `core.events.event.AssertAuthorship`
+Creates an event of type `core.events.event.ConfirmAuthorship`
 """
 
 from typing import Tuple, Dict, Any, Optional
@@ -21,7 +21,7 @@ import arxiv.submission as events
 from ..util import load_submission
 from . import util
 
-# from arxiv-submission-core.events.event import VerifyContactInformation
+# from arxiv-submission-core.events.event import ConfirmContactInformation
 
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 
@@ -46,7 +46,7 @@ def _data_from_submission(params: MultiDict,
 @util.flow_control('ui.verify_user', 'ui.license', 'ui.user')
 def authorship(method: str, params: MultiDict, session: Session,
                submission_id: int) -> Response:
-    """Convert authorship form data into an `AssertAuthorship` event."""
+    """Convert authorship form data into an `ConfirmAuthorship` event."""
     logger.debug(f'method: {method}, submission: {submission_id}. {params}')
     user, client = util.user_and_client_from_session(session)
 
@@ -69,9 +69,9 @@ def authorship(method: str, params: MultiDict, session: Session,
             # No need to do this more than once.
             if submission.submitter_is_author != value:
                 try:
-                    # Create AssertAuthorship event
+                    # Create ConfirmAuthorship event
                     submission, stack = events.save(  # pylint: disable=W0612
-                        events.AssertAuthorship(
+                        events.ConfirmAuthorship(
                             creator=user,
                             client=client,
                             submitter_is_author=value
@@ -79,7 +79,7 @@ def authorship(method: str, params: MultiDict, session: Session,
                         submission_id=submission_id
                     )
                 except events.exceptions.InvalidStack as e:
-                    logger.error('Could not AssertAuthorship: %s', str(e))
+                    logger.error('Could not ConfirmAuthorship: %s', str(e))
                     form.errors     # Causes the form to initialize errors.
                     form._errors['events'] = [ie.message for ie
                                               in e.event_exceptions]

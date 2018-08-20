@@ -1,7 +1,7 @@
 """
 Controller for verify_user action.
 
-Creates an event of type `core.events.event.VerifyContactInformation`
+Creates an event of type `core.events.event.ConfirmContactInformation`
 """
 
 from typing import Tuple, Dict, Any, Optional
@@ -32,7 +32,7 @@ def verify_user(method: str, params: MultiDict, session: Session,
     """
     Prompt the user to verify their contact information.
 
-    Generates a `VerifyContactInformation` event when valid data are POSTed.
+    Generates a `ConfirmContactInformation` event when valid data are POSTed.
     """
     logger.debug(f'method: {method}, submission: {submission_id}. {params}')
     submitter, client = util.user_and_client_from_session(session)
@@ -67,13 +67,13 @@ def verify_user(method: str, params: MultiDict, session: Session,
 
             # There is no need to do this more than once.
             if not submission.submitter_contact_verified:
-                try:    # Create VerifyContactInformation event
+                try:    # Create ConfirmContactInformation event
                     submission, _ = events.save(
-                        events.VerifyContactInformation(creator=submitter),
+                        events.ConfirmContactInformation(creator=submitter),
                         submission_id=submission_id
                     )
                 except events.exceptions.InvalidStack as e:
-                    logger.error('Could not VerifyContactInformation: %s',
+                    logger.error('Could not ConfirmContactInformation: %s',
                                  str(e))
                     form.errors     # Causes the form to initialize errors.
                     form._errors['events'] = [ie.message for ie

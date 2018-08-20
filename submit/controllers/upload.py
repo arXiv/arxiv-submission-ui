@@ -8,11 +8,12 @@ from werkzeug.exceptions import InternalServerError, BadRequest,\
 from werkzeug.datastructures import FileStorage
 
 from wtforms import Form, SelectMultipleField, StringField, BooleanField, \
-    widgets, validators
-from flask import url_for
+    widgets, validators, HiddenField
+from flask import url_for, Markup
 
 from arxiv import status
 from arxiv.submission import save
+from arxiv.base import logging, messages
 from arxiv.submission.domain import Submission, User, Client
 from arxiv.submission.domain.event import SetUploadPackage
 from arxiv.submission.exceptions import InvalidStack, SaveError
@@ -22,6 +23,7 @@ from ..util import load_submission
 from ..services import filemanager
 from ..domain import UploadStatus
 
+logger = logging.getLogger(__name__)
 
 Response = Tuple[Dict[str, Any], int, Dict[str, Any]]  # pylint: disable=C0103
 
@@ -31,7 +33,8 @@ def _update_submission(submission: Submission, upload_status: UploadStatus,
         -> Submission:
     existing_upload = getattr(submission.source_content, 'identifier', None)
     if existing_upload == upload_status.identifier:
-        return None
+        return submission
+
     try:
         submission, stack = save(  # pylint: disable=W0612
             SetUploadPackage(
@@ -45,7 +48,16 @@ def _update_submission(submission: Submission, upload_status: UploadStatus,
     except InvalidStack as e:   # TODO: get more specific
         raise BadRequest('Whoops') from e
     except SaveError as e:      # TODO: get more specific
-        raise InternalServerError('Whoops!') from e
+        logger.error('Encountered SaveError while updating files for %i:'
+                     ' %s', submission.submission_id, e)
+        messages.flash_failure(Markup(
+            'There was a problem carrying out your request. Please try'
+            ' again. If you continue to experience problems, please contact'
+            ' <a href="mailto:help@arxiv.org">arXiv support.'
+        ))
+        redirect = url_for('ui.file_upload',
+                           submission_id=submission.submission_id)
+        return {}, status.HTTP_303_SEE_OTHER, {'Location': redirect}
     return submission
 
 
@@ -60,22 +72,30 @@ def _get_upload(params: MultiDict, session: Session, submission: Submission) \
         return response_data, status.HTTP_200_OK, {}
     upload_id = submission.source_content.identifier
     try:
-        upload_status, headers = filemanager.get_upload_status(upload_id)
+        upload_status = filemanager.get_upload_status(upload_id)
     except filemanager.RequestFailed as e:
         # TODO: handle specific failure cases.
+        logger.error('Encountered RequestFailed getting data for'
+                     ' for %i: %s', submission.submission_id, e)
         raise InternalServerError('Whoops') from e
     response_data.update({'status': upload_status})
-    return response_data, status.HTTP_200_OK, headers
+    return response_data, status.HTTP_200_OK, {}
 
 
 def _post_new_upload(params: MultiDict, pointer: FileStorage, session: Session,
                      submission: Submission) -> Response:
     submitter, client = util.user_and_client_from_session(session)
     try:
-        upload_status, headers = filemanager.upload_package(pointer)
+        upload_status = filemanager.upload_package(pointer)
     except filemanager.RequestFailed as e:
-        # TODO: handle specific failure cases.
-        raise InternalServerError('Whoops') from e
+        messages.flash_failure(Markup(
+            'There was a problem carrying out your request. Please try'
+            ' again. If you continue to experience problems, please contact'
+            ' <a href="mailto:help@arxiv.org">arXiv support.'
+        ))
+        redirect = url_for('ui.file_upload',
+                           submission_id=submission.submission_id)
+        return {}, status.HTTP_303_SEE_OTHER, {'Location': redirect}
     submission = _update_submission(submission, upload_status, submitter,
                                     client)
     response_data = {
@@ -83,7 +103,7 @@ def _post_new_upload(params: MultiDict, pointer: FileStorage, session: Session,
         'submission': submission,
         'submission_id': submission.submission_id
     }
-    return response_data, status.HTTP_200_OK, headers
+    return response_data, status.HTTP_200_OK, {}
 
 
 def _post_new_file(params: MultiDict, pointer: FileStorage, session: Session,
@@ -91,10 +111,16 @@ def _post_new_file(params: MultiDict, pointer: FileStorage, session: Session,
     submitter, client = util.user_and_client_from_session(session)
     upload_id = submission.source_content.identifier
     try:
-        upload_status, headers = filemanager.add_file(upload_id, pointer)
+        upload_status = filemanager.add_file(upload_id, pointer)
     except filemanager.RequestFailed as e:
-        # TODO: handle specific failure cases.
-        raise InternalServerError('Whoops') from e
+        messages.flash_failure(Markup(
+            'There was a problem carrying out your request. Please try'
+            ' again. If you continue to experience problems, please contact'
+            ' <a href="mailto:help@arxiv.org">arXiv support.'
+        ))
+        redirect = url_for('ui.file_upload',
+                           submission_id=submission.submission_id)
+        return {}, status.HTTP_303_SEE_OTHER, {'Location': redirect}
     submission = _update_submission(submission, upload_status, submitter,
                                     client)
     response_data = {
@@ -102,24 +128,28 @@ def _post_new_file(params: MultiDict, pointer: FileStorage, session: Session,
         'submission': submission,
         'submission_id': submission.submission_id
     }
-    return response_data, status.HTTP_200_OK, headers
+    return response_data, status.HTTP_200_OK, {}
 
 
 def _post_upload(params: MultiDict, files: MultiDict, session: Session,
                  submission: Submission) -> Response:
+    logger.debug('POST upload with params %s and files %s', params, files)
+    logger.debug('POST upload with submission %s', submission)
     try:    # Make sure that we have a file to work with.
         pointer = files['file']
     except KeyError as e:
         raise BadRequest('No file selected') from e
 
     if submission.source_content is None:   # New upload package.
+        logger.debug('No existing source_content')
         return _post_new_upload(params, pointer, session, submission)
+    logger.debug('Submission has source content')
     return _post_new_file(params, pointer, session, submission)
 
 
 @util.flow_control('ui.cross_list', 'ui.file_process', 'ui.user')
 def upload(method: str, params: MultiDict, files: MultiDict, session: Session,
-           submission_id: int) -> Response:
+           submission_id: int, token: str) -> Response:
     """
     Handle a file upload request.
 
@@ -130,7 +160,11 @@ def upload(method: str, params: MultiDict, files: MultiDict, session: Session,
     a file. If a submission upload workspace does not already exist, the upload
     is treated as the former.
     """
+    logger.debug('%s upload request for submission %i', method, submission_id)
     submission = load_submission(submission_id)
+    logger.debug('Loaded submission with ID %i', submission.submission_id)
+
+    filemanager.set_auth_token(token)
     if method == 'GET':
         return _get_upload(params, session, submission)
 
@@ -141,7 +175,7 @@ def upload(method: str, params: MultiDict, files: MultiDict, session: Session,
 
 
 def delete(method: str, params: MultiDict, session: Session,
-           submission_id: int) -> Response:
+           submission_id: int, token: str) -> Response:
     """
     Handle a request to delete a file.
 
@@ -154,25 +188,36 @@ def delete(method: str, params: MultiDict, session: Session,
     as a query parameter. This will generate a deletion confirmation form,
     which can be POSTed to complete the action.
     """
+    logger.debug('%s delete with params %s', method, params)
     submission = load_submission(submission_id)
     upload_id = submission.source_content.identifier
     response_data = {
         'submission': submission,
         'submission_id': submission.submission_id
     }
+    filemanager.set_auth_token(token)
+
     if method == 'GET':
         # The only thing that we want to get from the request params on a GET
         # request is the file path. This way there is no way for a GET request
         # to trigger actual deletion. The user must explicitly indicate via
         # a valid POST that the file should in fact be deleted.
-        form = DeleteFileForm(MultiDict({'file_path': params['file_path']}))
+        form = DeleteFileForm(MultiDict({'file_path': params['name']}))
         response_data.update({'form': form})
         return response_data, status.HTTP_200_OK, {}
     elif method == 'POST':
         form = DeleteFileForm(params)
         if form.validate() and form.confirmed.data:
-            filemanager.delete_file(upload_id, form.file_path)
-            redirect = url_for('ui.upload_files', submission_id=submission_id)
+            try:
+                filemanager.delete_file(upload_id, form.file_path)
+            except filemanager.RequestForbidden as e:
+                messages.flash_failure(Markup(
+                    'There was a problem authorizing your request. Please try'
+                    ' again. If you continue to experience problems deleting'
+                    ' files, please contact <a href="mailto:help@arxiv.org">'
+                    ' arXiv support.'
+                ))
+            redirect = url_for('ui.file_upload', submission_id=submission_id)
             return {}, status.HTTP_303_SEE_OTHER, {'Location': redirect}
         response_data.update({'form': form})
         return response_data, status.HTTP_400_BAD_REQUEST, {}
@@ -181,6 +226,6 @@ def delete(method: str, params: MultiDict, session: Session,
 class DeleteFileForm(Form):
     """Form for deleting individual files."""
 
-    file_path = StringField('File', validators=[validators.DataRequired()])
+    file_path = HiddenField('File', validators=[validators.DataRequired()])
     confirmed = BooleanField('Confirmed',
                              validators=[validators.DataRequired()])

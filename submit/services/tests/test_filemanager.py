@@ -1,6 +1,11 @@
 """Tests for :mod:`submit.services.filemanager`."""
 
 from unittest import TestCase, mock
+import time
+import json
+from datetime import datetime
+from threading import Thread, Event
+import requests
 import io
 import tempfile
 from urllib.parse import urlparse
@@ -10,27 +15,31 @@ from werkzeug.datastructures import FileStorage
 from flask import Blueprint, jsonify, Flask, request
 from arxiv import status
 from .. import filemanager
+from ...tests import mock_filemanager
 
 
 class TestGetStatus(TestCase):
     """Get the file management service status."""
 
-    def setUp(self):
-        """Initialize a mock file management service."""
-        self.service = create_fm_app()
-        self.client = self.service.test_client()
+    @classmethod
+    def setUpClass(cls):
+        """Start a single-threaded mock file management service."""
+        app = mock_filemanager.create_fm_app()
+        cls.host = '127.0.0.1'
+        cls.port = '8900'
 
-    def get(self, path, *args, **kwargs):
-        """Mock get request with Flask test client."""
-        target = urlparse(path).path
-        return ResponseWrapper(self.client.get(target, *args, **kwargs))
+        def run_app():
+            app.run(host=cls.host, port=cls.port)
 
-    @mock.patch(f'{filemanager.__name__}.requests.Session')
-    def test_get_status(self, mock_Session):
+        t = Thread(target=run_app)
+        t.daemon = True
+        t.start()
+        time.sleep(2)    # Wait for app to be available.
+
+    def test_get_status(self):
         """Get the status endpoint for the file management service."""
-        mock_session = mock.MagicMock(get=self.get)
-        mock_Session.return_value = mock_session
-        fm = filemanager.FileManagementService('https://foo.somewhere.org')
+        service_endpoint = f'http://{self.host}:{self.port}'
+        fm = filemanager.FileManagementService(service_endpoint)
         data, headers = fm.get_service_status()
         self.assertEqual(data['status'], 'ok')
 
@@ -38,88 +47,85 @@ class TestGetStatus(TestCase):
 class TestUploadPackage(TestCase):
     """Create a new file upload package/workspace."""
 
-    def setUp(self):
-        """Initialize a mock file management service."""
-        self.service = create_fm_app()
-        self.client = self.service.test_client()
-        self.headers = {}
+    @classmethod
+    def setUpClass(cls):
+        """Start a single-threaded mock file management service."""
+        app = mock_filemanager.create_fm_app()
+        cls.host = '127.0.0.1'
+        cls.port = '8901'
+        cls.service_endpoint = f'http://{cls.host}:{cls.port}'
 
-    def get(self, path, *args, **kwargs):
-        """Mock get request with Flask test client."""
-        target = urlparse(path).path
-        kwargs.update({'headers': self.headers})
-        return ResponseWrapper(self.client.get(target, *args, **kwargs))
+        def run_app():
+            app.run(host=cls.host, port=cls.port)
 
-    def post(self, path, *args, **kwargs):
-        """Mock post request with Flask test client."""
-        target = urlparse(path).path
-        filename, pointer, mimetype = kwargs.pop('files')['file']
-        kwargs.update({'data': {'file': (pointer, filename)}})
-        kwargs.update({'headers': self.headers})
-        return ResponseWrapper(self.client.post(target, *args, **kwargs))
+        t = Thread(target=run_app)
+        t.daemon = True
+        t.start()
+        time.sleep(2)    # Wait for app to be available.
 
-    @mock.patch(f'{filemanager.__name__}.requests.Session')
-    def test_upload_package(self, mock_Session):
+        cls.mock_data = json.dumps(dict(
+            checksum='a1s2d3f4',
+            size=593920,
+            file_list=[
+                dict(
+                    path='',
+                    name='thebestfile.pdf',
+                    file_type='PDF',
+                    added=datetime.now().isoformat(),
+                    size=20505,
+                    ancillary=False,
+                    errors=[]
+                )
+            ],
+            errors=[]
+        ))
+
+    def test_upload_package(self):
         """Create a new file upload package/workspace."""
-        mock_session = mock.MagicMock(get=self.get, post=self.post,
-                                      headers=self.headers)
-        mock_Session.return_value = mock_session
-        fm = filemanager.FileManagementService('https://foo.somewhere.org',
+        fm = filemanager.FileManagementService(self.service_endpoint,
                                                headers={'Authorization': '!'})
         _, fname = tempfile.mkstemp()
         with open(fname, 'w') as f:
-            f.write('foo content')
+            f.write(self.mock_data)
 
         pointer = FileStorage(open(fname, 'rb'), filename=fname,
                               content_type='application/tar+gz')
         data, headers = fm.upload_package(pointer)
-        self.assertEqual(data['upload'], True)
+        self.assertIn('identifier', data)
 
-    @mock.patch(f'{filemanager.__name__}.requests.Session')
-    def test_upload_unauthorized(self, mock_Session):
+    def test_upload_unauthorized(self):
         """An auth header is not included in the request."""
-        mock_session = mock.MagicMock(get=self.get, post=self.post,
-                                      headers=self.headers)
-        mock_Session.return_value = mock_session
-        fm = filemanager.FileManagementService('https://foo.somewhere.org',
+        fm = filemanager.FileManagementService(self.service_endpoint,
                                                headers={})
         _, fname = tempfile.mkstemp()
         with open(fname, 'w') as f:
-            f.write('foo content')
+            f.write(self.mock_data)
 
         pointer = FileStorage(open(fname, 'rb'), filename=fname,
                               content_type='application/tar+gz')
         with self.assertRaises(filemanager.RequestUnauthorized):
             fm.upload_package(pointer)
 
-    @mock.patch(f'{filemanager.__name__}.requests.Session')
-    def test_upload_forbidden(self, mock_Session):
+    def test_upload_forbidden(self):
         """The auth token does not grant sufficient privileges."""
-        mock_session = mock.MagicMock(get=self.get, post=self.post,
-                                      headers=self.headers)
-        mock_Session.return_value = mock_session
-        fm = filemanager.FileManagementService('https://foo.somewhere.org',
+        fm = filemanager.FileManagementService(self.service_endpoint,
                                                headers={'Authorization': '?'})
         _, fname = tempfile.mkstemp()
         with open(fname, 'w') as f:
-            f.write('foo content')
+            f.write(self.mock_data)
 
         pointer = FileStorage(open(fname, 'rb'), filename=fname,
                               content_type='application/tar+gz')
         with self.assertRaises(filemanager.RequestForbidden):
             fm.upload_package(pointer)
 
-    @mock.patch(f'{filemanager.__name__}.requests.Session')
-    def test_upload_oversize_package(self, mock_Session):
+    def test_upload_oversize_package(self):
         """The file is too large."""
-        mock_session = mock.MagicMock(get=self.get, post=self.post,
-                                      headers=self.headers)
-        mock_Session.return_value = mock_session
-        fm = filemanager.FileManagementService('https://foo.somewhere.org',
+        fm = filemanager.FileManagementService(self.service_endpoint,
                                                headers={'Authorization': '!'})
         _, fname = tempfile.mkstemp()
         with open(fname, 'w') as f:
-            f.write('foo content' * 50)   # Bigger than arbitrary limit, above.
+            f.write(self.mock_data * 5000)   # Bigger than arbitrary limit.
 
         pointer = FileStorage(open(fname, 'rb'), filename=fname,
                               content_type='application/tar+gz')
@@ -127,51 +133,83 @@ class TestUploadPackage(TestCase):
             data, headers = fm.upload_package(pointer)
 
 
-class ResponseWrapper(object):
-    """Provide a :class:`requests.Response`-like API for Flask responses."""
+class TestUploadFile(TestCase):
+    """Upload a file to an existing upload workspace."""
 
-    def __init__(self, resp):
-        self.resp = resp
+    @classmethod
+    def setUpClass(cls):
+        """Start a single-threaded mock file management service."""
+        app = mock_filemanager.create_fm_app()
+        cls.host = '127.0.0.1'
+        cls.port = '8902'
+        cls.service_endpoint = f'http://{cls.host}:{cls.port}'
 
-    def json(self):
-        return self.resp.json
+        def run_app():
+            app.run(host=cls.host, port=cls.port)
 
-    @property
-    def status_code(self):
-        return self.resp.status_code
+        t = Thread(target=run_app)
+        t.daemon = True
+        t.start()
+        time.sleep(2)    # Wait for app to be available.
 
-    @property
-    def headers(self):
-        return self.resp.headers
+        cls.mock_data = json.dumps(dict(
+            path='',
+            name='thebestfile.pdf',
+            file_type='PDF',
+            added=datetime.now().isoformat(),
+            size=20505,
+            ancillary=False,
+            errors=[]
+        ))
 
-    @property
-    def content(self):
-        return self.resp.data
+    def test_upload_file(self):
+        """Upload a file to an upload package/workspace."""
+        fm = filemanager.FileManagementService(self.service_endpoint,
+                                               headers={'Authorization': '!'})
+        _, fname = tempfile.mkstemp()
+        with open(fname, 'w') as f:
+            f.write(self.mock_data)
 
+        pointer = FileStorage(open(fname, 'rb'), filename=fname,
+                              content_type='application/tar+gz')
+        data, headers = fm.add_file(2, pointer)
+        self.assertEqual(data.identifier, 2)
 
-def create_fm_app():
-    """Generate a mock file management app."""
-    blueprint = Blueprint('filemanager', __name__)
+    def test_upload_unauthorized(self):
+        """An auth header is not included in the request."""
+        fm = filemanager.FileManagementService(self.service_endpoint,
+                                               headers={})
+        _, fname = tempfile.mkstemp()
+        with open(fname, 'w') as f:
+            f.write(self.mock_data)
 
-    @blueprint.route('/status')
-    def service_status():
-        """Mock implementation of service status route."""
-        return jsonify({'status': 'ok'})
+        pointer = FileStorage(open(fname, 'rb'), filename=fname,
+                              content_type='application/tar+gz')
+        with self.assertRaises(filemanager.RequestUnauthorized):
+            fm.add_file(2, pointer)
 
-    @blueprint.route('/', methods=['POST'])
-    def upload_package():
-        """Mock implementation of upload route."""
-        if 'file' not in request.files:
-            raise BadRequest('No file')
-        if len(request.files['file'].read()) > 80:  # Arbitrary limit.
-            raise RequestEntityTooLarge('Nope!')
-        if 'Authorization' not in request.headers:
-            raise Unauthorized('Nope!')
-        if request.headers['Authorization'] != '!':     # Arbitrary value.
-            raise Forbidden('No sir!')
-        # Not sure what the response will look like yet.
-        return jsonify({'upload': True}), status.HTTP_201_CREATED
+    def test_upload_forbidden(self):
+        """The auth token does not grant sufficient privileges."""
+        fm = filemanager.FileManagementService(self.service_endpoint,
+                                               headers={'Authorization': '?'})
+        _, fname = tempfile.mkstemp()
+        with open(fname, 'w') as f:
+            f.write(self.mock_data)
 
-    app = Flask('filemanager')
-    app.register_blueprint(blueprint)
-    return app
+        pointer = FileStorage(open(fname, 'rb'), filename=fname,
+                              content_type='application/tar+gz')
+        with self.assertRaises(filemanager.RequestForbidden):
+            fm.add_file(2, pointer)
+
+    def test_upload_oversize_package(self):
+        """The file is too large."""
+        fm = filemanager.FileManagementService(self.service_endpoint,
+                                               headers={'Authorization': '!'})
+        _, fname = tempfile.mkstemp()
+        with open(fname, 'w') as f:
+            f.write(self.mock_data * 50000)   # Bigger than arbitrary limit, above.
+
+        pointer = FileStorage(open(fname, 'rb'), filename=fname,
+                              content_type='application/tar+gz')
+        with self.assertRaises(filemanager.Oversize):
+            fm.add_file(2, pointer)

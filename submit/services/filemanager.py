@@ -13,6 +13,7 @@ the file management service as they are being received by this UI application.
 from typing import Tuple
 import json
 from functools import wraps
+from collections import defaultdict
 from urllib.parse import urlparse, urlunparse, urlencode
 import dateutil.parser
 import requests
@@ -115,7 +116,15 @@ class FileManagementService(object):
         self._session.headers.update(headers)
 
     def _parse_upload_status(self, data: dict) -> UploadStatus:
-        logger.debug('Parse raw upload status, %s', str(data))
+        file_errors = defaultdict(list)
+        non_file_errors = []
+        for etype, filename, message in data['errors']:
+            if filename:
+                file_errors[filename].append(Error(etype.upper(), message))
+            else:
+                print(etype, message)
+                non_file_errors.append(Error(etype.upper(), message))
+
         return UploadStatus(
             started=dateutil.parser.parse(data['start_datetime']),
             completed=dateutil.parser.parse(data['completion_datetime']),
@@ -130,12 +139,12 @@ class FileManagementService(object):
                     name=fdata['name'],
                     path=fdata['public_filepath'],
                     size=fdata['size'],
-                    file_type=fdata['type']
+                    file_type=fdata['type'],
+                    modified=dateutil.parser.parse(fdata['modified_datetime']),
+                    errors=file_errors[fdata['public_filepath']]
                 ) for fdata in data['files']
             ],
-            errors=[
-                #
-            ]
+            errors=non_file_errors
         )
 
     def _path(self, path: str, query: dict = {}) -> str:
@@ -421,5 +430,10 @@ def add_file(upload_id: int, pointer: FileStorage) -> UploadStatus:
     return current_session().add_file(upload_id, pointer)
 
 
+@wraps(FileManagementService.delete_file)
 def delete_file(upload_id: int, file_path: str) -> UploadStatus:
     return current_session().delete_file(upload_id, file_path)
+
+
+def delete_all(upload_id: str) -> None:
+    return current_session().delete_all(upload_id)

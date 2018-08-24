@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "64fe4cb94d2afba82c001c6b7927e5d5239ece21bb832de99aec047aca29a64e"
+            "sha256": "5448ba56724f79ab8de59440405b48dc12dd9075b72b001a7e6cae1a64c79f07"
         },
         "pipfile-spec": 6,
         "requires": {},
@@ -14,6 +14,9 @@
         ]
     },
     "default": {
+        "17e504d": {
+            "path": "./../arxiv-base-ui"
+        },
         "3a3786f": {
             "path": "./../arxiv-submission-core/core"
         },
@@ -25,9 +28,11 @@
             "version": "==0.1.0rc10"
         },
         "arxiv-base": {
-            "editable": true,
-            "git": "https://github.com/cul-it/arxiv-base.git",
-            "ref": "develop"
+            "hashes": [
+                "sha256:1547d30022dc70a2f61f794de67ddc51d2ddd95bc953382619065b28c5c630cc"
+            ],
+            "index": "pypi",
+            "version": "==0.11.1rc1"
         },
         "bleach": {
             "hashes": [
@@ -39,17 +44,17 @@
         },
         "boto3": {
             "hashes": [
-                "sha256:83abd7ced787d634b170aac56d1f3f79b464b9bea67a22d141f575a1d0856bc9",
-                "sha256:8a71c68f0ff41bd8094a5b2c19170c93d99f98b09e3cf0e2dd9645b538460128"
+                "sha256:0ed4b107c3b4550547aaec3c9bb17df068ff92d1f6f4781205800e2cb8a66de5",
+                "sha256:64496f2c814e454e26c024df86bd08fb4643770d0e2b7a8fd70055fc6683eb9d"
             ],
-            "version": "==1.7.80"
+            "version": "==1.7.84"
         },
         "botocore": {
             "hashes": [
-                "sha256:41b9cf12310d9eca3871ad51d4094ef1fdd49b9bab722dd29dc49aab1124a4da",
-                "sha256:4f81a8613a57a722b0de75ced5e9bb40b2db476be17cf94b6f1550615fdcbe2a"
+                "sha256:380852e1adb9ba4ba9ff096af61f88a6888197b86e580e1bd786f04ebe6f9c0c",
+                "sha256:d3e4b5a2c903ea30d19d41ea2f65d0e51dce54f4f4c4dfd6ecd7b04f240844a8"
             ],
-            "version": "==1.10.80"
+            "version": "==1.10.84"
         },
         "click": {
             "hashes": [
@@ -199,10 +204,10 @@
         },
         "sqlalchemy": {
             "hashes": [
-                "sha256:72325e67fb85f6e9ad304c603d83626d1df684fdf0c7ab1f0352e71feeab69d8"
+                "sha256:ef6569ad403520ee13e180e1bfd6ed71a0254192a934ec1dbd3dbf48f4aa9524"
             ],
             "index": "pypi",
-            "version": "==1.2.10"
+            "version": "==1.2.11"
         },
         "uwsgi": {
             "hashes": [
@@ -243,10 +248,10 @@
         },
         "certifi": {
             "hashes": [
-                "sha256:4c1d68a1408dd090d2f3a869aa94c3947cc1d967821d1ed303208c9f41f0f2f4",
-                "sha256:b6e8b28b2b7e771a41ecdd12d4d43262ecab52adebbafa42c77d6b57fb6ad3a4"
+                "sha256:376690d6f16d32f9d1fe8932551d80b23e9d393a8578c5633a2ed39a64861638",
+                "sha256:456048c7e371c089d0a77a5212fb37a2c2dce1e24146e3b7e0261736aaeaa22a"
             ],
-            "version": "==2018.8.13"
+            "version": "==2018.8.24"
         },
         "chardet": {
             "hashes": [
@@ -302,11 +307,11 @@
         },
         "coveralls": {
             "hashes": [
-                "sha256:32569a43c9dbc13fa8199247580a4ab182ef439f51f65bb7f8316d377a1340e8",
-                "sha256:664794748d2e5673e347ec476159a9d87f43e0d2d44950e98ed0e27b98da8346"
+                "sha256:016358e1630559906f2e322727e5af7799c70eb61227cf1c43cad5562cd9ec89",
+                "sha256:7ddb2e3114db9604a7cb1fcc68a7dcca32dce346f5ba568c99979b38e166f5a6"
             ],
             "index": "pypi",
-            "version": "==1.3.0"
+            "version": "==1.4.0"
         },
         "docopt": {
             "hashes": [
@@ -457,7 +462,6 @@
                 "sha256:edb04bdd45bfd76c8292c4d9654568efaedf76fe78eb246dde69bdb13b2dad87",
                 "sha256:f19f2a4f547505fe9072e15f6f4ae714af51b5a681a97f187971f50c283193b6"
             ],
-            "markers": "python_version < '3.7' and implementation_name == 'cpython'",
             "version": "==1.1.0"
         },
         "urllib3": {

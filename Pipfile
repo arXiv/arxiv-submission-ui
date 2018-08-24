@@ -4,7 +4,6 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-arxiv-base = {git = "https://github.com/cul-it/arxiv-base.git", editable = true, ref = "develop"}
 dataclasses = "*"
 Flask = "*"
 jsonschema = "*"
@@ -16,6 +15,8 @@ SQLAlchemy = "*"
 bleach = "*"
 arxiv-auth = "==0.1.0rc10"
 "3a3786f" = {path = "./../arxiv-submission-core/core"}
+"17e504d" = {path = "./../arxiv-base-ui"}
+arxiv-base = "==0.11.1rc1"
 
 [dev-packages]
 "nose2" = "*"

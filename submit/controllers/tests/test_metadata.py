@@ -315,7 +315,7 @@ class TestMetadata(TestCase):
         self.assertIn(events.SetTitle, event_types, "Sets submission title")
         self.assertIn(events.SetAbstract, event_types,
                       "Sets submission abstract")
-        self.assertIn(events.UpdateAuthors, event_types,
+        self.assertIn(events.SetAuthors, event_types,
                       "Sets submission authors")
 
     @mock.patch('arxiv.submission.save')

@@ -1,5 +1,6 @@
 from typing import NamedTuple, List, Optional
 from datetime import datetime
+import dateutil.parser
 
 
 class Error(NamedTuple):
@@ -8,7 +9,18 @@ class Error(NamedTuple):
 
     error_type: str
     message: str
-    more_info: str
+    more_info: Optional[str] = None
+
+    def to_dict(self) -> dict:
+        return {
+            'error_type': self.error_type,
+            'message': self.message,
+            'more_info': self.more_info
+        }
+
+    @classmethod
+    def from_dict(cls: type, data: dict) -> 'Error':
+        return cls(**data)
 
 
 class FileStatus(NamedTuple):
@@ -16,9 +28,33 @@ class FileStatus(NamedTuple):
     name: str
     file_type: str
     size: int
+    modified: datetime
     ancillary: bool = False
-    added: Optional[datetime] = None
     errors: List[Error] = []
+
+    def to_dict(self) -> dict:
+        data = {
+            'path': self.path,
+            'name': self.name,
+            'file_type': self.file_type,
+            'size': self.size,
+            'modified': self.modified,
+            'ancillary': self.ancillary,
+            'errors': self.errors
+        }
+        if data['modified']:
+            data['modified'] = data['modified'].isoformat()
+        if data['errors']:
+            data['errors'] = [e.to_dict() for e in data['errors']]
+        return data
+
+    @classmethod
+    def from_dict(cls: type, data: dict) -> 'UploadStatus':
+        if 'errors' in data:
+            data['errors'] = [Error.from_dict(e) for e in data['errors']]
+        if 'modified' in data and type(data['modified']) is str:
+            data['modified'] = dateutil.parser.parse(data['modified'])
+        return cls(**data)
 
 
 class UploadStatus(NamedTuple):
@@ -52,4 +88,45 @@ class UploadStatus(NamedTuple):
 
     @property
     def locked(self) -> bool:
+        """Indicate whether the upload workspace is locked."""
         return self.lock_state == self.LOCKED
+
+    @property
+    def file_count(self) -> int:
+        """The number of files in the workspace."""
+        return len(self.files)
+
+    def to_dict(self) -> dict:
+        data = {
+            'started': self.started,
+            'completed': self.completed,
+            'created': self.created,
+            'modified': self.modified,
+            'status': self.status,
+            'workspace_state': self.workspace_state,
+            'lock_state': self.lock_state,
+            'identifier': self.identifier,
+            'checksum': self.checksum,
+            'size': self.size,
+            'files': self.files,
+            'errors': self.errors
+        }
+        for key in ['started', 'completed', 'created', 'modified']:
+            if data[key]:
+                data[key] = data[key].isoformat()
+        if data['files']:
+            data['files'] = [d.to_dict() for d in data['files']]
+        if data['errors']:
+            data['errors'] = [d.to_dict() for d in data['errors']]
+        return data
+
+    @classmethod
+    def from_dict(cls: type, data: dict) -> 'UploadStatus':
+        if 'files' in data:
+            data['files'] = [FileStatus.from_dict(f) for f in data['files']]
+        if 'errors' in data:
+            data['errors'] = [Error.from_dict(e) for e in data['errors']]
+        for key in ['started', 'completed', 'created', 'modified']:
+            if key in data and type(data[key]) is str:
+                data[key] = dateutil.parser.parse(data[key])
+        return cls(**data)

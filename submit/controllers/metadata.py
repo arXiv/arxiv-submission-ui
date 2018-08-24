@@ -72,7 +72,7 @@ class CoreMetadataForm(Form, util.FieldMixin, util.SubmissionMixin):
         if field.data == form.submission.metadata.authors_display:
             return
         if field.data:
-            form._validate_event(events.UpdateAuthors,
+            form._validate_event(events.SetAuthors,
                                  authors_display=field.data)
 
 

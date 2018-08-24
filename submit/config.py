@@ -67,6 +67,7 @@ CLASSIC_DATABASE_URI = os.environ.get('CLASSIC_DATABASE_URI', 'sqlite:///')
 
 JWT_SECRET = os.environ.get('JWT_SECRET', 'foosecret')
 SECRET_KEY = os.environ.get('FLASK_SECRET', 'fooflasksecret')
+CSRF_SECRET = os.environ.get('FLASK_SECRET', 'csrfbarsecret')
 
 FILE_MANAGER_HOST = os.environ.get('FILE_MANAGER_HOST', 'arxiv.org')
 FILE_MANAGER_PORT = os.environ.get('FILE_MANAGER_PORT', '443')

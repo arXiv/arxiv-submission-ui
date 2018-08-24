@@ -122,7 +122,6 @@ class FileManagementService(object):
             if filename:
                 file_errors[filename].append(Error(etype.upper(), message))
             else:
-                print(etype, message)
                 non_file_errors.append(Error(etype.upper(), message))
 
         return UploadStatus(

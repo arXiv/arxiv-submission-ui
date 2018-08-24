@@ -122,7 +122,7 @@ class TestUpload(TestCase):
         self.assertIn('submission', response_data, 'Submission is in response')
         self.assertIn('submission_id', response_data, 'ID is in response')
 
-    @mock.patch(f'{upload.__name__}.messages', mock.MagicMock())
+    @mock.patch(f'{upload.__name__}.alerts', mock.MagicMock())
     @mock.patch(f'{upload.__name__}.url_for', mock.MagicMock(return_value='/'))
     @mock.patch(f'{upload.__name__}.filemanager')
     @mock.patch(f'{upload.__name__}.save')

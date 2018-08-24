@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "5448ba56724f79ab8de59440405b48dc12dd9075b72b001a7e6cae1a64c79f07"
+            "sha256": "f0d4210f4b8dcac7484ca9c860b60c4a0e348a22b79f1023af3b0487804e87e1"
         },
         "pipfile-spec": 6,
         "requires": {},
@@ -29,10 +29,10 @@
         },
         "arxiv-base": {
             "hashes": [
-                "sha256:1547d30022dc70a2f61f794de67ddc51d2ddd95bc953382619065b28c5c630cc"
+                "sha256:ed1fa9effd76e00758ee4f8d3d44ff87d2f02bffdbd973dd9c18c1ca87f6e6df"
             ],
             "index": "pypi",
-            "version": "==0.11.1rc1"
+            "version": "==0.11.1rc2"
         },
         "bleach": {
             "hashes": [
@@ -462,6 +462,7 @@
                 "sha256:edb04bdd45bfd76c8292c4d9654568efaedf76fe78eb246dde69bdb13b2dad87",
                 "sha256:f19f2a4f547505fe9072e15f6f4ae714af51b5a681a97f187971f50c283193b6"
             ],
+            "markers": "python_version < '3.7' and implementation_name == 'cpython'",
             "version": "==1.1.0"
         },
         "urllib3": {

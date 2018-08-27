@@ -20,6 +20,14 @@ def user() -> Response:
     return redirect('https://www.arxiv.org/user')
 
 
+@blueprint.route('/progress', methods=['GET'])
+def test_page() -> Response:
+    """Render a page to test progress bar display."""
+    rendered = render_template("submit/progress.html", pagetitle='Progress bar')
+    response = make_response(rendered, status.HTTP_200_OK)
+    return response
+
+
 @blueprint.route('/', methods=['GET', 'POST'])
 @auth.decorators.scoped(auth.scopes.CREATE_SUBMISSION)
 def create_submission():

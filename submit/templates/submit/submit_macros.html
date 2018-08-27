@@ -13,18 +13,19 @@
 {# TODO: make this into a real navigation mechanism, with variables to relate
    tooltips, page name, template, and page order. Also real routenames instead
    of this initial hack. #}
-
-  <span><a class="button" title="Verify user info" href="{% if submission_id %}{{ url_for('ui.verify_user', submission_id=submission_id) }}{% endif %}">1</a></span>
-  <span><a class="button" title="Authorship" href="{% if submission_id %}{{ url_for('ui.authorship', submission_id=submission_id) }}{% else %}{{ url_for('ui.verify_user') }}{% endif %}">2</a></span>
-  <span><a class="button" title="Choose license" href="{% if submission_id %}{{ url_for('ui.license', submission_id=submission_id) }}{% else %}{{ url_for('ui.verify_user') }}{% endif %}">3</a></span>
-  <span><a class="button" title="Acknowledge policy" href="{% if submission_id %}{{ url_for('ui.policy', submission_id=submission_id) }}{% else %}{{ url_for('ui.verify_user') }}{% endif %}">4</a></span>
-  <span><a class="button" title="Primary class" href="{% if submission_id %}{{ url_for('ui.classification', submission_id=submission_id) }}{% else %}{{ url_for('ui.verify_user') }}{% endif %}">5</a></span>
-  <span><a class="button" title="Cross-list" href="{% if submission_id %}{{ url_for('ui.cross_list', submission_id=submission_id) }}{% else %}{{ url_for('ui.verify_user') }}{% endif %}">6</a></span>
-  <span><a class="button" title="File upload" href="{% if submission_id %}{{ url_for('ui.file_upload', submission_id=submission_id) }}{% else %}{{ url_for('ui.verify_user') }}{% endif %}">7</a></span>
-  <span><a class="button" title="File process" href="{% if submission_id %}{{ url_for('ui.file_process', submission_id=submission_id) }}{% else %}{{ url_for('ui.verify_user') }}{% endif %}">8</a></span>
-  <span><a class="button" title="Add metadata" href="{% if submission_id %}{{ url_for('ui.add_metadata', submission_id=submission_id) }}{% else %}{{ url_for('ui.verify_user') }}{% endif %}">9</a></span>
-  <span><a class="button" title="Add optional metadata" href="{% if submission_id %}{{ url_for('ui.add_optional_metadata', submission_id=submission_id) }}{% else %}{{ url_for('ui.verify_user') }}{% endif %}">10</a></span>
-  <span><a class="button" title="Final preview" href="{% if submission_id %}{{ url_for('ui.final_preview', submission_id=submission_id) }}{% else %}{{ url_for('ui.verify_user') }}{% endif %}">11</a></span>
-  <span><a class="button" title="Submission confirmed" href="{% if submission_id %}{{ url_for('ui.confirm_submit', submission_id=submission_id) }}{% else %}{{ url_for('ui.verify_user') }}{% endif %}">12</a></span>
+  <ul class="progressbar">
+    <li><a class="button" title="Verify user info" href="{% if submission_id %}{{ url_for('ui.verify_user', submission_id=submission_id) }}{% endif %}">Verify User</a></li>
+    <li><a class="button" title="Authorship" href="{% if submission_id %}{{ url_for('ui.authorship', submission_id=submission_id) }}{% else %}{{ url_for('ui.verify_user') }}{% endif %}">Confirm Authorship</a></li>
+    <li><a class="button" title="Choose license" href="{% if submission_id %}{{ url_for('ui.license', submission_id=submission_id) }}{% else %}{{ url_for('ui.verify_user') }}{% endif %}">Choose License</a></li>
+    <li><a class="button" title="Acknowledge policy" href="{% if submission_id %}{{ url_for('ui.policy', submission_id=submission_id) }}{% else %}{{ url_for('ui.verify_user') }}{% endif %}">Acknowledge Policy</a></li>
+    <li><a class="button" title="Primary class" href="{% if submission_id %}{{ url_for('ui.classification', submission_id=submission_id) }}{% else %}{{ url_for('ui.verify_user') }}{% endif %}">Choose Primary Category</a></li>
+    <li><a class="button" title="Cross-list" href="{% if submission_id %}{{ url_for('ui.cross_list', submission_id=submission_id) }}{% else %}{{ url_for('ui.verify_user') }}{% endif %}">Choose Cross-list</a></li>
+    <li><a class="button" title="File upload" href="{% if submission_id %}{{ url_for('ui.file_upload', submission_id=submission_id) }}{% else %}{{ url_for('ui.verify_user') }}{% endif %}">Upload Files</a></li>
+    <li><a class="button" title="File process" href="{% if submission_id %}{{ url_for('ui.file_process', submission_id=submission_id) }}{% else %}{{ url_for('ui.verify_user') }}{% endif %}">Process Files</a></li>
+    <li><a class="button" title="Add metadata" href="{% if submission_id %}{{ url_for('ui.add_metadata', submission_id=submission_id) }}{% else %}{{ url_for('ui.verify_user') }}{% endif %}">Add Metadata</a></li>
+    <li><a class="button" title="Add optional metadata" href="{% if submission_id %}{{ url_for('ui.add_optional_metadata', submission_id=submission_id) }}{% else %}{{ url_for('ui.verify_user') }}{% endif %}">Add Optional Metadata</a></li>
+    <li><a class="button" title="Final preview" href="{% if submission_id %}{{ url_for('ui.final_preview', submission_id=submission_id) }}{% else %}{{ url_for('ui.verify_user') }}{% endif %}">Preview</a></li>
+    <li><a class="button" title="Submission confirmed" href="{% if submission_id %}{{ url_for('ui.confirm_submit', submission_id=submission_id) }}{% else %}{{ url_for('ui.verify_user') }}{% endif %}">Confirmed</a></li>
+  </ul>
 
 {% endmacro %}

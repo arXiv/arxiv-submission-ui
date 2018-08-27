@@ -1,0 +1,60 @@
+{% extends "submit/base.html" %}
+
+{% block within_content %}
+<h2 class="is-size-4">Errors and Help</h2>
+
+<h3>File Upload Errors</h3>
+  <dl>
+    <dt>File name contains unsupported characters. Renamed <code>file_name</code> to <code>new_file_name</code>. Check and modify any file paths that reference this file.</dt>
+    <dd>File names for arXiv may only contain <code>a-z A-Z 0-9 . , - _ =</code>. This file has been automatically renamed to a supported character set, but any references to this file in other documents are not automatically corrected.</dd>
+
+    <dt>File name contains unsupported characters. Unable to automatically rename <code>file_name</code>. Change file name and modify any file paths that reference this name.</dt>
+    <dd>File names for arXiv may only contain <code>a-z A-Z 0-9 . , - _ =</code>. This file name, and any references to this file within other documents in the upload, must be renamed with the allowed character set.</dd>
+
+    <dt>File names may not start with a hyphen. Renamed <code>file_name</code> to <code>new_file_name</code>. Check and modify any file paths that reference this file.</dt>
+    <dd>Hyphens not allowed to start a file name, parentheses not allowed,etc. File renamed.</dd>
+
+    <dt>Removed hidden file <code>file_name</code>.</dt>
+    <dd>Files beginning with a . are not allowed and are automatically removed.</dd>
+
+    <dt>Removed hyperlink-compatible package. A local hypertex-compatible package <code>name?</code> will be used.</dt>
+    <dd>Styles that conflict with TeXLive 2016's internal hypertex package, such as espcrc2 and lamuphys, are removed. Instead, a local version of these style packages that are compatible with hypertext will be used.</dd>
+
+    <dt>File <code>file_name</code> not allowed.</dt>
+    <dd>Files named `uufiles` or `core` or `splread.1st` will conflict with TeXLive 2016 and are automatically removed. These files re.search(r'^xxx\.(rsrc$|finfo$|cshrc$|nfs)', file_name) or re.search(r'\.[346]00gf$', file_name) or (re.search(r'\.desc$', file_name) and file_size < 10) are also automatically removed.</dd>
+
+    <dt>Removing <code>file_name</code>. Please upload .bbl file instead.</dt>
+    <dd>We do not run BibTeX or store .bib files.</dd>
+
+    <dt>File removed, already included in TeXLive.</dt>
+    <dd>These files are included in TeXLive, removed as duplicates. re.search(r'^(10pt\.rtx|11pt\.rtx|12pt\.rtx|aps\.rtx|revsymb\.sty|revtex4\.cls|rmp\.rtx)$', file_name)</dd>
+
+    <dt>File removed - time dependent package. Replaced with <code>filename-internal</code>.</dt>
+    <dd>This diagrams package stops working after a specified date. File is removed and replaced with an internal diagrams package that works for all time. re.search(r'^diagrams\.(sty|tex)$', file_name)</dd>
+
+    <dt>Removed file <code>aa.dem</code>, assumed example file for <code>aa.cls</code>.</dt>
+    <dd>Example files for the Astronomy and Astrophysics macro package aa.cls are not needed for any specific build, removed as unnecessary.</dd>
+
+    <dt>Removing <code>file_name</code> due to name conflict.</dt>
+    <dd>Naming conflicts are caused by files that are TeX-produced output, and can cause potential build corruption and/or conflicts.</dd>
+
+    <dt>File <code>file_name</code> contains unsupported character \"$&\". Renamed to <code>new_file_name</code>. Check and modify any path references to this file to avoid compilation errors.</dt>
+    <dd>Attempted fix for this already, would only see this error if renaming failed for some reason or there were multiple character errors in one file name.</dd>
+
+    <dt>file_name.endswith('.doc') and type == 'failed':
+                    # Doc warning
+                    # TODO: Get doc warning from message class
+                    msg = ''</dt>
+    <dd>no failed docs</dd>
+  </dl>
+
+<h3>File Upload Messages</h3>
+  <dl>
+    <dt>Deleted Files</dt>
+    <dd>Deleting a file removes it permanently from a submission. It is important to delete any files that are not needed or used during TeX compilation or included in /anc for supplemental information.</dd>
+
+    <dt>Ancillary Files</dt>
+    <dd>Files that provide supporting content but are not part of a submission's primary document files are moved into an /anc directory. Checking the "Ancillary" box during upload will create an /anc directory and move uploaded files into that directory. To specify ancillary files in a single .tar upload, create the /anc directory and place ancillary files there. This prevents the TeX compiler from including files in the build that may slow or stop the compilation process and cause unwanted errors.</dd>
+  </dl>
+
+{% endblock within_content %}

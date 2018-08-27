@@ -25,4 +25,5 @@ def create_ui_web_app() -> Flask:
 
     wrap(app, [auth.middleware.AuthMiddleware])
     app.jinja_env.filters['group_files'] = filters.group_files
+    app.jinja_env.filters['timesince'] = filters.timesince
     return app

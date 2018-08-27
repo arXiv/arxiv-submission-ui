@@ -235,6 +235,11 @@ def delete(method: str, params: MultiDict, session: Session,
         if form.validate() and form.confirmed.data:
             try:
                 filemanager.delete_file(upload_id, form.file_path.data)
+                alerts.flash_success(
+                    f'File <code>{form.file_path.data}</code> was deleted'
+                    ' successfully', title='Deleted file successfully',
+                    safe=True
+                )
             except filemanager.RequestForbidden as e:
                 alerts.flash_failure(Markup(
                     'There was a problem authorizing your request. Please try'

@@ -1,5 +1,47 @@
 {% extends "submit/base.html" %}
 
+{% macro display_tree(key, item) %}
+  {% if key %}
+  <li class="{% if item.errors %}is-warning{% endif %}">
+  {% endif %}
+    {% if item.name %}
+    <div class="level" style="margin-bottom: 0px;">
+      <div class="level-left">
+        {{ item.name }}
+      </div>
+      <div class="level-right">
+          <div class="columns" style="width: 30vw;">
+            <div class="column">{{ item.size|filesizeformat }}</div>
+            <div class="column">{{ item.modified|timesince }}</div>
+            <div class="column has-text-centered">
+             <a href="{{ url_for('ui.file_delete', submission_id=submission_id) }}?name={{ item.name }}">
+               <span class="icon">
+                 <i class="fa fa-trash" aria-label="Delete"></i>
+               </span>
+             </a>
+            </div>
+          </div>
+      </div>
+    </div>
+    {% else %}
+    {% if key %}{{ key }}/{% endif %}
+    <ol style="margin-top: 0px; list-style-type: none;">
+      {% for k, subitem in item.items() %}
+      {{ display_tree(k, subitem) }}
+      {% endfor %}
+    </ol>
+    {% endif %}
+    {% if item.errors %}
+        {% for error in item.errors %}
+        <p class="help has-text-weight-bold is-marginless {% if error.error_type == error.ERROR %}is-danger{% else %}is-warning{% endif %}">
+          {{ error.message }}
+        </p>
+        {% endfor %}
+      {% endif %}
+  {% if key %}
+  </li>
+  {% endif %}
+{% endmacro %}
 
 
 {% block within_content %}
@@ -34,67 +76,21 @@
       </p>
     </form>
 
-
+    {% if status.files %}
     <h3>Files currently attached to this submission</h3>
-    <table class="table is-hoverable is-marginless has-text-size-6">
-      <thead>
-        <tr>
-          <th style="width:45%;">File Name</th>
-          <th>Type</th>
-          <th>Size (total: XXMB)</th>
-          <th>Updated</th>
-          <th style="width:5%;">Actions</th>
-        </tr>
-      </thead>
-      <tfoot>
-        <th class="is-paddingless"></th>
-        <th class="is-paddingless"></th>
-        <th class="is-paddingless"></th>
-        <th class="is-paddingless"></th>
-        <th class="is-paddingless"></th>
-      </tfoot>
-      {% for indent, key, file in status.files|group_files %}
-        {% if file %}
-        <tr class="{% if file.errors %}is-warning{% endif %}">
-          <td>
-            {% for i in range(indent - 1) %}&nbsp;&nbsp;&nbsp;&nbsp;{% endfor %}{{ file.name }}
-            {% if file.errors %}
-              {% for error in file.errors %}
-              <div class="help has-text-weight-bold {% if error.error_type == error.ERROR %}is-danger{% else %}is-warning{% endif %}">
-                {{ error.message }}
-              </div>
-              {% endfor %}
-            {% endif %}
-          </td>
-          <td>{{ file.file_type }}</td>
-          <td>{{ file.size|filesizeformat }}</td>
-          <td>{{ file.modified }}</td>
-          <td class="has-text-centered">
-            <a href="{{ url_for('ui.file_delete', submission_id=submission_id) }}?name={{ file.name }}">
-              <span class="icon">
-                <i class="fa fa-trash" aria-label="Delete"></i>
-              </span>
-            </a>
-          </td>
-        </tr>
-        {% else %}
-          {% if indent > 0 %}
-          <tr>
-            <td>{% for i in range(indent - 1) %}&nbsp;&nbsp;&nbsp;&nbsp;{% endfor %}{{ key }}/</td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-          </tr>
-          {% endif %}
-        {% endif %}
-      {% endfor %}
-    </table>
+
+    {{ display_tree(None, status.files|group_files) }}
+
     <p class="help is-pulled-right">
       <a href="{{ url_for('ui.file_delete_all', submission_id=submission_id) }}">
         <span class="icon"><i class="fa fa-trash" aria-label="Delete all"></i></span>Remove All
       </a>
     </p>
+    {% else %}
+    <p class="title is-4 breathe-vertical has-text-centered">
+      There's nothing here!
+    </p>
+    {% endif %}
   </div>
   <div class="column is-one-third-desktop">
     <div class="message is-info">

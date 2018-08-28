@@ -2,10 +2,10 @@
 
 from collections import OrderedDict
 from datetime import datetime
-from typing import List, Tuple, Optional, Union, Dict, Map
+from typing import List, Tuple, Optional, Union, Dict, Mapping
 from .domain import FileStatus
 
-NestedFileTree = Map[str, Union[FileStatus, 'NestedFileTree']]
+NestedFileTree = Mapping[str, Union[FileStatus, 'NestedFileTree']]
 
 
 def group_files(files: List[FileStatus]) -> NestedFileTree:

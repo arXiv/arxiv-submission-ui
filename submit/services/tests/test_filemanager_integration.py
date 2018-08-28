@@ -8,7 +8,7 @@ from arxiv.base.globals import get_application_config
 from arxiv.users.helpers import generate_token
 from arxiv.users.auth import scopes
 from .. import filemanager
-from ...domain import UploadStatus, FileStatus, Error
+from ...domain import UploadStatus, FileStatus, FileError
 
 
 class TestFileManagerIntegration(TestCase):

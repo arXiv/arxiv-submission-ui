@@ -24,7 +24,7 @@ from arxiv.base import logging
 from arxiv.base.globals import get_application_config, get_application_global
 from werkzeug.datastructures import FileStorage
 
-from submit.domain import UploadStatus, FileStatus, Error
+from submit.domain import UploadStatus, FileStatus, FileError
 
 logger = logging.getLogger(__name__)
 
@@ -178,6 +178,7 @@ class FileManagementService(object):
         return resp
 
     def set_auth_token(self, token: str) -> None:
+        """Set the authn/z token to use in subsequent requests."""
         self._session.headers.update({'Authorization': token})
 
     def request(self, method: str, path: str, expected_code: int = 200, **kw) \
@@ -411,28 +412,34 @@ def current_session() -> FileManagementService:
 
 @wraps(FileManagementService.set_auth_token)
 def set_auth_token(token: str) -> None:
+    """See :meth:`FileManagementService.set_auth_token`."""
     return current_session().set_auth_token(token)
 
 
 @wraps(FileManagementService.get_upload_status)
 def get_upload_status(upload_id: int) -> UploadStatus:
+    """See :meth:`FileManagementService.get_upload_status`."""
     return current_session().get_upload_status(upload_id)
 
 
 @wraps(FileManagementService.upload_package)
 def upload_package(pointer: FileStorage) -> UploadStatus:
+    """See :meth:`FileManagementService.upload_package`."""
     return current_session().upload_package(pointer)
 
 
 @wraps(FileManagementService.add_file)
 def add_file(upload_id: int, pointer: FileStorage) -> UploadStatus:
+    """See :meth:`FileManagementService.add_file`."""
     return current_session().add_file(upload_id, pointer)
 
 
 @wraps(FileManagementService.delete_file)
 def delete_file(upload_id: int, file_path: str) -> UploadStatus:
+    """See :meth:`FileManagementService.delete_file`."""
     return current_session().delete_file(upload_id, file_path)
 
 
 def delete_all(upload_id: str) -> None:
+    """See :meth:`FileManagementService.delete_all`."""
     return current_session().delete_all(upload_id)

@@ -3,7 +3,9 @@ from datetime import datetime
 import dateutil.parser
 
 
-class Error(NamedTuple):
+class FileError(NamedTuple):
+    """Represents an error returned by the file management service."""
+
     ERROR = 'ERROR'
     WARNING = 'WARN'
 
@@ -12,6 +14,7 @@ class Error(NamedTuple):
     more_info: Optional[str] = None
 
     def to_dict(self) -> dict:
+        """Generate a dict representation of this error."""
         return {
             'error_type': self.error_type,
             'message': self.message,
@@ -20,19 +23,23 @@ class Error(NamedTuple):
 
     @classmethod
     def from_dict(cls: type, data: dict) -> 'Error':
+        """Instantiate a :class:`FileError` from a dict."""
         return cls(**data)
 
 
 class FileStatus(NamedTuple):
+    """Represents the state of an uploaded file."""
+
     path: str
     name: str
     file_type: str
     size: int
     modified: datetime
     ancillary: bool = False
-    errors: List[Error] = []
+    errors: List[FileError] = []
 
     def to_dict(self) -> dict:
+        """Generate a dict representation of this status object."""
         data = {
             'path': self.path,
             'name': self.name,
@@ -50,14 +57,16 @@ class FileStatus(NamedTuple):
 
     @classmethod
     def from_dict(cls: type, data: dict) -> 'UploadStatus':
+        """Instantiate a :class:`FileStatus` from a dict."""
         if 'errors' in data:
-            data['errors'] = [Error.from_dict(e) for e in data['errors']]
+            data['errors'] = [FileError.from_dict(e) for e in data['errors']]
         if 'modified' in data and type(data['modified']) is str:
             data['modified'] = dateutil.parser.parse(data['modified'])
         return cls(**data)
 
 
 class UploadStatus(NamedTuple):
+    """Represents the state of an upload workspace."""
 
     READY = 'READY'
     READY_WITH_WARNINGS = 'READY_WITH_WARNINGS'
@@ -84,7 +93,7 @@ class UploadStatus(NamedTuple):
     checksum: Optional[str] = None
     size: Optional[int] = None
     files: List[FileStatus] = []
-    errors: List[Error] = []
+    errors: List[FileError] = []
 
     @property
     def locked(self) -> bool:
@@ -97,6 +106,7 @@ class UploadStatus(NamedTuple):
         return len(self.files)
 
     def to_dict(self) -> dict:
+        """Generate a dict representation of this status object."""
         data = {
             'started': self.started,
             'completed': self.completed,
@@ -122,10 +132,11 @@ class UploadStatus(NamedTuple):
 
     @classmethod
     def from_dict(cls: type, data: dict) -> 'UploadStatus':
+        """Instantiate an :class:`UploadStatus` from a dict."""
         if 'files' in data:
             data['files'] = [FileStatus.from_dict(f) for f in data['files']]
         if 'errors' in data:
-            data['errors'] = [Error.from_dict(e) for e in data['errors']]
+            data['errors'] = [FileError.from_dict(e) for e in data['errors']]
         for key in ['started', 'completed', 'created', 'modified']:
             if key in data and type(data[key]) is str:
                 data[key] = dateutil.parser.parse(data[key])

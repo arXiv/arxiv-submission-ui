@@ -177,10 +177,14 @@ def cross_list(submission_id: int) -> Response:
 def file_upload(submission_id: int) -> Response:
     """Render step 7, file upload."""
     request_data = MultiDict(request.form.items(multi=True))
-    data, code, headers = controllers.upload_files(request.method, request_data,
-                                             request.files, request.session,
-                                             submission_id,
-                                             request.environ['token'])
+    data, code, headers = controllers.upload_files(
+        request.method,
+        request_data,
+        request.files,
+        request.session,
+        submission_id,
+        request.environ['token']
+    )
     if code == status.HTTP_303_SEE_OTHER:
         return redirect(headers['Location'], code=code)
     rendered = render_template("submit/file_upload.html",
@@ -193,15 +197,18 @@ def file_upload(submission_id: int) -> Response:
 @auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION,
                         authorizer=can_edit_submission)
 def file_delete(submission_id: int) -> Response:
+    """Provide the file deletion endpoint, part of the upload step."""
     if request.method == 'GET':
         request_data = MultiDict(request.args.items(multi=True))
     elif request.method == 'POST':
         request_data = MultiDict(request.form.items(multi=True))
-    data, code, headers = controllers.delete_file(request.method,
-                                                  request_data,
-                                                  request.session,
-                                                  submission_id,
-                                                  request.environ['token'])
+    data, code, headers = controllers.delete_file(
+        request.method,
+        request_data,
+        request.session,
+        submission_id,
+        request.environ['token']
+    )
     if code == status.HTTP_303_SEE_OTHER:
         return redirect(headers['Location'], code=code)
 
@@ -216,6 +223,7 @@ def file_delete(submission_id: int) -> Response:
 @auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION,
                         authorizer=can_edit_submission)
 def file_delete_all(submission_id: int) -> Response:
+    """Provide endpoint to delete all files, part of the upload step."""
     if request.method == 'GET':
         request_data = MultiDict(request.args.items(multi=True))
     elif request.method == 'POST':

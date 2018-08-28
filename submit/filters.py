@@ -1,11 +1,12 @@
 from collections import OrderedDict
 from datetime import datetime
-from typing import List, Tuple, Optional, Union
+from typing import List, Tuple, Optional, Union, Dict, Map
 from .domain import FileStatus
 
+NestedFileTree = Map[str, Union[FileStatus, 'NestedFileTree']]
 
-def group_files(files: List[FileStatus]) \
-        -> List[Tuple[int, Optional[str], Optional[FileStatus]]]:
+
+def group_files(files: List[FileStatus]) -> NestedFileTree:
     """
     Group a set of file status objects by directory structure.
 
@@ -16,11 +17,10 @@ def group_files(files: List[FileStatus]) \
 
     Returns
     -------
-    list
-        Elements are (int, str or None, :class:`FileStatus` or None) tuples,
-        where the first element is the tree level, the second element (if
-        not None) is the parent directory, and the third element (if not None)
-        if the leaf file status object.
+    :class:`OrderedDict`
+        Keys are strings. Values are either :class:`FileStatus` instances
+        (leaves) or :class:`OrderedDict` (containing more :class:`FileStatus`
+        and/or :class:`OrderedDict`, etc).
 
     """
     # First step is to organize by file tree.
@@ -50,10 +50,8 @@ def group_files(files: List[FileStatus]) \
 
 
 def timesince(timestamp: datetime, default: str = "just now") -> str:
-    """ """
-    now = datetime.utcnow()
-    diff = now - timestamp
-
+    """Format a :class:`datetime` as a relative duration in plain English."""
+    diff = datetime.utcnow() - timestamp
     periods = (
         (diff.days / 365, "year", "years"),
         (diff.days / 30, "month", "months"),
@@ -63,7 +61,6 @@ def timesince(timestamp: datetime, default: str = "just now") -> str:
         (diff.seconds / 60, "minute", "minutes"),
         (diff.seconds, "second", "seconds"),
     )
-
     for period, singular, plural in periods:
         if period > 1:
             return "%d %s ago" % (period, singular if period == 1 else plural)

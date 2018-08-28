@@ -11,7 +11,7 @@ from wtforms import Form
 from arxiv import status
 from arxiv.users import auth, domain
 from arxiv.submission.domain.submission import SubmissionContent
-from submit.domain import UploadStatus, FileStatus, Error
+from submit.domain import UploadStatus, FileStatus, FileError
 from submit.services import filemanager
 from .. import upload
 

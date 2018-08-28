@@ -276,6 +276,7 @@ class TestDelete(TestCase):
         redirect_uri = '/foo'
         mock_url_for.return_value = redirect_uri
         mock_filemanager.RequestFailed = filemanager.RequestFailed
+        mock_filemanager.RequestForbidden = filemanager.RequestForbidden
         upload_id = '5433'
         submission_id = 2
         mock_load.return_value = (

@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "642c9075faacb0829e84bd20280767fa619bf1caeb6feac7d8cc5620301adb78"
+            "sha256": "168bc58eb8e66ae70c2cfd686d7d2ee3cbea5eff6c3892a0ffbcbaf547e39540"
         },
         "pipfile-spec": 6,
         "requires": {},
@@ -14,9 +14,6 @@
         ]
     },
     "default": {
-        "17e504d": {
-            "path": "./../arxiv-base-ui"
-        },
         "arxiv-auth": {
             "hashes": [
                 "sha256:1cfa04c7a3f4a946e99e3308711c26614af37152f0c3d30293a6593051c7400a"
@@ -26,9 +23,10 @@
         },
         "arxiv-base": {
             "hashes": [
-                "sha256:0b29db977e15f53215d390da994e29bf39bea03412372bbfa522b71ac85eb4bb"
+                "sha256:3da5c489499c57dc94a6d5484e4f135f5c931d6b4d212254d0e8f908800d7dfd"
             ],
-            "version": "==0.10.1"
+            "index": "pypi",
+            "version": "==0.11.1rc3"
         },
         "arxiv-submission-core": {
             "hashes": [
@@ -47,17 +45,17 @@
         },
         "boto3": {
             "hashes": [
-                "sha256:6f011ea4fa100cf3952f86312fde278e58fb2cb9732076a8bad5924608e2f332",
-                "sha256:d73f16306ebc28718ffa2d23af9ae7b6d699d3a386348e7c0501ea3456bd9d75"
+                "sha256:0b9b24fd96f5bf7ae931982bfa029e3617680057d6dfc8c6d178fcb9c336c14e",
+                "sha256:3d2084c9db1a73a4681a6a62fef8730898f4afb41292d91311e2aad78a6dfdd4"
             ],
-            "version": "==1.8.1"
+            "version": "==1.8.2"
         },
         "botocore": {
             "hashes": [
-                "sha256:5b2d2393c02a082d605dac13c1322c3c553a4d4cf23de7b48268ae7f4a105eb3",
-                "sha256:c2dc0d5a247a122f7a9c18604b12ef3feffaee7f2c11cf48054f746f08fc8462"
+                "sha256:02a33ab792c25f40e268b9d91cb3a4bd76d94bb0438e86fb2e1f3907d20af495",
+                "sha256:762a325d4f6931140c58829b7a122436d235802f9a10e8f816e91e68951a9ee2"
             ],
-            "version": "==1.11.1"
+            "version": "==1.11.2"
         },
         "certifi": {
             "hashes": [
@@ -178,6 +176,7 @@
                 "sha256:1adb80e7a782c12e52ef9a8182bebeb73f1d7e24e374397af06fb4956c8dc5c0",
                 "sha256:e27001de32f627c22380a688bcc43ce83504a7bc5da472209b4c70f02829f0b8"
             ],
+            "markers": "python_version >= '2.7'",
             "version": "==2.7.3"
         },
         "pytz": {
@@ -502,6 +501,7 @@
                 "sha256:edb04bdd45bfd76c8292c4d9654568efaedf76fe78eb246dde69bdb13b2dad87",
                 "sha256:f19f2a4f547505fe9072e15f6f4ae714af51b5a681a97f187971f50c283193b6"
             ],
+            "markers": "python_version < '3.7' and implementation_name == 'cpython'",
             "version": "==1.1.0"
         },
         "urllib3": {

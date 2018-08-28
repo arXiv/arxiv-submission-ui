@@ -202,5 +202,4 @@ def user_and_client_from_session(session: Session) \
         suffix=getattr(session.user.name, 'suffix', None),
         endorsements=[c.compound for c in session.authorizations.endorsements]
     )
-    print(user.endorsements)
     return user, None

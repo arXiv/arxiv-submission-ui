@@ -7,11 +7,14 @@ os:
   - linux
 python:
   - "3.6"
-script:
-  - pip install pipenv
-  - pipenv install --dev
-  - pipenv run nose2 --with-coverage
-  - tests/lint.sh
-  - tests/docstyle.sh
-after_success:
-  - coveralls
+jobs:
+  include:
+    - stage: dependencies
+      script: pip install pipenv && pipenv install --dev
+    - stage: test
+      script: pipenv run nose2 --with-coverage && coveralls
+    - stage: lint
+      script: ./tests/lint.sh && ./tests/docstyle.sh
+    - stage: deploy
+      if: tag IS present
+      script: (docker build ./ -t arxiv/submission-ui:${TRAVIS_TAG}) && (echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin) && (docker push arxiv/submission-ui:${TRAVIS_TAG})

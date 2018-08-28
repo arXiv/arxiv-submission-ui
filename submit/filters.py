@@ -1,3 +1,5 @@
+"""Custom Jinja2 filters."""
+
 from collections import OrderedDict
 from datetime import datetime
 from typing import List, Tuple, Optional, Union, Dict, Map

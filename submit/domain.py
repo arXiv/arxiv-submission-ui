@@ -1,3 +1,5 @@
+"""Core data concepts in the submission UI application."""
+
 from typing import NamedTuple, List, Optional
 from datetime import datetime
 import dateutil.parser

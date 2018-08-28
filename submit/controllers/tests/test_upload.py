@@ -69,6 +69,7 @@ class TestUpload(TestCase):
         self.assertIn('submission', response_data, 'Submission is in response')
         self.assertIn('submission_id', response_data, 'ID is in response')
 
+    @mock.patch(f'{upload.__name__}.alerts', mock.MagicMock())
     @mock.patch(f'{upload.__name__}.filemanager')
     @mock.patch('arxiv.submission.load')
     def test_get_upload(self, mock_load, mock_filemanager):
@@ -237,6 +238,7 @@ class TestDelete(TestCase):
         self.assertEqual(response_data['form'].file_path.data, file_path,
                          'File path is set on the form')
 
+    @mock.patch(f'{upload.__name__}.alerts', mock.MagicMock())
     @mock.patch(f'{upload.__name__}.DeleteFileForm.Meta.csrf', False)
     @mock.patch(f'{upload.__name__}.filemanager')
     @mock.patch('arxiv.submission.load')
@@ -266,6 +268,7 @@ class TestDelete(TestCase):
         self.assertEqual(response_data['form'].file_path.data, file_path,
                          'File path is set on the form')
 
+    @mock.patch(f'{upload.__name__}.alerts', mock.MagicMock())
     @mock.patch(f'{upload.__name__}.DeleteFileForm.Meta.csrf', False)
     @mock.patch(f'{upload.__name__}.url_for')
     @mock.patch(f'{upload.__name__}.filemanager')
@@ -277,6 +280,7 @@ class TestDelete(TestCase):
         mock_url_for.return_value = redirect_uri
         mock_filemanager.RequestFailed = filemanager.RequestFailed
         mock_filemanager.RequestForbidden = filemanager.RequestForbidden
+        mock_filemanager.BadRequest = filemanager.BadRequest
         upload_id = '5433'
         submission_id = 2
         mock_load.return_value = (

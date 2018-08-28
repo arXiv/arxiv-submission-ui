@@ -102,7 +102,7 @@ class TestUpload(TestCase):
                     path='',
                     name='thebestfile.pdf',
                     file_type='PDF',
-                    added=datetime.now(),
+                    modified=datetime.now(),
                     size=20505,
                     ancillary=False,
                     errors=[]
@@ -157,7 +157,7 @@ class TestUpload(TestCase):
                 path='',
                 name='thebestfile.pdf',
                 file_type='PDF',
-                added=datetime.now(),
+                modified=datetime.now(),
                 size=20505,
                 ancillary=False,
                 errors=[]
@@ -237,6 +237,7 @@ class TestDelete(TestCase):
         self.assertEqual(response_data['form'].file_path.data, file_path,
                          'File path is set on the form')
 
+    @mock.patch(f'{upload.__name__}.DeleteFileForm.Meta.csrf', False)
     @mock.patch(f'{upload.__name__}.filemanager')
     @mock.patch('arxiv.submission.load')
     def test_post_delete(self, mock_load, mock_filemanager):

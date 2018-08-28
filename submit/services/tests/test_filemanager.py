@@ -71,7 +71,7 @@ from ...tests import mock_filemanager
 #                     path='',
 #                     name='thebestfile.pdf',
 #                     file_type='PDF',
-#                     added=datetime.now().isoformat(),
+#                     modified=datetime.now().isoformat(),
 #                     size=20505,
 #                     ancillary=False,
 #                     errors=[]
@@ -156,7 +156,7 @@ from ...tests import mock_filemanager
 #             path='',
 #             name='thebestfile.pdf',
 #             file_type='PDF',
-#             added=datetime.now().isoformat(),
+#             modified=datetime.now().isoformat(),
 #             size=20505,
 #             ancillary=False,
 #             errors=[]

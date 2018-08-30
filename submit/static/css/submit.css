@@ -19,31 +19,32 @@ ul.progressbar {
   width: 100%;
   display: flex; }
   ul.progressbar > li {
-    color: red;
     text-align: center;
     list-style: none;
     position: relative;
     margin-top: 1em;
     width: 100%; }
-    ul.progressbar > li > a:before {
-      content: "";
+    ul.progressbar > li > a {
       display: block;
-      position: relative;
-      margin: 0 auto 4px;
-      background-color: #FFF;
-      width: 16px;
-      height: 16px;
-      text-align: center;
-      border: 5px solid #ccc;
-      border-radius: 50%; }
-    ul.progressbar > li > a:hover {
-      border-bottom: 1px solid transparent; }
-      ul.progressbar > li > a:hover:before {
-        width: 24px;
-        height: 24px;
-        border-width: 2px;
-        top: -3px;
-        margin-bottom: -3px; }
+      color: #222;
+      line-height: 2em; }
+      ul.progressbar > li > a:before {
+        content: "";
+        display: block;
+        position: relative;
+        margin: 0 auto 4px;
+        background-color: #FFF;
+        width: 16px;
+        height: 16px;
+        text-align: center;
+        border: 5px solid #ccc;
+        border-radius: 50%; }
+      ul.progressbar > li > a:hover {
+        border-bottom: 1px solid transparent; }
+        ul.progressbar > li > a:hover:before {
+          border-width: 6px;
+          transform: scale(1.6);
+          box-shadow: 0px 0px 2px 1px #999; }
     ul.progressbar > li:after {
       content: "";
       height: 16px;
@@ -59,16 +60,11 @@ ul.progressbar {
       background-color: #FFF;
       border-color: #0068ac;
       border-width: 2px;
-      width: 24px;
-      height: 24px;
-      top: -3px;
-      margin-bottom: -3px; }
+      transform: scale(1.6); }
     ul.progressbar > li.is-complete:after {
       background-color: #0068ac; }
     ul.progressbar > li.is-complete > a:before {
       background-color: #FFF;
       border-color: #0068ac; }
-    ul.progressbar > li.is-complete > a:hover:before {
-      background-color: #0068ac; }
 
 /*# sourceMappingURL=submit.css.map */

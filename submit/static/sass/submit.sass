@@ -18,25 +18,24 @@
 /* Classes for responsive bubble-style progress bar */
 
 $bubblesize: 16px
-$hoversize: 24px
-$hoverposition: -3px
 $barsize: 16px
 $dotcolor: #FFF
-$completed: #0068ac
+$complete: #0068ac
 $incomplete: #ccc
-$findme: red
 
 ul.progressbar
   width: 100%
   display: flex
   > li
-    color: $findme
     text-align: center
     list-style: none
     position: relative
     margin-top: 1em
     width: 100%
     > a
+      display: block
+      color: #222
+      line-height: 2em
       &:before
         content: ''
         display: block
@@ -51,12 +50,10 @@ ul.progressbar
       &:hover
         border-bottom: 1px solid transparent
         &:before
-          width: $hoversize
-          height: $hoversize
-          border-width: 2px
+          border-width: 6px
           $background-color: $incomplete
-          top: $hoverposition
-          margin-bottom: $hoverposition
+          transform: scale(1.6)
+          box-shadow: 0px 0px 2px 1px #999
 
     &:after
       content: ''
@@ -76,20 +73,14 @@ ul.progressbar
       > a
         &:before
           background-color: $dotcolor
-          border-color: $completed
+          border-color: $complete
           border-width: 2px
-          width: $hoversize
-          height: $hoversize
-          top: $hoverposition
-          margin-bottom: $hoverposition
+          transform: scale(1.6)
 
     &.is-complete
       &:after
-        background-color: $completed
+        background-color: $complete
       > a
         &:before
           background-color: $dotcolor
-          border-color: $completed
-        &:hover
-          &:before
-            background-color: $completed
+          border-color: $complete

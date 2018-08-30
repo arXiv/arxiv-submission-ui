@@ -14,12 +14,12 @@ UPLOADS = {
     1: dict(
         checksum='a1s2d3f4',
         size=593920,
-        file_list={
+        files={
             'thebestfile.pdf': dict(
                 path='',
                 name='thebestfile.pdf',
                 file_type='PDF',
-                added=datetime.now().isoformat(),
+                modified=datetime.now().isoformat(),
                 size=20505,
                 ancillary=False,
                 errors=[]
@@ -27,14 +27,14 @@ UPLOADS = {
         },
         errors=[]
     ),
-    2: dict(checksum='4f3d2s1a', size=0, file_list={}, errors=[])
+    2: dict(checksum='4f3d2s1a', size=0, files={}, errors=[])
 }
 
 
 def _set_upload(upload_id, payload):
     upload_status = dict(payload)
-    upload_status['file_list'] = {
-        f'{f["path"]}{f["name"]}': f for f in upload_status['file_list']
+    upload_status['files'] = {
+        f'{f["path"]}{f["name"]}': f for f in upload_status['files']
     }
     UPLOADS[upload_id] = upload_status
     return _get_upload(upload_id)
@@ -45,14 +45,14 @@ def _get_upload(upload_id):
         status = dict(UPLOADS[upload_id])
     except KeyError:
         raise NotFound('Nope')
-    if type(status['file_list']) is dict:
-        status['file_list'] = list(status['file_list'].values())
+    if type(status['files']) is dict:
+        status['files'] = list(status['files'].values())
     status['identifier'] = upload_id
     return status
 
 
 def _add_file(upload_id, file_data):
-    UPLOADS[upload_id]['file_list'][f'{file_data["path"]}{file_data["name"]}'] = file_data
+    UPLOADS[upload_id]['files'][f'{file_data["path"]}{file_data["name"]}'] = file_data
     return _get_upload(upload_id)
 
 

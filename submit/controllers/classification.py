@@ -17,7 +17,7 @@ import arxiv.submission as events
 from ..util import load_submission
 from . import util
 
-# from arxiv-submission-core.events.event import VerifyContactInformation
+# from arxiv-submission-core.events.event import ConfirmContactInformation
 
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 
@@ -134,7 +134,7 @@ def classification(method: str, params: MultiDict, session: Session,
                     or submission.primary_classification.category != category:
                 try:
                     logger.debug('Setting new primary: %s', category)
-                    # Create SelectLicense event
+                    # Create SetLicense event
                     submission, stack = events.save(  # pylint: disable=W0612
                         events.SetPrimaryClassification(creator=submitter,
                                                         category=category),

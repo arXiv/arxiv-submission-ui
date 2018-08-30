@@ -120,7 +120,7 @@ class TestVerifyUser(TestCase):
 
         # Event store does not complain; returns object with `submission_id`
         def raise_on_verify(*ev, **kwargs):
-            if type(ev[0]) is events.VerifyContactInformation:
+            if type(ev[0]) is events.ConfirmContactInformation:
                 raise events.InvalidStack([
                     events.InvalidEvent(ev[0], 'foo')
                 ])

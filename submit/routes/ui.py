@@ -41,7 +41,8 @@ def create_submission():
 
 
 @blueprint.route('/<int:submission_id>/verify_user', methods=['GET', 'POST'])
-@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION, can_edit_submission)
+@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION,
+                        authorizer=can_edit_submission)
 def verify_user(submission_id: Optional[int] = None) -> Response:
     """Render the submit start page."""
     request_data = MultiDict(request.form.items(multi=True))
@@ -61,7 +62,8 @@ def verify_user(submission_id: Optional[int] = None) -> Response:
 
 
 @blueprint.route('/<int:submission_id>/authorship', methods=['GET', 'POST'])
-@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION, can_edit_submission)
+@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION,
+                        authorizer=can_edit_submission)
 def authorship(submission_id: int) -> Response:
     """Render step 2, authorship."""
     request_data = MultiDict(request.form.items(multi=True))
@@ -82,7 +84,8 @@ def authorship(submission_id: int) -> Response:
 
 
 @blueprint.route('/<int:submission_id>/license', methods=['GET', 'POST'])
-@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION, can_edit_submission)
+@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION,
+                        authorizer=can_edit_submission)
 def license(submission_id: int) -> Response:
     """Render step 3, select license."""
     request_data = MultiDict(request.form.items(multi=True))
@@ -103,7 +106,8 @@ def license(submission_id: int) -> Response:
 
 
 @blueprint.route('/<int:submission_id>/policy', methods=['GET', 'POST'])
-@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION, can_edit_submission)
+@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION,
+                        authorizer=can_edit_submission)
 def policy(submission_id: int) -> Response:
     """Render step 4, policy agreement."""
     request_data = MultiDict(request.form.items(multi=True))
@@ -125,7 +129,8 @@ def policy(submission_id: int) -> Response:
 
 @blueprint.route('/<int:submission_id>/classification',
                  methods=['GET', 'POST'])
-@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION, can_edit_submission)
+@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION,
+                        authorizer=can_edit_submission)
 def classification(submission_id: int) -> Response:
     """Render step 5, choose classification."""
     request_data = MultiDict(request.form.items(multi=True))
@@ -146,7 +151,8 @@ def classification(submission_id: int) -> Response:
 
 
 @blueprint.route('/<int:submission_id>/cross_list', methods=['GET', 'POST'])
-@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION, can_edit_submission)
+@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION,
+                        authorizer=can_edit_submission)
 def cross_list(submission_id: int) -> Response:
     """Render step 6, secondary classes."""
     request_data = MultiDict(request.form.items(multi=True))
@@ -165,21 +171,82 @@ def cross_list(submission_id: int) -> Response:
     return response
 
 
-@blueprint.route('/<int:submission_id>/file_upload', methods=['GET'])
-@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION, can_edit_submission)
+@blueprint.route('/<int:submission_id>/file_upload', methods=['GET', 'POST'])
+@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION,
+                        authorizer=can_edit_submission)
 def file_upload(submission_id: int) -> Response:
     """Render step 7, file upload."""
-    code = status.HTTP_200_OK
-    rendered = render_template(
-        "submit/file_upload.html",
-        pagetitle='Upload Files'
+    request_data = MultiDict(request.form.items(multi=True))
+    data, code, headers = controllers.upload_files(
+        request.method,
+        request_data,
+        request.files,
+        request.session,
+        submission_id,
+        request.environ['token']
     )
+    if code == status.HTTP_303_SEE_OTHER:
+        return redirect(headers['Location'], code=code)
+    rendered = render_template("submit/file_upload.html",
+                               pagetitle='Upload Files', **data)
+    response = make_response(rendered, code)
+    return response
+
+
+@blueprint.route('/<int:submission_id>/file_delete', methods=['GET', 'POST'])
+@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION,
+                        authorizer=can_edit_submission)
+def file_delete(submission_id: int) -> Response:
+    """Provide the file deletion endpoint, part of the upload step."""
+    if request.method == 'GET':
+        request_data = MultiDict(request.args.items(multi=True))
+    elif request.method == 'POST':
+        request_data = MultiDict(request.form.items(multi=True))
+    data, code, headers = controllers.delete_file(
+        request.method,
+        request_data,
+        request.session,
+        submission_id,
+        request.environ['token']
+    )
+    if code == status.HTTP_303_SEE_OTHER:
+        return redirect(headers['Location'], code=code)
+
+    rendered = render_template("submit/confirm_delete.html",
+                               pagetitle='Delete File', **data)
+    response = make_response(rendered, code)
+    return response
+
+
+@blueprint.route('/<int:submission_id>/file_delete_all',
+                 methods=['GET', 'POST'])
+@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION,
+                        authorizer=can_edit_submission)
+def file_delete_all(submission_id: int) -> Response:
+    """Provide endpoint to delete all files, part of the upload step."""
+    if request.method == 'GET':
+        request_data = MultiDict(request.args.items(multi=True))
+    elif request.method == 'POST':
+        request_data = MultiDict(request.form.items(multi=True))
+    data, code, headers = controllers.delete_all_files(
+        request.method,
+        request_data,
+        request.session,
+        submission_id,
+        request.environ['token']
+    )
+    if code == status.HTTP_303_SEE_OTHER:
+        return redirect(headers['Location'], code=code)
+
+    rendered = render_template("submit/confirm_delete_all.html",
+                               pagetitle='Delete All Files', **data)
     response = make_response(rendered, code)
     return response
 
 
 @blueprint.route('/<int:submission_id>/file_process', methods=['GET'])
-@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION, can_edit_submission)
+@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION,
+                        authorizer=can_edit_submission)
 def file_process(submission_id: int) -> Response:
     """Render step 8, file processing."""
     code = status.HTTP_200_OK
@@ -192,7 +259,8 @@ def file_process(submission_id: int) -> Response:
 
 
 @blueprint.route('/<int:submission_id>/add_metadata', methods=['GET', 'POST'])
-@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION, can_edit_submission)
+@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION,
+                        authorizer=can_edit_submission)
 def add_metadata(submission_id: int) -> Response:
     """Render step 9, metadata."""
     request_data = MultiDict(request.form.items(multi=True))
@@ -213,7 +281,8 @@ def add_metadata(submission_id: int) -> Response:
 
 @blueprint.route('/<int:submission_id>/add_optional_metadata',
                  methods=['GET', 'POST'])
-@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION, can_edit_submission)
+@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION,
+                        authorizer=can_edit_submission)
 def add_optional_metadata(submission_id: int) -> Response:
     """Render step 9, metadata."""
     request_data = MultiDict(request.form.items(multi=True))
@@ -233,7 +302,8 @@ def add_optional_metadata(submission_id: int) -> Response:
 
 
 @blueprint.route('/<int:submission_id>/final_preview', methods=['GET'])
-@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION, can_edit_submission)
+@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION,
+                        authorizer=can_edit_submission)
 def final_preview(submission_id: int) -> Response:
     """Render step 10, preview."""
     rendered = render_template(
@@ -246,7 +316,8 @@ def final_preview(submission_id: int) -> Response:
 
 
 @blueprint.route('/<int:submission_id>/confirm_submit', methods=['GET'])
-@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION, can_edit_submission)
+@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION,
+                        authorizer=can_edit_submission)
 def confirm_submit(submission_id: int) -> Response:
     """Render the final confirmation page."""
     rendered = render_template(

@@ -1,7 +1,7 @@
 """
 Controller for license action.
 
-Creates an event of type `core.events.event.SelectLicense`
+Creates an event of type `core.events.event.SetLicense`
 """
 
 from typing import Tuple, Dict, Any
@@ -38,7 +38,7 @@ def _data_from_submission(params: MultiDict,
 @util.flow_control('ui.authorship', 'ui.policy', 'ui.user')
 def license(method: str, params: MultiDict, session: Session,
             submission_id: int) -> Response:
-    """Convert license form data into a `SelectLicense` event."""
+    """Convert license form data into a `SetLicense` event."""
     submitter, client = util.user_and_client_from_session(session)
 
     logger.debug(f'method: {method}, submission: {submission_id}. {params}')
@@ -62,14 +62,14 @@ def license(method: str, params: MultiDict, session: Session,
             # If already selected, nothing more to do.
             if not submission.license or submission.license.uri != license_uri:
                 try:
-                    # Create SelectLicense event
+                    # Create SetLicense event
                     submission, stack = events.save(  # pylint: disable=W0612
-                        events.SelectLicense(creator=submitter,
+                        events.SetLicense(creator=submitter,
                                              license_uri=license_uri),
                         submission_id=submission_id
                     )
                 except events.exceptions.InvalidStack as e:
-                    logger.error('Could not AssertAuthorship: %s', str(e))
+                    logger.error('Could not ConfirmAuthorship: %s', str(e))
                     form.errors     # Causes the form to initialize errors.
                     form._errors['events'] = [ie.message for ie
                                               in e.event_exceptions]

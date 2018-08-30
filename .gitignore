@@ -111,3 +111,5 @@ venv.bak/
 .*.swp
 
 
+*.db
+.DS_Store

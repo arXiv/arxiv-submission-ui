@@ -66,3 +66,15 @@ cookie as path value. If domains are used, this should be None.
 CLASSIC_DATABASE_URI = os.environ.get('CLASSIC_DATABASE_URI', 'sqlite:///')
 
 JWT_SECRET = os.environ.get('JWT_SECRET', 'foosecret')
+SECRET_KEY = os.environ.get('FLASK_SECRET', 'fooflasksecret')
+CSRF_SECRET = os.environ.get('FLASK_SECRET', 'csrfbarsecret')
+
+FILE_MANAGER_HOST = os.environ.get('FILE_MANAGER_HOST', 'arxiv.org')
+FILE_MANAGER_PORT = os.environ.get('FILE_MANAGER_PORT', '443')
+FILE_MANAGER_PROTO = os.environ.get('FILE_MANAGER_PROTO', 'https')
+FILE_MANAGER_PATH = os.environ.get('FILE_MANAGER_PATH', '')
+FILE_MANAGER_ENDPOINT = os.environ.get(
+    'FILE_MANAGER_ENDPOINT',
+    f'{FILE_MANAGER_PROTO}://{FILE_MANAGER_HOST}:{FILE_MANAGER_PORT}/{FILE_MANAGER_PATH}'
+)
+FILE_MANAGER_VERIFY = bool(int(os.environ.get('FILE_MANAGER_VERIFY', '1')))

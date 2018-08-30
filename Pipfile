@@ -4,7 +4,6 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-arxiv-base = {git = "https://github.com/cul-it/arxiv-base.git", editable = true, ref = "develop"}
 dataclasses = "*"
 Flask = "*"
 jsonschema = "*"
@@ -14,14 +13,16 @@ PyYAML = "*"
 pytz = "*"
 SQLAlchemy = "*"
 bleach = "*"
-arxiv-auth = "==0.1.0rc10"
-arxiv-submission-core = "==0.4.2rc1"
+arxiv-submission-core = "==0.4.2rc3"
+requests = "==2.19.1"
+arxiv-base = "==0.11.1rc5"
+arxiv-auth = "==0.1.0rc11"
 
 [dev-packages]
-"nose2" = "*"
 pylint = "*"
 pydocstyle = "*"
 mypy = "*"
 mimesis = "*"
 coveralls = "*"
 coverage = "*"
+"nose2" = "*"

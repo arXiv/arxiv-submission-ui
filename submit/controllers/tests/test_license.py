@@ -13,7 +13,7 @@ from datetime import timedelta, datetime
 from arxiv.users import auth, domain
 
 
-class TestSelectLicense(TestCase):
+class TestSetLicense(TestCase):
     """Test behavior of :func:`.license` controller."""
 
     def setUp(self):
@@ -125,7 +125,7 @@ class TestSelectLicense(TestCase):
 
         # Event store does not complain; returns object with `submission_id`
         def raise_on_verify(*ev, **kwargs):
-            if type(ev[0]) is events.SelectLicense:
+            if type(ev[0]) is events.SetLicense:
                 raise events.InvalidStack([
                     events.InvalidEvent(ev[0], 'foo')
                 ])

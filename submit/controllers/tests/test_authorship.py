@@ -147,7 +147,7 @@ class TestVerifyAuthorship(TestCase):
 
         # Event store does not complain; returns object with `submission_id`
         def raise_on_verify(*ev, **kwargs):
-            if type(ev[0]) is events.AssertAuthorship:
+            if type(ev[0]) is events.ConfirmAuthorship:
                 raise events.InvalidStack([
                     events.InvalidEvent(ev[0], 'foo')
                 ])

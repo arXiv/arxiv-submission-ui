@@ -3,7 +3,7 @@
 from typing import Callable, Any, Dict, Tuple, Optional, List
 
 from werkzeug import MultiDict
-from werkzeug.exceptions import InternalServerError, NotFound
+from werkzeug.exceptions import InternalServerError, NotFound, BadRequest
 from flask import url_for
 
 from wtforms.widgets import ListWidget, CheckboxInput, Select, HTMLString, \
@@ -19,6 +19,11 @@ import arxiv.submission as events
 Response = Tuple[Dict[str, Any], int, Dict[str, Any]]  # pylint: disable=C0103
 
 
+PREVIOUS = 'previous'
+NEXT = 'next'
+SAVE_EXIT = 'save_exit'
+
+
 # TODO: handle case that there is no prev/next page!
 # TODO: handle case that prev/next page doesn't exist.
 def flow_control(prev_page: str, next_page: str, exit_page: str) -> Callable:
@@ -28,12 +33,21 @@ def flow_control(prev_page: str, next_page: str, exit_page: str) -> Callable:
         def wrapper(method: str, params: MultiDict, *args: Any,
                     **kwargs: Dict) -> Response:
             """Update the redirect to the next, previous, or exit page."""
+            action = params.get('action')
+
             data, status_code, headers = func(method, params, *args, **kwargs)
+
+            # If the user selects "go back", we attempt to save their input
+            # above. But if the input does not validate, we don't prevent them
+            # from going to the previous step.
+            if status_code == status.HTTP_400_BAD_REQUEST \
+                    and action == PREVIOUS:
+                status_code = status.HTTP_303_SEE_OTHER
+
             # No redirect; nothing to do.
             if status_code != status.HTTP_303_SEE_OTHER:
                 return data, status_code, headers
 
-            action = params.get('action')
             if not action and 'Location' not in headers:
                 raise InternalServerError('Attempted redirect without URL')
 
@@ -48,11 +62,11 @@ def flow_control(prev_page: str, next_page: str, exit_page: str) -> Callable:
                     url = url_for(page)
                 return url
 
-            if action == 'next':
+            if action == NEXT:
                 headers.update({'Location': _get_target(next_page)})
-            elif action == 'previous':
+            elif action == PREVIOUS:
                 headers.update({'Location': _get_target(prev_page)})
-            elif action == 'save_exit':
+            elif action == SAVE_EXIT:
                 headers.update({'Location': _get_target(exit_page)})
             return data, status_code, headers
         return wrapper
@@ -114,7 +128,6 @@ class SubmissionMixin:
 
     Examples
     --------
-
     .. code-block:: python
 
        >>> from wtforms import Form, TextField, validators

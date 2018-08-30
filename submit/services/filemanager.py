@@ -120,9 +120,9 @@ class FileManagementService(object):
         non_file_errors = []
         for etype, filename, message in data['errors']:
             if filename:
-                file_errors[filename].append(Error(etype.upper(), message))
+                file_errors[filename].append(FileError(etype.upper(), message))
             else:
-                non_file_errors.append(Error(etype.upper(), message))
+                non_file_errors.append(FileError(etype.upper(), message))
 
         return UploadStatus(
             started=dateutil.parser.parse(data['start_datetime']),

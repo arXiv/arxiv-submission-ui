@@ -16,40 +16,59 @@
 
 /* Classes for responsive bubble-style progress bar */
 ul.progressbar {
-  width: 100%; }
+  width: 100%;
+  display: flex; }
   ul.progressbar > li {
-    color: findme;
-    text-align: center; }
-    ul.progressbar > li:before {
+    color: red;
+    text-align: center;
+    list-style: none;
+    position: relative;
+    margin-top: 1em;
+    width: 100%; }
+    ul.progressbar > li > a:before {
       content: "";
       display: block;
+      position: relative;
       margin: 0 auto 4px;
       background-color: #FFF;
       width: 16px;
       height: 16px;
       text-align: center;
-      border: 2px solid purple;
+      border: 5px solid #ccc;
       border-radius: 50%; }
+    ul.progressbar > li > a:hover {
+      border-bottom: 1px solid transparent; }
+      ul.progressbar > li > a:hover:before {
+        width: 24px;
+        height: 24px;
+        border-width: 2px;
+        top: -3px;
+        margin-bottom: -3px; }
     ul.progressbar > li:after {
       content: "";
-      height: 2px;
+      height: 16px;
       width: 100%;
-      background-color: purple;
+      background-color: #ccc;
       position: absolute;
-      top: 8px;
-      left: 50%;
+      top: 0;
+      right: 50%;
       z-index: -1; }
-    ul.progressbar > li:last-child:after {
+    ul.progressbar > li:first-child:after {
       display: none; }
-    ul.progressbar > li.is-active:before {
-      background-color: green;
-      border-color: green; }
-    ul.progressbar > li.is-active ~ li {
-      color: purple; }
-      ul.progressbar > li.is-active ~ li:before {
-        background-color: aliceblue;
-        border-color: aliceblue; }
-      ul.progressbar > li.is-active ~ li:after {
-        background-color: aliceblue; }
+    ul.progressbar > li.is-active > a:before {
+      background-color: #FFF;
+      border-color: #0068ac;
+      border-width: 2px;
+      width: 24px;
+      height: 24px;
+      top: -3px;
+      margin-bottom: -3px; }
+    ul.progressbar > li.is-complete:after {
+      background-color: #0068ac; }
+    ul.progressbar > li.is-complete > a:before {
+      background-color: #FFF;
+      border-color: #0068ac; }
+    ul.progressbar > li.is-complete > a:hover:before {
+      background-color: #0068ac; }
 
 /*# sourceMappingURL=submit.css.map */

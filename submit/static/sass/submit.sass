@@ -14,3 +14,73 @@
 
 .buttons .button:not(:last-child)
   margin-right: .75rem
+
+/* Classes for responsive bubble-style progress bar */
+
+$bubblesize: 16px
+$barsize: 16px
+$dotcolor: #FFF
+$complete: #0068ac
+$incomplete: #ccc
+
+ul.progressbar
+  width: 100%
+  display: flex
+  > li
+    text-align: center
+    list-style: none
+    position: relative
+    margin-top: 1em
+    width: 100%
+    > a
+      display: block
+      color: #222
+      line-height: 2em
+      &:before
+        content: ''
+        display: block
+        position: relative
+        margin: 0 auto 4px
+        background-color: $dotcolor
+        width: $bubblesize
+        height: $bubblesize
+        text-align: center
+        border: 5px solid $incomplete
+        border-radius: 50%
+      &:hover
+        border-bottom: 1px solid transparent
+        &:before
+          border-width: 6px
+          $background-color: $incomplete
+          transform: scale(1.6)
+          box-shadow: 0px 0px 2px 1px #999
+
+    &:after
+      content: ''
+      height: $barsize
+      width: 100%
+      background-color: $incomplete
+      position: absolute
+      top: 0
+      right: 50%
+      z-index: -1
+
+    &:first-child
+      &:after
+        display: none
+
+    &.is-active
+      > a
+        &:before
+          background-color: $dotcolor
+          border-color: $complete
+          border-width: 2px
+          transform: scale(1.6)
+
+    &.is-complete
+      &:after
+        background-color: $complete
+      > a
+        &:before
+          background-color: $dotcolor
+          border-color: $complete

@@ -78,3 +78,5 @@ FILE_MANAGER_ENDPOINT = os.environ.get(
     f'{FILE_MANAGER_PROTO}://{FILE_MANAGER_HOST}:{FILE_MANAGER_PORT}/{FILE_MANAGER_PATH}'
 )
 FILE_MANAGER_VERIFY = bool(int(os.environ.get('FILE_MANAGER_VERIFY', '1')))
+
+SESSION_COOKIE_NAME = 'submission_ui_session'

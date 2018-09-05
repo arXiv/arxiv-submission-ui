@@ -362,6 +362,7 @@ def _get_upload(params: MultiDict, session: Session, submission: Submission) \
         return response_data, status.HTTP_200_OK, {}
     upload_id = submission.source_content.identifier
     status_data = alerts.get_hidden_alerts('status')
+    logger.debug('Got status data from hidden alert: %s', status_data)
     if type(status_data) is dict and status_data['identifier'] == upload_id:
         upload_status = UploadStatus.from_dict(status_data)
     else:
@@ -469,7 +470,9 @@ def _post_new_file(params: MultiDict, pointer: FileStorage, session: Session,
             f'Upoaded {pointer.filename} successfully',
             title='Upload successful'
         )
-        alerts.flash_hidden(upload_status.to_dict(), 'status')
+        status_data = upload_status.to_dict()
+        logger.debug('Stashing status data for next page: %s', status_data)
+        alerts.flash_hidden(status_data, 'status')
     except filemanager.RequestFailed as e:
         alerts.flash_failure(Markup(
             'There was a problem carrying out your request. Please try'

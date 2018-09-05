@@ -13,7 +13,7 @@ from datetime import timedelta, datetime
 from arxiv.users import auth, domain
 
 
-class TestAcceptPolicy(TestCase):
+class TestConfirmPolicy(TestCase):
     """Test behavior of :func:`.policy` controller."""
 
     def setUp(self):
@@ -147,7 +147,7 @@ class TestAcceptPolicy(TestCase):
 
         # Event store does not complain; returns object with `submission_id`
         def raise_on_policy(*ev, **kwargs):
-            if type(ev[0]) is events.AcceptPolicy:
+            if type(ev[0]) is events.ConfirmPolicy:
                 raise events.InvalidStack([
                     events.InvalidEvent(ev[0], 'foo')
                 ])

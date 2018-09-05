@@ -1,41 +1,104 @@
 {% extends "submit/base.html" %}
 
+{% macro display_tree(key, item) %}
+  {% if key %}
+  <li class="{% if item.errors %}is-warning{% endif %}">
+  {% endif %}
+    {% if item.name %}
+    <div class="level" style="margin-bottom: 0px;">
+      <div class="level-left">
+        {{ item.name }}
+      </div>
+      <div class="level-right">
+          <div class="columns" style="width: 30vw;">
+            <div class="column">{{ item.size|filesizeformat }}</div>
+            <div class="column">{{ item.modified|timesince }}</div>
+            <div class="column has-text-centered">
+             <a href="{{ url_for('ui.file_delete', submission_id=submission_id) }}?name={{ item.name }}">
+               <span class="icon">
+                 <i class="fa fa-trash" aria-label="Delete"></i>
+               </span>
+             </a>
+            </div>
+          </div>
+      </div>
+    </div>
+    {% else %}
+    {% if key %}{{ key }}/{% endif %}
+    <ol style="margin-top: 0px; list-style-type: none;">
+      {% for k, subitem in item.items() %}
+      {{ display_tree(k, subitem) }}
+      {% endfor %}
+    </ol>
+    {% endif %}
+    {% if item.errors %}
+        {% for error in item.errors %}
+        <p class="help has-text-weight-bold is-marginless {% if error.error_type == error.ERROR %}is-danger{% else %}is-warning{% endif %}">
+          {{ error.message }}
+        </p>
+        {% endfor %}
+      {% endif %}
+  {% if key %}
+  </li>
+  {% endif %}
+{% endmacro %}
 
 
 {% block within_content %}
-<div class="level">
-  <div class="level-left">
-    <h2>Upload files</h2>
+
+<div class="columns">
+  <div class="column is-two-thirds-desktop">
+    <h2 class="h2">Upload files</h2>
+    <form class="form" action="{{ url_for('ui.file_upload', submission_id=submission_id) }}" method="POST" enctype="multipart/form-data">
+      <div class="field is-grouped breathe-vertical">
+        <div class="control">
+          <div class="file has-name">
+            <label class="file-label">
+              <input class="file-input" type="file" name="file" id="file">
+              <span class="file-cta">
+                <span class="file-icon"><i class="fa fa-upload"></i></span>
+                <span class="file-label">Choose a file…</span>
+              </span>
+              <span id="filename" class="file-name is-fullwidth">Select a file to upload</span>
+            </label>
+          </div>
+        </div>
+        <div class="control is-centered-vertically">
+          <label class="checkbox">
+            <input type="checkbox"> Ancillary <span class="icon has-text-link"><i class="fa fa-info-circle"></i></span>
+        </div>
+        <div class="control">
+          <button type="submit" class="button is-link">Upload</button>
+        </div>
+      </div>
+      <p class="is-marginless help has-text-grey">
+        You can upload all your files at once as a single .tar.gz file or upload individual files as needed.
+      </p>
+    </form>
+
+    {% if status.files %}
+    <h3>Files currently attached to this submission</h3>
+
+    {{ display_tree(None, status.files|group_files) }}
+
+    <p class="help is-pulled-right">
+      <a href="{{ url_for('ui.file_delete_all', submission_id=submission_id) }}">
+        <span class="icon"><i class="fa fa-trash" aria-label="Delete all"></i></span>Remove All
+      </a>
+    </p>
+    {% else %}
+    <p class="title is-4 breathe-vertical has-text-centered">
+      There's nothing here!
+    </p>
+    {% endif %}
   </div>
-  <div class="level-right">
+  <div class="column is-one-third-desktop">
     <div class="message is-info">
       <div class="message-body">
-        <p><span class="icon has-text-link"><i class="fa fa-info-circle"></i></span>
-        You can upload all your files at once as a single .tar.gz file or upload individual files as needed.</p>
-      </div>
-    </div>
-  </div>
-</div>
+        <div class="is-pulled-left">
+          <span class="icon has-text-link"><i class="fa fa-info-circle"></i></span>
+        </div>
 
-<div class="message is-danger">
-  <div class="message-body">
-    <button class="delete is-small is-pulled-right"></button>
-    <div class="is-pulled-left">
-      <span class="icon has-text-danger"><i class="fa fa-warning"></i></span>
-    </div>
-    <div class="content">
-      <p>This is where an error message goes</p>
-    </div>
-  </div>
-</div>
-
-<div class="message is-info">
-  <div class="message-body">
-    <div class="is-pulled-left">
-      <span class="icon has-text-link"><i class="fa fa-info-circle"></i></span>
-    </div>
-    <div class="columns">
-      <div class="column">
         <p class="has-text-weight-semibold">Accepted File Formats</p>
         <ul>
           <li>(La)TeX, AMS(La)TeX, PDFLaTeX</li>
@@ -43,114 +106,33 @@
           <li>PostScript</li>
           <li>HTML</li>
         </ul>
-      </div>
-      <div class="column">
+
         <p class="has-text-weight-semibold">Accepted Image Formats</p>
         <ul>
           <li>PDF or EPS</li>
           <li>JPG, GIF, PNG</li>
           <li>SVG?</li>
         </ul>
-      </div>
-      <div class="column">
+
+
         <p class="has-text-weight-semibold">Accepted File Properties</p>
         <ul>
           <li>Names containing a-z A-Z 0-9 . , - _</li>
           <li>Individual files less than [x]MB</li>
           <li>Total size less than [x]MB</li>
         </ul>
-      </div>
-      <div class="column">
+
+
         <p class="has-text-weight-semibold">Style and Class Files</p>
         <ul>
           <li><a href="#">Default packages</a></li>
           <li><a href="#">What to include</a></li>
           <li><a href="#">Upload FAQ</a></li>
         </ul>
-      </div>
-    </div> <!-- ends columns -->
-  </div>
-</div>
 
-<form>
-  <div class="field is-grouped breathe-vertical">
-    <div class="control">
-      <div class="file has-name">
-        <label class="file-label">
-          <input class="file-input" type="file" name="resume">
-          <span class="file-cta">
-            <span class="file-icon"><i class="fa fa-upload"></i></span>
-            <span class="file-label">
-              Choose a file…
-            </span>
-          </span>
-          <span class="file-name is-fullwidth">
-            sample-archive-pr27x.tar.gz
-          </span>
-        </label>
       </div>
     </div>
-    <div class="control is-centered-vertically">
-      <label class="checkbox">
-        <input type="checkbox"> Ancillary <span class="icon has-text-link"><i class="fa fa-info-circle"></i></span>
-    </div>
-    <div class="control">
-      <button type="button" class="button is-link">Upload</button>
-    </div>
   </div>
-</form>
-
-<h3>Files currently attached to this submission</h3>
-    <table class="table is-hoverable is-marginless">
-      <thead>
-        <tr>
-          <th style="width:45%;">File Name</th>
-          <th>Type</th>
-          <th>Size (total: XXMB)</th>
-          <th>Date Added</th>
-          <th style="width:5%;">Actions</th>
-        </tr>
-      </thead>
-      <tfoot>
-        <th class="is-paddingless"></th>
-        <th class="is-paddingless"></th>
-        <th class="is-paddingless"></th>
-        <th class="is-paddingless"></th>
-        <th class="is-paddingless"></th>
-      </tfoot>
-      <tr class="is-danger">
-        <td><div class="help has-text-weight-bold is-danger">File type unknown - delete or move to /anc.</div>
-            file1.file</td>
-        <td>Unknown</td>
-        <td>32KB</td>
-        <td>2018-07-23 2:32pm EDT</td>
-        <td class="has-text-centered"><a href="#"><span class="icon"><i class="fa fa-trash" aria-label="Delete"></i></span></a></td>
-      </tr>
-      <tr class="is-warning">
-        <td><div class="help has-text-weight-bold is-warning">This is a warning about this file</div>
-          file2.tex</td>
-        <td>LaTeX2e</td>
-        <td>119KB</td>
-        <td>2018-07-23 2:32pm EDT</td>
-        <td class="has-text-centered"><a href="#"><span class="icon"><i class="fa fa-trash" aria-label="Delete"></i></span></a></td>
-      </tr>
-      <tr>
-        <td>/anc <i class="fa fa-angle-down" aria-label="Expand subdirectory"></a></td>
-        <td></td>
-        <td class="has-text-weight-bold">2KB</td>
-        <td>2018-07-23 2:32pm EDT</td>
-        <td class="has-text-centered"><a href="#"><span class="icon"><i class="fa fa-trash" aria-label="Delete"></i></span></a></td>
-      </tr>
-      <tr>
-        <td><span class="is-subdirectory">file3.txt</span></td>
-        <td>Plain text</td>
-        <td>2KB</td>
-        <td>2018-07-23 2:32pm EDT</td>
-        <td class="has-text-centered"><a href="#"><span class="icon"><i class="fa fa-trash" aria-label="Delete"></i></span></a></td>
-      </tr>
-    </table>
-    <p class="help is-pulled-right"><a href="#"><span class="icon"><i class="fa fa-trash" aria-label="Delete all"></i></span>remove all</a></p>
-
 </div>
 
 {{ submit_macros.submit_nav() }}

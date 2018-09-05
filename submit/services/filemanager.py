@@ -12,15 +12,21 @@ the file management service as they are being received by this UI application.
 """
 from typing import Tuple
 import json
+from functools import wraps
+from collections import defaultdict
 from urllib.parse import urlparse, urlunparse, urlencode
 import dateutil.parser
 import requests
 from requests.packages.urllib3.util.retry import Retry
 
 from arxiv import status
+from arxiv.base import logging
+from arxiv.base.globals import get_application_config, get_application_global
 from werkzeug.datastructures import FileStorage
 
-from submit.domain import UploadStatus, FileStatus, Error
+from submit.domain import UploadStatus, FileStatus, FileError
+
+logger = logging.getLogger(__name__)
 
 
 class RequestFailed(IOError):
@@ -92,6 +98,7 @@ class FileManagementService(object):
             Headers to be included on all requests.
 
         """
+        logger.debug('New FileManagementService with endpoint %s', endpoint)
         self._session = requests.Session()
         self._verify_cert = verify_cert
         self._retry = Retry(  # type: ignore
@@ -109,28 +116,34 @@ class FileManagementService(object):
         self._session.headers.update(headers)
 
     def _parse_upload_status(self, data: dict) -> UploadStatus:
+        file_errors = defaultdict(list)
+        non_file_errors = []
+        for etype, filename, message in data['errors']:
+            if filename:
+                file_errors[filename].append(FileError(etype.upper(), message))
+            else:
+                non_file_errors.append(FileError(etype.upper(), message))
+
         return UploadStatus(
-            identifier=data['identifier'],
-            checksum=data['checksum'],
-            size=data['size'],
-            file_list=[FileStatus(
-                path=file_data['path'],
-                name=file_data['name'],
-                file_type=file_data['file_type'],
-                added=dateutil.parser.parse(file_data['added']),
-                size=int(file_data['size']),
-                ancillary=bool(file_data['ancillary']),
-                errors=[Error(
-                    type=error_data['type'],
-                    message=error_data['message'],
-                    more_info=error_data['more_info']
-                ) for error_data in file_data['errors']]
-            ) for file_data in data['file_list']],
-            errors=[Error(
-                type=error_data['type'],
-                message=error_data['message'],
-                more_info=error_data['more_info']
-            ) for error_data in data['errors']]
+            started=dateutil.parser.parse(data['start_datetime']),
+            completed=dateutil.parser.parse(data['completion_datetime']),
+            created=dateutil.parser.parse(data['created_datetime']),
+            modified=dateutil.parser.parse(data['modified_datetime']),
+            status=data['upload_status'],
+            workspace_state=data['workspace_state'],
+            lock_state=data['lock_state'],
+            identifier=data['upload_id'],
+            files=[
+                FileStatus(
+                    name=fdata['name'],
+                    path=fdata['public_filepath'],
+                    size=fdata['size'],
+                    file_type=fdata['type'],
+                    modified=dateutil.parser.parse(fdata['modified_datetime']),
+                    errors=file_errors[fdata['public_filepath']]
+                ) for fdata in data['files']
+            ],
+            errors=non_file_errors
         )
 
     def _path(self, path: str, query: dict = {}) -> str:
@@ -164,6 +177,10 @@ class FileManagementService(object):
             raise RequestFailed(f'Unexpected status code: {resp.status_code}')
         return resp
 
+    def set_auth_token(self, token: str) -> None:
+        """Set the authn/z token to use in subsequent requests."""
+        self._session.headers.update({'Authorization': token})
+
     def request(self, method: str, path: str, expected_code: int = 200, **kw) \
             -> Tuple[dict, dict]:
         """Perform an HTTP request, and handle any exceptions."""
@@ -188,7 +205,7 @@ class FileManagementService(object):
         """Get the status of the file management service."""
         return self.request('get', 'status')
 
-    def upload_package(self, pointer: FileStorage) -> Tuple[dict, dict]:
+    def upload_package(self, pointer: FileStorage) -> UploadStatus:
         """
         Stream an upload to the file management service.
 
@@ -210,16 +227,17 @@ class FileManagementService(object):
             Response headers.
         """
         files = {'file': (pointer.filename, pointer, pointer.mimetype)}
-        return self.request('post', '/', files=files,
-                            expected_code=status.HTTP_201_CREATED)
+        data, headers = self.request('post', '/', files=files,
+                                     expected_code=status.HTTP_201_CREATED)
+        return self._parse_upload_status(data)
 
-    def get_upload_status(self, upload_id: str) -> Tuple[UploadStatus, dict]:
+    def get_upload_status(self, upload_id: int) -> UploadStatus:
         """
         Retrieve metadata about an accepted and processed upload package.
 
         Parameters
         ----------
-        upload_id : str
+        upload_id : int
             Unique long-lived identifier for the upload.
 
         Returns
@@ -232,10 +250,9 @@ class FileManagementService(object):
         """
         data, headers = self.request('get', f'/{upload_id}')
         upload_status = self._parse_upload_status(data)
-        return upload_status, headers
+        return upload_status
 
-    def add_file(self, upload_id: str, pointer: FileStorage) \
-            -> Tuple[dict, dict]:
+    def add_file(self, upload_id: int, pointer: FileStorage) -> UploadStatus:
         """
         Upload a file or package to an existing upload workspace.
 
@@ -247,7 +264,7 @@ class FileManagementService(object):
 
         Parameters
         ----------
-        upload_id : str
+        upload_id : int
             Unique long-lived identifier for the upload.
         pointer : :class:`FileStorage`
             File upload stream from the client.
@@ -260,13 +277,13 @@ class FileManagementService(object):
             Response headers.
 
         """
-        data, headers = self.request('post', f'/{upload_id}',
-                                     files={'file': pointer},
+        files = {'file': (pointer.filename, pointer, pointer.mimetype)}
+        data, headers = self.request('post', f'/{upload_id}', files=files,
                                      expected_code=status.HTTP_201_CREATED)
         upload_status = self._parse_upload_status(data)
-        return upload_status, headers
+        return upload_status
 
-    def delete_all(self, upload_id: str) -> Download:
+    def delete_all(self, upload_id: str) -> None:
         """
         Delete all files in the workspace.
 
@@ -277,16 +294,10 @@ class FileManagementService(object):
         upload_id : str
             Unique long-lived identifier for the upload.
 
-        Returns
-        -------
-        dict
-            An empty dict.
-        dict
-            Response headers.
-
         """
-        return self.request('post', f'/{upload_id}/delete_all',
-                            expected_code=status.HTTP_204_NO_CONTENT)
+        self.request('post', f'/{upload_id}/delete_all',
+                     expected_code=status.HTTP_204_NO_CONTENT)
+        return
 
     def get_file_content(self, upload_id: str, file_path: str) \
             -> Tuple[Download, dict]:
@@ -371,3 +382,64 @@ class FileManagementService(object):
 
         """
         return self.request('post', f'/{upload_id}/logs')
+
+
+def init_app(app: object = None) -> None:
+    """Set default configuration parameters for an application instance."""
+    config = get_application_config(app)
+    config.setdefault('FILE_MANAGER_ENDPOINT', 'https://arxiv.org/')
+    config.setdefault('FILE_MANAGER_VERIFY', True)
+
+
+def get_session(app: object = None) -> FileManagementService:
+    """Get a new session with the file management endpoint."""
+    config = get_application_config(app)
+    endpoint = config.get('FILE_MANAGER_ENDPOINT', 'https://arxiv.org/')
+    verify_cert = config.get('FILE_MANAGER_VERIFY', True)
+    logger.debug('Create FileManagementService with endpoint %s', endpoint)
+    return FileManagementService(endpoint, verify_cert=verify_cert)
+
+
+def current_session() -> FileManagementService:
+    """Get/create :class:`.FileManagementService` for this context."""
+    g = get_application_global()
+    if not g:
+        return get_session()
+    elif 'filemanager' not in g:
+        g.filemanager = get_session()   # type: ignore
+    return g.filemanager    # type: ignore
+
+
+@wraps(FileManagementService.set_auth_token)
+def set_auth_token(token: str) -> None:
+    """See :meth:`FileManagementService.set_auth_token`."""
+    return current_session().set_auth_token(token)
+
+
+@wraps(FileManagementService.get_upload_status)
+def get_upload_status(upload_id: int) -> UploadStatus:
+    """See :meth:`FileManagementService.get_upload_status`."""
+    return current_session().get_upload_status(upload_id)
+
+
+@wraps(FileManagementService.upload_package)
+def upload_package(pointer: FileStorage) -> UploadStatus:
+    """See :meth:`FileManagementService.upload_package`."""
+    return current_session().upload_package(pointer)
+
+
+@wraps(FileManagementService.add_file)
+def add_file(upload_id: int, pointer: FileStorage) -> UploadStatus:
+    """See :meth:`FileManagementService.add_file`."""
+    return current_session().add_file(upload_id, pointer)
+
+
+@wraps(FileManagementService.delete_file)
+def delete_file(upload_id: int, file_path: str) -> UploadStatus:
+    """See :meth:`FileManagementService.delete_file`."""
+    return current_session().delete_file(upload_id, file_path)
+
+
+def delete_all(upload_id: str) -> None:
+    """See :meth:`FileManagementService.delete_all`."""
+    return current_session().delete_all(upload_id)

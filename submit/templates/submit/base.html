@@ -4,16 +4,13 @@
 
 {% block addl_head %}
  <link rel="stylesheet" href="{{ url_for('static', filename='css/submit.css')}}" />
+ <script src="{{ url_for('static', filename='js/filewidget.js') }}"></script>
 {% endblock addl_head %}
 
 {% block content %}
   <h1 class="title">{% block title %}Submit an Article{% endblock title %}</h1>
   {% if submission_id %}
-  <div class="message">
-    <div class="message-body">
     {{ submit_macros.progress_bar(submission_id) }}
-    </div>
-  </div>
   {% endif %}
   <content>
     {% if form and form.errors %}

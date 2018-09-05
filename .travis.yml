@@ -11,7 +11,14 @@ script:
   - pip install pipenv
   - pipenv install --dev
   - pipenv run nose2 --with-coverage
-  - tests/lint.sh
-  - tests/docstyle.sh
+  - ./tests/lint.sh
+  - ./tests/docstyle.sh
 after_success:
   - coveralls
+  - if [ -z "$TRAVIS_TAG" ]; then
+      echo "Not a tagged commit; skipping deploy.";
+    else
+      docker build ./ -t arxiv/submission-ui:${TRAVIS_TAG};
+      echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin;
+      docker push arxiv/submission-ui:${TRAVIS_TAG});
+    fi

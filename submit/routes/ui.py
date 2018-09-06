@@ -28,6 +28,14 @@ def test_page() -> Response:
     return response
 
 
+@blueprint.route('/error', methods=['GET'])
+def error_page() -> Response:
+    """Render a page to test progress bar display."""
+    rendered = render_template("submit/error_messages.html", pagetitle='Help and Errors')
+    response = make_response(rendered, status.HTTP_200_OK)
+    return response
+
+
 @blueprint.route('/', methods=['GET', 'POST'])
 @auth.decorators.scoped(auth.scopes.CREATE_SUBMISSION)
 def create_submission():

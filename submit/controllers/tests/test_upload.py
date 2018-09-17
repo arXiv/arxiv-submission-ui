@@ -48,7 +48,8 @@ class TestUpload(TestCase):
                               domain.Category('astro-ph', 'GA')]
             )
         )
-    
+
+    @mock.patch(f'{upload.__name__}.UploadForm.Meta.csrf', False)
     @mock.patch('arxiv.submission.load')
     def test_get_no_upload(self, mock_load):
         """GET request for submission with no upload package."""

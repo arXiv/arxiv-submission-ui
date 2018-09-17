@@ -24,7 +24,7 @@ Response = Tuple[Dict[str, Any], int, Dict[str, Any]]  # pylint: disable=C0103
 logger = logging.getLogger(__name__)
 
 
-def load_submission(submission_id: int) -> events.domain.Submission:
+def load_submission(submission_id: Optional[int]) -> events.domain.Submission:
     """
     Load a submission by ID.
 
@@ -42,14 +42,20 @@ def load_submission(submission_id: int) -> events.domain.Submission:
         Raised when there is no submission with the specified ID.
 
     """
+    if submission_id is None:
+        raise NotFound('No such submission.')
+
     g = get_application_global()
-    if f'submission_{submission_id}' not in g:
+    if g is None or f'submission_{submission_id}' not in g:
         try:
             submission, _ = events.load(submission_id)
         except events.exceptions.NoSuchSubmission as e:
             raise NotFound('No such submission.') from e
-        setattr(g, f'submission_{submission_id}', submission)
-    return getattr(g, f'submission_{submission_id}')
+        if g is not None:
+            setattr(g, f'submission_{submission_id}', submission)
+    if g is not None:
+        return getattr(g, f'submission_{submission_id}')
+    return submission
 
 
 def flow_control(this_stage: str, exit_page: str = 'user') -> Callable:

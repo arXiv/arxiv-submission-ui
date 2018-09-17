@@ -24,7 +24,6 @@ logger = logging.getLogger(__name__)  # pylint: disable=C0103
 Response = Tuple[Dict[str, Any], int, Dict[str, Any]]  # pylint: disable=C0103
 
 
-@util.flow_control('ui.license', 'ui.classification', 'ui.user')
 def policy(method: str, params: MultiDict, session: Session,
            submission_id: int) -> Response:
     """Convert policy form data into an `ConfirmPolicy` event."""

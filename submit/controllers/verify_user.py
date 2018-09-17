@@ -26,7 +26,6 @@ logger = logging.getLogger(__name__)    # pylint: disable=C0103
 Response = Tuple[Dict[str, Any], int, Dict[str, Any]]   # pylint: disable=C0103
 
 
-@util.flow_control('ui.user', 'ui.authorship', 'ui.user')
 def verify_user(method: str, params: MultiDict, session: Session,
                 submission_id: int) -> Response:
     """

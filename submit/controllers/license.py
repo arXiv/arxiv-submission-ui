@@ -35,7 +35,6 @@ def _data_from_submission(params: MultiDict,
     return params
 
 
-@util.flow_control('ui.authorship', 'ui.policy', 'ui.user')
 def license(method: str, params: MultiDict, session: Session,
             submission_id: int) -> Response:
     """Convert license form data into a `SetLicense` event."""

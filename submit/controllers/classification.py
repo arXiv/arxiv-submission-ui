@@ -97,7 +97,6 @@ def _formset_from_submission(submission: events.domain.Submission) \
     return formset
 
 
-@util.flow_control('ui.policy', 'ui.cross_list', 'ui.user')
 def classification(method: str, params: MultiDict, session: Session,
                    submission_id: int) -> Response:
     """Generate a `SetPrimaryClassification` event."""
@@ -162,7 +161,6 @@ def classification(method: str, params: MultiDict, session: Session,
     return response_data, status.HTTP_200_OK, {}
 
 
-@util.flow_control('ui.classification', 'ui.file_upload', 'ui.user')
 def cross_list(method: str, params: MultiDict, session: Session,
                submission_id: int) -> Response:
     """Generate an `AddSecondaryClassification` event."""

@@ -152,7 +152,6 @@ def _data_from_submission(params: MultiDict, submission: events.Submission,
     return params
 
 
-@util.flow_control('ui.file_process', 'ui.add_optional_metadata', 'ui.user')
 def metadata(method: str, params: MultiDict, session: Session,
              submission_id: int) -> Response:
     """Update metadata on the submission."""
@@ -206,7 +205,6 @@ def metadata(method: str, params: MultiDict, session: Session,
     return response_data, status.HTTP_200_OK, {}
 
 
-@util.flow_control('ui.add_metadata', 'ui.confirm_submit', 'ui.user')
 def optional(method: str, params: MultiDict, session: Session,
              submission_id: int) -> Response:
     """Update optional metadata on the submission."""

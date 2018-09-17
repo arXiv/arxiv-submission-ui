@@ -43,7 +43,6 @@ PLEASE_CONTACT_SUPPORT = Markup(
 )
 
 
-@util.flow_control('ui.cross_list', 'ui.file_process', 'ui.user')
 def upload_files(method: str, params: MultiDict, files: MultiDict,
                  session: Session, submission_id: int, token: str) -> Response:
     """

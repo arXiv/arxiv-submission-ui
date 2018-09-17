@@ -43,7 +43,6 @@ def _data_from_submission(params: MultiDict,
     return params
 
 
-@util.flow_control('ui.verify_user', 'ui.license', 'ui.user')
 def authorship(method: str, params: MultiDict, session: Session,
                submission_id: int) -> Response:
     """Convert authorship form data into an `ConfirmAuthorship` event."""

@@ -17,6 +17,11 @@ CSRF_PATTERN = (r'\<input id="csrf_token" name="csrf_token" type="hidden"'
                 r' value="([^\"]+)">')
 
 
+# TODO: finish building out this test suite. The current tests run up to
+# file upload. Once the remaining stages have stabilized, this should have
+# tests from end to end.
+# TODO: add a test where the user tries to jump around in the workflow, and
+# verify that stage completion order is enforced.
 class TestSubmissionWorkflow(TestCase):
     """Tests that progress through the submission workflow in various ways."""
 
@@ -55,7 +60,7 @@ class TestSubmissionWorkflow(TestCase):
         return token
 
     def test_create_submission(self):
-        """User creates a new submission."""
+        """User creates a new submission, and proceeds up to upload stage."""
         # Get the submission creation page.
         response = self.client.get('/', headers=self.headers)
         self.assertEqual(response.status_code, status.HTTP_200_OK)

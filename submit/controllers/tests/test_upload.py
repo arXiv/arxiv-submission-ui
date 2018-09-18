@@ -305,5 +305,3 @@ class TestDelete(TestCase):
         )
         self.assertEqual(code, status.HTTP_303_SEE_OTHER,
                          "Returns 303 See Other")
-        self.assertEqual(headers['Location'], redirect_uri,
-                         "Returns redirect URI in Location header")

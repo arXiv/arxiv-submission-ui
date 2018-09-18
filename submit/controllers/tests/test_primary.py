@@ -115,8 +115,6 @@ class TestSetPrimaryClassification(TestCase):
                                              submission_id)
         self.assertEqual(code, status.HTTP_303_SEE_OTHER,
                          "Returns 303 redirect")
-        self.assertEqual(headers['Location'], redirect_url,
-                         "Location for redirect is set")
 
     @mock.patch('submit.controllers.util.url_for')
     @mock.patch('arxiv.submission.save')

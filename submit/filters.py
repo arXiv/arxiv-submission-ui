@@ -2,11 +2,9 @@
 
 from collections import OrderedDict
 from datetime import datetime, timedelta
-from pytz import timezone
+from pytz import UTC
 from typing import List, Tuple, Optional, Union, Dict, Mapping
 from .domain import FileStatus, UploadStatus
-
-EST = timezone('US/Eastern')
 
 NestedFileTree = Mapping[str, Union[FileStatus, 'NestedFileTree']]
 
@@ -56,7 +54,7 @@ def group_files(files: List[FileStatus]) -> NestedFileTree:
 
 def timesince(timestamp: datetime, default: str = "just now") -> str:
     """Format a :class:`datetime` as a relative duration in plain English."""
-    diff = datetime.utcnow().astimezone(EST) - timestamp
+    diff = datetime.now(tz=UTC) - timestamp
     periods = (
         (diff.days / 365, "year", "years"),
         (diff.days / 30, "month", "months"),
@@ -102,5 +100,5 @@ def just_updated(status: FileStatus, seconds: int = 2) -> bool:
        </p>
 
     """
-    now = datetime.utcnow().astimezone(EST)
+    now = datetime.now(tz=UTC)
     return abs((now - status.modified).seconds) < seconds

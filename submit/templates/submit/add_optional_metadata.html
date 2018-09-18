@@ -6,6 +6,7 @@
 <h2 class="is-size-4">Add or edit optional metadata</h2>
 
 <form method="POST" action="{{ url_for('ui.add_optional_metadata', submission_id=submission_id) }}">
+  {{ form.csrf_token }}
   {% for field in form %}
   <div class="field is-short-field">
     <div class="control">

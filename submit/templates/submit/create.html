@@ -4,6 +4,7 @@
 <p class="help-text">Click on the button below to start a new submission.</p>
 
 <form class="form" method="POST" action="{{ url_for('ui.create_submission') }}">
+  {{ form.csrf_token }}
   <button name="new" class="button" value="new" aria-label="New submission">New submission</button>
 </form>
 

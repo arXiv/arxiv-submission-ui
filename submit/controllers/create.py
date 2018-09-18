@@ -2,10 +2,11 @@
 from typing import Optional, Tuple, Dict, Any
 
 from werkzeug import MultiDict
-from werkzeug.exceptions import InternalServerError
+from werkzeug.exceptions import InternalServerError, BadRequest
 from flask import url_for
 
 from arxiv import status
+from arxiv.forms import csrf
 from arxiv.base import logging
 from arxiv.users.domain import Session, User
 
@@ -17,10 +18,19 @@ Response = Tuple[Dict[str, Any], int, Dict[str, Any]]   # pylint: disable=C0103
 logger = logging.getLogger(__name__)    # pylint: disable=C0103
 
 
+class CreateSubmissionForm(csrf.CSRFForm):
+    """Submission creation form."""
+
+
 def create(method: str, params: MultiDict, session: Session) -> Response:
     """Create a new submission, and redirect to workflow."""
     if method == 'GET':     # Display a splash page.
-        return {}, status.HTTP_200_OK, {}
+        return {'form': CreateSubmissionForm()}, status.HTTP_200_OK, {}
+
+    # We're using a form here for CSRF protection.
+    form = CreateSubmissionForm(params)
+    if not form.validate():
+        raise BadRequest('Invalid request')
 
     submitter, client = util.user_and_client_from_session(session)
     try:

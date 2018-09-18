@@ -9,14 +9,16 @@ from typing import Tuple, Dict, Any, Optional
 from werkzeug import MultiDict
 from werkzeug.exceptions import InternalServerError, NotFound
 from flask import url_for
-from wtforms import Form, BooleanField
+
+from wtforms import BooleanField
 from wtforms.validators import InputRequired
 
 from arxiv import status
 from arxiv.base import logging
+from arxiv.forms import csrf
 from arxiv.users.domain import Session
 import arxiv.submission as events
-
+from ..domain import SubmissionStage
 from ..util import load_submission
 from . import util
 
@@ -51,6 +53,7 @@ def verify_user(method: str, params: MultiDict, session: Session,
         'form': form,
         'submission': submission,
         'user': session.user,   # We want the most up-to-date representation.
+
     }
 
     # Process event if go to next page.
@@ -96,7 +99,7 @@ def verify_user(method: str, params: MultiDict, session: Session,
     return response_data, status.HTTP_200_OK, {}
 
 
-class VerifyUserForm(Form):
+class VerifyUserForm(csrf.CSRFForm):
     """Generates form with single checkbox to confirm user information."""
 
     verify_user = BooleanField(

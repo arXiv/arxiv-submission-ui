@@ -31,7 +31,7 @@ from arxiv.users.domain import Session
 from . import util
 from ..util import load_submission
 from ..services import filemanager
-from ..domain import UploadStatus
+from ..domain import UploadStatus, SubmissionStage
 
 logger = logging.getLogger(__name__)
 
@@ -136,7 +136,8 @@ def delete_all(method: str, params: MultiDict, session: Session,
     upload_id = submission.source_content.identifier
     response_data = {
         'submission': submission,
-        'submission_id': submission.submission_id
+        'submission_id': submission.submission_id,
+
     }
     filemanager.set_auth_token(token)
     if method == 'GET':
@@ -217,7 +218,8 @@ def delete(method: str, params: MultiDict, session: Session,
     upload_id = submission.source_content.identifier
     response_data = {
         'submission': submission,
-        'submission_id': submission.submission_id
+        'submission_id': submission.submission_id,
+
     }
     filemanager.set_auth_token(token)
 
@@ -355,6 +357,7 @@ def _get_upload(params: MultiDict, session: Session, submission: Submission) \
         'submission': submission,
         'submission_id': submission.submission_id,
         'status': None,
+
     }
     if submission.source_content is None:
         # Nothing to show; should generate a blank-slate upload screen.

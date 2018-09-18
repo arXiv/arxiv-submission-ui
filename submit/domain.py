@@ -13,27 +13,35 @@ class SubmissionStage(NamedTuple):
     submission: Submission
 
     def user_is_verified(self) -> bool:
+        """Determine whether the submitter has verified their information."""
         return self.submission.submitter_contact_verified
 
     def authorship_is_set(self) -> bool:
+        """Determine whether the submitter has indicated authorship."""
         return self.submission.submitter_is_author is not None
 
     def license_is_set(self) -> bool:
+        """Determine whether the submitter has selected a license."""
         return self.submission.license is not None
 
     def policy_is_accepted(self) -> bool:
+        """Determine whether the submitter has accepted arXiv policies."""
         return self.submission.submitter_accepts_policy is True
 
     def classification_is_set(self) -> bool:
+        """Determine whether the submitter selected a primary category."""
         return self.submission.primary_classification is not None
 
     def files_are_uploaded(self) -> bool:
+        """Determine whether the submitter has uploaded files."""
         return self.submission.source_content is not None
 
     def files_are_processed(self) -> bool:
+        """Determine whether the submitter has compiled their upload."""
         return len(self.submission.compiled_content) > 0
 
     def metadata_is_set(self) -> bool:
+        """Determine whether the submitter has entered required metadata."""
         return (self.submission.metadata.title is not None
                 and self.submission.metadata.abstract is not None
                 and self.submission.metadata.authors_display is not None)
@@ -153,6 +161,24 @@ class SubmissionStage(NamedTuple):
     def on_or_after(self, stage: str) -> bool:
         """Greater-than or equal-to comparator."""
         return self._get_current_index() >= self._get_index(stage)
+
+    def has_completed(self, stage: str) -> bool:
+        """Determine whether a stage has been completed."""
+        i = self._get_index(stage)
+        _, required, method = self.ORDER[i]
+        if method:
+            return method(self)
+        elif not required:
+            if i == 0:
+                return False
+            x = i
+            _required = False
+            while not _required and x < len(self.ORDER):
+                x += 1
+                _, _required, method = self.ORDER[x]
+            if method:
+                return method(self)
+        return False
 
 
 class FileError(NamedTuple):

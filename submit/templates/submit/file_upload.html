@@ -50,6 +50,7 @@
   <div class="column is-two-thirds-desktop">
     <h2 class="h2">Upload files</h2>
     <form class="form" action="{{ url_for('ui.file_upload', submission_id=submission_id) }}" method="POST" enctype="multipart/form-data">
+      {{ form.csrf_token }}
       <div class="field is-grouped breathe-vertical">
         <div class="control">
           <div class="file has-name">

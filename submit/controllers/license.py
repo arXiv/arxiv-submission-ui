@@ -9,15 +9,16 @@ from typing import Tuple, Dict, Any
 from werkzeug import MultiDict
 from werkzeug.exceptions import InternalServerError
 from flask import url_for
-from wtforms import Form
 from wtforms.fields import RadioField
 from wtforms.validators import InputRequired
 
 from arxiv import status
+from arxiv.forms import csrf
 from arxiv.base import logging
 from arxiv.license import LICENSES
 from arxiv.users.domain import Session
 import arxiv.submission as events
+from ..domain import SubmissionStage
 from ..util import load_submission
 from . import util
 
@@ -51,7 +52,11 @@ def license(method: str, params: MultiDict, session: Session,
         params = _data_from_submission(params, submission)
 
     form = LicenseForm(params)
-    response_data = {'submission_id': submission_id, 'form': form}
+    response_data = {
+        'submission_id': submission_id,
+        'form': form,
+
+    }
 
     if method == 'POST':
         if form.validate():
@@ -64,7 +69,7 @@ def license(method: str, params: MultiDict, session: Session,
                     # Create SetLicense event
                     submission, stack = events.save(  # pylint: disable=W0612
                         events.SetLicense(creator=submitter,
-                                             license_uri=license_uri),
+                                          license_uri=license_uri),
                         submission_id=submission_id
                     )
                 except events.exceptions.InvalidStack as e:
@@ -89,7 +94,7 @@ def license(method: str, params: MultiDict, session: Session,
     return response_data, status.HTTP_200_OK, {}
 
 
-class LicenseForm(Form):
+class LicenseForm(csrf.CSRFForm):
     """Generate form to select license."""
 
     LICENSE_CHOICES = [(uri, data['label']) for uri, data in LICENSES.items()

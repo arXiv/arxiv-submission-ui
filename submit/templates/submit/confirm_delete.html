@@ -5,6 +5,7 @@
 {% block within_content %}
 <h2 class="is-size-4">Delete Files</h2>
 <form method="POST" action="{{ url_for('ui.file_delete', submission_id=submission_id) }}">
+  {{ form.csrf_token }}
   <div class="container" style="max-width: 640px">
     <div class="message is-danger is-inline-block">
       <div class="message-body">

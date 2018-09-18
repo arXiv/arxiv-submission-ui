@@ -1,10 +1,11 @@
 """Provides routes for the submission user interface."""
 
-from typing import Optional
+from typing import Optional, Callable
+
 from werkzeug import MultiDict
 from werkzeug.exceptions import InternalServerError
 from flask import Blueprint, make_response, redirect, request, \
-                  render_template, url_for, Response
+                  render_template, url_for, Response, g
 from arxiv import status
 from submit import controllers
 from arxiv.users import auth
@@ -12,32 +13,10 @@ import arxiv.submission as events
 
 from .auth import can_edit_submission
 from ..domain import SubmissionStage
-from ..util import flow_control
+from .util import flow_control, inject_stage
 
 blueprint = Blueprint('ui', __name__, url_prefix='/')
-
-
-@blueprint.route('/user')
-def user() -> Response:
-    """Give save and exit button a place to go."""
-    return redirect('https://www.arxiv.org/user')
-
-
-@blueprint.route('/progress', methods=['GET'])
-def test_page() -> Response:
-    """Render a page to test progress bar display."""
-    rendered = render_template("submit/progress.html", pagetitle='Progress bar')
-    response = make_response(rendered, status.HTTP_200_OK)
-    return response
-
-
-@blueprint.route('/error', methods=['GET'])
-def error_page() -> Response:
-    """Render a page to test progress bar display."""
-    rendered = render_template("submit/error_messages.html",
-                               pagetitle='Help and Errors')
-    response = make_response(rendered, status.HTTP_200_OK)
-    return response
+blueprint.context_processor(inject_stage)
 
 
 @blueprint.route('/', methods=['GET', 'POST'])
@@ -45,8 +24,11 @@ def error_page() -> Response:
 def create_submission():
     """Create a new submission."""
     request_data = MultiDict(request.form.items(multi=True))
-    data, code, headers = controllers.create(request.method, request_data,
-                                             request.session)
+    data, code, headers = controllers.create.create(
+        request.method,
+        request_data,
+        request.session
+    )
     if code in [status.HTTP_200_OK, status.HTTP_400_BAD_REQUEST]:
         rendered = render_template(
             "submit/create.html",
@@ -68,9 +50,12 @@ def create_submission():
 def verify_user(submission_id: Optional[int] = None) -> Response:
     """Render the submit start page."""
     request_data = MultiDict(request.form.items(multi=True))
-    data, code, headers = controllers.verify_user(request.method, request_data,
-                                                  request.session,
-                                                  submission_id)
+    data, code, headers = controllers.verify_user.verify_user(
+        request.method,
+        request_data,
+        request.session,
+        submission_id
+    )
     if code in [status.HTTP_200_OK, status.HTTP_400_BAD_REQUEST]:
         rendered = render_template(
             "submit/verify_user.html",
@@ -90,9 +75,12 @@ def verify_user(submission_id: Optional[int] = None) -> Response:
 def authorship(submission_id: int) -> Response:
     """Render step 2, authorship."""
     request_data = MultiDict(request.form.items(multi=True))
-    data, code, headers = controllers.authorship(request.method, request_data,
-                                                 request.session,
-                                                 submission_id)
+    data, code, headers = controllers.authorship.authorship(
+        request.method,
+        request_data,
+        request.session,
+        submission_id
+    )
 
     if code in [status.HTTP_200_OK, status.HTTP_400_BAD_REQUEST]:
         rendered = render_template(
@@ -113,9 +101,12 @@ def authorship(submission_id: int) -> Response:
 def license(submission_id: int) -> Response:
     """Render step 3, select license."""
     request_data = MultiDict(request.form.items(multi=True))
-    data, code, headers = controllers.license(request.method, request_data,
-                                              request.session,
-                                              submission_id)
+    data, code, headers = controllers.license.license(
+        request.method,
+        request_data,
+        request.session,
+        submission_id
+    )
 
     if code in [status.HTTP_200_OK, status.HTTP_400_BAD_REQUEST]:
         rendered = render_template(
@@ -136,9 +127,12 @@ def license(submission_id: int) -> Response:
 def policy(submission_id: int) -> Response:
     """Render step 4, policy agreement."""
     request_data = MultiDict(request.form.items(multi=True))
-    data, code, headers = controllers.policy(request.method, request_data,
-                                             request.session,
-                                             submission_id)
+    data, code, headers = controllers.policy.policy(
+        request.method,
+        request_data,
+        request.session,
+        submission_id
+    )
 
     if code in [status.HTTP_200_OK, status.HTTP_400_BAD_REQUEST]:
         rendered = render_template(
@@ -160,10 +154,12 @@ def policy(submission_id: int) -> Response:
 def classification(submission_id: int) -> Response:
     """Render step 5, choose classification."""
     request_data = MultiDict(request.form.items(multi=True))
-    data, code, headers = controllers.classification(request.method,
-                                                     request_data,
-                                                     request.session,
-                                                     submission_id)
+    data, code, headers = controllers.classification.classification(
+        request.method,
+        request_data,
+        request.session,
+        submission_id
+    )
     if code in [status.HTTP_200_OK, status.HTTP_400_BAD_REQUEST]:
         rendered = render_template(
             "submit/classification.html",
@@ -184,9 +180,12 @@ def classification(submission_id: int) -> Response:
 def cross_list(submission_id: int) -> Response:
     """Render step 6, secondary classes."""
     request_data = MultiDict(request.form.items(multi=True))
-    data, code, headers = controllers.cross_list(request.method, request_data,
-                                                 request.session,
-                                                 submission_id)
+    data, code, headers = controllers.classification.cross_list(
+        request.method,
+        request_data,
+        request.session,
+        submission_id
+    )
     if code in [status.HTTP_200_OK, status.HTTP_400_BAD_REQUEST]:
         rendered = render_template(
             "submit/cross_list.html",

@@ -10,7 +10,7 @@
 {% block content %}
   <h1 class="title">{% block title %}Submit an Article{% endblock title %}</h1>
   {% if submission_id %}
-    {{ submit_macros.progress_bar(submission_id) }}
+    {{ submit_macros.progress_bar(submission_id, stage, this_stage) }}
   {% endif %}
   <content>
     {% if form and form.errors %}

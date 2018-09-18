@@ -6,6 +6,7 @@
 <h2 class="is-size-4">Select a license</h2>
 
 <form method="POST" action="{{ url_for('ui.license',submission_id=submission_id) }}">
+  {{ form.csrf_token }}
   <div class="field">
   {% for subfield in form.license %}
     <div class="control">

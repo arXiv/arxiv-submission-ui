@@ -229,7 +229,7 @@ class TestDelete(TestCase):
             ), []
         )
         file_path = 'anc/foo.jpeg'
-        params = MultiDict({'name': file_path})
+        params = MultiDict({'path': file_path})
         response_data, code, headers = upload.delete(
             'GET', params, self.session, submission_id, 'footoken'
         )

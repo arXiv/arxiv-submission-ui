@@ -1,9 +1,10 @@
 """Custom Jinja2 filters."""
 
 from collections import OrderedDict
-from datetime import datetime
+from datetime import datetime, timedelta
+from pytz import UTC
 from typing import List, Tuple, Optional, Union, Dict, Mapping
-from .domain import FileStatus
+from .domain import FileStatus, UploadStatus
 
 NestedFileTree = Mapping[str, Union[FileStatus, 'NestedFileTree']]
 
@@ -53,7 +54,7 @@ def group_files(files: List[FileStatus]) -> NestedFileTree:
 
 def timesince(timestamp: datetime, default: str = "just now") -> str:
     """Format a :class:`datetime` as a relative duration in plain English."""
-    diff = datetime.utcnow() - timestamp
+    diff = datetime.now(tz=UTC) - timestamp
     periods = (
         (diff.days / 365, "year", "years"),
         (diff.days / 30, "month", "months"),
@@ -67,3 +68,37 @@ def timesince(timestamp: datetime, default: str = "just now") -> str:
         if period > 1:
             return "%d %s ago" % (period, singular if period == 1 else plural)
     return default
+
+
+def just_updated(status: FileStatus, seconds: int = 2) -> bool:
+    """
+    Filter to determine whether a specific file was just touched.
+
+    Parameters
+    ----------
+    status : :class:`FileStatus`
+        Represents the state of the uploaded file, as conveyed by the file
+        management service.
+    seconds : int
+        Threshold number of seconds for determining whether a file was just
+        touched.
+
+    Returns
+    -------
+    bool
+
+    Examples
+    --------
+
+    .. code-block:: html
+
+       <p>
+           This item
+           {% if item|just_updated %}was just updated
+           {% else %}has been sitting here for a while
+           {% endif %}.
+       </p>
+
+    """
+    now = datetime.now(tz=UTC)
+    return abs((now - status.modified).seconds) < seconds

@@ -182,7 +182,7 @@ def delete(method: str, params: MultiDict, session: Session,
     the ``confirmed`` parameter.
 
     The process can be initiated with a GET request that contains the
-    ``name`` (key) for the file to be deleted. For example, a button on
+    ``path`` (key) for the file to be deleted. For example, a button on
     the upload interface may link to the deletion route with the file path
     as a query parameter. This will generate a deletion confirmation form,
     which can be POSTed to complete the action.
@@ -227,7 +227,7 @@ def delete(method: str, params: MultiDict, session: Session,
         # request is the file path. This way there is no way for a GET request
         # to trigger actual deletion. The user must explicitly indicate via
         # a valid POST that the file should in fact be deleted.
-        form = DeleteFileForm(MultiDict({'file_path': params['name']}))
+        form = DeleteFileForm(MultiDict({'file_path': params['path']}))
         response_data.update({'form': form})
         return response_data, status.HTTP_200_OK, {}
     elif method == 'POST':

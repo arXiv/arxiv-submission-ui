@@ -123,7 +123,6 @@ class FileManagementService(object):
                 file_errors[filename].append(FileError(etype.upper(), message))
             else:
                 non_file_errors.append(FileError(etype.upper(), message))
-
         return UploadStatus(
             started=dateutil.parser.parse(data['start_datetime']),
             completed=dateutil.parser.parse(data['completion_datetime']),

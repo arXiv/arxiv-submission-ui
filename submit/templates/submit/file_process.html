@@ -1,32 +1,33 @@
 {% extends "submit/base.html" %}
 
-
-
 {% block within_content %}
 <h2 class="is-size-4">Process Files</h2>
-
+<form method="POST" action="{{ url_for('ui.file_process', submission_id=8) }}">
 <div class="columns">
   <div class="column">
-    <div class="field">
+    <div class="field is-grouped">
       <div class="control">
-        <label class="label">Compiler:</label>
+        <label class="label" id="compiler">Compiler: <span class="icon has-text-link"><i class="fa fa-question-circle"></i></span></label>
         <div class="select">
-          <select>
+          <select aria-labelledby="compiler">
             <option>pdflatex</option>
             <option>some other compiler</option>
           </select>
         </div>
-      </div>
-    </div>
-    <div class="field">
-      <div class="control">
         <button type="button" class="button is-link">Process</button>
       </div>
     </div>
   </div>
 
   <div class="column">
-    <div class="message is-info is-inline-block submit-nav">
+    <div class="message is-info">
+      <div class="message-body">
+        <p><span class="icon has-text-link"><i class="fa fa-info-circle"></i></span>
+        This step runs all files through a series of automatic checks.<br />
+         Additionally, TeX and LaTeX source packages will be compiled into a PDF.</p>
+      </div>
+    </div>
+    <div class="message is-info">
       <div class="message-body">
         <p><span class="icon has-text-link"><i class="fa fa-info-circle"></i></span>
         Our system has automatically detected your files as type <strong>filetype</strong>.</p>
@@ -39,12 +40,6 @@
   </div>
 </div>
 
-<div class="message is-info is-inline-block submit-nav">
-  <div class="message-body">
-    <p><span class="icon has-text-link"><i class="fa fa-info-circle"></i></span>
-    You can upload all your files at once as a single .tar.gz file or upload individual files as needed.</p>
-  </div>
-</div>
-
 {{ submit_macros.submit_nav() }}
+</form>
 {% endblock within_content %}

@@ -49,6 +49,7 @@ class TestUpload(TestCase):
             )
         )
 
+    @mock.patch(f'{upload.__name__}.UploadForm.Meta.csrf', False)
     @mock.patch('arxiv.submission.load')
     def test_get_no_upload(self, mock_load):
         """GET request for submission with no upload package."""
@@ -69,6 +70,7 @@ class TestUpload(TestCase):
         self.assertIn('submission', response_data, 'Submission is in response')
         self.assertIn('submission_id', response_data, 'ID is in response')
 
+    @mock.patch(f'{upload.__name__}.UploadForm.Meta.csrf', False)
     @mock.patch(f'{upload.__name__}.alerts', mock.MagicMock())
     @mock.patch(f'{upload.__name__}.filemanager')
     @mock.patch('arxiv.submission.load')
@@ -123,6 +125,7 @@ class TestUpload(TestCase):
         self.assertIn('submission', response_data, 'Submission is in response')
         self.assertIn('submission_id', response_data, 'ID is in response')
 
+    @mock.patch(f'{upload.__name__}.UploadForm.Meta.csrf', False)
     @mock.patch(f'{upload.__name__}.alerts', mock.MagicMock())
     @mock.patch(f'{upload.__name__}.url_for', mock.MagicMock(return_value='/'))
     @mock.patch(f'{upload.__name__}.filemanager')
@@ -229,7 +232,7 @@ class TestDelete(TestCase):
             ), []
         )
         file_path = 'anc/foo.jpeg'
-        params = MultiDict({'name': file_path})
+        params = MultiDict({'path': file_path})
         response_data, code, headers = upload.delete(
             'GET', params, self.session, submission_id, 'footoken'
         )

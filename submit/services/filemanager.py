@@ -123,7 +123,6 @@ class FileManagementService(object):
                 file_errors[filename].append(FileError(etype.upper(), message))
             else:
                 non_file_errors.append(FileError(etype.upper(), message))
-
         return UploadStatus(
             started=dateutil.parser.parse(data['start_datetime']),
             completed=dateutil.parser.parse(data['completion_datetime']),
@@ -252,7 +251,8 @@ class FileManagementService(object):
         upload_status = self._parse_upload_status(data)
         return upload_status
 
-    def add_file(self, upload_id: int, pointer: FileStorage) -> UploadStatus:
+    def add_file(self, upload_id: int, pointer: FileStorage,
+                 ancillary: bool = False) -> UploadStatus:
         """
         Upload a file or package to an existing upload workspace.
 
@@ -268,6 +268,8 @@ class FileManagementService(object):
             Unique long-lived identifier for the upload.
         pointer : :class:`FileStorage`
             File upload stream from the client.
+        ancillary : bool
+            If ``True``, the file should be added as an ancillary file.
 
         Returns
         -------
@@ -278,7 +280,9 @@ class FileManagementService(object):
 
         """
         files = {'file': (pointer.filename, pointer, pointer.mimetype)}
-        data, headers = self.request('post', f'/{upload_id}', files=files,
+        data, headers = self.request('post', f'/{upload_id}',
+                                     data={'ancillary': ancillary},
+                                     files=files,
                                      expected_code=status.HTTP_201_CREATED)
         upload_status = self._parse_upload_status(data)
         return upload_status
@@ -429,9 +433,10 @@ def upload_package(pointer: FileStorage) -> UploadStatus:
 
 
 @wraps(FileManagementService.add_file)
-def add_file(upload_id: int, pointer: FileStorage) -> UploadStatus:
+def add_file(upload_id: int, pointer: FileStorage, ancillary: bool = False) \
+        -> UploadStatus:
     """See :meth:`FileManagementService.add_file`."""
-    return current_session().add_file(upload_id, pointer)
+    return current_session().add_file(upload_id, pointer, ancillary=ancillary)
 
 
 @wraps(FileManagementService.delete_file)

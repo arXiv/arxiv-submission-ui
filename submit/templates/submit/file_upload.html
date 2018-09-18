@@ -2,7 +2,7 @@
 
 {% macro display_tree(key, item) %}
   {% if key %}
-  <li class="{% if item.errors %}is-warning{% endif %}">
+  <li class="{% if item.errors %}is-warning{% elif item.modified and item|just_updated %}is-success{% endif %}">
   {% endif %}
     {% if item.name %}
     <div class="level" style="margin-bottom: 0px;">
@@ -14,7 +14,7 @@
             <div class="column">{{ item.size|filesizeformat }}</div>
             <div class="column">{{ item.modified|timesince }}</div>
             <div class="column has-text-centered">
-             <a href="{{ url_for('ui.file_delete', submission_id=submission_id) }}?name={{ item.name }}">
+             <a href="{{ url_for('ui.file_delete', submission_id=submission_id) }}?path={{ item.path }}">
                <span class="icon">
                  <i class="fa fa-trash" aria-label="Delete"></i>
                </span>
@@ -55,7 +55,7 @@
         <div class="control">
           <div class="file has-name">
             <label class="file-label">
-              <input class="file-input" type="file" name="file" id="file">
+              {{ form.file(class="file-input") }}
               <span class="file-cta">
                 <span class="file-icon"><i class="fa fa-upload"></i></span>
                 <span class="file-label">Choose a file…</span>
@@ -66,7 +66,7 @@
         </div>
         <div class="control is-centered-vertically">
           <label class="checkbox">
-            <input type="checkbox"> Ancillary <span class="icon has-text-link"><i class="fa fa-info-circle"></i></span>
+            {{ form.ancillary }} Ancillary <span class="icon has-text-link"><i class="fa fa-info-circle"></i></span>
         </div>
         <div class="control">
           <button type="submit" class="button is-link">Upload</button>

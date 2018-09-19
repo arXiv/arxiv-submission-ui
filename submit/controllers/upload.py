@@ -17,7 +17,7 @@ from werkzeug.exceptions import InternalServerError, BadRequest,\
     MethodNotAllowed
 from werkzeug.datastructures import FileStorage
 
-from wtforms import BooleanField, widgets, validators, HiddenField
+from wtforms import BooleanField, widgets, validators, HiddenField, FileField
 from flask import url_for, Markup
 
 from arxiv import status
@@ -264,6 +264,14 @@ def delete(method: str, params: MultiDict, session: Session,
         return response_data, status.HTTP_400_BAD_REQUEST, {}
 
 
+class UploadForm(csrf.CSRFForm):
+    """Form for uploading files."""
+
+    file = FileField('Choose a file...',
+                     validators=[validators.DataRequired()])
+    ancillary = BooleanField('Ancillary')
+
+
 class DeleteFileForm(csrf.CSRFForm):
     """Form for deleting individual files."""
 
@@ -356,6 +364,7 @@ def _get_upload(params: MultiDict, session: Session, submission: Submission) \
         'submission': submission,
         'submission_id': submission.submission_id,
         'status': None,
+        'form': UploadForm()
     }
     if submission.source_content is None:
         # Nothing to show; should generate a blank-slate upload screen.
@@ -409,6 +418,14 @@ def _post_new_upload(params: MultiDict, pointer: FileStorage, session: Session,
 
     """
     submitter, client = util.user_and_client_from_session(session)
+
+    # Using a form object provides some extra assurance that this is a legit
+    # request; provides CSRF goodies.
+    params['file'] = pointer
+    form = UploadForm(params)
+    if not form.validate():
+        raise BadRequest('Invalid upload request')
+
     try:
         upload_status = filemanager.upload_package(pointer)
         submission = _update_submission(submission, upload_status, submitter,
@@ -462,8 +479,24 @@ def _post_new_file(params: MultiDict, pointer: FileStorage, session: Session,
     """
     submitter, client = util.user_and_client_from_session(session)
     upload_id = submission.source_content.identifier
+
+    # Using a form object provides some extra assurance that this is a legit
+    # request; provides CSRF goodies.
+    params['file'] = pointer
+    form = UploadForm(params)
+    if not form.validate():
+        logger.error('Invalid upload form: %s', form.errors)
+        alerts.flash_failure(Markup(form.errors[0]))
+        redirect = url_for('ui.file_upload',
+                           submission_id=submission.submission_id)
+        return {}, status.HTTP_303_SEE_OTHER, {'Location': redirect}
+
+    print(form.data)
+    ancillary = bool(form.ancillary.data)
+    print(ancillary)
     try:
-        upload_status = filemanager.add_file(upload_id, pointer)
+        upload_status = filemanager.add_file(upload_id, pointer,
+                                             ancillary=ancillary)
         submission = _update_submission(submission, upload_status, submitter,
                                         client)
         alerts.flash_success(
@@ -520,7 +553,10 @@ def _post_upload(params: MultiDict, files: MultiDict, session: Session,
     try:    # Make sure that we have a file to work with.
         pointer = files['file']
     except KeyError as e:
-        raise BadRequest('No file selected') from e
+        alerts.flash_failure(Markup('Please select a file to upload'))
+        redirect = url_for('ui.file_upload',
+                           submission_id=submission.submission_id)
+        return {}, status.HTTP_303_SEE_OTHER, {'Location': redirect}
 
     if submission.source_content is None:   # New upload package.
         logger.debug('No existing source_content')

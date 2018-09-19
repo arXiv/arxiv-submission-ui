@@ -50,11 +50,12 @@
   <div class="column is-two-thirds-desktop">
     <h2 class="h2">Upload files</h2>
     <form class="form" action="{{ url_for('ui.file_upload', submission_id=submission_id) }}" method="POST" enctype="multipart/form-data">
+      {{ form.csrf_token }}
       <div class="field is-grouped breathe-vertical">
         <div class="control">
           <div class="file has-name">
             <label class="file-label">
-              <input class="file-input" type="file" name="file" id="file">
+              {{ form.file(class="file-input") }}
               <span class="file-cta">
                 <span class="file-icon"><i class="fa fa-upload"></i></span>
                 <span class="file-label">Choose a file…</span>
@@ -65,7 +66,7 @@
         </div>
         <div class="control is-centered-vertically">
           <label class="checkbox">
-            <input type="checkbox"> Ancillary <span class="icon has-text-link"><i class="fa fa-info-circle"></i></span>
+            {{ form.ancillary }} Ancillary <span class="icon has-text-link"><i class="fa fa-info-circle"></i></span>
         </div>
         <div class="control">
           <button type="submit" class="button is-link">Upload</button>

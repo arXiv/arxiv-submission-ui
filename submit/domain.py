@@ -158,8 +158,8 @@ class SubmissionStage(NamedTuple):
     def get_previous_stage(self, stage: str) -> str:
         """Get the previous stage in the submission process."""
         stages = self._get_stage_list()
-        if stage is None:     # All stages are complete.
-            return stages[-1]
+        if stage is None:   # There is nothing before nothing.
+            return None
         if self._get_index(stage) == 0:    # This is already the first stage.
             return None
         # Get the stage before the current stage.
@@ -170,9 +170,13 @@ class SubmissionStage(NamedTuple):
         return list(stages)
 
     def _get_current_index(self) -> int:
+        if self.current_stage is None:
+            return -1
         return self._get_index(self.current_stage)
 
     def _get_index(self, stage: str) -> int:
+        if stage is None:
+            return -1
         return self._get_stage_list().index(stage)
 
     def before(self, stage: str) -> bool:

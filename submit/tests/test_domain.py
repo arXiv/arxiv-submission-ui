@@ -17,12 +17,11 @@ class TestSubmissionStage(TestCase):
             created=datetime.now()
         )
         submission_stage = domain.SubmissionStage(submission)
-        self.assertEqual(submission_stage.current_stage,
-                         domain.SubmissionStage.ORDER[0][0],
-                         "The current stage is the first stage.")
+        self.assertEqual(submission_stage.current_stage, None,
+                         "No stage is complete.")
         self.assertEqual(submission_stage.next_stage,
-                         domain.SubmissionStage.ORDER[1][0],
-                         "The next stage is the second stage.")
+                         domain.SubmissionStage.ORDER[0][0],
+                         "The next stage is the first stage.")
         self.assertIsNone(submission_stage.previous_stage,
                           "There is no previous stage.")
 
@@ -50,12 +49,11 @@ class TestSubmissionStage(TestCase):
             submitter_contact_verified=True
         )
         submission_stage = domain.SubmissionStage(submission)
-        self.assertEqual(submission_stage.previous_stage,
-                         domain.SubmissionStage.VERIFY_USER,
-                         "The verify user stage is complete.")
+        self.assertEqual(submission_stage.previous_stage, None,
+                         "There is nothing before the verify user stage")
         self.assertEqual(submission_stage.next_stage,
-                         domain.SubmissionStage.LICENSE,
-                         "The next stage is to select license.")
-        self.assertEqual(submission_stage.current_stage,
                          domain.SubmissionStage.AUTHORSHIP,
-                         "The current stage is to confirm authorship.")
+                         "The next stage is to indicate authorship.")
+        self.assertEqual(submission_stage.current_stage,
+                         domain.SubmissionStage.VERIFY_USER,
+                         "The current completed stage is verify user.")

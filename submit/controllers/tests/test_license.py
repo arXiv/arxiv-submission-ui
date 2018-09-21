@@ -6,7 +6,8 @@ from werkzeug.exceptions import InternalServerError, NotFound
 from wtforms import Form
 from arxiv import status
 import arxiv.submission as events
-from submit.controllers.license import license, LicenseForm
+from submit.controllers import license
+
 
 from pytz import timezone
 from datetime import timedelta, datetime
@@ -46,6 +47,7 @@ class TestSetLicense(TestCase):
             )
         )
 
+    @mock.patch(f'{license.__name__}.LicenseForm.Meta.csrf', False)
     @mock.patch('arxiv.submission.load')
     def test_get_request_with_submission(self, mock_load):
         """GET request with a submission ID."""
@@ -53,12 +55,13 @@ class TestSetLicense(TestCase):
         mock_load.return_value = (
             mock.MagicMock(submission_id=submission_id), []
         )
-        data, code, headers = license('GET', MultiDict(), self.session,
-                                      submission_id)
+        data, code, headers = license.license('GET', MultiDict(), self.session,
+                                              submission_id)
         self.assertEqual(code, status.HTTP_200_OK, "Returns 200 OK")
         self.assertIsInstance(data['form'], Form,
                               "Response data includes a form")
 
+    @mock.patch(f'{license.__name__}.LicenseForm.Meta.csrf', False)
     @mock.patch('arxiv.submission.load')
     def test_get_request_with_nonexistant_submission(self, mock_load):
         """GET request with a submission ID."""
@@ -69,8 +72,9 @@ class TestSetLicense(TestCase):
 
         mock_load.side_effect = raise_no_such_submission
         with self.assertRaises(NotFound):
-            license('GET', MultiDict(), self.session, submission_id)
+            license.license('GET', MultiDict(), self.session, submission_id)
 
+    @mock.patch(f'{license.__name__}.LicenseForm.Meta.csrf', False)
     @mock.patch('arxiv.submission.load')
     def test_post_request(self, mock_load):
         """POST request with no data."""
@@ -78,13 +82,14 @@ class TestSetLicense(TestCase):
         mock_load.return_value = (
             mock.MagicMock(submission_id=submission_id), []
         )
-        data, code, headers = license('POST', MultiDict(), self.session,
-                                      submission_id)
+        data, code, headers = license.license('POST', MultiDict(),
+                                              self.session, submission_id)
         self.assertEqual(code, status.HTTP_400_BAD_REQUEST,
                          "Returns 400 bad request")
         self.assertIsInstance(data['form'], Form,
                               "Response data includes a form")
 
+    @mock.patch(f'{license.__name__}.LicenseForm.Meta.csrf', False)
     @mock.patch('submit.controllers.util.url_for')
     @mock.patch('arxiv.submission.save')
     @mock.patch('arxiv.submission.load')
@@ -106,13 +111,12 @@ class TestSetLicense(TestCase):
             'license': 'http://arxiv.org/licenses/nonexclusive-distrib/1.0/',
             'action': 'next'
         })
-        data, code, headers = license('POST', form_data, self.session,
-                                      submission_id)
+        data, code, headers = license.license('POST', form_data, self.session,
+                                              submission_id)
         self.assertEqual(code, status.HTTP_303_SEE_OTHER,
                          "Returns 303 redirect")
-        self.assertEqual(headers['Location'], redirect_url,
-                         "Location for redirect is set")
 
+    @mock.patch(f'{license.__name__}.LicenseForm.Meta.csrf', False)
     @mock.patch('submit.controllers.util.url_for')
     @mock.patch('arxiv.submission.save')
     @mock.patch('arxiv.submission.load')
@@ -139,7 +143,8 @@ class TestSetLicense(TestCase):
             'license': 'http://arxiv.org/licenses/nonexclusive-distrib/1.0/',
             'action': 'next'
         })
-        data, code, headers = license('POST', form_data, self.session, 2)
+        data, code, headers = license.license('POST', form_data, self.session,
+                                              2)
         self.assertEqual(code, status.HTTP_400_BAD_REQUEST,
                          "Returns 400 bad request")
         self.assertIsInstance(data['form'], Form,

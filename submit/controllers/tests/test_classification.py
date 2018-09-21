@@ -6,8 +6,7 @@ from werkzeug.exceptions import InternalServerError, NotFound
 from wtforms import Form
 from arxiv import status
 import arxiv.submission as events
-from submit.controllers.classification import classification, cross_list, \
-    ClassificationForm
+from submit.controllers import classification
 
 from pytz import timezone
 from datetime import timedelta, datetime
@@ -47,6 +46,8 @@ class TestClassification(TestCase):
             )
         )
 
+    @mock.patch(f'{classification.__name__}.ClassificationForm.Meta.csrf',
+                False)
     @mock.patch('arxiv.submission.load')
     def test_get_request_with_submission(self, mock_load):
         """GET request with a submission ID."""
@@ -54,12 +55,18 @@ class TestClassification(TestCase):
         mock_load.return_value = (
             mock.MagicMock(submission_id=submission_id), []
         )
-        data, code, headers = classification('GET', MultiDict(), self.session,
-                                             submission_id)
+        data, code, headers = classification.classification(
+            'GET',
+            MultiDict(),
+            self.session,
+            submission_id
+        )
         self.assertEqual(code, status.HTTP_200_OK, "Returns 200 OK")
         self.assertIsInstance(data['form'], Form,
                               "Response data includes a form")
 
+    @mock.patch(f'{classification.__name__}.ClassificationForm.Meta.csrf',
+                False)
     @mock.patch('arxiv.submission.load')
     def test_get_request_with_nonexistant_submission(self, mock_load):
         """GET request with a submission ID."""
@@ -70,8 +77,11 @@ class TestClassification(TestCase):
 
         mock_load.side_effect = raise_no_such_submission
         with self.assertRaises(NotFound):
-            classification('GET', MultiDict(), self.session, submission_id)
+            classification.classification('GET', MultiDict(), self.session,
+                                          submission_id)
 
+    @mock.patch(f'{classification.__name__}.ClassificationForm.Meta.csrf',
+                False)
     @mock.patch('arxiv.submission.load')
     def test_post_request(self, mock_load):
         """POST request with no data."""
@@ -79,13 +89,19 @@ class TestClassification(TestCase):
         mock_load.return_value = (
             mock.MagicMock(submission_id=submission_id), []
         )
-        data, code, headers = classification('POST', MultiDict(), self.session,
-                                             submission_id)
+        data, code, headers = classification.classification(
+            'POST',
+            MultiDict(),
+            self.session,
+            submission_id
+        )
         self.assertEqual(code, status.HTTP_400_BAD_REQUEST,
                          "Returns 400 bad request")
         self.assertIsInstance(data['form'], Form,
                               "Response data includes a form")
 
+    @mock.patch(f'{classification.__name__}.ClassificationForm.Meta.csrf',
+                False)
     @mock.patch('arxiv.submission.save')
     @mock.patch('arxiv.submission.load')
     def test_post_with_invalid_category(self, mock_load, mock_save):
@@ -100,13 +116,19 @@ class TestClassification(TestCase):
         request_data = MultiDict({
             'category': 'astro-ph'  # <- expired
         })
-        data, code, headers = classification('POST', request_data,
-                                             self.session, submission_id)
+        data, code, headers = classification.classification(
+            'POST',
+            request_data,
+            self.session,
+            submission_id
+        )
         self.assertEqual(code, status.HTTP_400_BAD_REQUEST,
                          "Returns 400 bad request")
         self.assertIsInstance(data['form'], Form,
                               "Response data includes a form")
 
+    @mock.patch(f'{classification.__name__}.ClassificationForm.Meta.csrf',
+                False)
     @mock.patch('arxiv.submission.save')
     @mock.patch('arxiv.submission.load')
     def test_post_with_category(self, mock_load, mock_save):
@@ -121,8 +143,12 @@ class TestClassification(TestCase):
         request_data = MultiDict({
             'category': 'astro-ph.CO'
         })
-        data, code, headers = classification('POST', request_data,
-                                             self.session, submission_id)
+        data, code, headers = classification.classification(
+            'POST',
+            request_data,
+            self.session,
+            submission_id
+        )
         self.assertEqual(code, status.HTTP_200_OK, "Returns 200 OK")
         self.assertIsInstance(data['form'], Form,
                               "Response data includes a form")
@@ -130,7 +156,7 @@ class TestClassification(TestCase):
 
 class TestCrossList(TestCase):
     """Test behavior of :func:`.cross_list` controller."""
-    
+
     def setUp(self):
         """Create an authenticated session."""
         # Specify the validity period for the session.
@@ -161,6 +187,8 @@ class TestCrossList(TestCase):
             )
         )
 
+    @mock.patch(f'{classification.__name__}.ClassificationForm.Meta.csrf',
+                False)
     @mock.patch('arxiv.submission.load')
     def test_get_request_with_submission(self, mock_load):
         """GET request with a submission ID."""
@@ -173,12 +201,14 @@ class TestCrossList(TestCase):
                 )
             ), []
         )
-        data, code, headers = cross_list('GET', MultiDict(), self.session,
-                                         submission_id)
+        data, code, headers = classification.cross_list('GET', MultiDict(), self.session,
+                                                        submission_id)
         self.assertEqual(code, status.HTTP_200_OK, "Returns 200 OK")
         self.assertIsInstance(data['form'], Form,
                               "Response data includes a form")
 
+    @mock.patch(f'{classification.__name__}.ClassificationForm.Meta.csrf',
+                False)
     @mock.patch('arxiv.submission.load')
     def test_get_request_with_nonexistant_submission(self, mock_load):
         """GET request with a submission ID."""
@@ -189,8 +219,11 @@ class TestCrossList(TestCase):
 
         mock_load.side_effect = raise_no_such_submission
         with self.assertRaises(NotFound):
-            cross_list('GET', MultiDict(), self.session, submission_id)
+            classification.cross_list(
+                'GET', MultiDict(), self.session, submission_id)
 
+    @mock.patch(f'{classification.__name__}.ClassificationForm.Meta.csrf',
+                False)
     @mock.patch('arxiv.submission.load')
     def test_post_request(self, mock_load):
         """POST request with no data."""
@@ -203,13 +236,15 @@ class TestCrossList(TestCase):
                 )
             ), []
         )
-        data, code, headers = cross_list('POST', MultiDict(), self.session,
-                                         submission_id)
+        data, code, headers = classification.cross_list('POST', MultiDict(), self.session,
+                                                        submission_id)
         self.assertEqual(code, status.HTTP_400_BAD_REQUEST,
                          "Returns 400 bad request")
         self.assertIsInstance(data['form'], Form,
                               "Response data includes a form")
 
+    @mock.patch(f'{classification.__name__}.ClassificationForm.Meta.csrf',
+                False)
     @mock.patch('arxiv.submission.save')
     @mock.patch('arxiv.submission.load')
     def test_post_with_invalid_category(self, mock_load, mock_save):
@@ -234,13 +269,19 @@ class TestCrossList(TestCase):
         request_data = MultiDict({
             'category': 'astro-ph'  # <- expired
         })
-        data, code, headers = classification('POST', request_data,
-                                             self.session, submission_id)
+        data, code, headers = classification.classification(
+            'POST',
+            request_data,
+            self.session,
+            submission_id
+        )
         self.assertEqual(code, status.HTTP_400_BAD_REQUEST,
                          "Returns 400 bad request")
         self.assertIsInstance(data['form'], Form,
                               "Response data includes a form")
 
+    @mock.patch(f'{classification.__name__}.ClassificationForm.Meta.csrf',
+                False)
     @mock.patch('arxiv.submission.save')
     @mock.patch('arxiv.submission.load')
     def test_post_with_category(self, mock_load, mock_save):
@@ -263,8 +304,8 @@ class TestCrossList(TestCase):
             ), []
         )
         request_data = MultiDict({'category': 'astro-ph.CO'})
-        data, code, headers = cross_list('POST', request_data, self.session,
-                                         submission_id)
+        data, code, headers = classification.cross_list(
+            'POST', request_data, self.session, submission_id)
         self.assertEqual(code, status.HTTP_200_OK, "Returns 200 OK")
         self.assertIsInstance(data['form'], Form,
                               "Response data includes a form")

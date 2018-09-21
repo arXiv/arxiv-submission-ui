@@ -10,14 +10,16 @@ from werkzeug import MultiDict
 from werkzeug.exceptions import InternalServerError, NotFound
 
 from flask import url_for
-from wtforms import Form, BooleanField, RadioField
+from wtforms import BooleanField, RadioField
 from wtforms.validators import InputRequired, ValidationError, optional
 
 from arxiv import status
 from arxiv.base import logging
+from arxiv.forms import csrf
 from arxiv.users.domain import Session
 import arxiv.submission as events
 
+from ..domain import SubmissionStage
 from ..util import load_submission
 from . import util
 
@@ -43,7 +45,6 @@ def _data_from_submission(params: MultiDict,
     return params
 
 
-@util.flow_control('ui.verify_user', 'ui.license', 'ui.user')
 def authorship(method: str, params: MultiDict, session: Session,
                submission_id: int) -> Response:
     """Convert authorship form data into an `ConfirmAuthorship` event."""
@@ -59,7 +60,11 @@ def authorship(method: str, params: MultiDict, session: Session,
         params = _data_from_submission(params, submission)
 
     form = AuthorshipForm(params)
-    response_data = {'submission_id': submission_id, 'form': form}
+    response_data = {
+        'submission_id': submission_id,
+        'form': form,
+
+    }
 
     if method == 'POST':
         if form.validate():
@@ -98,7 +103,7 @@ def authorship(method: str, params: MultiDict, session: Session,
     return response_data, status.HTTP_200_OK, {}
 
 
-class AuthorshipForm(Form):
+class AuthorshipForm(csrf.CSRFForm):
     """Generate form with radio button to confirm authorship information."""
 
     YES = 'y'

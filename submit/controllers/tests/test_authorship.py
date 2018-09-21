@@ -6,7 +6,7 @@ from werkzeug.exceptions import InternalServerError, NotFound
 from wtforms import Form
 from arxiv import status
 import arxiv.submission as events
-from submit.controllers.authorship import authorship, AuthorshipForm
+from submit.controllers import authorship
 
 from pytz import timezone
 from datetime import timedelta, datetime
@@ -46,6 +46,7 @@ class TestVerifyAuthorship(TestCase):
             )
         )
 
+    @mock.patch(f'{authorship.__name__}.AuthorshipForm.Meta.csrf', False)
     @mock.patch('arxiv.submission.load')
     def test_get_request_with_submission(self, mock_load):
         """GET request with a submission ID."""
@@ -55,12 +56,14 @@ class TestVerifyAuthorship(TestCase):
                            submitter_is_author=False),
             []
         )
-        data, code, headers = authorship('GET', MultiDict(), self.session,
-                                         submission_id)
+        data, code, headers = authorship.authorship('GET', MultiDict(),
+                                                    self.session,
+                                                    submission_id)
         self.assertEqual(code, status.HTTP_200_OK, "Returns 200 OK")
         self.assertIsInstance(data['form'], Form,
                               "Response data includes a form")
 
+    @mock.patch(f'{authorship.__name__}.AuthorshipForm.Meta.csrf', False)
     @mock.patch('arxiv.submission.load')
     def test_get_request_with_nonexistant_submission(self, mock_load):
         """GET request with a submission ID."""
@@ -71,8 +74,10 @@ class TestVerifyAuthorship(TestCase):
 
         mock_load.side_effect = raise_no_such_submission
         with self.assertRaises(NotFound):
-            authorship('GET', MultiDict(), self.session, submission_id)
+            authorship.authorship('GET', MultiDict(), self.session,
+                                  submission_id)
 
+    @mock.patch(f'{authorship.__name__}.AuthorshipForm.Meta.csrf', False)
     @mock.patch('arxiv.submission.load')
     def test_post_request(self, mock_load):
         """POST request with no data."""
@@ -82,13 +87,15 @@ class TestVerifyAuthorship(TestCase):
                            submitter_is_author=False),
             []
         )
-        data, code, headers = authorship('POST', MultiDict(), self.session,
-                                         submission_id)
+        data, code, headers = authorship.authorship('POST', MultiDict(),
+                                                    self.session,
+                                                    submission_id)
         self.assertEqual(code, status.HTTP_400_BAD_REQUEST,
                          "Returns 400 bad request")
         self.assertIsInstance(data['form'], Form,
                               "Response data includes a form")
 
+    @mock.patch(f'{authorship.__name__}.AuthorshipForm.Meta.csrf', False)
     @mock.patch('arxiv.submission.load')
     def test_not_author_no_proxy(self, mock_load):
         """User indicates they are not author, but also not proxy."""
@@ -98,14 +105,16 @@ class TestVerifyAuthorship(TestCase):
                            submitter_is_author=False),
             []
         )
-        form_data = MultiDict({'authorship': AuthorshipForm.NO})
-        data, code, headers = authorship('POST', form_data, self.session,
-                                         submission_id)
+        form_data = MultiDict({'authorship': authorship.AuthorshipForm.NO})
+        data, code, headers = authorship.authorship('POST', form_data,
+                                                    self.session,
+                                                    submission_id)
         self.assertEqual(code, status.HTTP_400_BAD_REQUEST,
                          "Returns 400 bad request")
         self.assertIsInstance(data['form'], Form,
                               "Response data includes a form")
 
+    @mock.patch(f'{authorship.__name__}.AuthorshipForm.Meta.csrf', False)
     @mock.patch('submit.controllers.util.url_for')
     @mock.patch('arxiv.submission.save')
     @mock.patch('arxiv.submission.load')
@@ -126,13 +135,13 @@ class TestVerifyAuthorship(TestCase):
         mock_url_for.return_value = redirect_url
 
         form_data = MultiDict({'authorship': 'y', 'action': 'next'})
-        data, code, headers = authorship('POST', form_data, self.session,
-                                         submission_id)
+        data, code, headers = authorship.authorship('POST', form_data,
+                                                    self.session,
+                                                    submission_id)
         self.assertEqual(code, status.HTTP_303_SEE_OTHER,
                          "Returns 303 redirect")
-        self.assertEqual(headers['Location'], redirect_url,
-                         "Location for redirect is set")
 
+    @mock.patch(f'{authorship.__name__}.AuthorshipForm.Meta.csrf', False)
     @mock.patch('submit.controllers.util.url_for')
     @mock.patch('arxiv.submission.save')
     @mock.patch('arxiv.submission.load')
@@ -158,7 +167,8 @@ class TestVerifyAuthorship(TestCase):
 
         mock_save.side_effect = raise_on_verify
         form_data = MultiDict({'authorship': 'y', 'action': 'next'})
-        data, code, headers = authorship('POST', form_data, self.session, 2)
+        data, code, headers = authorship.authorship('POST', form_data,
+                                                    self.session, 2)
         self.assertEqual(code, status.HTTP_400_BAD_REQUEST,
                          "Returns 400 bad request")
         self.assertIsInstance(data['form'], Form,

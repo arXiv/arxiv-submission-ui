@@ -5,15 +5,16 @@ from typing import Tuple, Dict, Any, List
 from werkzeug import MultiDict
 from werkzeug.exceptions import InternalServerError
 from flask import url_for
-from wtforms import Form
 from wtforms.fields import TextField, TextAreaField, Field
 from wtforms import validators
 
 from arxiv import status
+from arxiv.forms import csrf
 from arxiv.base import logging
 from arxiv.users.domain import Session
 import arxiv.submission as events
 
+from ..domain import SubmissionStage
 from ..util import load_submission
 from . import util
 
@@ -22,7 +23,7 @@ logger = logging.getLogger(__name__)  # pylint: disable=C0103
 Response = Tuple[Dict[str, Any], int, Dict[str, Any]]  # pylint: disable=C0103
 
 
-class CoreMetadataForm(Form, util.FieldMixin, util.SubmissionMixin):
+class CoreMetadataForm(csrf.CSRFForm, util.FieldMixin, util.SubmissionMixin):
     """Handles core metadata fields on a submission."""
 
     title = TextField('*Title', validators=[validators.DataRequired()])
@@ -46,28 +47,28 @@ class CoreMetadataForm(Form, util.FieldMixin, util.SubmissionMixin):
                             "or figures, conference information."
                          ))
 
-    def validate_title(form: Form, field: Field) -> None:
+    def validate_title(form: csrf.CSRFForm, field: Field) -> None:
         """Validate title input using core events."""
         if field.data == form.submission.metadata.title:     # Nothing to do.
             return
         if field.data:
             form._validate_event(events.SetTitle, title=field.data)
 
-    def validate_abstract(form: Form, field: Field) -> None:
+    def validate_abstract(form: csrf.CSRFForm, field: Field) -> None:
         """Validate abstract input using core events."""
         if field.data == form.submission.metadata.abstract:    # Nothing to do.
             return
         if field.data:
             form._validate_event(events.SetAbstract, abstract=field.data)
 
-    def validate_comments(form: Form, field: Field) -> None:
+    def validate_comments(form: csrf.CSRFForm, field: Field) -> None:
         """Validate comments input using core events."""
         if field.data == form.submission.metadata.comments:    # Nothing to do.
             return
         if field.data is not None:
             form._validate_event(events.SetComments, comments=field.data)
 
-    def validate_authors_display(form: Form, field: Field) -> None:
+    def validate_authors_display(form: csrf.CSRFForm, field: Field) -> None:
         """Validate authors input using core events."""
         if field.data == form.submission.metadata.authors_display:
             return
@@ -76,7 +77,8 @@ class CoreMetadataForm(Form, util.FieldMixin, util.SubmissionMixin):
                                  authors_display=field.data)
 
 
-class OptionalMetadataForm(Form, util.FieldMixin, util.SubmissionMixin):
+class OptionalMetadataForm(csrf.CSRFForm, util.FieldMixin,
+                           util.SubmissionMixin):
     """Handles optional metadata fields on a submission."""
 
     doi = TextField('DOI',
@@ -103,14 +105,14 @@ class OptionalMetadataForm(Form, util.FieldMixin, util.SubmissionMixin):
                           description=("example: 14J60 (Primary), 14F05, "
                                        "14J26 (Secondary)"))
 
-    def validate_doi(form: Form, field: Field) -> None:
+    def validate_doi(form: csrf.CSRFForm, field: Field) -> None:
         """Validate DOI input using core events."""
         if field.data == form.submission.metadata.doi:     # Nothing to do.
             return
         if field.data:
             form._validate_event(events.SetDOI, doi=field.data)
 
-    def validate_journal_ref(form: Form, field: Field) -> None:
+    def validate_journal_ref(form: csrf.CSRFForm, field: Field) -> None:
         """Validate journal reference input using core events."""
         if field.data == form.submission.metadata.journal_ref:
             return
@@ -118,7 +120,7 @@ class OptionalMetadataForm(Form, util.FieldMixin, util.SubmissionMixin):
             form._validate_event(events.SetJournalReference,
                                  journal_ref=field.data)
 
-    def validate_report_num(form: Form, field: Field) -> None:
+    def validate_report_num(form: csrf.CSRFForm, field: Field) -> None:
         """Validate report number input using core events."""
         if field.data == form.submission.metadata.report_num:
             return
@@ -126,7 +128,7 @@ class OptionalMetadataForm(Form, util.FieldMixin, util.SubmissionMixin):
             form._validate_event(events.SetReportNumber,
                                  report_num=field.data)
 
-    def validate_acm_class(form: Form, field: Field) -> None:
+    def validate_acm_class(form: csrf.CSRFForm, field: Field) -> None:
         """Validate ACM classification input using core events."""
         if field.data == form.submission.metadata.acm_class:
             return
@@ -134,7 +136,7 @@ class OptionalMetadataForm(Form, util.FieldMixin, util.SubmissionMixin):
             form._validate_event(events.SetACMClassification,
                                  acm_class=field.data)
 
-    def validate_msc_class(form: Form, field: Field) -> None:
+    def validate_msc_class(form: csrf.CSRFForm, field: Field) -> None:
         """Validate MSC classification input using core events."""
         if field.data == form.submission.metadata.msc_class:
             return
@@ -152,7 +154,6 @@ def _data_from_submission(params: MultiDict, submission: events.Submission,
     return params
 
 
-@util.flow_control('ui.file_process', 'ui.add_optional_metadata', 'ui.user')
 def metadata(method: str, params: MultiDict, session: Session,
              submission_id: int) -> Response:
     """Update metadata on the submission."""
@@ -169,7 +170,11 @@ def metadata(method: str, params: MultiDict, session: Session,
     form = CoreMetadataForm(params)
     form.submission = submission
     form.creator = submitter
-    response_data = {'submission_id': submission_id, 'form': form}
+    response_data = {
+        'submission_id': submission_id,
+        'form': form,
+
+    }
 
     if method == 'POST':
         if not form.validate():
@@ -206,7 +211,6 @@ def metadata(method: str, params: MultiDict, session: Session,
     return response_data, status.HTTP_200_OK, {}
 
 
-@util.flow_control('ui.add_metadata', 'ui.confirm_submit', 'ui.user')
 def optional(method: str, params: MultiDict, session: Session,
              submission_id: int) -> Response:
     """Update optional metadata on the submission."""
@@ -225,7 +229,11 @@ def optional(method: str, params: MultiDict, session: Session,
     form = OptionalMetadataForm(params)
     form.submission = submission
     form.creator = submitter
-    response_data = {'submission_id': submission_id, 'form': form}
+    response_data = {
+        'submission_id': submission_id,
+        'form': form,
+
+    }
 
     if method == 'POST':
         if not form.validate():

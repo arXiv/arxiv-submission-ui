@@ -8,12 +8,14 @@ from typing import Tuple, Dict, Any, List, Optional
 from werkzeug import MultiDict
 from werkzeug.exceptions import InternalServerError
 from flask import url_for
-from wtforms import Form, SelectField, widgets, HiddenField, validators
+from wtforms import SelectField, widgets, HiddenField, validators
 
 from arxiv import status, taxonomy
+from arxiv.forms import csrf
 from arxiv.base import logging
 from arxiv.users.domain import Session
 import arxiv.submission as events
+from ..domain import SubmissionStage
 from ..util import load_submission
 from . import util
 
@@ -24,7 +26,7 @@ logger = logging.getLogger(__name__)  # pylint: disable=C0103
 Response = Tuple[Dict[str, Any], int, Dict[str, Any]]  # pylint: disable=C0103
 
 
-class ClassificationForm(Form):
+class ClassificationForm(csrf.CSRFForm):
     """Form for classification selection."""
 
     CATEGORIES = [
@@ -97,7 +99,6 @@ def _formset_from_submission(submission: events.domain.Submission) \
     return formset
 
 
-@util.flow_control('ui.policy', 'ui.cross_list', 'ui.user')
 def classification(method: str, params: MultiDict, session: Session,
                    submission_id: int) -> Response:
     """Generate a `SetPrimaryClassification` event."""
@@ -121,7 +122,8 @@ def classification(method: str, params: MultiDict, session: Session,
     form.filter_choices(submission, session, submitter.endorsements)
     response_data = {
         'submission_id': submission_id,
-        'form': form
+        'form': form,
+
     }
 
     if method == 'POST':
@@ -162,7 +164,6 @@ def classification(method: str, params: MultiDict, session: Session,
     return response_data, status.HTTP_200_OK, {}
 
 
-@util.flow_control('ui.classification', 'ui.file_upload', 'ui.user')
 def cross_list(method: str, params: MultiDict, session: Session,
                submission_id: int) -> Response:
     """Generate an `AddSecondaryClassification` event."""
@@ -186,9 +187,9 @@ def cross_list(method: str, params: MultiDict, session: Session,
         'primary': {
             'id': submission.primary_classification.category,
             'name': _primary['name']
-        }
-    }
+        },
 
+    }
     action = params.get('action')
 
     if method == 'POST':

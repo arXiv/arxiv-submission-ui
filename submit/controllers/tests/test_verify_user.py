@@ -6,7 +6,7 @@ from werkzeug.exceptions import InternalServerError
 from wtforms import Form
 from arxiv import status
 import arxiv.submission as events
-from submit.controllers.verify_user import verify_user
+from submit.controllers import verify_user
 
 from pytz import timezone
 from datetime import timedelta, datetime
@@ -46,6 +46,7 @@ class TestVerifyUser(TestCase):
             )
         )
 
+    @mock.patch(f'{verify_user.__name__}.VerifyUserForm.Meta.csrf', False)
     @mock.patch('arxiv.submission.load')
     def test_get_request_with_submission(self, mock_load):
         """GET request with a submission ID."""
@@ -55,12 +56,14 @@ class TestVerifyUser(TestCase):
                            submitter_contact_verified=False),
             []
         )
-        data, code, headers = verify_user('GET', MultiDict(), self.session,
-                                          submission_id)
+        data, code, headers = verify_user.verify_user('GET', MultiDict(),
+                                                      self.session,
+                                                      submission_id)
         self.assertEqual(code, status.HTTP_200_OK, "Returns 200 OK")
         self.assertIsInstance(data['form'], Form,
                               "Response data includes a form")
 
+    @mock.patch(f'{verify_user.__name__}.VerifyUserForm.Meta.csrf', False)
     @mock.patch('arxiv.submission.load')
     def test_post_request(self, mock_load):
         """POST request with no data."""
@@ -70,13 +73,15 @@ class TestVerifyUser(TestCase):
                            submitter_contact_verified=False),
             []
         )
-        data, code, headers = verify_user('POST', MultiDict(), self.session,
-                                          submission_id)
+        data, code, headers = verify_user.verify_user('POST', MultiDict(),
+                                                      self.session,
+                                                      submission_id)
         self.assertEqual(code, status.HTTP_400_BAD_REQUEST,
                          "Returns 400 bad request")
         self.assertIsInstance(data['form'], Form,
                               "Response data includes a form")
 
+    @mock.patch(f'{verify_user.__name__}.VerifyUserForm.Meta.csrf', False)
     @mock.patch('submit.controllers.util.url_for')
     @mock.patch('arxiv.submission.save')
     @mock.patch('arxiv.submission.load')
@@ -99,13 +104,13 @@ class TestVerifyUser(TestCase):
         mock_url_for.return_value = redirect_url
 
         form_data = MultiDict({'verify_user': 'y', 'action': 'next'})
-        data, code, headers = verify_user('POST', form_data, self.session,
-                                          submission_id)
+        data, code, headers = verify_user.verify_user('POST', form_data,
+                                                      self.session,
+                                                      submission_id)
         self.assertEqual(code, status.HTTP_303_SEE_OTHER,
                          "Returns 303 redirect")
-        self.assertEqual(headers['Location'], redirect_url,
-                         "Location for redirect is set")
 
+    @mock.patch(f'{verify_user.__name__}.VerifyUserForm.Meta.csrf', False)
     @mock.patch('submit.controllers.util.url_for')
     @mock.patch('arxiv.submission.save')
     @mock.patch('arxiv.submission.load')
@@ -134,7 +139,8 @@ class TestVerifyUser(TestCase):
 
         mock_save.side_effect = raise_on_verify
         form_data = MultiDict({'verify_user': 'y', 'action': 'next'})
-        data, code, headers = verify_user('POST', form_data, self.session, 2)
+        data, code, headers = verify_user.verify_user('POST', form_data,
+                                                      self.session, 2)
         self.assertEqual(code, status.HTTP_400_BAD_REQUEST,
                          "Returns 400 bad request")
         self.assertIsInstance(data['form'], Form,

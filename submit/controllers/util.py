@@ -15,62 +15,8 @@ from wtforms.fields.core import UnboundField
 from arxiv import status
 from arxiv.users.domain import Session
 import arxiv.submission as events
-
-Response = Tuple[Dict[str, Any], int, Dict[str, Any]]  # pylint: disable=C0103
-
-
-PREVIOUS = 'previous'
-NEXT = 'next'
-SAVE_EXIT = 'save_exit'
-
-
-# TODO: handle case that there is no prev/next page!
-# TODO: handle case that prev/next page doesn't exist.
-def flow_control(prev_page: str, next_page: str, exit_page: str) -> Callable:
-    """Get a decorator that handles redirection to next/previous steps."""
-    def deco(func: Callable) -> Callable:
-        """Decorator that applies next/previous redirection."""
-        def wrapper(method: str, params: MultiDict, *args: Any,
-                    **kwargs: Dict) -> Response:
-            """Update the redirect to the next, previous, or exit page."""
-            action = params.get('action')
-
-            data, status_code, headers = func(method, params, *args, **kwargs)
-
-            # If the user selects "go back", we attempt to save their input
-            # above. But if the input does not validate, we don't prevent them
-            # from going to the previous step.
-            if status_code == status.HTTP_400_BAD_REQUEST \
-                    and action == PREVIOUS:
-                status_code = status.HTTP_303_SEE_OTHER
-
-            # No redirect; nothing to do.
-            if status_code != status.HTTP_303_SEE_OTHER:
-                return data, status_code, headers
-
-            if not action and 'Location' not in headers:
-                raise InternalServerError('Attempted redirect without URL')
-
-            # Get the submission ID from the response, since it may not have
-            # been a param for the controller.
-            submission_id = data.get('submission_id')
-
-            def _get_target(page: str) -> str:
-                if submission_id:
-                    url: str = url_for(page, submission_id=submission_id)
-                else:
-                    url = url_for(page)
-                return url
-
-            if action == NEXT:
-                headers.update({'Location': _get_target(next_page)})
-            elif action == PREVIOUS:
-                headers.update({'Location': _get_target(prev_page)})
-            elif action == SAVE_EXIT:
-                headers.update({'Location': _get_target(exit_page)})
-            return data, status_code, headers
-        return wrapper
-    return deco
+from ..domain import SubmissionStage
+from ..util import load_submission
 
 
 class OptGroupSelectWidget(Select):

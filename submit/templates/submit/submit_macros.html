@@ -9,25 +9,25 @@
 
 {% endmacro %}
 
-{% macro progress_bar(submission_id) %}
+{% macro progress_bar(submission_id, stage, this_stage) %}
 {# TODO: make this into a real navigation mechanism, with variables to relate
    tooltips, page name, template, and page order. Also real routenames instead
    of this initial hack. #}
   <nav class="is-hidden-mobile" role="navigation" aria-labelledby="progress">
     <p class="sr-only">Steps in Submission Process</p>
     <ul class="progressbar is-marginless">
-      <li class="is-complete"><a class="is-size-7" title="Verify user info" href="{% if submission_id %}{{ url_for('ui.verify_user', submission_id=submission_id) }}{% endif %}">Verify User</a></li>
-      <li class="is-complete"><a class="is-size-7" title="Authorship" href="{% if submission_id %}{{ url_for('ui.authorship', submission_id=submission_id) }}{% else %}{{ url_for('ui.verify_user') }}{% endif %}">Authorship</a></li>
-      <li class="is-complete"><a class="is-size-7" title="License" href="{% if submission_id %}{{ url_for('ui.license', submission_id=submission_id) }}{% else %}{{ url_for('ui.verify_user') }}{% endif %}">License</a></li>
-      <li class="is-complete is-active"><a class="is-size-7" title="Acknowledge policy" href="{% if submission_id %}{{ url_for('ui.policy', submission_id=submission_id) }}{% else %}{{ url_for('ui.verify_user') }}{% endif %}">Policy</a></li>
-      <li class="is-complete"><a class="is-size-7" title="Primary class" href="{% if submission_id %}{{ url_for('ui.classification', submission_id=submission_id) }}{% else %}{{ url_for('ui.verify_user') }}{% endif %}">Category</a></li>
-      <li><a class="is-size-7" title="Cross-list" href="{% if submission_id %}{{ url_for('ui.cross_list', submission_id=submission_id) }}{% else %}{{ url_for('ui.verify_user') }}{% endif %}">Cross-list</a></li>
-      <li><a class="is-size-7" title="File upload" href="{% if submission_id %}{{ url_for('ui.file_upload', submission_id=submission_id) }}{% else %}{{ url_for('ui.verify_user') }}{% endif %}">Upload Files</a></li>
-      <li><a class="is-size-7" title="File process" href="{% if submission_id %}{{ url_for('ui.file_process', submission_id=submission_id) }}{% else %}{{ url_for('ui.verify_user') }}{% endif %}">Process Files</a></li>
-      <li><a class="is-size-7" title="Add metadata" href="{% if submission_id %}{{ url_for('ui.add_metadata', submission_id=submission_id) }}{% else %}{{ url_for('ui.verify_user') }}{% endif %}">Metadata</a></li>
-      <li><a class="is-size-7" title="Add optional metadata" href="{% if submission_id %}{{ url_for('ui.add_optional_metadata', submission_id=submission_id) }}{% else %}{{ url_for('ui.verify_user') }}{% endif %}">Opt. Metadata</a></li>
-      <li><a class="is-size-7" title="Final preview" href="{% if submission_id %}{{ url_for('ui.final_preview', submission_id=submission_id) }}{% else %}{{ url_for('ui.verify_user') }}{% endif %}">Preview</a></li>
-      <li><a class="is-size-7" title="Submission confirmed" href="{% if submission_id %}{{ url_for('ui.confirm_submit', submission_id=submission_id) }}{% else %}{{ url_for('ui.verify_user') }}{% endif %}">Confirmed</a></li>
+      <li class="{% if stage.has_completed(stage.VERIFY_USER) or this_stage == stage.VERIFY_USER %}is-complete{% endif %} {% if this_stage == stage.VERIFY_USER %}is-active{% endif %}"><a class="is-size-7" title="Verify user info" href="{% if submission_id %}{{ url_for('ui.verify_user', submission_id=submission_id) }}{% endif %}">Verify User</a></li>
+      <li class="{% if stage.has_completed(stage.AUTHORSHIP) or this_stage == stage.AUTHORSHIP %}is-complete{% endif %} {% if this_stage == stage.AUTHORSHIP %}is-active{% endif %}"><a class="is-size-7" title="Authorship" href="{% if submission_id %}{{ url_for('ui.authorship', submission_id=submission_id) }}{% else %}{{ url_for('ui.verify_user') }}{% endif %}">Authorship</a></li>
+      <li class="{% if stage.has_completed(stage.LICENSE) or this_stage == stage.LICENSE %}is-complete{% endif %} {% if this_stage == stage.LICENSE %}is-active{% endif %}"><a class="is-size-7" title="License" href="{% if submission_id %}{{ url_for('ui.license', submission_id=submission_id) }}{% else %}{{ url_for('ui.verify_user') }}{% endif %}">License</a></li>
+      <li class="{% if stage.has_completed(stage.POLICY) or this_stage == stage.POLICY %}is-complete{% endif %} {% if this_stage == stage.POLICY %}is-active{% endif %}"><a class="is-size-7" title="Acknowledge policy" href="{% if submission_id %}{{ url_for('ui.policy', submission_id=submission_id) }}{% else %}{{ url_for('ui.verify_user') }}{% endif %}">Policy</a></li>
+      <li class="{% if stage.has_completed(stage.CLASSIFICATION) or this_stage == stage.CLASSIFICATION %}is-complete{% endif %} {% if this_stage == stage.CLASSIFICATION %}is-active{% endif %}"><a class="is-size-7" title="Primary class" href="{% if submission_id %}{{ url_for('ui.classification', submission_id=submission_id) }}{% else %}{{ url_for('ui.verify_user') }}{% endif %}">Category</a></li>
+      <li class="{% if stage.has_completed(stage.CROSS_LIST) or this_stage == stage.CROSS_LIST %}is-complete{% endif %} {% if this_stage == stage.CROSS_LIST %}is-active{% endif %}"><a class="is-size-7" title="Cross-list" href="{% if submission_id %}{{ url_for('ui.cross_list', submission_id=submission_id) }}{% else %}{{ url_for('ui.verify_user') }}{% endif %}">Cross-list</a></li>
+      <li class="{% if stage.has_completed(stage.FILE_UPLOAD) or this_stage == stage.FILE_UPLOAD %}is-complete{% endif %} {% if this_stage == stage.FILE_UPLOAD %}is-active{% endif %}"><a class="is-size-7" title="File upload" href="{% if submission_id %}{{ url_for('ui.file_upload', submission_id=submission_id) }}{% else %}{{ url_for('ui.verify_user') }}{% endif %}">Upload Files</a></li>
+      <li class="{% if stage.has_completed(stage.FILE_PROCESS) or this_stage == stage.FILE_PROCESS %}is-complete{% endif %} {% if this_stage == stage.FILE_PROCESS %}is-active{% endif %}"><a class="is-size-7" title="File process" href="{% if submission_id %}{{ url_for('ui.file_process', submission_id=submission_id) }}{% else %}{{ url_for('ui.verify_user') }}{% endif %}">Process Files</a></li>
+      <li class="{% if stage.has_completed(stage.ADD_METADATA) or this_stage == stage.ADD_METADATA %}is-complete{% endif %} {% if this_stage == stage.ADD_METADATA %}is-active{% endif %}"><a class="is-size-7" title="Add metadata" href="{% if submission_id %}{{ url_for('ui.add_metadata', submission_id=submission_id) }}{% else %}{{ url_for('ui.verify_user') }}{% endif %}">Metadata</a></li>
+      <li class="{% if stage.has_completed(stage.ADD_OPTIONAL_METADATA) or this_stage == stage.ADD_OPTIONAL_METADATA %}is-complete{% endif %} {% if this_stage == stage.ADD_OPTIONAL_METADATA %}is-active{% endif %}"><a class="is-size-7" title="Add optional metadata" href="{% if submission_id %}{{ url_for('ui.add_optional_metadata', submission_id=submission_id) }}{% else %}{{ url_for('ui.verify_user') }}{% endif %}">Opt. Metadata</a></li>
+      <li class="{% if stage.has_completed(stage.FINAL_PREVIEW) or this_stage == stage.FINAL_PREVIEW %}is-complete{% endif %} {% if this_stage == stage.FINAL_PREVIEW %}is-active{% endif %}"><a class="is-size-7" title="Final preview" href="{% if submission_id %}{{ url_for('ui.final_preview', submission_id=submission_id) }}{% else %}{{ url_for('ui.verify_user') }}{% endif %}">Preview</a></li>
+      <li class=""><a class="is-size-7" title="Submission confirmed" href="{% if submission_id %}{{ url_for('ui.confirm_submit', submission_id=submission_id) }}{% else %}{{ url_for('ui.verify_user') }}{% endif %}">Confirmed</a></li>
     </ul>
   </nav>
 

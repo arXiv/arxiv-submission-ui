@@ -5,6 +5,7 @@
 {% block within_content %}
 <h2 class="is-size-4">Choose a primary classification</h2>
 <form method="POST" action="{{ url_for('ui.classification', submission_id=submission_id) }}">
+  {{ form.csrf_token }}
   {% with field = form.category %}
   <div class="field breathe-vertical">
     <div class="control">

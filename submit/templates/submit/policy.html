@@ -15,6 +15,7 @@
     to submit as a third-party submitter.</li>
 </ul>
 <form method="POST" action="{{ url_for('ui.policy', submission_id=submission_id) }}">
+  {{ form.csrf_token }}
   <div class="field">
     <div class="control">
       <div class="checkbox">

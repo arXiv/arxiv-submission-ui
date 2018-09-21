@@ -15,6 +15,7 @@
     {% for category, (display, subform) in formset.items() %}
 
     <form method="POST" class="form form-margin" action="{{ url_for('ui.cross_list', submission_id=submission_id) }}">
+      {{ form.csrf_token }}
       <p>
         {{ subform.operation }}
         {{ subform.category()|safe }}
@@ -30,6 +31,7 @@
 </div>
 
 <form method="POST" action="{{ url_for('ui.cross_list', submission_id=submission_id) }}">
+  {{ form.csrf_token }}
   {{ form.operation }}
   {% with field = form.category %}
   <label class="label" style="margin-top: 3em">Add a cross-list category

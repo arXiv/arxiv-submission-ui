@@ -133,6 +133,22 @@ class SubmissionStage(NamedTuple):
         return self.get_previous_stage(self.current_stage)
 
     @property
+    def previous_required_stage(self) -> str:
+        """The previous required stage in the submission process."""
+        previous = self.get_previous_stage(self.current_stage)
+        while not self.is_required(previous):
+            previous = self.get_previous_stage(previous)
+        return previous
+
+    @property
+    def next_required_stage(self) -> str:
+        """The next required stage in the submission process."""
+        next_stage = self.get_next_stage(self.current_stage)
+        while not self.is_required(next_stage):
+            next_stage = self.get_next_stage(next_stage)
+        return next_stage
+
+    @property
     def next_stage(self) -> str:
         """The next stage of the submission process."""
         return self.get_next_stage(self.current_stage)
@@ -212,6 +228,11 @@ class SubmissionStage(NamedTuple):
             if method:
                 return method(self)
         return False
+
+    def is_required(self, stage: str) -> bool:
+        """Determine whether or not a stage is required."""
+        stages, required, _ = zip(*self.ORDER)
+        return dict(zip(stages, required))[stage]
 
 
 class FileError(NamedTuple):

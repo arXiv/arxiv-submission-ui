@@ -123,6 +123,7 @@ class FileManagementService(object):
                 file_errors[filename].append(FileError(etype.upper(), message))
             else:
                 non_file_errors.append(FileError(etype.upper(), message))
+                
         return UploadStatus(
             started=dateutil.parser.parse(data['start_datetime']),
             completed=dateutil.parser.parse(data['completion_datetime']),
@@ -142,7 +143,8 @@ class FileManagementService(object):
                     errors=file_errors[fdata['public_filepath']]
                 ) for fdata in data['files']
             ],
-            errors=non_file_errors
+            errors=non_file_errors,
+            size=data['upload_total_size']
         )
 
     def _path(self, path: str, query: dict = {}) -> str:

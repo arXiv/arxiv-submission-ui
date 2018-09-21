@@ -78,7 +78,7 @@
     </form>
 
     {% if status.files %}
-    <h3>Files currently attached to this submission</h3>
+    <h3>Files currently attached to this submission ({{ status.size|filesizeformat }})</h3>
 
     {{ display_tree(None, status.files|group_files) }}
 

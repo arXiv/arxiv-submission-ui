@@ -432,8 +432,8 @@ def _post_new_upload(params: MultiDict, pointer: FileStorage, session: Session,
         submission = _update_submission(submission, upload_status, submitter,
                                         client)
         alerts.flash_success(
-            f'Unpacked {upload_status.file_count} files, weighing'
-            f'{upload_status.size} bytes',
+            f'Unpacked {upload_status.file_count} files. Total submission'
+            f' package size is {upload_status.size } bytes',
             title='Upload successful'
         )
         alerts.flash_hidden(upload_status.to_dict(), 'status')
@@ -492,16 +492,16 @@ def _post_new_file(params: MultiDict, pointer: FileStorage, session: Session,
                            submission_id=submission.submission_id)
         return {}, status.HTTP_303_SEE_OTHER, {'Location': redirect}
 
-    print(form.data)
     ancillary = bool(form.ancillary.data)
-    print(ancillary)
+
     try:
         upload_status = filemanager.add_file(upload_id, pointer,
                                              ancillary=ancillary)
         submission = _update_submission(submission, upload_status, submitter,
                                         client)
         alerts.flash_success(
-            f'Upoaded {pointer.filename} successfully',
+            f'Upoaded {pointer.filename} successfully. Total submission'
+            f' package size is {upload_status.size} bytes',
             title='Upload successful'
         )
         status_data = upload_status.to_dict()

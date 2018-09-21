@@ -1,32 +1,78 @@
 {% extends "submit/base.html" %}
 
-
-
 {% block within_content %}
 <h2 class="is-size-4">Process Files</h2>
-
+<form method="POST" action="{{ url_for('ui.file_process', submission_id=8) }}">
 <div class="columns">
-  <div class="column">
-    <div class="field">
+  <div class="column is-one-third-desktop is-one-half-tablet">
+    <div class="field is-grouped">
       <div class="control">
-        <label class="label">Compiler:</label>
+        <label class="label" id="compiler">Compiler: <span class="icon has-text-link"><i class="fa fa-question-circle"></i></span></label>
         <div class="select">
-          <select>
+          <select aria-labelledby="compiler">
             <option>pdflatex</option>
             <option>some other compiler</option>
           </select>
         </div>
+        <button type="button" class="button is-link">Process</button>
       </div>
     </div>
-    <div class="field">
-      <div class="control">
-        <button type="button" class="button is-link">Process</button>
+
+    <div class="message is-danger">
+      <div class="message-header">
+        <p><span class="icon"><i class="fa fa-exclamation-triangle"></i></span>Processing Failed</p></div>
+      <div class="message-body">
+        <p>What to do next:</p>
+        <ul>
+          <li>review the log warnings and errors</li>
+          <li>correct any missing file problems</li>
+          <li>edit your files if needed</li>
+          <li>re-upload any corrected files</li>
+        </ul>
+        <p class="has-text-centered"><a class="button is-link" href="{{ url_for('ui.file_upload', submission_id=8) }}">Go back to Upload Files</a></p>
+        <p class="has-text-centered"><a class="button" href="#help">Help: Common TeX Errors</a></p>
+      </div>
+    </div>
+
+    <div class="message is-info">
+      <div class="message-body">
+        <p>arXiv's processing system runs TeX Live 2016 and natbib 8.31. Authors are strongly encouraged to upgrade if older versions of these packages are being used to generate files.</p>
+      </div>
+    </div>
+
+    <div class="message is-warning">
+      <div class="message-header">
+        <p><span class="icon"><i class="fa fa-exclamation-triangle"></i></span>Completed With Warnings</p>
+      </div>
+      <div class="message-body">
+        <ul>
+          <li>Be sure to check the compiled preview carefully for any undesired artifacts or errors.</li>
+          <li>Check the compiler log for warnings and errors.</l>
+        </ul>
+      </div>
+    </div>
+
+    <div class="message is-success">
+      <div class="message-header">
+        <p><span class="icon"><i class="fa fa-check-circle"></i></span>Processing Successful</p></div>
+      <div class="message-body">
+        <p>Be sure to check the compiled preview carefully for any undesired artifacts or errors.</p>
+        <p>If you need to make corrections, return to the previous step and adjust your files, then reprocess your submission.</p>
+
+        <p class="has-text-centered"><a class="button is-link" href="{{ url_for('ui.file_upload', submission_id=8) }}">View PDF</a></p>
       </div>
     </div>
   </div>
 
   <div class="column">
-    <div class="message is-info is-inline-block submit-nav">
+    <div class="message is-info">
+      <div class="message-body">
+        <p><span class="icon has-text-link"><i class="fa fa-info-circle"></i></span>
+        This step runs all files through a series of automatic checks.<br />
+         Additionally, TeX and LaTeX source packages will be compiled into a PDF.</p>
+      </div>
+    </div>
+    <div class="message is-info">
       <div class="message-body">
         <p><span class="icon has-text-link"><i class="fa fa-info-circle"></i></span>
         Our system has automatically detected your files as type <strong>filetype</strong>.</p>
@@ -36,15 +82,32 @@
           leave this default alone.</p>
       </div>
     </div>
-  </div>
-</div>
-
-<div class="message is-info is-inline-block submit-nav">
-  <div class="message-body">
-    <p><span class="icon has-text-link"><i class="fa fa-info-circle"></i></span>
-    You can upload all your files at once as a single .tar.gz file or upload individual files as needed.</p>
+    <div class="box texlive-summary">
+      <div class="level">
+        <div class="level-left">
+          <h3>TeXLive Compiler Summary</h3>
+        </div>
+        <div class="level-right">
+          <a class="button">View complete log</a>
+        </div>
+      </div>
+      <article class="has-text-danger">
+        <h4 class="has-text-danger">Errors</h4>
+        <p>error 1 with information</p>
+      </article>
+      <article class="has-text-warning">
+        <h4 class="has-text-warning">Warnings</h4>
+        <p>and warnings go here</p>
+      </article>
+      <article>
+        <h4>Messages with no particular status</h4>
+        <p>Not even sure what this would be like, but there should be some place for just notifications</p>
+        <p class="has-text-weight-bold">Perhaps step completion notices in bold</p>
+      </article>
+    </div>
   </div>
 </div>
 
 {{ submit_macros.submit_nav() }}
+</form>
 {% endblock within_content %}

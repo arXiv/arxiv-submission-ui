@@ -34,12 +34,13 @@ def flow_control(this_stage: str, exit_page: str = 'user') -> Callable:
                 g.this_stage = this_stage
                 g.submission_stage = submission_stage
 
-            if submission_stage.before(this_stage):
+            if not submission_stage.can_proceed_to(this_stage):
+                label = submission_stage.LABELS[submission_stage.next_stage]
                 alerts.flash_warning(
-                    'Please complete this stage before proceeding.'
+                    f'Please {label} before proceeding.'
                 )
                 return redirect(url_for(
-                    f'ui.{submission_stage.current_stage}',
+                    f'ui.{submission_stage.next_stage}',
                     submission_id=submission_id
                 ), code=status.HTTP_303_SEE_OTHER)
 

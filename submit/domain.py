@@ -69,6 +69,26 @@ class SubmissionStage(NamedTuple):
     FINAL_PREVIEW = 'final_preview'
     """The user is asked to review the submission before finalizing."""
 
+    LABELS = {
+        VERIFY_USER: 'verify your personal information',
+        AUTHORSHIP: 'confirm authorship',
+        LICENSE: 'choose a license',
+        POLICY: 'accept arXiv submission policies',
+        CLASSIFICATION: 'select a primary category',
+        CROSS_LIST: 'add cross-list categories',
+        FILE_UPLOAD: 'upload your submission files',
+        FILE_PROCESS: 'process your submission files',
+        ADD_METADATA: 'add required metadata',
+        ADD_OPTIONAL_METADATA: 'add optional metadata',
+        FINAL_PREVIEW: 'preview and approve your submission'
+    }
+    """
+    Human-intelligible labels for the submission steps.
+
+    These can be used in templates to convey what the user is being asked to
+    do.
+    """
+
     ORDER = [
         (VERIFY_USER, True, user_is_verified),
         (AUTHORSHIP, True, authorship_is_set),
@@ -95,20 +115,34 @@ class SubmissionStage(NamedTuple):
         """
         The current stage of the submission.
 
-        This is the *uncompleted* stage that must be completed before the
-        submission can proceed.
+        This is the furthest stage that the user has completed in the
+        submission process.
         """
+        previous = None
         for i, (stage, required, method) in enumerate(self.ORDER):
-            if not required:
+            if not required:    # Will skip over optional steps.
                 continue
             if method and not method(self):
-                return stage
+                return previous
+            previous = stage
         return None
+
+    @property
+    def previous_stage(self) -> str:
+        """The previous stage in the submission process for this submission."""
+        return self.get_previous_stage(self.current_stage)
 
     @property
     def next_stage(self) -> str:
         """The next stage of the submission process."""
         return self.get_next_stage(self.current_stage)
+
+    def can_proceed_to(self, stage: str) -> bool:
+        """Determine whether the user can proceed to a particular stage."""
+        previous: Optional[str] = self.get_previous_stage(stage)
+        if previous is None:
+            return True
+        return self.has_completed(previous)
 
     def get_next_stage(self, stage: str) -> str:
         """Get the next stage in the submission process for this submission."""
@@ -120,11 +154,6 @@ class SubmissionStage(NamedTuple):
             return None     # Last stage is complete; naught to do.
         # Get the stage after the current stage.
         return stages[self._get_index(stage) + 1]
-
-    @property
-    def previous_stage(self) -> str:
-        """The previous stage in the submission process for this submission."""
-        return self.get_previous_stage(self.current_stage)
 
     def get_previous_stage(self, stage: str) -> str:
         """Get the previous stage in the submission process."""
@@ -170,11 +199,11 @@ class SubmissionStage(NamedTuple):
             return method(self)
         elif not required:
             if i == 0:
-                return False
+                return True
             x = i
             _required = False
-            while not _required and x < len(self.ORDER):
-                x += 1
+            while not _required and x > 0:
+                x -= 1
                 _, _required, method = self.ORDER[x]
             if method:
                 return method(self)

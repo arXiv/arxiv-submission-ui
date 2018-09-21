@@ -4,6 +4,13 @@
 .form-margin {
   margin: 0.4em 0; }
 
+.texlive-summary article {
+  padding: 0.8rem; }
+  .texlive-summary article:not(:last-child) {
+    margin-bottom: 0.5em;
+    border-bottom-width: 1px;
+    border-bottom-style: dotted; }
+
 /* overrides for this form only? may move to base */
 .field:not(:last-child) {
   margin-bottom: 1.25em; }

@@ -1,11 +1,13 @@
 {% extends "submit/base.html" %}
 
-
+{% block title -%}
+  Submit an Article: Confirm authorship
+{%- endblock title %}
 
 {% block within_content %}
-<h2 class="is-size-4">Confirm authorship</h2>
 <form method="POST" action="{{ url_for('ui.authorship',submission_id=submission_id) }}">
   {{ form.csrf_token }}
+  {% if form.authorship.errors %}<div class="notification is-danger">{% endif %}
   {% for field in form.authorship %}
     <div class="field">
       <div class="control">
@@ -16,17 +18,14 @@
       </div>
     </div>
   {% endfor %}
-  {% if form.authorship.errors %}
-    {% for error in form.authorship.errors %}
-      <p class="help is-danger">{{ error }}</p>
-    {% endfor %}
-  {% endif %}
 
   <div class="field">
-    <div class="control" style="margin-left: 2em">
+    <div class="control" style="margin-left: 2.5em; margin-top: -1em">
       <div class="checkbox">
         {{ form.proxy }}
-        {{ form.proxy.label }} <a href="help link as modal"><i class="fa fa-question-circle is-info"></i></a>
+        {{ form.proxy.label }} <a href="https://arxiv.org/help/third_party_submission" class="help-bubble">
+          <i class="fa fa-question-circle is-info"></i>
+          <div class="bubble-text">Third party submissions may have additional requirements. Click for detailed help page.</div></a>
       </div>
       {% if form.proxy.errors %}
         {% for error in form.proxy.errors %}
@@ -35,6 +34,13 @@
       {% endif %}
     </div>
   </div>
+  {% if form.authorship.errors %}
+    {% for error in form.authorship.errors %}
+      <p class="help is-danger">{{ error }}</p>
+    {% endfor %}
+  {% endif %}
+  {% if form.authorship.errors %}</div>{% endif %}
+
 
 {{ submit_macros.submit_nav() }}
 </form>

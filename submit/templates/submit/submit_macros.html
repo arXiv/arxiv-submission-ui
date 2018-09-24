@@ -10,12 +10,9 @@
 {% endmacro %}
 
 {% macro progress_bar(submission_id, stage, this_stage) %}
-{# TODO: make this into a real navigation mechanism, with variables to relate
-   tooltips, page name, template, and page order. Also real routenames instead
-   of this initial hack. #}
   <nav class="is-hidden-mobile" role="navigation" aria-labelledby="progress">
     <p class="sr-only">Steps in Submission Process</p>
-    <ul class="progressbar is-marginless">
+    <ul class="progressbar">
       <li class="{% if stage.has_completed(stage.VERIFY_USER) or this_stage == stage.VERIFY_USER %}is-complete{% endif %} {% if this_stage == stage.VERIFY_USER %}is-active{% endif %}"><a class="is-size-7" title="Verify user info" href="{% if submission_id %}{{ url_for('ui.verify_user', submission_id=submission_id) }}{% endif %}">Verify User</a></li>
       <li class="{% if stage.has_completed(stage.AUTHORSHIP) or this_stage == stage.AUTHORSHIP %}is-complete{% endif %} {% if this_stage == stage.AUTHORSHIP %}is-active{% endif %}"><a class="is-size-7" title="Authorship" href="{% if submission_id %}{{ url_for('ui.authorship', submission_id=submission_id) }}{% else %}{{ url_for('ui.verify_user') }}{% endif %}">Authorship</a></li>
       <li class="{% if stage.has_completed(stage.LICENSE) or this_stage == stage.LICENSE %}is-complete{% endif %} {% if this_stage == stage.LICENSE %}is-active{% endif %}"><a class="is-size-7" title="License" href="{% if submission_id %}{{ url_for('ui.license', submission_id=submission_id) }}{% else %}{{ url_for('ui.verify_user') }}{% endif %}">License</a></li>

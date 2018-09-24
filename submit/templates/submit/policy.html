@@ -1,9 +1,10 @@
 {% extends "submit/base.html" %}
 
-
+{% block title -%}
+  Submit an Article: Acknowledge policy statement
+{%- endblock title %}
 
 {% block within_content %}
-<h2 class="is-size-4">Acknowledge policy statement</h2>
 <ul>
   <li>I confirm that I have the rights to agree to the license designated for this submission.</li>
   <li>I understand that submissions cannot be completely removed once accepted.</li>
@@ -16,6 +17,7 @@
 </ul>
 <form method="POST" action="{{ url_for('ui.policy', submission_id=submission_id) }}">
   {{ form.csrf_token }}
+  {% if form.policy.errors %}<div class="notification is-danger">{% endif %}
   <div class="field">
     <div class="control">
       <div class="checkbox">
@@ -23,10 +25,11 @@
         {{ form.policy.label }}
       </div>
       {% for error in form.policy.errors %}
-        <p class="help is-warning">{{ error }}</p>
+        <p class="help is-danger">{{ error }}</p>
       {% endfor %}
     </div>
   </div>
+  {% if form.policy.errors %}</div>{% endif %}
 
   {{ submit_macros.submit_nav() }}
 </form>

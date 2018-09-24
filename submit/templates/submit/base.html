@@ -8,17 +8,17 @@
 {% endblock addl_head %}
 
 {% block content %}
+{% if submission_id %}
+  {{ submit_macros.progress_bar(submission_id, stage, this_stage) }}
+{% endif %}
   <h1 class="title">{% block title %}Submit an Article{% endblock title %}</h1>
-  {% if submission_id %}
-    {{ submit_macros.progress_bar(submission_id, stage, this_stage) }}
-  {% endif %}
   <content>
     {% if form and form.errors %}
       {% if form.errors.events %}
-      <div class="notification is-warning">
-        {% for error in form.errors.events %}
+      <div class="notification is-danger">
+        {% for error in form.errors.events -%}
         <li>{{ error }}</li>
-        {% endfor %}
+        {%- endfor %}
       </div>
       {% endif %}
     {% endif %}

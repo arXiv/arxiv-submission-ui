@@ -1,8 +1,11 @@
 .submit-nav
-  margin-top: 2em
+  margin-top: 2.5rem
 
 .form-margin
   margin: .4em 0
+
+.content h1.title
+  margin-bottom: 2.5rem
 
 .texlive-summary article
   padding: .8rem
@@ -22,6 +25,15 @@
 .buttons .button:not(:last-child)
   margin-right: .75rem
 
+/* tightens up user data display on verify user page */
+.user-info
+  margin-bottom: 1rem
+  .field
+    margin-bottom: .5rem
+
+.control .radio
+  margin-bottom: .25em
+
 /* Classes for responsive bubble-style progress bar */
 
 $bubblesize: 16px
@@ -33,6 +45,7 @@ $incomplete: #ccc
 ul.progressbar
   width: 100%
   display: flex
+  margin: 0 0 2.5em 0
   > li
     text-align: center
     list-style: none
@@ -91,3 +104,34 @@ ul.progressbar
         &:before
           background-color: $dotcolor
           border-color: $complete
+
+/* info and help bubbles */
+.help-bubble
+  position: relative
+  display: inline-block
+  &:hover
+    .bubble-text
+      visibility: visible
+  .bubble-text
+    position: absolute
+    visibility: hidden
+    width: 160px
+    background-color: #F5FAFE
+    border: 1px solid #0068AC
+    color: #0068AC
+    text-align: center
+    padding: 5px
+    border-radius: 4px
+    bottom: 125%
+    left: 50%
+    margin-left: -80px
+    font-size: .8rem
+    &:after
+      content: " "
+      position: absolute
+      top: 100%
+      left: 50%
+      margin-left: -5px
+      border-width: 5px
+      border-style: solid
+      border-color: #0068AC transparent transparent transparent

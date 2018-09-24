@@ -1,8 +1,11 @@
 .submit-nav {
-  margin-top: 2em; }
+  margin-top: 2.5rem; }
 
 .form-margin {
   margin: 0.4em 0; }
+
+.content h1.title {
+  margin-bottom: 2.5rem; }
 
 .texlive-summary article {
   padding: 0.8rem; }
@@ -21,10 +24,20 @@
 .buttons .button:not(:last-child) {
   margin-right: 0.75rem; }
 
+/* tightens up user data display on verify user page */
+.user-info {
+  margin-bottom: 1rem; }
+  .user-info .field {
+    margin-bottom: 0.5rem; }
+
+.control .radio {
+  margin-bottom: 0.25em; }
+
 /* Classes for responsive bubble-style progress bar */
 ul.progressbar {
   width: 100%;
-  display: flex; }
+  display: flex;
+  margin: 0 0 2.5em 0; }
   ul.progressbar > li {
     text-align: center;
     list-style: none;
@@ -73,5 +86,35 @@ ul.progressbar {
     ul.progressbar > li.is-complete > a:before {
       background-color: #FFF;
       border-color: #0068ac; }
+
+/* info and help bubbles */
+.help-bubble {
+  position: relative;
+  display: inline-block; }
+  .help-bubble:hover .bubble-text {
+    visibility: visible; }
+  .help-bubble .bubble-text {
+    position: absolute;
+    visibility: hidden;
+    width: 160px;
+    background-color: #F5FAFE;
+    border: 1px solid #0068AC;
+    color: #0068AC;
+    text-align: center;
+    padding: 5px;
+    border-radius: 4px;
+    bottom: 125%;
+    left: 50%;
+    margin-left: -80px;
+    font-size: 0.8rem; }
+    .help-bubble .bubble-text:after {
+      content: " ";
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      margin-left: -5px;
+      border-width: 5px;
+      border-style: solid;
+      border-color: #0068AC transparent transparent transparent; }
 
 /*# sourceMappingURL=submit.css.map */

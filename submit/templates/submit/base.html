@@ -11,7 +11,7 @@
 {% if submission_id %}
   {{ submit_macros.progress_bar(submission_id, stage, this_stage) }}
 {% endif %}
-  <h1 class="title">{% block title %}Submit an Article{% endblock title %}</h1>
+  <h1 class="title">Submit an Article: {% block title %}{% endblock title %}</h1>
   <content>
     {% if form and form.errors %}
       {% if form.errors.events %}

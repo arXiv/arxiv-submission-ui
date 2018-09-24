@@ -1,8 +1,6 @@
 {% extends "submit/base.html" %}
 
-{% block title -%}
-  Submit an Article: Confirm authorship
-{%- endblock title %}
+{% block title -%}Confirm authorship{%- endblock title %}
 
 {% block within_content %}
 <form method="POST" action="{{ url_for('ui.authorship',submission_id=submission_id) }}">

@@ -1,10 +1,8 @@
 {% extends "submit/base.html" %}
 
-
+{% block title -%}Choose cross-list classifications (optional){%- endblock title %}
 
 {% block within_content %}
-<h2 class="is-size-4">Choose cross-list classifications (optional)</h2>
-
 <div class="message is-link is-inline-block submit-nav">
   <div class="message-header"><p class="is-size-6 is-white has-text-weight-semibold">Selected Categories</p></div>
   <div class="message-body">
@@ -35,7 +33,7 @@
   {{ form.operation }}
   {% with field = form.category %}
   <label class="label" style="margin-top: 3em">Add a cross-list category
-  <a href="help link as modal"><i class="fa fa-question-circle is-info"></i></a></label>
+  <a href="https://arxiv.org/help/cross" class="help-bubble"><i class="fa fa-question-circle is-info"></i><div class="bubble-text">Cross-list suggestions indicate areas of overlapping interest for the submission.</div></a></label>
   <div class="field has-addons" style="margin-bottom: 3em">
     <div class="control">
       <div class="select">

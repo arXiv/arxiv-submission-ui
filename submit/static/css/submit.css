@@ -33,6 +33,23 @@
 .control .radio {
   margin-bottom: 0.25em; }
 
+/* Classes for zebra striping and nested directory display */
+ol.file-tree {
+  margin: 0 0 1rem 1rem; }
+  ol.file-tree .column {
+    padding: 0.35rem; }
+    ol.file-tree .column .columns {
+      padding: 0.35rem; }
+  ol.file-tree > li.even:empty {
+    background-color: #FCFCFC; }
+  ol.file-tree > li ol {
+    border-left: 2px solid #CCC;
+    margin: 0.5rem 0 0.5rem 1rem; }
+    ol.file-tree > li ol li {
+      padding-left: 1em; }
+    ol.file-tree > li ol li.even {
+      background-color: #FCFCFC; }
+
 /* Classes for responsive bubble-style progress bar */
 ul.progressbar {
   width: 100%;

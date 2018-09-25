@@ -28,18 +28,17 @@ def flow_control(this_stage: SubmissionStage.Stages,
         def wrapper(submission_id: str) -> Response:
             """Update the redirect to the next, previous, or exit page."""
             action = request.form.get('action')
-            submission_stage = SubmissionStage(
-                submission=load_submission(submission_id)
-            )
+            stage = SubmissionStage(submission=load_submission(submission_id))
+
             # Set the stage handled by this endpoint.
             g = get_application_global()
             if g:
                 g.this_stage = this_stage
-                g.submission_stage = submission_stage
+                g.stage = stage
 
-            if not submission_stage.can_proceed_to(this_stage):
-                next_stage = submission_stage.next_required_stage
-                label = submission_stage.LABELS[next_stage]
+            if not stage.can_proceed_to(this_stage):
+                next_stage = stage.next_required_stage.value
+                label = stage.LABELS[next_stage]
                 alerts.flash_warning(
                     f'Please {label} before proceeding.'
                 )
@@ -56,7 +55,7 @@ def flow_control(this_stage: SubmissionStage.Stages,
             except BadRequest:
                 logger.debug('Caught a BadRequest')
                 if action == PREVIOUS:
-                    target = submission_stage.get_previous_stage(this_stage)
+                    target = stage.get_previous_stage(this_stage).value
                     logger.debug('Redirecting to previous stage: %s', target)
                     return redirect(url_for(f'ui.{target}',
                                             submission_id=submission_id),
@@ -64,7 +63,7 @@ def flow_control(this_stage: SubmissionStage.Stages,
                 raise
             if response.status_code == status.HTTP_400_BAD_REQUEST \
                     and action == PREVIOUS:
-                target = submission_stage.get_previous_stage(this_stage)
+                target = stage.get_previous_stage(this_stage).value
                 logger.debug('Redirecting to previous stage: %s', target)
                 return redirect(url_for(f'ui.{target}',
                                         submission_id=submission_id),
@@ -75,12 +74,13 @@ def flow_control(this_stage: SubmissionStage.Stages,
                 return response
 
             if action == NEXT:
+                target = stage.get_next_stage(this_stage).value
                 response = redirect(url_for(
-                    f'ui.{submission_stage.get_next_stage(this_stage)}',
+                    f'ui.{target}',
                     submission_id=submission_id
                 ), code=status.HTTP_303_SEE_OTHER)
             elif action == PREVIOUS:
-                target = submission_stage.get_previous_stage(this_stage)
+                target = stage.get_previous_stage(this_stage).value
                 logger.debug('Redirecting to previous stage: %s', target)
                 response = redirect(url_for(f'ui.{target}',
                                             submission_id=submission_id),
@@ -100,8 +100,8 @@ def inject_stage() -> dict:
     ctx = {}
     g = get_application_global()
     if g:
-        if 'submission_stage' in g:
-            ctx['stage'] = g.submission_stage
+        if 'stage' in g:
+            ctx['stage'] = g.stage
         if 'this_stage' in g:
             ctx['this_stage'] = g.this_stage
     return ctx

@@ -43,7 +43,7 @@ def create_submission():
 
 
 @blueprint.route('/<int:submission_id>/verify_user',
-                 endpoint=SubmissionStage.Stages.VERIFY_USER,
+                 endpoint=SubmissionStage.Stages.VERIFY_USER.value,
                  methods=['GET', 'POST'])
 @auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION,
                         authorizer=can_edit_submission)
@@ -69,7 +69,7 @@ def verify_user(submission_id: Optional[int] = None) -> Response:
 
 
 @blueprint.route('/<int:submission_id>/authorship',
-                 endpoint=SubmissionStage.Stages.AUTHORSHIP,
+                 endpoint=SubmissionStage.Stages.AUTHORSHIP.value,
                  methods=['GET', 'POST'])
 @auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION,
                         authorizer=can_edit_submission)
@@ -96,7 +96,7 @@ def authorship(submission_id: int) -> Response:
 
 
 @blueprint.route('/<int:submission_id>/license',
-                 endpoint=SubmissionStage.Stages.LICENSE,
+                 endpoint=SubmissionStage.Stages.LICENSE.value,
                  methods=['GET', 'POST'])
 @auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION,
                         authorizer=can_edit_submission)
@@ -123,7 +123,7 @@ def license(submission_id: int) -> Response:
 
 
 @blueprint.route('/<int:submission_id>/policy',
-                 endpoint=SubmissionStage.Stages.POLICY,
+                 endpoint=SubmissionStage.Stages.POLICY.value,
                  methods=['GET', 'POST'])
 @auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION,
                         authorizer=can_edit_submission)
@@ -150,7 +150,7 @@ def policy(submission_id: int) -> Response:
 
 
 @blueprint.route('/<int:submission_id>/classification',
-                 endpoint=SubmissionStage.Stages.CLASSIFICATION,
+                 endpoint=SubmissionStage.Stages.CLASSIFICATION.value,
                  methods=['GET', 'POST'])
 @auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION,
                         authorizer=can_edit_submission)
@@ -176,7 +176,7 @@ def classification(submission_id: int) -> Response:
 
 
 @blueprint.route('/<int:submission_id>/cross_list',
-                 endpoint=SubmissionStage.Stages.CROSS_LIST,
+                 endpoint=SubmissionStage.Stages.CROSS_LIST.value,
                  methods=['GET', 'POST'])
 @auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION,
                         authorizer=can_edit_submission)
@@ -202,7 +202,7 @@ def cross_list(submission_id: int) -> Response:
 
 
 @blueprint.route('/<int:submission_id>/file_upload',
-                 endpoint=SubmissionStage.Stages.FILE_UPLOAD,
+                 endpoint=SubmissionStage.Stages.FILE_UPLOAD.value,
                  methods=['GET', 'POST'])
 @auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION,
                         authorizer=can_edit_submission)
@@ -277,7 +277,7 @@ def file_delete_all(submission_id: int) -> Response:
 
 
 @blueprint.route('/<int:submission_id>/file_process',
-                 endpoint=SubmissionStage.Stages.FILE_PROCESS,
+                 endpoint=SubmissionStage.Stages.FILE_PROCESS.value,
                  methods=['GET'])
 @auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION,
                         authorizer=can_edit_submission)
@@ -294,7 +294,7 @@ def file_process(submission_id: int) -> Response:
 
 
 @blueprint.route('/<int:submission_id>/add_metadata',
-                 endpoint=SubmissionStage.Stages.ADD_METADATA,
+                 endpoint=SubmissionStage.Stages.ADD_METADATA.value,
                  methods=['GET', 'POST'])
 @auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION,
                         authorizer=can_edit_submission)
@@ -317,7 +317,7 @@ def add_metadata(submission_id: int) -> Response:
 
 
 @blueprint.route('/<int:submission_id>/add_optional_metadata',
-                 endpoint=SubmissionStage.Stages.ADD_OPTIONAL_METADATA,
+                 endpoint=SubmissionStage.Stages.ADD_OPTIONAL_METADATA.value,
                  methods=['GET', 'POST'])
 @auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION,
                         authorizer=can_edit_submission)
@@ -340,7 +340,8 @@ def add_optional_metadata(submission_id: int) -> Response:
 
 
 @blueprint.route('/<int:submission_id>/final_preview',
-                 endpoint=SubmissionStage.Stages.FINAL_PREVIEW, methods=['GET'])
+                 endpoint=SubmissionStage.Stages.FINAL_PREVIEW.value,
+                 methods=['GET'])
 @auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION,
                         authorizer=can_edit_submission)
 @flow_control(SubmissionStage.Stages.FINAL_PREVIEW)

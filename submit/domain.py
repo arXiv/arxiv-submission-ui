@@ -73,7 +73,7 @@ class SubmissionStage(NamedTuple):
         FINAL_PREVIEW = 'final_preview'
         """The user is asked to review the submission before finalizing."""
 
-    LABELS: Dict['SubmissionStage.Stages', str] = {
+    LABELS = {
         Stages.VERIFY_USER: 'verify your personal information',
         Stages.AUTHORSHIP: 'confirm authorship',
         Stages.LICENSE: 'choose a license',
@@ -93,7 +93,7 @@ class SubmissionStage(NamedTuple):
     do.
     """
 
-    ORDER: list = [
+    ORDER = [
         (Stages.VERIFY_USER, True, user_is_verified),
         (Stages.AUTHORSHIP, True, authorship_is_set),
         (Stages.LICENSE, True, license_is_set),

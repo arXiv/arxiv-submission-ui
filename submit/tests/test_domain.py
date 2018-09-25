@@ -25,16 +25,20 @@ class TestSubmissionStage(TestCase):
         self.assertIsNone(submission_stage.previous_stage,
                           "There is no previous stage.")
 
-        self.assertTrue(submission_stage.before(domain.SubmissionStage.POLICY))
         self.assertTrue(
-            submission_stage.on_or_before(domain.SubmissionStage.POLICY)
+            submission_stage.before(domain.SubmissionStage.Stages.POLICY)
+        )
+        self.assertTrue(
+            submission_stage.on_or_before(domain.SubmissionStage.Stages.POLICY)
         )
         self.assertTrue(
             submission_stage.on_or_before(submission_stage.current_stage)
         )
-        self.assertFalse(submission_stage.after(domain.SubmissionStage.POLICY))
         self.assertFalse(
-            submission_stage.on_or_after(domain.SubmissionStage.POLICY)
+            submission_stage.after(domain.SubmissionStage.Stages.POLICY)
+        )
+        self.assertFalse(
+            submission_stage.on_or_after(domain.SubmissionStage.Stages.POLICY)
         )
         self.assertTrue(
             submission_stage.on_or_after(submission_stage.current_stage)
@@ -52,8 +56,8 @@ class TestSubmissionStage(TestCase):
         self.assertEqual(submission_stage.previous_stage, None,
                          "There is nothing before the verify user stage")
         self.assertEqual(submission_stage.next_stage,
-                         domain.SubmissionStage.AUTHORSHIP,
+                         domain.SubmissionStage.Stages.AUTHORSHIP,
                          "The next stage is to indicate authorship.")
         self.assertEqual(submission_stage.current_stage,
-                         domain.SubmissionStage.VERIFY_USER,
+                         domain.SubmissionStage.Stages.VERIFY_USER,
                          "The current completed stage is verify user.")

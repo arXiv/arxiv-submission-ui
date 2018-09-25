@@ -89,9 +89,7 @@ class FileManagementService(object):
         Parameters
         ----------
         endpoints : str
-            One or more endpoints for metadata retrieval. If more than one
-            are provided, calls to :meth:`.retrieve` will cycle through those
-            endpoints for each call.
+            URL for the root file management endpoint.
         verify_cert : bool
             Whether or not SSL certificate verification should enforced.
         headers : dict
@@ -123,15 +121,15 @@ class FileManagementService(object):
                 file_errors[filename].append(FileError(etype.upper(), message))
             else:
                 non_file_errors.append(FileError(etype.upper(), message))
-                
+
         return UploadStatus(
             started=dateutil.parser.parse(data['start_datetime']),
             completed=dateutil.parser.parse(data['completion_datetime']),
             created=dateutil.parser.parse(data['created_datetime']),
             modified=dateutil.parser.parse(data['modified_datetime']),
             status=data['upload_status'],
-            workspace_state=data['workspace_state'],
-            lock_state=data['lock_state'],
+            lifecycle=data['lifecycle'],
+            locked=bool(data['lock_state'] == 'LOCKED'),
             identifier=data['upload_id'],
             files=[
                 FileStatus(

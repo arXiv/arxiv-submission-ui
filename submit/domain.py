@@ -1,8 +1,9 @@
 """Core data concepts in the submission UI application."""
 
-from typing import NamedTuple, List, Optional
+from typing import NamedTuple, List, Optional, Dict
 from datetime import datetime
 import dateutil.parser
+from enum import Enum
 
 from arxiv.submission.domain import Submission
 
@@ -14,7 +15,7 @@ class SubmissionStage(NamedTuple):
 
     def user_is_verified(self) -> bool:
         """Determine whether the submitter has verified their information."""
-        return self.submission.submitter_contact_verified
+        return self.submission.submitter_contact_verified is True
 
     def authorship_is_set(self) -> bool:
         """Determine whether the submitter has indicated authorship."""
@@ -46,41 +47,44 @@ class SubmissionStage(NamedTuple):
                 and self.submission.metadata.abstract is not None
                 and self.submission.metadata.authors_display is not None)
 
-    VERIFY_USER = 'verify_user'
-    """The user is asked to verify their personal information."""
-    AUTHORSHIP = 'authorship'
-    """The user is asked to verify their authorship status."""
-    LICENSE = 'license'
-    """The user is asked to select a license."""
-    POLICY = 'policy'
-    """The user is required to agree to arXiv policies."""
-    CLASSIFICATION = 'classification'
-    """The user is asked to select a primary category."""
-    CROSS_LIST = 'cross_list'
-    """The user is given the option of selecting cross-list categories."""
-    FILE_UPLOAD = 'file_upload'
-    """The user is asked to upload files for their submission."""
-    FILE_PROCESS = 'file_process'
-    """Uploaded files are processed; this is primarily to compile LaTeX."""
-    ADD_METADATA = 'add_metadata'
-    """The user is asked to require core metadata fields, like title."""
-    ADD_OPTIONAL_METADATA = 'add_optional_metadata'
-    """The user is given the option of entering optional metadata, like DOI."""
-    FINAL_PREVIEW = 'final_preview'
-    """The user is asked to review the submission before finalizing."""
+    class Stages(Enum):     # type: ignore
+        """Stages in the submission UI workflow."""
 
-    LABELS = {
-        VERIFY_USER: 'verify your personal information',
-        AUTHORSHIP: 'confirm authorship',
-        LICENSE: 'choose a license',
-        POLICY: 'accept arXiv submission policies',
-        CLASSIFICATION: 'select a primary category',
-        CROSS_LIST: 'add cross-list categories',
-        FILE_UPLOAD: 'upload your submission files',
-        FILE_PROCESS: 'process your submission files',
-        ADD_METADATA: 'add required metadata',
-        ADD_OPTIONAL_METADATA: 'add optional metadata',
-        FINAL_PREVIEW: 'preview and approve your submission'
+        VERIFY_USER = 'verify_user'
+        """The user is asked to verify their personal information."""
+        AUTHORSHIP = 'authorship'
+        """The user is asked to verify their authorship status."""
+        LICENSE = 'license'
+        """The user is asked to select a license."""
+        POLICY = 'policy'
+        """The user is required to agree to arXiv policies."""
+        CLASSIFICATION = 'classification'
+        """The user is asked to select a primary category."""
+        CROSS_LIST = 'cross_list'
+        """The user is given the option of selecting cross-list categories."""
+        FILE_UPLOAD = 'file_upload'
+        """The user is asked to upload files for their submission."""
+        FILE_PROCESS = 'file_process'
+        """Uploaded files are processed; this is primarily to compile LaTeX."""
+        ADD_METADATA = 'add_metadata'
+        """The user is asked to require core metadata fields, like title."""
+        ADD_OPTIONAL_METADATA = 'add_optional_metadata'
+        """The user is given the option of entering optional metadata."""
+        FINAL_PREVIEW = 'final_preview'
+        """The user is asked to review the submission before finalizing."""
+
+    LABELS: Dict['SubmissionStage.Stages', str] = {
+        Stages.VERIFY_USER: 'verify your personal information',
+        Stages.AUTHORSHIP: 'confirm authorship',
+        Stages.LICENSE: 'choose a license',
+        Stages.POLICY: 'accept arXiv submission policies',
+        Stages.CLASSIFICATION: 'select a primary category',
+        Stages.CROSS_LIST: 'add cross-list categories',
+        Stages.FILE_UPLOAD: 'upload your submission files',
+        Stages.FILE_PROCESS: 'process your submission files',
+        Stages.ADD_METADATA: 'add required metadata',
+        Stages.ADD_OPTIONAL_METADATA: 'add optional metadata',
+        Stages.FINAL_PREVIEW: 'preview and approve your submission'
     }
     """
     Human-intelligible labels for the submission steps.
@@ -89,18 +93,18 @@ class SubmissionStage(NamedTuple):
     do.
     """
 
-    ORDER = [
-        (VERIFY_USER, True, user_is_verified),
-        (AUTHORSHIP, True, authorship_is_set),
-        (LICENSE, True, license_is_set),
-        (POLICY, True, policy_is_accepted),
-        (CLASSIFICATION, True, classification_is_set),
-        (CROSS_LIST, False, None),
-        (FILE_UPLOAD, True, files_are_uploaded),
-        (FILE_PROCESS, True, files_are_processed),
-        (ADD_METADATA, True, metadata_is_set),
-        (ADD_OPTIONAL_METADATA, False, None),
-        (FINAL_PREVIEW, True, None)
+    ORDER: list = [
+        (Stages.VERIFY_USER, True, user_is_verified),
+        (Stages.AUTHORSHIP, True, authorship_is_set),
+        (Stages.LICENSE, True, license_is_set),
+        (Stages.POLICY, True, policy_is_accepted),
+        (Stages.CLASSIFICATION, True, classification_is_set),
+        (Stages.CROSS_LIST, False, None),
+        (Stages.FILE_UPLOAD, True, files_are_uploaded),
+        (Stages.FILE_PROCESS, True, files_are_processed),
+        (Stages.ADD_METADATA, True, metadata_is_set),
+        (Stages.ADD_OPTIONAL_METADATA, False, None),
+        (Stages.FINAL_PREVIEW, True, None)
     ]
     """
     The standard order for submission steps.
@@ -111,7 +115,7 @@ class SubmissionStage(NamedTuple):
     """
 
     @property
-    def current_stage(self) -> Optional[str]:
+    def current_stage(self) -> Optional[Stages]:
         """
         The current stage of the submission.
 
@@ -128,50 +132,52 @@ class SubmissionStage(NamedTuple):
         return None
 
     @property
-    def previous_stage(self) -> str:
+    def previous_stage(self) -> Optional[Stages]:
         """The previous stage in the submission process for this submission."""
         return self.get_previous_stage(self.current_stage)
 
     @property
-    def previous_required_stage(self) -> str:
+    def previous_required_stage(self) -> Optional[Stages]:
         """The previous required stage in the submission process."""
         previous = self.get_previous_stage(self.current_stage)
-        while not self.is_required(previous):
+        while previous is not None and not self.is_required(previous):
             previous = self.get_previous_stage(previous)
         return previous
 
     @property
-    def next_required_stage(self) -> str:
+    def next_required_stage(self) -> Optional[Stages]:
         """The next required stage in the submission process."""
         next_stage = self.get_next_stage(self.current_stage)
-        while not self.is_required(next_stage):
+        while next_stage is not None and not self.is_required(next_stage):
             next_stage = self.get_next_stage(next_stage)
         return next_stage
 
     @property
-    def next_stage(self) -> str:
+    def next_stage(self) -> Optional[Stages]:
         """The next stage of the submission process."""
         return self.get_next_stage(self.current_stage)
 
-    def can_proceed_to(self, stage: str) -> bool:
+    def can_proceed_to(self, stage: Optional[Stages]) -> bool:
         """Determine whether the user can proceed to a particular stage."""
-        previous: Optional[str] = self.get_previous_stage(stage)
+        previous = self.get_previous_stage(stage)
         if previous is None:
             return True
         return self.has_completed(previous)
 
-    def get_next_stage(self, stage: str) -> str:
+    def get_next_stage(self, stage: Optional[Stages]) -> Optional[Stages]:
         """Get the next stage in the submission process for this submission."""
         if stage is None:     # No stage achieved; start at the beginning.
-            return self.ORDER[0][0]
+            next_stage: SubmissionStage.Stages = self.ORDER[0][0]
+            return next_stage
 
         stages = self._get_stage_list()
         if self._get_index(stage) == len(stages) - 1:
             return None     # Last stage is complete; naught to do.
         # Get the stage after the current stage.
-        return stages[self._get_index(stage) + 1]
+        next_stage = stages[self._get_index(stage) + 1]
+        return next_stage
 
-    def get_previous_stage(self, stage: str) -> str:
+    def get_previous_stage(self, stage: Optional[Stages]) -> Optional[Stages]:
         """Get the previous stage in the submission process."""
         stages = self._get_stage_list()
         if stage is None:   # There is nothing before nothing.
@@ -181,7 +187,7 @@ class SubmissionStage(NamedTuple):
         # Get the stage before the current stage.
         return stages[self._get_index(stage) - 1]
 
-    def _get_stage_list(self) -> List[str]:
+    def _get_stage_list(self) -> List[Stages]:
         stages, _, _ = zip(*self.ORDER)
         return list(stages)
 
@@ -190,33 +196,33 @@ class SubmissionStage(NamedTuple):
             return -1
         return self._get_index(self.current_stage)
 
-    def _get_index(self, stage: str) -> int:
+    def _get_index(self, stage: Stages) -> int:
         if stage is None:
             return -1
         return self._get_stage_list().index(stage)
 
-    def before(self, stage: str) -> bool:
+    def before(self, stage: Stages) -> bool:
         """Less-than comparator."""
         return self._get_current_index() < self._get_index(stage)
 
-    def on_or_before(self, stage: str) -> bool:
+    def on_or_before(self, stage: Stages) -> bool:
         """Less-than or equal-to comparator."""
         return self._get_current_index() <= self._get_index(stage)
 
-    def after(self, stage: str) -> bool:
+    def after(self, stage: Stages) -> bool:
         """Greater-than comparator."""
         return self._get_current_index() > self._get_index(stage)
 
-    def on_or_after(self, stage: str) -> bool:
+    def on_or_after(self, stage: Stages) -> bool:
         """Greater-than or equal-to comparator."""
         return self._get_current_index() >= self._get_index(stage)
 
-    def has_completed(self, stage: str) -> bool:
+    def has_completed(self, stage: Stages) -> bool:
         """Determine whether a stage has been completed."""
         i = self._get_index(stage)
         _, required, method = self.ORDER[i]
         if method:
-            return method(self)
+            return bool(method(self))
         elif not required:
             if i == 0:
                 return True
@@ -226,22 +232,25 @@ class SubmissionStage(NamedTuple):
                 x -= 1
                 _, _required, method = self.ORDER[x]
             if method:
-                return method(self)
+                return bool(method(self))
         return False
 
-    def is_required(self, stage: str) -> bool:
+    def is_required(self, stage: Stages) -> bool:
         """Determine whether or not a stage is required."""
         stages, required, _ = zip(*self.ORDER)
-        return dict(zip(stages, required))[stage]
+        return bool(dict(zip(stages, required))[stage])
 
 
 class FileError(NamedTuple):
     """Represents an error returned by the file management service."""
 
-    ERROR = 'ERROR'
-    WARNING = 'WARN'
+    class Levels(Enum):   # type: ignore
+        """Error severities."""
 
-    error_type: str
+        ERROR = 'ERROR'
+        WARNING = 'WARN'
+
+    error_type: 'FileError.Levels'
     message: str
     more_info: Optional[str] = None
 
@@ -254,9 +263,10 @@ class FileError(NamedTuple):
         }
 
     @classmethod
-    def from_dict(cls: type, data: dict) -> 'Error':
+    def from_dict(cls: type, data: dict) -> 'FileError':
         """Instantiate a :class:`FileError` from a dict."""
-        return cls(**data)
+        instance: FileError = cls(**data)
+        return instance
 
 
 class FileStatus(NamedTuple):
@@ -277,14 +287,14 @@ class FileStatus(NamedTuple):
             'name': self.name,
             'file_type': self.file_type,
             'size': self.size,
-            'modified': self.modified,
+            'modified': self.modified.isoformat(),
             'ancillary': self.ancillary,
-            'errors': self.errors
+            'errors': [e.to_dict() for e in self.errors]
         }
-        if data['modified']:
-            data['modified'] = data['modified'].isoformat()
-        if data['errors']:
-            data['errors'] = [e.to_dict() for e in data['errors']]
+        # if data['modified']:
+        #     data['modified'] = data['modified']
+        # if data['errors']:
+        #     data['errors'] = [e.to_dict() for e in data['errors']]
         return data
 
     @classmethod
@@ -294,43 +304,39 @@ class FileStatus(NamedTuple):
             data['errors'] = [FileError.from_dict(e) for e in data['errors']]
         if 'modified' in data and type(data['modified']) is str:
             data['modified'] = dateutil.parser.parse(data['modified'])
-        return cls(**data)
+        instance: UploadStatus = cls(**data)
+        return instance
 
 
 class UploadStatus(NamedTuple):
     """Represents the state of an upload workspace."""
 
-    READY = 'READY'
-    READY_WITH_WARNINGS = 'READY_WITH_WARNINGS'
-    ERRORS = 'ERRORS'
-    UPLOAD_STATUSES = (READY, READY_WITH_WARNINGS, ERRORS)
+    class Statuses(Enum):   # type: ignore
+        """The status of the upload workspace with respect to submission."""
 
-    LOCKED = 'LOCKED'
-    UNLOCKED = 'UNLOCKED'
-    LOCK_STATES = (LOCKED, UNLOCKED)
+        READY = 'READY'
+        READY_WITH_WARNINGS = 'READY_WITH_WARNINGS'
+        ERRORS = 'ERRORS'
 
-    ACTIVE = 'ACTIVE'
-    RELEASED = 'RELEASED'
-    DELETED = 'DELETED'
-    WORKSPACE_STATES = (ACTIVE, RELEASED, DELETED)
+    class LifecycleStates(Enum):   # type: ignore
+        """The status of the workspace with respect to its lifecycle."""
+
+        ACTIVE = 'ACTIVE'
+        RELEASED = 'RELEASED'
+        DELETED = 'DELETED'
 
     started: datetime
     completed: datetime
     created: datetime
     modified: datetime
-    status: str
-    workspace_state: str
-    lock_state: str
+    status: 'UploadStatus.Statuses'
+    lifecycle: 'UploadStatus.LifecycleStates'
+    locked: bool
     identifier: int
     checksum: Optional[str] = None
     size: Optional[int] = None
     files: List[FileStatus] = []
     errors: List[FileError] = []
-
-    @property
-    def locked(self) -> bool:
-        """Indicate whether the upload workspace is locked."""
-        return self.lock_state == self.LOCKED
 
     @property
     def file_count(self) -> int:
@@ -340,26 +346,26 @@ class UploadStatus(NamedTuple):
     def to_dict(self) -> dict:
         """Generate a dict representation of this status object."""
         data = {
-            'started': self.started,
-            'completed': self.completed,
-            'created': self.created,
-            'modified': self.modified,
+            'started': self.started.isoformat(),
+            'completed': self.completed.isoformat(),
+            'created': self.created.isoformat(),
+            'modified': self.modified.isoformat(),
             'status': self.status,
-            'workspace_state': self.workspace_state,
-            'lock_state': self.lock_state,
+            'lifecycle': self.lifecycle,
+            'locked': self.locked,
             'identifier': self.identifier,
             'checksum': self.checksum,
             'size': self.size,
-            'files': self.files,
-            'errors': self.errors
+            'files': [d.to_dict() for d in self.files],
+            'errors': [d.to_dict() for d in self.errors]
         }
-        for key in ['started', 'completed', 'created', 'modified']:
-            if data[key]:
-                data[key] = data[key].isoformat()
-        if data['files']:
-            data['files'] = [d.to_dict() for d in data['files']]
-        if data['errors']:
-            data['errors'] = [d.to_dict() for d in data['errors']]
+        # for key in ['started', 'completed', 'created', 'modified']:
+        #     if data[key]:
+        #         data[key] = data[key]
+        # if data['files']:
+        #     data['files'] = [d.to_dict() for d in data['files']]
+        # if data['errors']:
+        #     data['errors'] = [d.to_dict() for d in data['errors']]
         return data
 
     @classmethod
@@ -372,4 +378,14 @@ class UploadStatus(NamedTuple):
         for key in ['started', 'completed', 'created', 'modified']:
             if key in data and type(data[key]) is str:
                 data[key] = dateutil.parser.parse(data[key])
-        return cls(**data)
+        instance: UploadStatus = cls(**data)
+        return instance
+
+
+class CompilationStatus(NamedTuple):
+    """Represents the status of a submission compilation."""
+
+
+
+    compilation_id: int
+    status: str

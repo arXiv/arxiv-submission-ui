@@ -15,7 +15,8 @@ from ..util import load_submission
 logger = logging.getLogger(__name__)
 
 
-def flow_control(this_stage: str, exit_page: str = 'user') -> Callable:
+def flow_control(this_stage: SubmissionStage.Stages,
+                 exit_page: str = 'user') -> Callable:
     """Get a decorator that handles redirection to next/previous steps."""
     PREVIOUS = 'previous'
     NEXT = 'next'
@@ -27,7 +28,9 @@ def flow_control(this_stage: str, exit_page: str = 'user') -> Callable:
         def wrapper(submission_id: str) -> Response:
             """Update the redirect to the next, previous, or exit page."""
             action = request.form.get('action')
-            submission_stage = SubmissionStage(load_submission(submission_id))
+            submission_stage = SubmissionStage(
+                submission=load_submission(submission_id)
+            )
             # Set the stage handled by this endpoint.
             g = get_application_global()
             if g:

@@ -1,14 +1,11 @@
 """
-Integration with the :mod:`filemanager` service API.
+Integration with the :mod:`compiler` service API.
 
-The file management service is responsible for accepting and processing user
-uploads used for submissions. The core resource for the file management service
-is the upload "workspace", which contains one or many files. We associate the
-workspace with a submission prior to finalization. The workspace URI is used
-for downstream processing, e.g. compilation.
-
-A key requirement for this integration is the ability to stream uploads to
-the file management service as they are being received by this UI application.
+The compiler is responsible for building PDF, DVI, and other goodies from
+LaTeX sources. In the submission UI, we specifically want to build a PDF so
+that the user can preview their submission. Additionally, we want to show the
+submitter the TeX log so that they can identify any potential problems with
+their sources.
 """
 from typing import Tuple
 import json
@@ -30,7 +27,7 @@ logger = logging.getLogger(__name__)
 
 
 class RequestFailed(IOError):
-    """The file management service returned an unexpected status code."""
+    """The compiler service returned an unexpected status code."""
 
     def __init__(self, msg: str, data: dict = {}) -> None:
         """Attach (optional) data to the exception."""
@@ -55,11 +52,11 @@ class Oversize(BadRequest):
 
 
 class BadResponse(RequestFailed):
-    """The response from the file management service was malformed."""
+    """The response from the compiler service was malformed."""
 
 
 class ConnectionFailed(IOError):
-    """Could not connect to the file management service."""
+    """Could not connect to the compiler service."""
 
 
 class SecurityException(ConnectionFailed):
@@ -78,8 +75,8 @@ class Download(object):
         return self._response.content
 
 
-class FileManagementService(object):
-    """Encapsulates a connection with the file management service."""
+class CompilerService(object):
+    """Encapsulates a connection with the compiler service."""
 
     def __init__(self, endpoint: str, verify_cert: bool = True,
                  headers: dict = {}) -> None:
@@ -89,14 +86,16 @@ class FileManagementService(object):
         Parameters
         ----------
         endpoints : str
-            URL for the root file management endpoint.
+            One or more endpoints for metadata retrieval. If more than one
+            are provided, calls to :meth:`.retrieve` will cycle through those
+            endpoints for each call.
         verify_cert : bool
             Whether or not SSL certificate verification should enforced.
         headers : dict
             Headers to be included on all requests.
 
         """
-        logger.debug('New FileManagementService with endpoint %s', endpoint)
+        logger.debug('New CompilerService with endpoint %s', endpoint)
         self._session = requests.Session()
         self._verify_cert = verify_cert
         self._retry = Retry(  # type: ignore
@@ -129,7 +128,7 @@ class FileManagementService(object):
             modified=dateutil.parser.parse(data['modified_datetime']),
             status=data['upload_status'],
             lifecycle=data['lifecycle'],
-            locked=bool(data['lock_state'] == 'LOCKED'),
+            lock_state=data['lock_state'],
             identifier=data['upload_id'],
             files=[
                 FileStatus(
@@ -201,12 +200,12 @@ class FileManagementService(object):
         return Download(resp), resp.headers
 
     def get_service_status(self) -> dict:
-        """Get the status of the file management service."""
+        """Get the status of the compiler service."""
         return self.request('get', 'status')
 
     def upload_package(self, pointer: FileStorage) -> UploadStatus:
         """
-        Stream an upload to the file management service.
+        Stream an upload to the compiler service.
 
         If the file is an archive (zip, tar-ball, etc), it will be unpacked.
         A variety of processing and sanitization routines are performed, and
@@ -395,17 +394,17 @@ def init_app(app: object = None) -> None:
     config.setdefault('FILE_MANAGER_VERIFY', True)
 
 
-def get_session(app: object = None) -> FileManagementService:
-    """Get a new session with the file management endpoint."""
+def get_session(app: object = None) -> CompilerService:
+    """Get a new session with the compiler endpoint."""
     config = get_application_config(app)
     endpoint = config.get('FILE_MANAGER_ENDPOINT', 'https://arxiv.org/')
     verify_cert = config.get('FILE_MANAGER_VERIFY', True)
-    logger.debug('Create FileManagementService with endpoint %s', endpoint)
-    return FileManagementService(endpoint, verify_cert=verify_cert)
+    logger.debug('Create CompilerService with endpoint %s', endpoint)
+    return CompilerService(endpoint, verify_cert=verify_cert)
 
 
-def current_session() -> FileManagementService:
-    """Get/create :class:`.FileManagementService` for this context."""
+def current_session() -> CompilerService:
+    """Get/create :class:`.CompilerService` for this context."""
     g = get_application_global()
     if not g:
         return get_session()
@@ -414,37 +413,37 @@ def current_session() -> FileManagementService:
     return g.filemanager    # type: ignore
 
 
-@wraps(FileManagementService.set_auth_token)
+@wraps(CompilerService.set_auth_token)
 def set_auth_token(token: str) -> None:
-    """See :meth:`FileManagementService.set_auth_token`."""
+    """See :meth:`CompilerService.set_auth_token`."""
     return current_session().set_auth_token(token)
 
 
-@wraps(FileManagementService.get_upload_status)
+@wraps(CompilerService.get_upload_status)
 def get_upload_status(upload_id: int) -> UploadStatus:
-    """See :meth:`FileManagementService.get_upload_status`."""
+    """See :meth:`CompilerService.get_upload_status`."""
     return current_session().get_upload_status(upload_id)
 
 
-@wraps(FileManagementService.upload_package)
+@wraps(CompilerService.upload_package)
 def upload_package(pointer: FileStorage) -> UploadStatus:
-    """See :meth:`FileManagementService.upload_package`."""
+    """See :meth:`CompilerService.upload_package`."""
     return current_session().upload_package(pointer)
 
 
-@wraps(FileManagementService.add_file)
+@wraps(CompilerService.add_file)
 def add_file(upload_id: int, pointer: FileStorage, ancillary: bool = False) \
         -> UploadStatus:
-    """See :meth:`FileManagementService.add_file`."""
+    """See :meth:`CompilerService.add_file`."""
     return current_session().add_file(upload_id, pointer, ancillary=ancillary)
 
 
-@wraps(FileManagementService.delete_file)
+@wraps(CompilerService.delete_file)
 def delete_file(upload_id: int, file_path: str) -> UploadStatus:
-    """See :meth:`FileManagementService.delete_file`."""
+    """See :meth:`CompilerService.delete_file`."""
     return current_session().delete_file(upload_id, file_path)
 
 
 def delete_all(upload_id: str) -> None:
-    """See :meth:`FileManagementService.delete_all`."""
+    """See :meth:`CompilerService.delete_all`."""
     return current_session().delete_all(upload_id)

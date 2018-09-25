@@ -68,9 +68,8 @@ class TestFileManagerIntegration(TestCase):
         self.fm._session.headers.update({'Authorization': self.token})
         data = self.fm.upload_package(pointer)
         self.assertIsInstance(data, UploadStatus)
-        self.assertEqual(data.status, UploadStatus.READY)
-        self.assertEqual(data.workspace_state, UploadStatus.ACTIVE)
-        self.assertEqual(data.lock_state, UploadStatus.UNLOCKED)
+        self.assertEqual(data.status, UploadStatus.Statuses.READY)
+        self.assertEqual(data.lifecycle, UploadStatus.LifecycleStates.ACTIVE)
         self.assertFalse(data.locked)
 
     def test_upload_package_without_authorization(self):
@@ -106,9 +105,8 @@ class TestFileManagerIntegration(TestCase):
 
         status = self.fm.get_upload_status(data.identifier)
         self.assertIsInstance(status, UploadStatus)
-        self.assertEqual(status.status, UploadStatus.READY)
-        self.assertEqual(status.workspace_state, UploadStatus.ACTIVE)
-        self.assertEqual(status.lock_state, UploadStatus.UNLOCKED)
+        self.assertEqual(status.status, UploadStatus.Statuses.READY)
+        self.assertEqual(status.lifecycle, UploadStatus.LifecycleState.ACTIVE)
         self.assertFalse(status.locked)
 
     def test_get_upload_status_without_authorization(self):
@@ -156,7 +154,6 @@ class TestFileManagerIntegration(TestCase):
                                content_type='text/plain')
         status = self.fm.add_file(data.identifier, pointer2)
         self.assertIsInstance(status, UploadStatus)
-        self.assertEqual(status.status, UploadStatus.READY)
-        self.assertEqual(status.workspace_state, UploadStatus.ACTIVE)
-        self.assertEqual(status.lock_state, UploadStatus.UNLOCKED)
+        self.assertEqual(status.status, UploadStatus.Statuses.READY)
+        self.assertEqual(status.lifecycle, UploadStatus.LifecycleState.ACTIVE)
         self.assertFalse(status.locked)

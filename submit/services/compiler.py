@@ -21,7 +21,7 @@ from arxiv.base import logging
 from arxiv.base.globals import get_application_config, get_application_global
 from werkzeug.datastructures import FileStorage
 
-from submit.domain import ComplationStatus, FileStatus, FileError
+from submit.domain import ComplationStatus, UploadStatus, FileStatus, FileError
 
 logger = logging.getLogger(__name__)
 
@@ -115,7 +115,7 @@ class CompilerService(object):
     def _parse_compilation_status(self, data: dict) -> ComplationStatus:
 
         return ComplationStatus(
-            
+
         )
 
     def _path(self, path: str, query: dict = {}) -> str:

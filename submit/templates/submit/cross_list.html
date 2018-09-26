@@ -1,10 +1,8 @@
 {% extends "submit/base.html" %}
 
-
+{% block title -%}Choose cross-list classifications (optional){%- endblock title %}
 
 {% block within_content %}
-<h2 class="is-size-4">Choose cross-list classifications (optional)</h2>
-
 <div class="message is-link is-inline-block submit-nav">
   <div class="message-header"><p class="is-size-6 is-white has-text-weight-semibold">Selected Categories</p></div>
   <div class="message-body">
@@ -33,46 +31,52 @@
 <form method="POST" action="{{ url_for('ui.cross_list', submission_id=submission_id) }}">
   {{ form.csrf_token }}
   {{ form.operation }}
-  {% with field = form.category %}
-  <label class="label" style="margin-top: 3em">Add a cross-list category
-  <a href="help link as modal"><i class="fa fa-question-circle is-info"></i></a></label>
-  <div class="field has-addons" style="margin-bottom: 3em">
-    <div class="control">
-      <div class="select">
-      {% if field.errors %}
-        {{ field(class="is-danger")|safe }}
-      {% else %}
-        {{ field()|safe }}
-      {% endif %}
-      </div>
-      {% if field.errors %}
-        <div class="help is-danger">
-          {% for error in field.errors %}
-              {{ error }}
-          {% endfor %}
+  <div class="columns">
+    <div class="column is-two-thirds-tablet">
+      {% with field = form.category %}
+      <label class="label" style="margin-top: 3em">Add a cross-list category
+      <a href="https://arxiv.org/help/cross" class="help-bubble"><i class="fa fa-question-circle is-info"></i><div class="bubble-text">Cross-list suggestions indicate areas of overlapping interest for the submission.</div></a></label>
+      <div class="field has-addons" style="margin-bottom: 3em">
+        <div class="control">
+          <div class="select">
+          {% if field.errors %}
+            {{ field(class="is-danger")|safe }}
+          {% else %}
+            {{ field()|safe }}
+          {% endif %}
+          </div>
+          {% if field.errors %}
+            <div class="help is-danger">
+              {% for error in field.errors %}
+                  {{ error }}
+              {% endfor %}
+            </div>
+          {% endif %}
+          {% if field.description %}
+          <p class="help has-text-grey">
+            {{ field.description|safe }}
+          </p>
+          {% endif %}
         </div>
-      {% endif %}
-      {% if field.description %}
-      <p class="help has-text-grey">
-        {{ field.description|safe }}
-      </p>
-      {% endif %}
+        <div class="control">
+          <button class="button is-link">Add</button>
+        </div>
+      </div>
+        {% endwith %}
     </div>
-    <div class="control">
-      <button class="button is-link">Add</button>
-    </div>
-  </div>
-    {% endwith %}
 
-    <div class="message is-info is-inline-block submit-nav">
-      <div class="message-body">
-        <p>
-          <span class="icon has-text-link"><i class="fa fa-info-circle"></i></span>
-          Adding more than three cross-list classifications will result in a delay
-          in the acceptance of your submission.
-        </p>
+    <div class="column is-one-third-tablet">
+      <div class="message is-info is-inline-block submit-nav">
+        <div class="message-body">
+          <p>
+            <span class="icon has-text-link"><i class="fa fa-info-circle"></i></span>
+            Adding more than three cross-list classifications will result in a delay
+            in the acceptance of your submission.
+          </p>
+        </div>
       </div>
     </div>
+  </div> <!-- end columns -->
 
     {{ submit_macros.submit_nav() }}
 </form>

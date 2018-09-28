@@ -4,6 +4,7 @@ from typing import NamedTuple, List, Optional, Dict
 from datetime import datetime
 import dateutil.parser
 from enum import Enum
+import io
 
 from arxiv.submission.domain import Submission
 
@@ -74,17 +75,17 @@ class SubmissionStage(NamedTuple):
         """The user is asked to review the submission before finalizing."""
 
     LABELS = {
-        Stages.VERIFY_USER: 'verify your personal information',
-        Stages.AUTHORSHIP: 'confirm authorship',
-        Stages.LICENSE: 'choose a license',
-        Stages.POLICY: 'accept arXiv submission policies',
-        Stages.CLASSIFICATION: 'select a primary category',
-        Stages.CROSS_LIST: 'add cross-list categories',
-        Stages.FILE_UPLOAD: 'upload your submission files',
-        Stages.FILE_PROCESS: 'process your submission files',
-        Stages.ADD_METADATA: 'add required metadata',
-        Stages.ADD_OPTIONAL_METADATA: 'add optional metadata',
-        Stages.FINAL_PREVIEW: 'preview and approve your submission'
+        Stages.VERIFY_USER.value: 'verify your personal information',
+        Stages.AUTHORSHIP.value: 'confirm authorship',
+        Stages.LICENSE.value: 'choose a license',
+        Stages.POLICY.value: 'accept arXiv submission policies',
+        Stages.CLASSIFICATION.value: 'select a primary category',
+        Stages.CROSS_LIST.value: 'add cross-list categories',
+        Stages.FILE_UPLOAD.value: 'upload your submission files',
+        Stages.FILE_PROCESS.value: 'process your submission files',
+        Stages.ADD_METADATA.value: 'add required metadata',
+        Stages.ADD_OPTIONAL_METADATA.value: 'add optional metadata',
+        Stages.FINAL_PREVIEW.value: 'preview and approve your submission'
     }
     """
     Human-intelligible labels for the submission steps.
@@ -221,6 +222,7 @@ class SubmissionStage(NamedTuple):
         """Determine whether a stage has been completed."""
         i = self._get_index(stage)
         _, required, method = self.ORDER[i]
+
         if method:
             return bool(method(self))
         elif not required:
@@ -385,7 +387,20 @@ class UploadStatus(NamedTuple):
 class CompilationStatus(NamedTuple):
     """Represents the status of a submission compilation."""
 
+    class Statuses(Enum):  # type: ignore
+        """Valid status for a compilation."""
+
+        FAILED = 'failed'
+        COMPLETED = 'completed'
+        IN_PROGRESS = 'in_progress'
+
+    upload_id: int
+    status: 'CompilationStatus.Statuses'
+    task_id: str
 
 
-    compilation_id: int
-    status: str
+class CompilationProduct(NamedTuple):
+    upload_id: int
+
+    stream: io.BytesIO
+    """Readable buffer with the product content."""

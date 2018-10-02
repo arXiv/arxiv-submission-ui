@@ -1,6 +1,7 @@
 """Core data concepts in the submission UI application."""
 
 from typing import NamedTuple, List, Optional, Dict
+import io
 from datetime import datetime
 import dateutil.parser
 from enum import Enum
@@ -383,9 +384,58 @@ class UploadStatus(NamedTuple):
 
 
 class CompilationStatus(NamedTuple):
-    """Represents the status of a submission compilation."""
+    """Represents the state of a compilation product in the store."""
+
+    # This is intended as a fixed class attributes, not a slot.
+    class Statuses(Enum):      # type: ignore
+        COMPLETED = "completed"
+        IN_PROGRESS = "in_progress"
+        FAILED = "failed"
+
+    # Here are the actual slots/fields.
+    upload_id: str
+
+    status: 'CompilationStatus.Statuses'
+    """
+    The status of the compilation.
+
+    One of :attr:`COMPLETED`, :attr:`IN_PROGRESS`, or :attr:`FAILED`.
+
+    If :attr:`COMPLETED`, the current file corresponding to the format of this
+    compilation status is the product of this compilation.
+    """
+
+    task_id: Optional[str] = None
+    """If a task exists for this compilation, the unique task ID."""
+
+    @property
+    def content_type(self):
+        _ctypes = {
+            CompilationStatus.Formats.PDF: 'application/pdf',
+            CompilationStatus.Formats.DVI: 'application/x-dvi',
+            CompilationStatus.Formats.PS: 'application/postscript'
+        }
+        return _ctypes[self.format]
+
+    def to_dict(self) -> dict:
+        """Generate a dict representation of this object."""
+        return {
+            'upload_id': self.upload_id,
+            'format': self.format.value,
+            'source_checksum': self.source_checksum,
+            'task_id': self.task_id,
+            'status': self.status.value
+        }
 
 
+class CompilationProduct(NamedTuple):
+    """Content of a compilation product itself."""
 
-    compilation_id: int
-    status: str
+    stream: io.BytesIO
+    """Readable buffer with the product content."""
+
+    status: Optional[CompilationStatus] = None
+    """Status information about the product."""
+
+    checksum: Optional[str] = None
+    """The B64-encoded MD5 hash of the compilation product."""

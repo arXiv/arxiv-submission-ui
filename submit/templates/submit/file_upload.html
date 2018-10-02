@@ -47,9 +47,9 @@
 
 {% block within_content %}
 
-<div class="columns">
-  <div class="column is-two-thirds-desktop is-three-quarters-tablet">
-    <form class="form" action="{{ url_for('ui.file_upload', submission_id=submission_id) }}" method="POST" enctype="multipart/form-data">
+<form class="form" action="{{ url_for('ui.file_upload', submission_id=submission_id) }}" method="POST" enctype="multipart/form-data">
+  <div class="columns">
+    <div class="column is-two-thirds-desktop is-three-quarters-tablet">
       {{ form.csrf_token }}
       <div class="field is-grouped is-grouped-multiline">
         <div class="control is-expanded">
@@ -75,65 +75,65 @@
       <p class="is-marginless help has-text-grey">
         You can upload all your files at once as a single .tar.gz or .zip file, or upload individual files as needed.
       </p>
-    </form>
+      
 
-    {% if status.files %}
-    <h3>Files currently attached to this submission ({{ status.size|filesizeformat }})</h3>
+      {% if status.files %}
+      <h3>Files currently attached to this submission ({{ status.size|filesizeformat }})</h3>
 
-    {{ display_tree(None, status.files|group_files) }}
+      {{ display_tree(None, status.files|group_files) }}
 
-    <p class="help has-text-right" style="margin-right: .5rem">
-      <a href="{{ url_for('ui.file_delete_all', submission_id=submission_id) }}">
-        Remove All<span class="icon"><i class="fa fa-trash" aria-label="Delete all"></i></span></a>
-    </p>
-    {% else %}
-    <p class="title is-4 breathe-vertical has-text-centered">
-      There's nothing here!
-    </p>
-    {% endif %}
-  </div>
-  <div class="column is-one-third-desktop is-one-quarter-tablet">
-    <div class="message is-info">
-      <div class="message-body">
-        <div class="is-pulled-left">
-          <span class="icon has-text-link"><i class="fa fa-info-circle"></i></span>
+      <p class="help has-text-right" style="margin-right: .5rem">
+        <a href="{{ url_for('ui.file_delete_all', submission_id=submission_id) }}">
+          Remove All<span class="icon"><i class="fa fa-trash" aria-label="Delete all"></i></span></a>
+      </p>
+      {% else %}
+      <p class="title is-4 breathe-vertical has-text-centered">
+        There's nothing here!
+      </p>
+      {% endif %}
+    </div>
+    <div class="column is-one-third-desktop is-one-quarter-tablet">
+      <div class="message is-info">
+        <div class="message-body">
+          <div class="is-pulled-left">
+            <span class="icon has-text-link"><i class="fa fa-info-circle"></i></span>
+          </div>
+
+          <p class="has-text-weight-semibold">Accepted File Formats</p>
+          <ul>
+            <li>(La)TeX, AMS(La)TeX, PDFLaTeX</li>
+            <li>PDF</li>
+            <li>PostScript</li>
+            <li>HTML</li>
+          </ul>
+
+          <p class="has-text-weight-semibold">Accepted Image Formats</p>
+          <ul>
+            <li>PDF or EPS</li>
+            <li>JPG, GIF, PNG</li>
+            <li>SVG?</li>
+          </ul>
+
+
+          <p class="has-text-weight-semibold">Accepted File Properties</p>
+          <ul>
+            <li>Names containing a-z A-Z 0-9 . , - _</li>
+            <li>Individual files less than [x]MB</li>
+            <li>Total size less than [x]MB</li>
+          </ul>
+
+
+          <p class="has-text-weight-semibold">Style and Class Files</p>
+          <ul>
+            <li><a href="#">Default packages</a></li>
+            <li><a href="#">What to include</a></li>
+            <li><a href="#">Upload FAQ</a></li>
+          </ul>
+
         </div>
-
-        <p class="has-text-weight-semibold">Accepted File Formats</p>
-        <ul>
-          <li>(La)TeX, AMS(La)TeX, PDFLaTeX</li>
-          <li>PDF</li>
-          <li>PostScript</li>
-          <li>HTML</li>
-        </ul>
-
-        <p class="has-text-weight-semibold">Accepted Image Formats</p>
-        <ul>
-          <li>PDF or EPS</li>
-          <li>JPG, GIF, PNG</li>
-          <li>SVG?</li>
-        </ul>
-
-
-        <p class="has-text-weight-semibold">Accepted File Properties</p>
-        <ul>
-          <li>Names containing a-z A-Z 0-9 . , - _</li>
-          <li>Individual files less than [x]MB</li>
-          <li>Total size less than [x]MB</li>
-        </ul>
-
-
-        <p class="has-text-weight-semibold">Style and Class Files</p>
-        <ul>
-          <li><a href="#">Default packages</a></li>
-          <li><a href="#">What to include</a></li>
-          <li><a href="#">Upload FAQ</a></li>
-        </ul>
-
       </div>
     </div>
   </div>
-</div>
-
 {{ submit_macros.submit_nav() }}
+</form>
 {% endblock within_content %}

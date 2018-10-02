@@ -491,8 +491,7 @@ def _post_new_file(params: MultiDict, pointer: FileStorage, session: Session,
         redirect = url_for('ui.file_upload',
                            submission_id=submission.submission_id)
         return {}, status.HTTP_303_SEE_OTHER, {'Location': redirect}
-
-    ancillary = bool(form.ancillary.data)
+    ancillary: bool = form.ancillary.data
 
     try:
         upload_status = filemanager.add_file(upload_id, pointer,
@@ -554,10 +553,16 @@ def _post_upload(params: MultiDict, files: MultiDict, session: Session,
     try:    # Make sure that we have a file to work with.
         pointer = files['file']
     except KeyError as e:
-        alerts.flash_failure(Markup('Please select a file to upload'))
-        redirect = url_for('ui.file_upload',
-                           submission_id=submission.submission_id)
-        return {}, status.HTTP_303_SEE_OTHER, {'Location': redirect}
+        headers = {}
+
+        # Don't flash a message if the user is just trying to go back to the
+        # previous page.
+        if params.get('action') != 'previous':
+            alerts.flash_failure(Markup('Please select a file to upload'))
+            redirect = url_for('ui.file_upload',
+                               submission_id=submission.submission_id)
+            headers['Location'] = redirect
+        return {}, status.HTTP_303_SEE_OTHER, headers
 
     if submission.source_content is None:   # New upload package.
         logger.debug('No existing source_content')

@@ -1,8 +1,6 @@
 {% extends "submit/base.html" %}
 
-{% block title -%}
-  Submit an Article: Select a license
-{%- endblock title %}
+{% block title -%}Select a license{%- endblock title %}
 
 {% block within_content %}
 <form method="POST" action="{{ url_for('ui.license',submission_id=submission_id) }}">

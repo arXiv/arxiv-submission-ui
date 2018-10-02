@@ -128,7 +128,7 @@ class FileManagementService(object):
             created=dateutil.parser.parse(data['created_datetime']),
             modified=dateutil.parser.parse(data['modified_datetime']),
             status=data['upload_status'],
-            lifecycle=data['lifecycle'],
+            lifecycle=data['workspace_state'],
             locked=bool(data['lock_state'] == 'LOCKED'),
             identifier=data['upload_id'],
             files=[

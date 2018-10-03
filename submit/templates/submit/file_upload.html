@@ -1,8 +1,8 @@
 {% extends "submit/base.html" %}
 
-{% macro display_tree(key, item) %}
+{% macro display_tree(key, item, even) %}
   {% if key %}
-  <li class="{% if item.errors %}is-warning{% elif item.modified and item|just_updated %}is-success{% endif %}">
+  <li class="{% if item.errors %}is-warning{% elif item.modified and item|just_updated %}is-success{% elif even %}even{% endif %}">
   {% endif %}
     {% if item.name %}
     <div class="columns">
@@ -13,7 +13,7 @@
           <div class="columns is-mobile">
             <div class="column">{{ item.size|filesizeformat }}</div>
             <div class="column">{{ item.modified|timesince }}</div>
-            <div class="column has-text-centered is-2">
+            <div class="column has-text-centered is-1">
              <a href="{{ url_for('ui.file_delete', submission_id=submission_id) }}?path={{ item.path }}">
                <span class="icon">
                  <i class="fa fa-trash" aria-label="Delete"></i>
@@ -27,7 +27,7 @@
     {% if key %}<span class="icon"><i class="fa fa-folder-open-o"></i></span>{{ key }}/{% endif %}
     <ol class="{% if not key %}file-tree{% endif %}" style="list-style-type: none;">
       {% for k, subitem in item.items() %}
-      {{ display_tree(k, subitem) }}
+      {{ display_tree(k, subitem, loop.cycle('', 'even')) }}
       {% endfor %}
     </ol>
     {% endif %}
@@ -75,7 +75,6 @@
       <p class="is-marginless help has-text-grey">
         You can upload all your files at once as a single .tar.gz or .zip file, or upload individual files as needed.
       </p>
-    </form>
 
     {% if status.files %}
     <h3>Files currently attached to this submission ({{ status.size|filesizeformat }})</h3>
@@ -136,4 +135,5 @@
 </div>
 
 {{ submit_macros.submit_nav() }}
+</form>
 {% endblock within_content %}

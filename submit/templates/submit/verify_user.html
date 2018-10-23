@@ -3,38 +3,47 @@
 {% block title -%}Verify your contact information{%- endblock title %}
 
 {% block within_content %}
-<article class="user-info">
-  <div class="field is-horizontal">
-      <div class="field-label">
-        <span class="has-text-weight-semibold">First or given name(s):</span>
+<div class="columns">
+  <div class="column is-two-thirds-tablet">
+    <article class="user-info">
+      <div class="field is-horizontal">
+          <div class="field-label">
+            <span class="has-text-weight-semibold">First or given name(s):</span>
+          </div>
+          <div class="field-body"><span class="is-expanded">{{ user.name.forename }}</span></div>
       </div>
-      <div class="field-body"><span class="is-expanded">{{ user.name.forename }}</span></div>
+      <div class="field is-horizontal">
+        <div class="field-label">
+          <span class="has-text-weight-semibold">Last or family name(s):</span>
+        </div>
+         <div class="field-body">{{ user.name.surname }}</div>
+      </div>
+      <div class="field is-horizontal">
+        <div class="field-label">
+          <span class="has-text-weight-semibold">Suffix:</span>
+        </div>
+        <div class="field-body">{{ user.name.suffix }}</div>
+      </div>
+      <div class="field is-horizontal">
+        <div class="field-label">
+          <span class="has-text-weight-semibold">Affiliation:</span>
+        </div>
+        <div class="field-body">{{ user.profile.affiliation }}</div>
+      </div>
+      <div class="field is-horizontal">
+        <div class="field-label">
+          <span class="has-text-weight-semibold">E-mail:</span>
+        </div>
+        <div class="field-body">{{ user.email }}</div>
+      </div>
+    </article>
   </div>
-  <div class="field is-horizontal">
-    <div class="field-label">
-      <span class="has-text-weight-semibold">Last or family name(s):</span>
+  <div class="column">
+    <div class="message">
+      If you need to change your user information, edit.
     </div>
-     <div class="field-body">{{ user.name.surname }}</div>
   </div>
-  <div class="field is-horizontal">
-    <div class="field-label">
-      <span class="has-text-weight-semibold">Suffix:</span>
-    </div>
-    <div class="field-body">{{ user.name.suffix }}</div>
-  </div>
-  <div class="field is-horizontal">
-    <div class="field-label">
-      <span class="has-text-weight-semibold">Affiliation:</span>
-    </div>
-    <div class="field-body">{{ user.profile.affiliation }}</div>
-  </div>
-  <div class="field is-horizontal">
-    <div class="field-label">
-      <span class="has-text-weight-semibold">E-mail:</span>
-    </div>
-    <div class="field-body">{{ user.email }}</div>
-  </div>
-</article>
+</div>
 
 <form method="POST" action="{% if submission_id %}{{ url_for('ui.verify_user', submission_id=submission_id) }}{% else %}{{ url_for('ui.verify_user') }}{% endif %}">
   {{ form.csrf_token }}

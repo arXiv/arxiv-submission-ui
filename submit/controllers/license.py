@@ -98,8 +98,7 @@ class LicenseForm(csrf.CSRFForm):
     """Generate form to select license."""
 
     LICENSE_CHOICES = [(uri, data['label']) for uri, data in LICENSES.items()
-                       if data['is_current']] \
-        + [('',  'None of the above licenses apply')]
+                       if data['is_current']]
 
     license = RadioField(
         u'Select a license',

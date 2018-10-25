@@ -51,11 +51,14 @@ def tidy_filesize(size) -> str:
     with Jinja filesizeformat filter with binary=false setting that we are
     using in file_upload template.
 
+    Parameter: size in bytes
+    Returns: formatted string of size in units up through GB
+
     """
     if size == 0:
         return "0B"
     if size > 1000000000:
-        return '{} {}'.format(size, units(4))
+        return '{} {}'.format(size, units[3])
     units = ["B", "KB", "MB", "GB"]
     units_index = 0
     while size > 1000:
@@ -452,9 +455,10 @@ def _post_new_upload(params: MultiDict, pointer: FileStorage, session: Session,
         upload_status = filemanager.upload_package(pointer)
         submission = _update_submission(submission, upload_status, submitter,
                                         client)
+        converted_size = tidy_filesize(upload_status.size)
         alerts.flash_success(
             f'Unpacked {upload_status.file_count} files. Total submission'
-            f' package size is {upload_status.size } bytes',
+            f' package size is {converted_size}',
             title='Upload successful'
         )
         alerts.flash_hidden(upload_status.to_dict(), 'status')

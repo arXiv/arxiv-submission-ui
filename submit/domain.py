@@ -226,10 +226,6 @@ class SubmissionStage(NamedTuple):
         """Less-than or equal-to comparator."""
         return self._get_current_index() <= self._get_index(stage)
 
-    def is_on_or_before(self, stage_a: Stages, stage_b: Stages) -> bool:
-        """Determine whether stage_a is equivalent to or after stage_b."""
-        return self._get_index(stage_a) <= self._get_index(stage_b)
-
     def after(self, stage: Stages) -> bool:
         """Greater-than comparator."""
         return self._get_current_index() > self._get_index(stage)

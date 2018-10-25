@@ -4,14 +4,51 @@ This is the primary interface for arXiv users to submit e-prints to arXiv.
 It is comprised of a Flask application built around the [submission core
 events](https://github.com/cul-it/arxiv-submission-core) package.
 
+The Submission UI requires the File Management service.
+
 ## Quick start
 
+Start the File Management service.
+
 ```bash
+$ cd arxiv-filemanager
+$ git pull
+$ pipenv install --dev
+$ LOGLEVEL=10 JWT_SECRET=foosecret LOGLEVEL=10 FLASK_APP=app.py FLASK_DEBUG=1 pipenv run flask run --port=8002
+```
+
+```bash
+$ cd arxiv-submission-ui
+$ # Check out branch you are evaluating and be sure to pull recent changes
+$ git pull
 $ pipenv install --dev
 $ CLASSIC_DATABASE_URI='sqlite:///db.sqlite' LOGLEVEL=10 FLASK_APP=app.py FLASK_DEBUG=1 pipenv run flask run
 ```
 
 ## Generating an auth token
+
+You MUST create a valid token to run the UI/FM development environment. The easiest way to do this is use the generate_token.py script in arxiv-auth.
+
+```bash
+$ cd arxiv-auth
+$ git pull
+$ pipenv install ./users
+$ JWT_SECRET=foosecret pipenv run python generate_token.py
+Numeric user ID: 1234
+Email address: jdoe@cornell.edu 
+Username: Jane Doe
+First name [Jane]:
+Last name [Doe]:
+Name suffix [IV]:
+Affiliation [Cornell University]:
+Numeric rank [3]:
+Alpha-2 country code [us]:
+Default category [astro-ph.GA]:
+Submission groups (comma delim) [grp_physics]:
+Endorsement categories (comma delim) [astro-ph.CO,astro-ph.GA]:
+Authorization scope (space delim) [public:read submission:create submission:update submission:read upload:create upload:update upload:read upload:delete upload:read_logs]:
+eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzZXNzaW9uX2lkIjoiNTI3Yjc1NWMtZTA1Yi00ZWRlLTlmMzEtY2ViMzg4ZjY2NjVkIiwic3RhcnRfdGltZSI6IjIwMTgtMTAtMjNUMTE6MTc6MDkuNDczMzU1LTA0OjAwIiwidXNlciI6eyJ1c2VybmFtZSI6IkRhdmlkIEZyZWRkeSIsImVtYWlsIjoiZGxmMkBjb3JuZWxsLmVkdSIsInVzZXJfaWQiOiIxMjM0IiwibmFtZSI6eyJmb3JlbmFtZSI6IkphbmUiLCJzdXJuYW1lIjoiRG9lIiwic3VmZml4IjoiSVYifSwicHJvZmlsZSI6eyJhZmZpbGlhdGlvbiI6IkNvcm5lbGwgVW5pdmVyc2l0eSIsImNvdW50cnkiOiJ1cyIsInJhbmsiOjMsInN1Ym1pc3Npb25fZ3JvdXBzIjpbImdycF9waHlzaWNzIl0sImRlZmF1bHRfY2F0ZWdvcnkiOnsiYXJjaGl2ZSI6ImFzdHJvLXBoIiwic3ViamVjdCI6IkdBIn0sImhvbWVwYWdlX3VybCI6IiIsInJlbWVtYmVyX21lIjp0cnVlfSwidmVyaWZpZWQiOmZhbHNlfSwiY2xpZW50IjpudWxsLCJlbmRfdGltZSI6IjIwMTgtMTAtMjNUMjE6MTc6MDkuNDczMzU1LTA0OjAwIiwiYXV0aG9yaXphdGlvbnMiOnsiY2xhc3NpYyI6MCwiZW5kb3JzZW1lbnRzIjpbeyJhcmNoaXZlIjoiYXN0cm8tcGgiLCJzdWJqZWN0IjoiQ08ifSx7ImFyY2hpdmUiOiJhc3Ryby1waCIsInN1YmplY3QiOiJHQSJ9XSwic2NvcGVzIjpbeyJkb21haW4iOiJwdWJsaWMiLCJhY3Rpb24iOiJyZWFkIiwicmVzb3VyY2UiOm51bGx9LHsiZG9tYWluIjoic3VibWlzc2lvbiIsImFjdGlvbiI6ImNyZWF0ZSIsInJlc291cmNlIjpudWxsfSx7ImRvbWFpbiI6InN1Ym1pc3Npb24iLCJhY3Rpb24iOiJ1cGRhdGUiLCJyZXNvdXJjZSI6bnVsbH0seyJkb21haW4iOiJzdWJtaXNzaW9uIiwiYWN0aW9uIjoicmVhZCIsInJlc291cmNlIjpudWxsfSx7ImRvbWFpbiI6InVwbG9hZCIsImFjdGlvbiI6ImNyZWF0ZSIsInJlc291cmNlIjpudWxsfSx7ImRvbWFpbiI6InVwbG9hZCIsImFjdGlvbiI6InVwZGF0ZSIsInJlc291cmNlIjpudWxsfSx7ImRvbWFpbiI6InVwbG9hZCIsImFjdGlvbiI6InJlYWQiLCJyZXNvdXJjZSI6bnVsbH0seyJkb21haW4iOiJ1cGxvYWQiLCJhY3Rpb24iOiJkZWxldGUiLCJyZXNvdXJjZSI6bnVsbH0seyJkb21haW4iOiJ1cGxvYWQiLCJhY3Rpb24iOiJyZWFkX2xvZ3MiLCJyZXNvdXJjZSI6bnVsbH1dfSwiaXBfYWRkcmVzcyI6bnVsbCwicmVtb3RlX2hvc3QiOm51bGwsIm5vbmNlIjpudWxsfQ.9-bVljfCz4jwaJLTq1sXhgawlB5H0qrmYtwl60PC4aE
+```
 
 This application uses ``arxiv.users.auth`` to enforce authorization rules
 at submission endpoints. To create an auth token for use in development or

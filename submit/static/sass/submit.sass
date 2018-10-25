@@ -38,25 +38,29 @@
 
 /* Classes for zebra striping and nested directory display */
 
-$stripe-color: #FCFCFC
+$stripe-color: #E8E8E8
 $directory-color: #CCC
 
 ol.file-tree
-  margin: 0 0 1rem 1rem
-  .column
-    padding: .35rem
-    .columns
-      padding: .35rem
-  > li.even
-    &:empty
+  margin: 0 0 1rem 0
+  li
+    margin-top: .35em
+    background-color: white
+    &.even
       background-color: $stripe-color
+  .columns
+    margin: 0
+  .column
+    padding: 0
+    .columns
+      margin: 0
   > li ol
     border-left: 2px solid $directory-color
-    margin: .5rem 0 .5rem 1rem
+    margin: 0 0 .5rem 1rem
     li
       padding-left: 1em
-    li.even
-      background-color: $stripe-color
+      &:first-child
+        margin-top: 0
 
 /* Classes for responsive bubble-style progress bar */
 

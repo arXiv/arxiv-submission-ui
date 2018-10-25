@@ -8,6 +8,9 @@
   <div class="message-body">
     <p class="has-text-weight-bold" style="margin-bottom: .5em">
       <span class="tag is-link">{{ primary.id }}</span> {{ primary.name }}
+      <a class="button is-outlined is-link is-small" style="border: 0" title="Change primary category" href="{{ url_for('ui.classification', submission_id=submission_id)}}">
+        <span class="icon"><i class="fa fa-pencil"></i>
+      </a>
     </p>
 
     {% for category, (display, subform) in formset.items() %}
@@ -18,7 +21,7 @@
         {{ subform.operation }}
         {{ subform.category()|safe }}
           <span class="tag" style="border: 1px solid #999;">{{ subform.category.data }}</span> <span>{{ display }}</span>
-        <button class="button is-outlined is-link is-small" style="border: 0" aria-label="remove">
+        <button class="button is-outlined is-link is-small" style="border: 0" title="Remove category">
           <span class="icon"><i class="fa fa-trash"></i>
         </button>
       </p>

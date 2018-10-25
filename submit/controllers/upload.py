@@ -43,6 +43,27 @@ PLEASE_CONTACT_SUPPORT = Markup(
 )
 
 
+def tidy_filesize(size) -> str:
+    """
+    Convert upload size to human readable form.
+
+    Decision to use powers of 10 rather than powers of 2 to stay compatible
+    with Jinja filesizeformat filter with binary=false setting that we are
+    using in file_upload template.
+
+    """
+    if size == 0:
+        return "0B"
+    if size > 1000000000:
+        return '{} {}'.format(size, units(4))
+    units = ["B", "KB", "MB", "GB"]
+    units_index = 0
+    while size > 1000:
+        units_index += 1
+        size = round(size / 1000, 3)
+    return '{} {}'.format(size, units[units_index])
+
+
 def upload_files(method: str, params: MultiDict, files: MultiDict,
                  session: Session, submission_id: int, token: str) -> Response:
     """
@@ -498,9 +519,10 @@ def _post_new_file(params: MultiDict, pointer: FileStorage, session: Session,
                                              ancillary=ancillary)
         submission = _update_submission(submission, upload_status, submitter,
                                         client)
+        converted_size = tidy_filesize(upload_status.size)
         alerts.flash_success(
-            f'Upoaded {pointer.filename} successfully. Total submission'
-            f' package size is {upload_status.size} bytes',
+            f'Uploaded {pointer.filename} successfully. Total submission'
+            f' package size is {converted_size}',
             title='Upload successful'
         )
         status_data = upload_status.to_dict()

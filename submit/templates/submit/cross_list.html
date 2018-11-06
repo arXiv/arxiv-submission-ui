@@ -38,7 +38,7 @@
     <div class="column is-two-thirds-tablet">
       {% with field = form.category %}
       <label class="label" style="margin-top: 3em">Add a cross-list category
-      <a href="https://arxiv.org/help/cross" class="help-bubble"><i class="fa fa-question-circle is-info"></i><div class="bubble-text">Cross-list suggestions indicate areas of overlapping interest for the submission.</div></a></label>
+      <a href="{{ url_for('help_cross') }}" class="help-bubble"><i class="fa fa-question-circle is-info"></i><div class="bubble-text">Cross-list suggestions indicate areas of overlapping interest for the submission.</div></a></label>
       <div class="field has-addons" style="margin-bottom: 3em">
         <div class="control">
           <div class="select">

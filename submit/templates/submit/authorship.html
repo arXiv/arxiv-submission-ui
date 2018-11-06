@@ -21,7 +21,8 @@
     <div class="control" style="margin-left: 2.5em; margin-top: -1em">
       <div class="checkbox">
         {{ form.proxy }}
-        {{ form.proxy.label }} <a href="https://arxiv.org/help/third_party_submission" class="help-bubble">
+        {{ form.proxy.label }}
+        <a href="{{ url_for('help_third_party_submission') }}" class="help-bubble">
           <i class="fa fa-question-circle is-info"></i>
           <div class="bubble-text">Third party submissions may have additional requirements. Click for detailed help page.</div></a>
       </div>

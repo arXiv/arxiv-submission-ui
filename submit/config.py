@@ -73,3 +73,28 @@ FILE_MANAGER_ENDPOINT = os.environ.get(
 FILE_MANAGER_VERIFY = bool(int(os.environ.get('FILE_MANAGER_VERIFY', '1')))
 
 SESSION_COOKIE_NAME = 'submission_ui_session'
+
+EXTERNAL_URL_SCHEME = os.environ.get('EXTERNAL_URL_SCHEME', 'https')
+BASE_SERVER = os.environ.get('BASE_SERVER', 'arxiv.org')
+
+URLS = [
+    ("help_license", "/help/license", BASE_SERVER),
+    ("help_third_party_submission", "/help/third_party_submission", BASE_SERVER),
+    ("help_cross", "/help/cross", BASE_SERVER),
+    ("help_submit", "/help/submit", BASE_SERVER),
+    ("help_ancillary_files", "/help/ancillary_files", BASE_SERVER),
+    ("help_whytex", "/help/faq/whytex", BASE_SERVER),
+    ("help_default_packages", "/help/submit_tex#wegotem", BASE_SERVER),
+    ("help_submit_tex", "/help/submit_tex", BASE_SERVER),
+    ("help_submit_pdf", "/help/submit_pdf", BASE_SERVER),
+    ("help_submit_ps", "/help/submit_ps", BASE_SERVER),
+    ("help_submit_html", "/help/submit_html", BASE_SERVER),
+    ("help_metadata", "/help/prep", BASE_SERVER)
+]
+"""
+URLs for external services, for use with :func:`flask.url_for`.
+This subset of URLs is common only within submit, for now - maybe move to base
+if these pages seem relevant to other services.
+
+For details, see :mod:`arxiv.base.urls`.
+"""

@@ -66,7 +66,7 @@
         </div>
         <div class="control" style="margin-top: .35em">
           <label class="checkbox">
-            {{ form.ancillary }} Ancillary <a class="icon has-text-link help-bubble" href="https://arxiv.org/help/ancillary_files"><i class="fa fa-info-circle"></i><div class="bubble-text">Ancillary files will be placed in an /anc directory automatically.</div></a>
+            {{ form.ancillary }} Ancillary <a class="icon has-text-link help-bubble" href="{{ url_for('help_ancillary_files') }}"><i class="fa fa-info-circle"></i><div class="bubble-text">Ancillary files will be placed in an /anc directory automatically.</div></a>
         </div>
         <div class="control">
           <button type="submit" class="button is-link">Upload</button>
@@ -89,44 +89,49 @@
       <p class="title is-4 breathe-vertical has-text-centered">
         There's nothing here!
       </p>
+      <div class="message is-link">
+        <div class="message-body">
+          <p><span class="icon has-text-link"><i class="fa fa-exclamation-triangle"></i></span>If this submission was written in TeX, TeX source must be submitted to be compiled by arXiv.
+          PDF documents created from TeX will not be accepted.
+          <a href="{{ url_for('help_whytex') }}">Why?</a></p>
+        </div>
+      </div>
       {% endif %}
     </div>
     <div class="column is-one-third-desktop is-one-quarter-tablet">
       <div class="message is-info">
         <div class="message-body">
-          <div class="is-pulled-left">
-            <span class="icon has-text-link"><i class="fa fa-info-circle"></i></span>
-          </div>
-
-          <p class="has-text-weight-semibold">Accepted File Formats</p>
+          <p class="has-text-weight-semibold"><span class="icon has-text-link"><i class="fa fa-info-circle"></i></span>Accepted formats, in order of preference</p>
           <ul>
-            <li>(La)TeX, AMS(La)TeX, PDFLaTeX</li>
-            <li>PDF</li>
-            <li>PostScript</li>
-            <li>HTML</li>
+            <li><a href="{{ url_for('help_submit_tex') }}">(La)TeX, AMS(La)TeX, PDFLaTeX</a></li>
+            <li><a href="{{ url_for('help_submit_pdf') }}">PDF</a></li>
+            <li><a href="{{ url_for('help_submit_ps') }}">PostScript</a></li>
+            <li><a href="{{ url_for('help_submit_html') }}">HTML</a></li>
           </ul>
 
-          <p class="has-text-weight-semibold">Accepted Image Formats</p>
+          <p class="has-text-weight-semibold"><span class="icon has-text-link"><i class="fa fa-info-circle"></i></span>Accepted formats for figures</p>
           <ul>
-            <li>PDF or EPS</li>
-            <li>JPG, GIF, PNG</li>
-            <li>SVG?</li>
+            <li>PostScript (PS/EPS)</li>
+            <li>JPG (best for photographs)</li>
+            <li>GIF or PNG</li>
+            <li>PDF figures (only with PDFLaTeX)</li>
           </ul>
 
 
-          <p class="has-text-weight-semibold">Accepted File Properties</p>
+          <p class="has-text-weight-semibold"><span class="icon has-text-link"><i class="fa fa-info-circle"></i></span>Accepted file properties</p>
           <ul>
             <li>Names containing a-z A-Z 0-9 . , - _</li>
-            <li>Individual files less than [x]MB</li>
-            <li>Total size less than [x]MB</li>
+            <li>Total compressed package size limit: 6MB</li>
+            <li>Total uncompressed package size limit: 18MB</li>
+            <li>Individual PDF size limit: 15MB</li>
           </ul>
 
 
-          <p class="has-text-weight-semibold">Style and Class Files</p>
+          <p class="has-text-weight-semibold"><span class="icon has-text-link"><i class="fa fa-info-circle"></i></span>TeX style and class files</p>
           <ul>
-            <li><a href="#">Default packages</a></li>
-            <li><a href="#">What to include</a></li>
-            <li><a href="#">Upload FAQ</a></li>
+            <li><a href="help_default_packages">Default packages</a></li>
+            <li><a href="help_submit_tex">What to include</a></li>
+            <!-- <li><a href="#">Upload FAQ</a></li> -->
           </ul>
 
         </div>

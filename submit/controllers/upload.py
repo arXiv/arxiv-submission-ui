@@ -43,6 +43,30 @@ PLEASE_CONTACT_SUPPORT = Markup(
 )
 
 
+def tidy_filesize(size) -> str:
+    """
+    Convert upload size to human readable form.
+
+    Decision to use powers of 10 rather than powers of 2 to stay compatible
+    with Jinja filesizeformat filter with binary=false setting that we are
+    using in file_upload template.
+
+    Parameter: size in bytes
+    Returns: formatted string of size in units up through GB
+
+    """
+    if size == 0:
+        return "0B"
+    if size > 1000000000:
+        return '{} {}'.format(size, units[3])
+    units = ["B", "KB", "MB", "GB"]
+    units_index = 0
+    while size > 1000:
+        units_index += 1
+        size = round(size / 1000, 3)
+    return '{} {}'.format(size, units[units_index])
+
+
 def upload_files(method: str, params: MultiDict, files: MultiDict,
                  session: Session, submission_id: int, token: str) -> Response:
     """
@@ -431,9 +455,10 @@ def _post_new_upload(params: MultiDict, pointer: FileStorage, session: Session,
         upload_status = filemanager.upload_package(pointer)
         submission = _update_submission(submission, upload_status, submitter,
                                         client)
+        converted_size = tidy_filesize(upload_status.size)
         alerts.flash_success(
             f'Unpacked {upload_status.file_count} files. Total submission'
-            f' package size is {upload_status.size } bytes',
+            f' package size is {converted_size}',
             title='Upload successful'
         )
         alerts.flash_hidden(upload_status.to_dict(), 'status')
@@ -491,17 +516,17 @@ def _post_new_file(params: MultiDict, pointer: FileStorage, session: Session,
         redirect = url_for('ui.file_upload',
                            submission_id=submission.submission_id)
         return {}, status.HTTP_303_SEE_OTHER, {'Location': redirect}
-
-    ancillary = bool(form.ancillary.data)
+    ancillary: bool = form.ancillary.data
 
     try:
         upload_status = filemanager.add_file(upload_id, pointer,
                                              ancillary=ancillary)
         submission = _update_submission(submission, upload_status, submitter,
                                         client)
+        converted_size = tidy_filesize(upload_status.size)
         alerts.flash_success(
-            f'Upoaded {pointer.filename} successfully. Total submission'
-            f' package size is {upload_status.size} bytes',
+            f'Uploaded {pointer.filename} successfully. Total submission'
+            f' package size is {converted_size}',
             title='Upload successful'
         )
         status_data = upload_status.to_dict()
@@ -554,10 +579,16 @@ def _post_upload(params: MultiDict, files: MultiDict, session: Session,
     try:    # Make sure that we have a file to work with.
         pointer = files['file']
     except KeyError as e:
-        alerts.flash_failure(Markup('Please select a file to upload'))
-        redirect = url_for('ui.file_upload',
-                           submission_id=submission.submission_id)
-        return {}, status.HTTP_303_SEE_OTHER, {'Location': redirect}
+        headers = {}
+
+        # Don't flash a message if the user is just trying to go back to the
+        # previous page.
+        if params.get('action') != 'previous':
+            alerts.flash_failure(Markup('Please select a file to upload'))
+            redirect = url_for('ui.file_upload',
+                               submission_id=submission.submission_id)
+            headers['Location'] = redirect
+        return {}, status.HTTP_303_SEE_OTHER, headers
 
     if submission.source_content is None:   # New upload package.
         logger.debug('No existing source_content')

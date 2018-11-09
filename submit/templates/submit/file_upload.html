@@ -1,19 +1,19 @@
 {% extends "submit/base.html" %}
 
-{% macro display_tree(key, item) %}
+{% macro display_tree(key, item, even) %}
   {% if key %}
-  <li class="{% if item.errors %}is-warning{% elif item.modified and item|just_updated %}is-success{% endif %}">
+  <li class="{% if item.errors %}is-warning{% elif item.modified and item|just_updated %}is-success{% endif %}{% if even %}even{% endif %}">
   {% endif %}
     {% if item.name %}
-    <div class="level" style="margin-bottom: 0px;">
-      <div class="level-left">
+    <div class="columns">
+      <div class="column">
         {{ item.name }}
       </div>
-      <div class="level-right">
-          <div class="columns" style="width: 30vw;">
+      <div class="column">
+          <div class="columns is-mobile">
             <div class="column">{{ item.size|filesizeformat }}</div>
             <div class="column">{{ item.modified|timesince }}</div>
-            <div class="column has-text-centered">
+            <div class="column has-text-centered is-1">
              <a href="{{ url_for('ui.file_delete', submission_id=submission_id) }}?path={{ item.path }}">
                <span class="icon">
                  <i class="fa fa-trash" aria-label="Delete"></i>
@@ -24,10 +24,10 @@
       </div>
     </div>
     {% else %}
-    {% if key %}{{ key }}/{% endif %}
-    <ol style="margin-top: 0px; list-style-type: none;">
+    {% if key %}<span class="icon"><i class="fa fa-folder-open-o"></i></span>{{ key }}/{% endif %}
+    <ol class="{% if not key %}file-tree{% endif %}" style="list-style-type: none;">
       {% for k, subitem in item.items() %}
-      {{ display_tree(k, subitem) }}
+      {{ display_tree(k, subitem, loop.cycle('', 'even')) }}
       {% endfor %}
     </ol>
     {% endif %}
@@ -43,98 +43,96 @@
   {% endif %}
 {% endmacro %}
 
+{% block title -%}Upload files{%- endblock title %}
 
 {% block within_content %}
 
-<div class="columns">
-  <div class="column is-two-thirds-desktop">
-    <h2 class="h2">Upload files</h2>
-    <form class="form" action="{{ url_for('ui.file_upload', submission_id=submission_id) }}" method="POST" enctype="multipart/form-data">
+<form class="form" action="{{ url_for('ui.file_upload', submission_id=submission_id) }}" method="POST" enctype="multipart/form-data">
+  <div class="columns">
+    <div class="column is-two-thirds-desktop is-three-quarters-tablet">
       {{ form.csrf_token }}
-      <div class="field is-grouped breathe-vertical">
-        <div class="control">
-          <div class="file has-name">
+      <div class="field is-grouped is-grouped-multiline">
+        <div class="control is-expanded">
+          <div class="file has-name is-fullwidth">
             <label class="file-label">
               {{ form.file(class="file-input") }}
               <span class="file-cta">
                 <span class="file-icon"><i class="fa fa-upload"></i></span>
                 <span class="file-label">Choose a file…</span>
               </span>
-              <span id="filename" class="file-name is-fullwidth">Select a file to upload</span>
+              <span id="filename" class="file-name">Select a file to upload</span>
             </label>
           </div>
         </div>
-        <div class="control is-centered-vertically">
+        <div class="control" style="margin-top: .35em">
           <label class="checkbox">
-            {{ form.ancillary }} Ancillary <span class="icon has-text-link"><i class="fa fa-info-circle"></i></span>
+            {{ form.ancillary }} Ancillary <a class="icon has-text-link help-bubble" href="https://arxiv.org/help/ancillary_files"><i class="fa fa-info-circle"></i><div class="bubble-text">Ancillary files will be placed in an /anc directory automatically.</div></a>
         </div>
         <div class="control">
           <button type="submit" class="button is-link">Upload</button>
         </div>
       </div>
       <p class="is-marginless help has-text-grey">
-        You can upload all your files at once as a single .tar.gz file or upload individual files as needed.
+        You can upload all your files at once as a single .tar.gz or .zip file, or upload individual files as needed.
       </p>
-    </form>
 
-    {% if status.files %}
-    <h3>Files currently attached to this submission ({{ status.size|filesizeformat }})</h3>
+      {% if status.files %}
+      <h3>Files currently attached to this submission ({{ status.size|filesizeformat }})</h3>
 
-    {{ display_tree(None, status.files|group_files) }}
+      {{ display_tree(None, status.files|group_files) }}
 
-    <p class="help is-pulled-right">
-      <a href="{{ url_for('ui.file_delete_all', submission_id=submission_id) }}">
-        <span class="icon"><i class="fa fa-trash" aria-label="Delete all"></i></span>Remove All
-      </a>
-    </p>
-    {% else %}
-    <p class="title is-4 breathe-vertical has-text-centered">
-      There's nothing here!
-    </p>
-    {% endif %}
-  </div>
-  <div class="column is-one-third-desktop">
-    <div class="message is-info">
-      <div class="message-body">
-        <div class="is-pulled-left">
-          <span class="icon has-text-link"><i class="fa fa-info-circle"></i></span>
+      <p class="help has-text-right" style="margin-right: .5rem">
+        <a href="{{ url_for('ui.file_delete_all', submission_id=submission_id) }}">
+          Remove All<span class="icon"><i class="fa fa-trash" aria-label="Delete all"></i></span></a>
+      </p>
+      {% else %}
+      <p class="title is-4 breathe-vertical has-text-centered">
+        There's nothing here!
+      </p>
+      {% endif %}
+    </div>
+    <div class="column is-one-third-desktop is-one-quarter-tablet">
+      <div class="message is-info">
+        <div class="message-body">
+          <div class="is-pulled-left">
+            <span class="icon has-text-link"><i class="fa fa-info-circle"></i></span>
+          </div>
+
+          <p class="has-text-weight-semibold">Accepted File Formats</p>
+          <ul>
+            <li>(La)TeX, AMS(La)TeX, PDFLaTeX</li>
+            <li>PDF</li>
+            <li>PostScript</li>
+            <li>HTML</li>
+          </ul>
+
+          <p class="has-text-weight-semibold">Accepted Image Formats</p>
+          <ul>
+            <li>PDF or EPS</li>
+            <li>JPG, GIF, PNG</li>
+            <li>SVG?</li>
+          </ul>
+
+
+          <p class="has-text-weight-semibold">Accepted File Properties</p>
+          <ul>
+            <li>Names containing a-z A-Z 0-9 . , - _</li>
+            <li>Individual files less than [x]MB</li>
+            <li>Total size less than [x]MB</li>
+          </ul>
+
+
+          <p class="has-text-weight-semibold">Style and Class Files</p>
+          <ul>
+            <li><a href="#">Default packages</a></li>
+            <li><a href="#">What to include</a></li>
+            <li><a href="#">Upload FAQ</a></li>
+          </ul>
+
         </div>
-
-        <p class="has-text-weight-semibold">Accepted File Formats</p>
-        <ul>
-          <li>(La)TeX, AMS(La)TeX, PDFLaTeX</li>
-          <li>PDF</li>
-          <li>PostScript</li>
-          <li>HTML</li>
-        </ul>
-
-        <p class="has-text-weight-semibold">Accepted Image Formats</p>
-        <ul>
-          <li>PDF or EPS</li>
-          <li>JPG, GIF, PNG</li>
-          <li>SVG?</li>
-        </ul>
-
-
-        <p class="has-text-weight-semibold">Accepted File Properties</p>
-        <ul>
-          <li>Names containing a-z A-Z 0-9 . , - _</li>
-          <li>Individual files less than [x]MB</li>
-          <li>Total size less than [x]MB</li>
-        </ul>
-
-
-        <p class="has-text-weight-semibold">Style and Class Files</p>
-        <ul>
-          <li><a href="#">Default packages</a></li>
-          <li><a href="#">What to include</a></li>
-          <li><a href="#">Upload FAQ</a></li>
-        </ul>
-
       </div>
     </div>
   </div>
-</div>
-
 {{ submit_macros.submit_nav() }}
+</form>
 {% endblock within_content %}

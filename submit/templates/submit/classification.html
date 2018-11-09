@@ -1,46 +1,61 @@
 {% extends "submit/base.html" %}
 
-
+{% block title -%}Choose a primary classification{%- endblock title %}
 
 {% block within_content %}
-<h2 class="is-size-4">Choose a primary classification</h2>
 <form method="POST" action="{{ url_for('ui.classification', submission_id=submission_id) }}">
   {{ form.csrf_token }}
-  {% with field = form.category %}
-  <div class="field breathe-vertical">
-    <div class="control">
-      <div class="is-block">
-      {{ field.label(class_="label is-inline-block") }} <a href="help link as modal"><i class="fa fa-question-circle is-info"></i></a>
-    </div>
-      <div class="select">
-      {% if field.errors %}
-        {{ field(class="is-danger")|safe }}
-      {% else %}
-        {{ field()|safe }}
-      {% endif %}
-      </div>
-      {% if field.errors %}
-        <div class="help is-danger">
-          {% for error in field.errors %}
-              {{ error }}
-          {% endfor %}
+  <div class="columns">
+    <div class="column is-two-thirds-tablet is-half-desktop">
+      {% with field = form.category %}
+      <div class="field breathe-vertical">
+        <div class="control">
+          <div class="is-block">
+          {{ field.label(class_="label is-inline-block") }} <a href="help link as modal" class="help-bubble"><i class="fa fa-question-circle is-info"></i><div class="bubble-text">I couldn't find any help pages about categories, info needed.</div></a>
         </div>
-      {% endif %}
-      {% if field.description %}
-      <p class="help has-text-grey">
-        {{ field.description|safe }}
-      </p>
-      {% endif %}
+          <div class="select">
+          {% if field.errors %}
+            {{ field(class="is-danger")|safe }}
+          {% else %}
+            {{ field()|safe }}
+          {% endif %}
+          </div>
+          {% if field.errors %}
+            <div class="help is-danger">
+              {% for error in field.errors %}
+                  {{ error }}
+              {% endfor %}
+            </div>
+          {% endif %}
+          {% if field.description %}
+          <p class="help has-text-grey">
+            {{ field.description|safe }}
+          </p>
+          {% endif %}
+        </div>
+      </div>
+      {% endwith %}
     </div>
-  </div>
-  {% endwith %}
 
-  <div class="message is-link is-inline-block submit-nav">
-    <div class="message-body">
-      <p><span class="icon has-text-link"><i class="fa fa-info-circle"></i></span>
-      You may add categories to the list and change defaults in your <a href="#">user account settings</a>.</p>
+    <div class="column is-one-third-tablet is-half-desktop">
+      <div class="message is-link submit-nav">
+        <div class="message-body">
+          <p><span class="icon has-text-link"><i class="fa fa-info-circle"></i></span>
+          You are registered to submit to < groups >.</p>
+          <p>You may add groups and change defaults in your <a href="{{ url_for('account') }}">user account settings</a>.</p>
+        </div>
+      </div>
+      <div class="message is-link">
+        <div class="message-header">
+          <p><span class="icon"><i class="fa fa-info-circle"></i></span> Choosing a Good Category</p>
+        </div>
+        <div class="message-body">
+          <p>The most specific category for your article is best. If you are not sure, check the <a href="">category descriptions</a>. If there is interest in more than one category for your article, you may choose cross-lists as secondary categories on the following page.</p>
+        </div>
+      </div>
     </div>
-  </div>
+</div> <!-- end columns -->
+
   {{ submit_macros.submit_nav() }}
 </form>
 {% endblock within_content %}

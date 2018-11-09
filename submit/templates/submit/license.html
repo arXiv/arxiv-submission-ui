@@ -1,31 +1,55 @@
 {% extends "submit/base.html" %}
 
-
+{% block title -%}Select a license{%- endblock title %}
 
 {% block within_content %}
-<h2 class="is-size-4">Select a license</h2>
-
 <form method="POST" action="{{ url_for('ui.license',submission_id=submission_id) }}">
   {{ form.csrf_token }}
-  <div class="field">
-  {% for subfield in form.license %}
-    <div class="control">
-      <label class="radio">
-        {{subfield}}
-        {{ subfield.label.text }}
-      {% if subfield.data %}
-          <a href="{{subfield.data}}" title="license info"><i class="fa fa-question-circle is-info"></i></a>
-      {% endif %}
-      </label>
-    </div>
-  {% endfor %}
-  </div>
+  <div class="columns">
+    <div class="column is-two-thirds">
+      {% if form.license.errors %}<div class="notification is-danger">{% endif %}
+      <div class="field">
+      {% for subfield in form.license %}
+        <div class="control">
+          <label class="radio">
+            {{subfield}}
+            {{ subfield.label.text }}
+          {% if subfield.data %}
+              <a href="{{subfield.data}}" title="license info" class="help-bubble"><i class="fa fa-question-circle is-info"></i><div class="bubble-text">License information opens in this tab</div></a>
+          {% endif %}
+          </label>
+        </div>
+      {% endfor %}
+      </div>
 
-  {% if form.license.errors %}
-    {% for error in form.license.errors %}
-      <p class="help is-danger">{{ error }}</p>
-    {% endfor %}
-  {% endif %}
+      {% if form.license.errors %}
+        {% for error in form.license.errors %}
+          <p class="help is-danger">{{ error }}</p>
+        {% endfor %}
+      {% endif %}
+      {% if form.license.errors %}</div>{% endif %}
+    </div>
+
+    <div class="column is-one-third">
+      <div class="message is-link">
+        <div class="message-header">
+          <p><span class="icon"><i class="fa fa-info-circle"></i></span>Not sure which license to select?</p>
+        </div>
+        <div class="message-body">
+          <p>See the <a href="">Discussion of licenses</a> for more information.</p>
+          <p>If none of these licenses apply, you may be able to indicate your license of choice in the article text.</p>
+        </div>
+      </div>
+      <div class="message is-warning">
+        <div class="message-header">
+          <p><span class="icon"><i class="fa fa-exclamation-circle"></i></span>This license is irrevocable and permanent.</p>
+        </div>
+        <div class="message-body">
+          <p>If you plan to publish this article in a journal, check the journal's policies before uploading to arXiv.</p>
+        </div>
+      </div>
+    </div>
+  </div>
 
   {{ submit_macros.submit_nav() }}
 </form>

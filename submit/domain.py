@@ -5,10 +5,13 @@ import io
 from datetime import datetime
 import dateutil.parser
 from enum import Enum
+import io
 
 from arxiv.submission.domain import Submission
 
 
+# TODO: many of the instance methods on this class could be classmethods
+#  or staticmethods.
 class SubmissionStage(NamedTuple):
     """Represents the furthest completed stage reached by a submission."""
 
@@ -48,6 +51,18 @@ class SubmissionStage(NamedTuple):
                 and self.submission.metadata.abstract is not None
                 and self.submission.metadata.authors_display is not None)
 
+    def crosslist_is_selected(self) -> bool:
+        """Determine whether a cross-list category has been selected."""
+        return len(self.submission.secondary_classification) > 0
+
+    def optional_metadata_is_set(self) -> bool:
+        """Determine whether the user has set optional metadata fields."""
+        return (self.submission.metadata.doi is not None
+                or self.submission.metadata.msc_class is not None
+                or self.submission.metadata.acm_class is not None
+                or self.submission.metadata.report_num is not None
+                or self.submission.metadata.journal_ref is not None)
+
     class Stages(Enum):     # type: ignore
         """Stages in the submission UI workflow."""
 
@@ -75,17 +90,17 @@ class SubmissionStage(NamedTuple):
         """The user is asked to review the submission before finalizing."""
 
     LABELS = {
-        Stages.VERIFY_USER: 'verify your personal information',
-        Stages.AUTHORSHIP: 'confirm authorship',
-        Stages.LICENSE: 'choose a license',
-        Stages.POLICY: 'accept arXiv submission policies',
-        Stages.CLASSIFICATION: 'select a primary category',
-        Stages.CROSS_LIST: 'add cross-list categories',
-        Stages.FILE_UPLOAD: 'upload your submission files',
-        Stages.FILE_PROCESS: 'process your submission files',
-        Stages.ADD_METADATA: 'add required metadata',
-        Stages.ADD_OPTIONAL_METADATA: 'add optional metadata',
-        Stages.FINAL_PREVIEW: 'preview and approve your submission'
+        Stages.VERIFY_USER.value: 'verify your personal information',
+        Stages.AUTHORSHIP.value: 'confirm authorship',
+        Stages.LICENSE.value: 'choose a license',
+        Stages.POLICY.value: 'accept arXiv submission policies',
+        Stages.CLASSIFICATION.value: 'select a primary category',
+        Stages.CROSS_LIST.value: 'add cross-list categories',
+        Stages.FILE_UPLOAD.value: 'upload your submission files',
+        Stages.FILE_PROCESS.value: 'process your submission files',
+        Stages.ADD_METADATA.value: 'add required metadata',
+        Stages.ADD_OPTIONAL_METADATA.value: 'add optional metadata',
+        Stages.FINAL_PREVIEW.value: 'preview and approve your submission'
     }
     """
     Human-intelligible labels for the submission steps.
@@ -100,11 +115,11 @@ class SubmissionStage(NamedTuple):
         (Stages.LICENSE, True, license_is_set),
         (Stages.POLICY, True, policy_is_accepted),
         (Stages.CLASSIFICATION, True, classification_is_set),
-        (Stages.CROSS_LIST, False, None),
+        (Stages.CROSS_LIST, False, crosslist_is_selected),
         (Stages.FILE_UPLOAD, True, files_are_uploaded),
         (Stages.FILE_PROCESS, True, files_are_processed),
         (Stages.ADD_METADATA, True, metadata_is_set),
-        (Stages.ADD_OPTIONAL_METADATA, False, None),
+        (Stages.ADD_OPTIONAL_METADATA, optional_metadata_is_set, None),
         (Stages.FINAL_PREVIEW, True, None)
     ]
     """
@@ -163,6 +178,8 @@ class SubmissionStage(NamedTuple):
         previous = self.get_previous_stage(stage)
         if previous is None:
             return True
+        while not self.is_required(previous) and previous is not None:
+            previous = self.get_previous_stage(previous)
         return self.has_completed(previous)
 
     def get_next_stage(self, stage: Optional[Stages]) -> Optional[Stages]:
@@ -218,22 +235,17 @@ class SubmissionStage(NamedTuple):
         """Greater-than or equal-to comparator."""
         return self._get_current_index() >= self._get_index(stage)
 
+    def is_on_or_after(self, stage_a: Stages, stage_b: Stages) -> bool:
+        """Determine whether stage_a is equivalent to or after stage_b."""
+        return self._get_index(stage_a) >= self._get_index(stage_b)
+
     def has_completed(self, stage: Stages) -> bool:
         """Determine whether a stage has been completed."""
         i = self._get_index(stage)
         _, required, method = self.ORDER[i]
+
         if method:
             return bool(method(self))
-        elif not required:
-            if i == 0:
-                return True
-            x = i
-            _required = False
-            while not _required and x > 0:
-                x -= 1
-                _, _required, method = self.ORDER[x]
-            if method:
-                return bool(method(self))
         return False
 
     def is_required(self, stage: Stages) -> bool:
@@ -439,3 +451,4 @@ class CompilationProduct(NamedTuple):
 
     checksum: Optional[str] = None
     """The B64-encoded MD5 hash of the compilation product."""
+

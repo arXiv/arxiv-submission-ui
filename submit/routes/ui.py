@@ -42,6 +42,19 @@ def create_submission():
     raise InternalServerError('Something went wrong')
 
 
+@blueprint.route('/<int:submission_id>', methods=['GET'])
+def submission_status(submission_id: int) -> Response:
+    """Display the current state of the submission."""
+    data, code, headers = controllers.submission_status(
+        request.session,
+        submission_id
+    )
+    rendered = render_template("submit/status.html",
+                               pagetitle='Submission status',
+                               **data)
+    return make_response(rendered, code)
+
+
 @blueprint.route('/<int:submission_id>/verify_user',
                  endpoint=SubmissionStage.Stages.VERIFY_USER.value,
                  methods=['GET', 'POST'])

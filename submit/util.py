@@ -1,6 +1,6 @@
 """Utilities and helpers for the :mod:`submit` application."""
 
-from typing import Optional
+from typing import Optional, Tuple, List
 
 from werkzeug.exceptions import NotFound
 
@@ -8,7 +8,8 @@ from arxiv.base.globals import get_application_global
 import arxiv.submission as events
 
 
-def load_submission(submission_id: Optional[int]) -> events.domain.Submission:
+def load_submission(submission_id: Optional[int]) \
+        -> Tuple[events.domain.Submission, List[events.domain.Event]]:
     """
     Load a submission by ID.
 
@@ -32,11 +33,12 @@ def load_submission(submission_id: Optional[int]) -> events.domain.Submission:
     g = get_application_global()
     if g is None or f'submission_{submission_id}' not in g:
         try:
-            submission, _ = events.load(submission_id)
+            submission, submission_events = events.load(submission_id)
         except events.exceptions.NoSuchSubmission as e:
             raise NotFound('No such submission.') from e
         if g is not None:
-            setattr(g, f'submission_{submission_id}', submission)
+            setattr(g, f'submission_{submission_id}',
+                    (submission, submission_events))
     if g is not None:
         return getattr(g, f'submission_{submission_id}')
-    return submission
+    return submission, submission_events

@@ -40,7 +40,7 @@ def verify_user(method: str, params: MultiDict, session: Session,
 
     if submission_id:
         # Will raise NotFound if there is no such submission.
-        submission = load_submission(submission_id)
+        submission, submission_events = load_submission(submission_id)
 
     # Initialize the form with the current state of the submission.
     if method == 'GET':

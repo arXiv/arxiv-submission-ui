@@ -105,7 +105,7 @@ def classification(method: str, params: MultiDict, session: Session,
     submitter, client = util.user_and_client_from_session(session)
 
     # Will raise NotFound if there is no such submission.
-    submission = load_submission(submission_id)
+    submission, submission_events = load_submission(submission_id)
 
     # The form should be prepopulated based on the current state of the
     # submission.
@@ -170,7 +170,7 @@ def cross_list(method: str, params: MultiDict, session: Session,
     submitter, client = util.user_and_client_from_session(session)
 
     # Will raise NotFound if there is no such submission.
-    submission = load_submission(submission_id)
+    submission, submission_events = load_submission(submission_id)
 
     # We need forms for existing secondaries, to generate removal requests.
     formset = _formset_from_submission(submission)

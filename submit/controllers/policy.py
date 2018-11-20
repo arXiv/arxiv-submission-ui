@@ -32,7 +32,7 @@ def policy(method: str, params: MultiDict, session: Session,
     submitter, client = util.user_and_client_from_session(session)
 
     logger.debug(f'method: {method}, submission: {submission_id}. {params}')
-    submission = load_submission(submission_id)
+    submission, submission_events = load_submission(submission_id)
 
     if method == 'GET' and submission.submitter_accepts_policy:
         params['policy'] = 'true'

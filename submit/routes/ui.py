@@ -395,3 +395,26 @@ def confirm_delete(submission_id: int) -> Response:
     code = status.HTTP_200_OK
     response = make_response(rendered, code)
     return response
+
+
+# Other workflows.
+
+
+@blueprint.route('/<int:submission_id>/jref', methods=['GET', 'POST'])
+@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION,
+                        authorizer=can_edit_submission)
+def jref(submission_id: Optional[int] = None) -> Response:
+    """Render the submit start page."""
+    request_data = MultiDict(request.form.items(multi=True))
+    data, code, headers = controllers.jref.jref(
+        request.method,
+        request_data,
+        request.session,
+        submission_id
+    )
+    if code in [status.HTTP_200_OK, status.HTTP_400_BAD_REQUEST]:
+        rendered = render_template("submit/jref.html",
+                                   pagetitle='Add journal reference',
+                                   **data)
+        return make_response(rendered, code)
+    return Response(response=data, status=code, headers=headers)

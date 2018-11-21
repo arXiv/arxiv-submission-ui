@@ -11,10 +11,10 @@ from .upload import delete_all as delete_all_files
 
 from ..util import load_submission
 from . import create, verify_user, authorship, license, policy, \
-    classification, metadata, util
+    classification, metadata, util, jref
 
 __all__ = ('verify_user', 'authorship', 'license', 'policy', 'classification',
-           'metadata', 'create')
+           'metadata', 'create', 'jref')
 
 Response = Tuple[Dict[str, Any], int, Dict[str, Any]]
 

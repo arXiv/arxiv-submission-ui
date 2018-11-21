@@ -1,0 +1,98 @@
+{%- extends "base/base.html" %}
+
+{% import "submit/submit_macros.html" as submit_macros %}
+
+{% block addl_head %}
+ <link rel="stylesheet" href="{{ url_for('static', filename='css/submit.css')}}" />
+ <script src="{{ url_for('static', filename='js/filewidget.js') }}"></script>
+{% endblock addl_head %}
+
+{% block content %}
+  <h1 class="title">Update journal reference</h1>
+  <content>
+
+
+    <form method="POST" action="{{ url_for('ui.jref', submission_id=submission_id) }}">
+      {{ form.csrf_token }}
+      {% with field = form.doi %}
+      <div class="field is-short-field">
+        <div class="control">
+          <label class="label">{{ field.label.text }} <span class="icon has-text-link"><i class="fa fa-question-circle"></i></span></label>
+          {% if field.errors %}
+            <div class="help is-danger">
+              {% for error in field.errors %}
+                  {{ error }}
+              {% endfor %}
+            </div>
+          {% endif %}
+          {% if field.description %}
+          <p class="help has-text-grey is-marginless">
+            {{ field.description|safe }}
+          </p>
+          {% endif %}
+          {% if field.errors %}
+            {{ field(class="input is-danger")|safe }}
+          {% else %}
+            {{ field(class="input")|safe }}
+          {% endif %}
+        </div>
+      </div>
+      {% endwith %}
+
+      {% with field = form.journal_ref %}
+      <div class="field is-short-field">
+        <div class="control">
+          <label class="label">{{ field.label.text }} <span class="icon has-text-link"><i class="fa fa-question-circle"></i></span></label>
+          {% if field.errors %}
+            <div class="help is-danger">
+              {% for error in field.errors %}
+                  {{ error }}
+              {% endfor %}
+            </div>
+          {% endif %}
+          {% if field.description %}
+          <p class="help has-text-grey is-marginless">
+            {{ field.description|safe }}
+          </p>
+          {% endif %}
+          {% if field.errors %}
+            {{ field(class="input is-danger")|safe }}
+          {% else %}
+            {{ field(class="input")|safe }}
+          {% endif %}
+        </div>
+      </div>
+      {% endwith %}
+
+      {% with field = form.report_num %}
+      <div class="field is-short-field">
+        <div class="control">
+          <label class="label">{{ field.label.text }} <span class="icon has-text-link"><i class="fa fa-question-circle"></i></span></label>
+          {% if field.errors %}
+            <div class="help is-danger">
+              {% for error in field.errors %}
+                  {{ error }}
+              {% endfor %}
+            </div>
+          {% endif %}
+          {% if field.description %}
+          <p class="help has-text-grey is-marginless">
+            {{ field.description|safe }}
+          </p>
+          {% endif %}
+          {% if field.errors %}
+            {{ field(class="input is-danger")|safe }}
+          {% else %}
+            {{ field(class="input")|safe }}
+          {% endif %}
+        </div>
+      </div>
+      {% endwith %}
+
+      <div class="buttons submit-nav" role="navigation">
+          <button name="cancel" class="button has-text-grey is-light is-outlined" style="border:0" value="cancel" aria-label="Cancel submission" title="Cancel submission"><span class="icon"><i class="fa fa-trash fa-lg"></i></button>
+          <button name="action" type="submit" class="button is-link" value="submit" aria-label="Submit">Submit</button>
+      </div>
+    </form>
+  </content>
+{% endblock content %}

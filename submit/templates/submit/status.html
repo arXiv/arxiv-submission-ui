@@ -3,11 +3,15 @@
 {% block title -%}{{ submission.status }}{%- endblock title %}
 
 {% block within_content %}
-
 <p>
   This is for dev/debugging. We need to implement this page with a real
   layout that communicates what's going on with a user's submission.
 </p>
+
+<a href="{{ url_for('ui.publish', submission_id=submission_id) }}" class="button is-link">
+  Click me to set the submission to published which cannot be undone and is for testing purposes only
+</a>
+
 <pre>
 {{ submission.to_dict()|pprint }}
 </pre>

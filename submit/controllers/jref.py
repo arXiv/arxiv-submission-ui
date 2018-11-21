@@ -54,6 +54,14 @@ class JREFForm(csrf.CSRFForm, util.FieldMixin, util.SubmissionMixin):
             form._validate_event(events.SetJournalReference,
                                  journal_ref=field.data)
 
+    def validate_report_num(form: csrf.CSRFForm, field: Field) -> None:
+        """Validate report number input using core events."""
+        if field.data == form.submission.metadata.report_num:
+            return
+        if field.data:
+            form._validate_event(events.SetReportNumber,
+                                 report_num=field.data)
+
 
 def jref(method: str, params: MultiDict, session: Session,
          submission_id: int) -> Response:

@@ -14,6 +14,7 @@ import arxiv.submission as events
 from .auth import can_edit_submission
 from ..domain import SubmissionStage
 from .util import flow_control, inject_stage
+from .. import util
 
 blueprint = Blueprint('ui', __name__, url_prefix='/')
 blueprint.context_processor(inject_stage)
@@ -43,6 +44,8 @@ def create_submission():
 
 
 @blueprint.route('/<int:submission_id>', methods=['GET'])
+@auth.decorators.scoped(auth.scopes.VIEW_SUBMISSION,
+                        authorizer=can_edit_submission)
 def submission_status(submission_id: int) -> Response:
     """Display the current state of the submission."""
     data, code, headers = controllers.submission_status(
@@ -53,6 +56,18 @@ def submission_status(submission_id: int) -> Response:
                                pagetitle='Submission status',
                                **data)
     return make_response(rendered, code)
+
+
+# TODO: remove me!!
+@blueprint.route('/<int:submission_id>/publish', methods=['GET'])
+@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION,
+                        authorizer=can_edit_submission)
+def publish(submission_id: int) -> Response:
+    """WARNING WARNING WARNING this is for testing purposes only."""
+    util.publish_submission(submission_id)
+    target = url_for('ui.submission_status', submission_id=submission_id)
+    return Response(response={}, status=status.HTTP_303_SEE_OTHER,
+                    headers={'Location': target})
 
 
 @blueprint.route('/<int:submission_id>/verify_user',

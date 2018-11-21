@@ -42,3 +42,18 @@ def load_submission(submission_id: Optional[int]) \
     if g is not None:
         return getattr(g, f'submission_{submission_id}')
     return submission, submission_events
+
+
+# TODO: remove me! 
+def publish_submission(submission_id: int) -> None:
+    """WARNING WARNING WARNING this is for testing purposes only."""
+    session = events.services.classic.current_session()
+    db_submission = session.query(events.services.classic.models.Submission) \
+        .get(submission_id)
+    db_submission.status = events.services.classic.models.Submission.PUBLISHED
+    db_document = events.services.classic.models.Document(paper_id='1234.5678')
+    db_submission.doc_paper_id = '1234.5678'
+    db_submission.document = db_document
+    session.add(db_submission)
+    session.add(db_document)
+    session.commit()

@@ -1,7 +1,7 @@
 """Utilities and helpers for the :mod:`submit` application."""
 
 from typing import Optional, Tuple, List
-
+from datetime import datetime
 from werkzeug.exceptions import NotFound
 
 from arxiv.base.globals import get_application_global
@@ -44,15 +44,18 @@ def load_submission(submission_id: Optional[int]) \
     return submission, submission_events
 
 
-# TODO: remove me! 
+# TODO: remove me!
 def publish_submission(submission_id: int) -> None:
     """WARNING WARNING WARNING this is for testing purposes only."""
     session = events.services.classic.current_session()
     db_submission = session.query(events.services.classic.models.Submission) \
         .get(submission_id)
     db_submission.status = events.services.classic.models.Submission.PUBLISHED
-    db_document = events.services.classic.models.Document(paper_id='1234.5678')
-    db_submission.doc_paper_id = '1234.5678'
+    paper_id = datetime.now().strftime('%s')[-4:] \
+        + "." \
+        + datetime.now().strftime('%s')[-5:]
+    db_document = events.services.classic.models.Document(paper_id=paper_id)
+    db_submission.doc_paper_id = paper_id
     db_submission.document = db_document
     session.add(db_submission)
     session.add(db_document)

@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "e9bc0d9ef3a85fa7852b4a7df22947ed9ef2192f5863d24c2163c3c6b9cbab05"
+            "sha256": "ac7a744b1c511a2ba67da2bd675661857072abcfadc02a5bb8edf1f23b63dae8"
         },
         "pipfile-spec": 6,
         "requires": {},
@@ -14,6 +14,9 @@
         ]
     },
     "default": {
+        "3a3786f": {
+            "path": "./../arxiv-submission-core/core"
+        },
         "arxiv-auth": {
             "hashes": [
                 "sha256:c391381cc94b83a9173c383b78b06d5a77d5d124d5686577ba8466e68012fd80"
@@ -45,17 +48,17 @@
         },
         "boto3": {
             "hashes": [
-                "sha256:8bc0c3333d4858b26a8f84b231479b92d4bc965ae75b9bfdb0d4dfa7164f2317",
-                "sha256:b8a6d9beff31492bd135709d5fbfbe902931c2a6708c4ccbe01f704924f182b8"
+                "sha256:177e9dd53db5028bb43050da20cc7956287889fc172e5e6275a634e42a10beeb",
+                "sha256:8c63e616b91907037ab19236afbcf0057efb31411faf38b46f4590e634dc17ea"
             ],
-            "version": "==1.9.48"
+            "version": "==1.9.50"
         },
         "botocore": {
             "hashes": [
-                "sha256:7140e51ab0a7aa3b7fa9cf5fefa663e0cd097098fcbd51b12ff8884c8d967754",
-                "sha256:8f290040128194454d25a39061ffcb089914c2e1dd619b621308cb59c339df4f"
+                "sha256:07fae5a2b8cfb5a92c1dbee3f2feb4da7c471bcead7e18ce735babe5f39e270f",
+                "sha256:eeaa190f50ee05a56225ee78c64cb8bf0c3bf090ec605ca6c2f325aa3826a347"
             ],
-            "version": "==1.12.48"
+            "version": "==1.12.50"
         },
         "certifi": {
             "hashes": [
@@ -538,6 +541,7 @@
                 "sha256:edb04bdd45bfd76c8292c4d9654568efaedf76fe78eb246dde69bdb13b2dad87",
                 "sha256:f19f2a4f547505fe9072e15f6f4ae714af51b5a681a97f187971f50c283193b6"
             ],
+            "markers": "python_version < '3.7' and implementation_name == 'cpython'",
             "version": "==1.1.0"
         },
         "urllib3": {

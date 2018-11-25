@@ -9,6 +9,15 @@
 
 {% block content %}
   <h1 class="title">Update journal reference</h1>
+  <p>
+    When an article is published, the author may wish to indicate this in the
+    abstract listing for the article. For this reason, the journal reference
+    and DOI (Digital Object Identifier) fields are provided for articles.
+    Additionally, a report number field is provided for institutional report
+    numbers.
+  </p>
+  <h2>arXiv:{{ submission.arxiv_id }}v{{ submission.version }} {{ submission.metadata.title }}</h2>
+  <p>{{ submission.metadata.authors_disay }}</p>
   <content>
 
 
@@ -90,7 +99,7 @@
       {% endwith %}
 
       <div class="buttons submit-nav" role="navigation">
-          <button name="cancel" class="button has-text-grey is-light is-outlined" style="border:0" value="cancel" aria-label="Cancel submission" title="Cancel submission"><span class="icon"><i class="fa fa-trash fa-lg"></i></button>
+          <a href="{{ url_for('ui.submission_status', submission_id=submission_id) }}" name="cancel" class="button is-danger" value="cancel" aria-label="Cancel" title="Cancel">Cancel</a>
           <button name="action" type="submit" class="button is-link" value="submit" aria-label="Submit">Submit</button>
       </div>
     </form>

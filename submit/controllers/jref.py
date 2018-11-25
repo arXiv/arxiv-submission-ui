@@ -87,13 +87,17 @@ def jref(method: str, params: MultiDict, session: Session,
         params = MultiDict({
             'doi': submission.metadata.doi,
             'journal_ref': submission.metadata.journal_ref,
-            'report_num': submission.metadata.report_num,
+            'report_num': submission.metadata.report_num
         })
 
     form = JREFForm(params)
     form.submission = submission
     form.creator = submitter
-    response_data = {'submission_id': submission_id, 'form': form}
+    response_data = {
+        'submission_id': submission_id,
+        'submission': submission,
+        'form': form
+    }
 
     if method == 'POST':
         if not form.validate():

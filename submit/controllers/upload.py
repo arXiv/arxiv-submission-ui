@@ -110,7 +110,7 @@ def upload_files(method: str, params: MultiDict, files: MultiDict,
 
     """
     logger.debug('%s upload request for submission %i', method, submission_id)
-    submission = load_submission(submission_id)
+    submission, submission_events = load_submission(submission_id)
     logger.debug('Loaded submission with ID %i', submission.submission_id)
 
     filemanager.set_auth_token(token)
@@ -156,7 +156,7 @@ def delete_all(method: str, params: MultiDict, session: Session,
 
     """
     logger.debug('%s delete all files with params %s', method, params)
-    submission = load_submission(submission_id)
+    submission, submission_events = load_submission(submission_id)
     upload_id = submission.source_content.identifier
     response_data = {
         'submission': submission,
@@ -238,7 +238,7 @@ def delete(method: str, params: MultiDict, session: Session,
         applicable.
     """
     logger.debug('%s delete with params %s', method, params)
-    submission = load_submission(submission_id)
+    submission, submission_events = load_submission(submission_id)
     upload_id = submission.source_content.identifier
     response_data = {
         'submission': submission,

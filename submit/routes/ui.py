@@ -14,6 +14,7 @@ import arxiv.submission as events
 from .auth import can_edit_submission
 from ..domain import SubmissionStage
 from .util import flow_control, inject_stage
+from .. import util
 
 blueprint = Blueprint('ui', __name__, url_prefix='/')
 blueprint.context_processor(inject_stage)
@@ -40,6 +41,33 @@ def create_submission():
     if 'Location' in headers:
         return redirect(headers['Location'], code=code)
     raise InternalServerError('Something went wrong')
+
+
+@blueprint.route('/<int:submission_id>', methods=['GET'])
+@auth.decorators.scoped(auth.scopes.VIEW_SUBMISSION,
+                        authorizer=can_edit_submission)
+def submission_status(submission_id: int) -> Response:
+    """Display the current state of the submission."""
+    data, code, headers = controllers.submission_status(
+        request.session,
+        submission_id
+    )
+    rendered = render_template("submit/status.html",
+                               pagetitle='Submission status',
+                               **data)
+    return make_response(rendered, code)
+
+
+# TODO: remove me!!
+@blueprint.route('/<int:submission_id>/publish', methods=['GET'])
+@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION,
+                        authorizer=can_edit_submission)
+def publish(submission_id: int) -> Response:
+    """WARNING WARNING WARNING this is for testing purposes only."""
+    util.publish_submission(submission_id)
+    target = url_for('ui.submission_status', submission_id=submission_id)
+    return Response(response={}, status=status.HTTP_303_SEE_OTHER,
+                    headers={'Location': target})
 
 
 @blueprint.route('/<int:submission_id>/verify_user',
@@ -382,3 +410,26 @@ def confirm_delete(submission_id: int) -> Response:
     code = status.HTTP_200_OK
     response = make_response(rendered, code)
     return response
+
+
+# Other workflows.
+
+
+@blueprint.route('/<int:submission_id>/jref', methods=['GET', 'POST'])
+@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION,
+                        authorizer=can_edit_submission)
+def jref(submission_id: Optional[int] = None) -> Response:
+    """Render the submit start page."""
+    request_data = MultiDict(request.form.items(multi=True))
+    data, code, headers = controllers.jref.jref(
+        request.method,
+        request_data,
+        request.session,
+        submission_id
+    )
+    if code in [status.HTTP_200_OK, status.HTTP_400_BAD_REQUEST]:
+        rendered = render_template("submit/jref.html",
+                                   pagetitle='Add journal reference',
+                                   **data)
+        return make_response(rendered, code)
+    return Response(response=data, status=code, headers=headers)

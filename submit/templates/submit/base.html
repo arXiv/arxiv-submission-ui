@@ -8,7 +8,7 @@
 {% endblock addl_head %}
 
 {% block content %}
-{% if submission_id %}
+{% if submission_id and stage %}
   {{ submit_macros.progress_bar(submission_id, stage, this_stage) }}
 {% endif %}
   <h1 class="title">Submit an Article: {% block title %}{% endblock title %}</h1>

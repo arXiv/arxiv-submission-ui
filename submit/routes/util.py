@@ -28,7 +28,8 @@ def flow_control(this_stage: SubmissionStage.Stages,
         def wrapper(submission_id: str) -> Response:
             """Update the redirect to the next, previous, or exit page."""
             action = request.form.get('action')
-            stage = SubmissionStage(submission=load_submission(submission_id))
+            submission, _ = load_submission(submission_id)
+            stage = SubmissionStage(submission=submission)
 
             # Set the stage handled by this endpoint.
             g = get_application_global()

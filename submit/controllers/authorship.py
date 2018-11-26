@@ -52,7 +52,7 @@ def authorship(method: str, params: MultiDict, session: Session,
     user, client = util.user_and_client_from_session(session)
 
     # Will raise NotFound if there is no such submission.
-    submission = load_submission(submission_id)
+    submission, submission_events = load_submission(submission_id)
 
     # The form should be prepopulated based on the current state of the
     # submission.
@@ -63,7 +63,6 @@ def authorship(method: str, params: MultiDict, session: Session,
     response_data = {
         'submission_id': submission_id,
         'form': form,
-
     }
 
     if method == 'POST':

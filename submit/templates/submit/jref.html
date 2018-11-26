@@ -1,0 +1,136 @@
+{%- extends "base/base.html" %}
+
+{% import "submit/submit_macros.html" as submit_macros %}
+
+{% block addl_head %}
+ <link rel="stylesheet" href="{{ url_for('static', filename='css/submit.css')}}" />
+ <script src="{{ url_for('static', filename='js/filewidget.js') }}"></script>
+{% endblock addl_head %}
+
+{% block content %}
+  <h1 class="title">Update journal reference</h1>
+  <p>
+    When an article is published, the author may wish to indicate this in the
+    abstract listing for the article. For this reason, the journal reference
+    and DOI (Digital Object Identifier) fields are provided for articles.
+    Additionally, a report number field is provided for institutional report
+    numbers.
+  </p>
+  {% if require_confirmation and not confirmed %}
+  <div class="notification is-info">
+    Please review the preview of your paper's abstract page, and confirm that
+    you with to proceed. You can continue to make changes until you are
+    satisfied with the result.
+  </div>
+  {% endif %}
+  <h2>arXiv:{{ submission.arxiv_id }}v{{ submission.version }} {{ submission.metadata.title }}</h2>
+  <content>
+    <form method="POST" action="{{ url_for('ui.jref', submission_id=submission_id) }}">
+      <div class="columns">
+        <div class="column">
+          {{ form.csrf_token }}
+          {% with field = form.doi %}
+          <div class="field is-short-field">
+            <div class="control">
+              <label class="label">{{ field.label.text }} <span class="icon has-text-link"><i class="fa fa-question-circle"></i></span></label>
+              {% if field.errors %}
+                <div class="help is-danger">
+                  {% for error in field.errors %}
+                      {{ error }}
+                  {% endfor %}
+                </div>
+              {% endif %}
+              {% if field.description %}
+              <p class="help has-text-grey is-marginless">
+                {{ field.description|safe }}
+              </p>
+              {% endif %}
+              {% if field.errors %}
+                {{ field(class="input is-danger")|safe }}
+              {% else %}
+                {{ field(class="input")|safe }}
+              {% endif %}
+            </div>
+          </div>
+          {% endwith %}
+
+          {% with field = form.journal_ref %}
+          <div class="field is-short-field">
+            <div class="control">
+              <label class="label">{{ field.label.text }} <span class="icon has-text-link"><i class="fa fa-question-circle"></i></span></label>
+              {% if field.errors %}
+                <div class="help is-danger">
+                  {% for error in field.errors %}
+                      {{ error }}
+                  {% endfor %}
+                </div>
+              {% endif %}
+              {% if field.description %}
+              <p class="help has-text-grey is-marginless">
+                {{ field.description|safe }}
+              </p>
+              {% endif %}
+              {% if field.errors %}
+                {{ field(class="input is-danger")|safe }}
+              {% else %}
+                {{ field(class="input")|safe }}
+              {% endif %}
+            </div>
+          </div>
+          {% endwith %}
+
+          {% with field = form.report_num %}
+          <div class="field is-short-field">
+            <div class="control">
+              <label class="label">{{ field.label.text }} <span class="icon has-text-link"><i class="fa fa-question-circle"></i></span></label>
+              {% if field.errors %}
+                <div class="help is-danger">
+                  {% for error in field.errors %}
+                      {{ error }}
+                  {% endfor %}
+                </div>
+              {% endif %}
+              {% if field.description %}
+              <p class="help has-text-grey is-marginless">
+                {{ field.description|safe }}
+              </p>
+              {% endif %}
+              {% if field.errors %}
+                {{ field(class="input is-danger")|safe }}
+              {% else %}
+                {{ field(class="input")|safe }}
+              {% endif %}
+            </div>
+          </div>
+          {% endwith %}
+        </div>
+        <div class="column">
+          {% if require_confirmation and not confirmed %}
+          <div class="box">
+            <p>The abs-page preview goes here, and shows these values in context.</p>
+            <dl>
+              <dt>DOI</dt>
+              <dd>{{ form.doi.data }}</dd>
+
+              <dt>Journal Reference</dt>
+              <dd>{{ form.journal_ref.data }}</dd>
+
+              <dt>Report Number</dt>
+              <dd>{{ form.report_num.data }}</dd>
+            </dl>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+      <div class="buttons submit-nav" role="navigation">
+          <a href="{{ url_for('ui.submission_status', submission_id=submission_id) }}" name="cancel" class="button is-danger" value="cancel" aria-label="Cancel" title="Cancel">Cancel</a>
+          {% if require_confirmation and not confirmed %}
+          <button name="action" type="submit" class="button is-link" value="submit" aria-label="Submit">Update</button>
+          <button name="confirmed" type="submit" class="button is-success" value="1" aria-label="Confirm">Confirm & Submit</button>
+          {% else %}
+          <button name="action" type="submit" class="button is-link" value="submit" aria-label="Submit">Proceed</button>
+          {% endif %}
+      </div>
+    </form>
+  </content>
+{% endblock content %}

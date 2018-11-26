@@ -161,7 +161,7 @@ def metadata(method: str, params: MultiDict, session: Session,
     logger.debug(f'method: {method}, submission: {submission_id}. {params}')
 
     # Will raise NotFound if there is no such submission.
-    submission = load_submission(submission_id)
+    submission, submission_events = load_submission(submission_id)
     # The form should be prepopulated based on the current state of the
     # submission.
     if method == 'GET':
@@ -219,7 +219,7 @@ def optional(method: str, params: MultiDict, session: Session,
     logger.debug(f'method: {method}, submission: {submission_id}. {params}')
 
     # Will raise NotFound if there is no such submission.
-    submission = load_submission(submission_id)
+    submission, submission_events = load_submission(submission_id)
     # The form should be prepopulated based on the current state of the
     # submission.
     if method == 'GET':

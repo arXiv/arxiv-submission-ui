@@ -295,6 +295,15 @@ class TestJREFWorkflow(TestCase):
                         'csrf_token': token}
         response = self.client.post(endpoint, data=request_data,
                                     headers=self.headers)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.content_type, 'text/html; charset=utf-8')
+        self.assertIn(b'Confirm & Submit', response.data)
+        token = self._parse_csrf_token(response)
+
+        request_data['confirmed'] = True
+        request_data['csrf_token'] = token
+        response = self.client.post(endpoint, data=request_data,
+                                    headers=self.headers)
         self.assertEqual(response.status_code, status.HTTP_303_SEE_OTHER)
 
         with self.app.app_context():
@@ -302,5 +311,5 @@ class TestJREFWorkflow(TestCase):
             # What happened.
             db_submission = session.query(classic.models.Submission) \
                 .filter(classic.models.Submission.doc_paper_id == '1234.5678')
-            self.assertEqual(db_submission.count(), 4,
+            self.assertEqual(db_submission.count(), 2,
                              "Creates a second row for the JREF")

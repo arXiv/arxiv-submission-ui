@@ -40,7 +40,7 @@ class JREFForm(csrf.CSRFForm, util.FieldMixin, util.SubmissionMixin):
                                "the arXiv help pages</a> for details."
                            ))
     confirmed = BooleanField('Confirmed',
-                             validators=[DataRequired()])
+                             false_values=('false', False, 0, '0', ''))
 
     def validate_doi(form: csrf.CSRFForm, field: Field) -> None:
         """Validate DOI input using core events."""
@@ -93,6 +93,7 @@ def jref(method: str, params: MultiDict, session: Session,
             'report_num': submission.metadata.report_num
         })
 
+    params.setdefault("confirmed", False)
     form = JREFForm(params)
     form.submission = submission
     form.creator = submitter
@@ -107,20 +108,22 @@ def jref(method: str, params: MultiDict, session: Session,
         # them a preview of what their paper's abs page will look like after
         # the proposed change. They can either make further changes, or
         # confirm and submit.
-        response_data['require_confirmation'] = True
         if not form.validate():
             logger.debug('Invalid form data; return bad request')
             return response_data, status.HTTP_400_BAD_REQUEST, {}
 
-        if not form.confirmed.data:
+        elif not form.events:
+            pass
+        elif not form.confirmed.data:
+            response_data['require_confirmation'] = True
             logger.debug('Not confirmed')
             return response_data, status.HTTP_200_OK, {}
 
-        logger.debug('Form is valid, with data: %s', str(form.data))
-
         # form.events get set by the SubmissionMixin during validation.
         # TODO: that's kind of indirect.
-        if form.events:   # Metadata has changed.
+        elif form.events:   # Metadata has changed.
+            response_data['require_confirmation'] = True
+            logger.debug('Form is valid, with data: %s', str(form.data))
             try:
                 # Save the events created during form validation.
                 submission, stack = events.save(*form.events,

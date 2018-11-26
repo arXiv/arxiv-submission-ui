@@ -16,7 +16,7 @@ bleach = "*"
 requests = "==2.19.1"
 arxiv-auth = "==0.2.0rc1"
 arxiv-base = "==0.11.1"
-arxiv-submission-core = "==0.5.1rc7"
+arxiv-submission-core = "==0.5.1rc8"
 
 [dev-packages]
 pylint = "*"

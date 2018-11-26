@@ -131,6 +131,11 @@ class TestJREFSubmission(TestCase):
         request_data = MultiDict({'doi': '10.1000/182'})
         data, code, headers = jref.jref('POST', request_data, self.session,
                                         submission_id)
+        self.assertEqual(code, status.HTTP_200_OK, "Returns 200 OK")
+
+        request_data['confirmed'] = True
+        data, code, headers = jref.jref('POST', request_data, self.session,
+                                        submission_id)
         self.assertEqual(code, status.HTTP_303_SEE_OTHER,
                          "Returns 303 See Other")
         self.assertIn('Location', headers, "Returns Location header")

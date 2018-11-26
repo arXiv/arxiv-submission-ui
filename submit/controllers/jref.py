@@ -6,8 +6,9 @@ from werkzeug import MultiDict
 from werkzeug.exceptions import InternalServerError, NotFound
 
 from flask import url_for, Markup
-from wtforms.fields import TextField, TextAreaField, Field
-from wtforms.validators import InputRequired, ValidationError, optional
+from wtforms.fields import TextField, TextAreaField, Field, BooleanField
+from wtforms.validators import InputRequired, ValidationError, optional, \
+    DataRequired
 
 from arxiv import status
 from arxiv.base import logging, alerts
@@ -38,6 +39,8 @@ class JREFForm(csrf.CSRFForm, util.FieldMixin, util.SubmissionMixin):
                                "See <a href='https://arxiv.org/help/jref'>"
                                "the arXiv help pages</a> for details."
                            ))
+    confirmed = BooleanField('Confirmed',
+                             validators=[DataRequired()])
 
     def validate_doi(form: csrf.CSRFForm, field: Field) -> None:
         """Validate DOI input using core events."""
@@ -96,13 +99,22 @@ def jref(method: str, params: MultiDict, session: Session,
     response_data = {
         'submission_id': submission_id,
         'submission': submission,
-        'form': form
+        'form': form,
     }
 
     if method == 'POST':
+        # We require the user to confirm that they wish to proceed. We show
+        # them a preview of what their paper's abs page will look like after
+        # the proposed change. They can either make further changes, or
+        # confirm and submit.
+        response_data['require_confirmation'] = True
         if not form.validate():
             logger.debug('Invalid form data; return bad request')
             return response_data, status.HTTP_400_BAD_REQUEST, {}
+
+        if not form.confirmed.data:
+            logger.debug('Not confirmed')
+            return response_data, status.HTTP_200_OK, {}
 
         logger.debug('Form is valid, with data: %s', str(form.data))
 

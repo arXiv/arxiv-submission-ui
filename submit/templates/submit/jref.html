@@ -8,18 +8,11 @@
 {% endblock addl_head %}
 
 {% block content %}
-  <h1 class="title">Update journal reference</h1>
-  <p>
-    When an article is published, the author may wish to indicate this in the
-    abstract listing for the article. For this reason, the journal reference
-    and DOI (Digital Object Identifier) fields are provided for articles.
-    Additionally, a report number field is provided for institutional report
-    numbers.
-  </p>
+  <h1 class="title">Update journal reference, DOI, or report number</h1>
   {% if require_confirmation and not confirmed %}
   <div class="notification is-info">
-    Please review the preview of your paper's abstract page, and confirm that
-    you with to proceed. You can continue to make changes until you are
+    Please carefully check this preview, which shows the abstract page as
+    it will be updated. You can continue to make changes until you are
     satisfied with the result.
   </div>
   {% endif %}
@@ -29,10 +22,10 @@
       <div class="columns">
         <div class="column">
           {{ form.csrf_token }}
-          {% with field = form.doi %}
+          {% with field = form.journal_ref %}
           <div class="field is-short-field">
             <div class="control">
-              <label class="label">{{ field.label.text }} <span class="icon has-text-link"><i class="fa fa-question-circle"></i></span></label>
+              <label class="label">{{ field.label.text }} <a href="{{ url_for('help_jref') }}" class="help-bubble"><i class="fa fa-question-circle is-info"></i><div class="bubble-text">A journal reference includes at least the journal name, volume number, year and page number(s).</div></a></label>
               {% if field.errors %}
                 <div class="help is-danger">
                   {% for error in field.errors %}
@@ -54,10 +47,10 @@
           </div>
           {% endwith %}
 
-          {% with field = form.journal_ref %}
+          {% with field = form.doi %}
           <div class="field is-short-field">
             <div class="control">
-              <label class="label">{{ field.label.text }} <span class="icon has-text-link"><i class="fa fa-question-circle"></i></span></label>
+              <label class="label">{{ field.label.text }} <a href="{{ url_for('help_jref') }}" class="help-bubble"><i class="fa fa-question-circle is-info"></i><div class="bubble-text">DOIs have the form number.number/something and you should not include any prefix such as doi:.</div></a></label>
               {% if field.errors %}
                 <div class="help is-danger">
                   {% for error in field.errors %}
@@ -82,7 +75,7 @@
           {% with field = form.report_num %}
           <div class="field is-short-field">
             <div class="control">
-              <label class="label">{{ field.label.text }} <span class="icon has-text-link"><i class="fa fa-question-circle"></i></span></label>
+              <label class="label">{{ field.label.text }} <a href="{{ url_for('help_jref') }}" class="help-bubble"><i class="fa fa-question-circle is-info"></i><div class="bubble-text">Enter only your institution's locally assigned publication number or numbers. These usually comprise a prefix of a few letters and then sequence numbers and/or year indication.</div></a></label>
               {% if field.errors %}
                 <div class="help is-danger">
                   {% for error in field.errors %}
@@ -105,30 +98,44 @@
           {% endwith %}
         </div>
         <div class="column">
-          {% if require_confirmation and not confirmed %}
-          <div class="box">
-            <p>The abs-page preview goes here, and shows these values in context.</p>
-            <dl>
-              <dt>DOI</dt>
-              <dd>{{ form.doi.data }}</dd>
-
-              <dt>Journal Reference</dt>
-              <dd>{{ form.journal_ref.data }}</dd>
-
-              <dt>Report Number</dt>
-              <dd>{{ form.report_num.data }}</dd>
-            </dl>
+          <div class="message">
+            <div class="message-body is-info">
+            <p><span class="icon has-text-link"><i class="fa fa-info-circle"></i></span>
+              When an article is published, the author may wish to
+              indicate this in the abstract listing for the article. For
+              this reason, the journal reference and DOI (Digital Object
+              Identifier) fields are provided for articles.
+              Additionally, a report number field is provided for
+              institutional report numbers.
+            </p>
+            </div>
           </div>
-          {% endif %}
         </div>
       </div>
+
+      {% if require_confirmation and not confirmed %}
+      <div class="box">
+        <p>The abs-page preview goes here, and shows these values in context.</p>
+        <dl>
+          <dt>DOI</dt>
+          <dd>{{ form.doi.data }}</dd>
+
+          <dt>Journal Reference</dt>
+          <dd>{{ form.journal_ref.data }}</dd>
+
+          <dt>Report Number</dt>
+          <dd>{{ form.report_num.data }}</dd>
+        </dl>
+      </div>
+      {% endif %}
+
       <div class="buttons submit-nav" role="navigation">
-          <a href="{{ url_for('ui.submission_status', submission_id=submission_id) }}" name="cancel" class="button is-danger" value="cancel" aria-label="Cancel" title="Cancel">Cancel</a>
+          <a href="{{ url_for('ui.submission_status', submission_id=submission_id) }}" name="cancel" class="button is-danger is-outlined" value="cancel" aria-label="Cancel" title="Cancel">Cancel</a>
           {% if require_confirmation and not confirmed %}
-          <button name="action" type="submit" class="button is-link" value="submit" aria-label="Submit">Update</button>
-          <button name="confirmed" type="submit" class="button is-success" value="1" aria-label="Confirm">Confirm & Submit</button>
+          <button name="action" type="submit" class="button is-link is-outlined" value="submit" aria-label="Edit">Edit</button>
+          <button name="confirmed" type="submit" class="button is-success" value="1" aria-label="Confirm and Save">Confirm & Save</button>
           {% else %}
-          <button name="action" type="submit" class="button is-link" value="submit" aria-label="Submit">Proceed</button>
+          <button name="action" type="submit" class="button is-link" value="submit" aria-label="Preview Changes">Preview Changes</button>
           {% endif %}
       </div>
     </form>

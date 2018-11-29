@@ -42,7 +42,7 @@
           {% with field = form.journal_ref %}
           <div class="field is-short-field">
             <div class="control">
-              <label class="label">{{ field.label.text }} <a href="{{ url_for('help_jref') }}" class="help-bubble"><i class="fa fa-question-circle is-info"></i><div class="bubble-text">A journal reference includes at least the journal name, volume number, year and page number(s).</div></a></label>
+              <label class="label" for="journal_ref">{{ field.label.text }} <a href="{{ url_for('help_jref') }}" class="help-bubble"><i class="fa fa-question-circle is-info"></i><div class="bubble-text">A journal reference includes at least the journal name, volume number, year and page number(s).</div></a></label>
               {% if field.errors %}
                 <div class="help is-danger">
                   {% for error in field.errors %}
@@ -67,7 +67,7 @@
           {% with field = form.doi %}
           <div class="field is-short-field">
             <div class="control">
-              <label class="label">{{ field.label.text }} <a href="{{ url_for('help_jref') }}" class="help-bubble"><i class="fa fa-question-circle is-info"></i><div class="bubble-text">DOIs have the form number.number/something and you should not include any prefix such as doi:.</div></a></label>
+              <label class="label" for="doi">{{ field.label.text }} <a href="{{ url_for('help_jref') }}" class="help-bubble"><i class="fa fa-question-circle is-info"></i><div class="bubble-text">DOIs have the form number.number/something and you should not include any prefix such as doi:.</div></a></label>
               {% if field.errors %}
                 <div class="help is-danger">
                   {% for error in field.errors %}
@@ -92,7 +92,7 @@
           {% with field = form.report_num %}
           <div class="field is-short-field">
             <div class="control">
-              <label class="label">{{ field.label.text }} <a href="{{ url_for('help_jref') }}" class="help-bubble"><i class="fa fa-question-circle is-info"></i><div class="bubble-text">Enter only your institution's locally assigned publication number or numbers. These usually comprise a prefix of a few letters and then sequence numbers and/or year indication.</div></a></label>
+              <label class="label" for="report_num">{{ field.label.text }} <a href="{{ url_for('help_jref') }}" class="help-bubble"><i class="fa fa-question-circle is-info"></i><div class="bubble-text">Enter only your institution's locally assigned publication number or numbers. These usually comprise a prefix of a few letters and then sequence numbers and/or year indication.</div></a></label>
               {% if field.errors %}
                 <div class="help is-danger">
                   {% for error in field.errors %}
@@ -144,7 +144,7 @@
 
 
       <div class="buttons submit-nav" role="navigation">
-          <a href="{{ url_for('ui.submission_status', submission_id=submission_id) }}" name="cancel" class="button is-outlined" value="cancel" aria-label="Cancel" title="Cancel">Cancel</a>
+          <a href="{{ url_for('ui.submission_status', submission_id=submission_id) }}" name="cancel" class="button is-outlined" value="cancel" aria-label="Cancel">Cancel</a>
           {% if require_confirmation and not confirmed %}
           <button name="action" type="submit" class="button is-link is-outlined" value="submit" aria-label="Edit">Edit</button>
           <button name="confirmed" type="submit" class="button is-success" value="1" aria-label="Confirm and Submit">Confirm and Submit</button>

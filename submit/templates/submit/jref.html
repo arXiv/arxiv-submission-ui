@@ -11,12 +11,29 @@
   <h1 class="title">Update journal reference, DOI, or report number</h1>
   {% if require_confirmation and not confirmed %}
   <div class="notification is-info">
-    Please carefully check this preview, which shows the abstract page as
-    it will be updated. You can continue to make changes until you are
-    satisfied with the result.
+    <p>This preview shows the abstract page as it will be updated.
+    Please check carefully to ensure that it is correct.<br/ >
+    You can continue to make changes until you are
+    satisfied with the result.</p>
   </div>
+
+  <div class="box">
+    <p>The abs-page preview goes here, and shows these values in context.</p>
+    <dl>
+      <dt>DOI</dt>
+      <dd>{{ form.doi.data }}</dd>
+
+      <dt>Journal Reference</dt>
+      <dd>{{ form.journal_ref.data }}</dd>
+
+      <dt>Report Number</dt>
+      <dd>{{ form.report_num.data }}</dd>
+    </dl>
+  </div>
+  {% else %}
+    <h2>arXiv:{{ submission.arxiv_id }}v{{ submission.version }} {{ submission.metadata.title }}</h2>
   {% endif %}
-  <h2>arXiv:{{ submission.arxiv_id }}v{{ submission.version }} {{ submission.metadata.title }}</h2>
+
   <content>
     <form method="POST" action="{{ url_for('ui.jref', submission_id=submission_id) }}">
       <div class="columns">
@@ -98,9 +115,19 @@
           {% endwith %}
         </div>
         <div class="column">
-          <div class="message">
-            <div class="message-body is-info">
-            <p><span class="icon has-text-link"><i class="fa fa-info-circle"></i></span>
+          <div class="message is-link">
+            {% if require_confirmation and not confirmed %}
+            <div class="message-header">
+              <p><span class="icon"><i class="fa fa-info-circle"></i></span>
+                Noticed a typo or odd character?</p>
+            </div>
+            <div class="message-body">
+              <p>If the preview doesn't look right, correct it in the form fields and use the "Edit" button to make changes.</p>
+            </div>
+            {% else %}
+            <div class="message-body">
+            <p>
+              <span class="icon has-text-link"><i class="fa fa-info-circle"></i></span>
               When an article is published, the author may wish to
               indicate this in the abstract listing for the article. For
               this reason, the journal reference and DOI (Digital Object
@@ -109,31 +136,18 @@
               institutional report numbers.
             </p>
             </div>
+            {% endif %}
           </div>
         </div>
       </div>
 
-      {% if require_confirmation and not confirmed %}
-      <div class="box">
-        <p>The abs-page preview goes here, and shows these values in context.</p>
-        <dl>
-          <dt>DOI</dt>
-          <dd>{{ form.doi.data }}</dd>
 
-          <dt>Journal Reference</dt>
-          <dd>{{ form.journal_ref.data }}</dd>
-
-          <dt>Report Number</dt>
-          <dd>{{ form.report_num.data }}</dd>
-        </dl>
-      </div>
-      {% endif %}
 
       <div class="buttons submit-nav" role="navigation">
-          <a href="{{ url_for('ui.submission_status', submission_id=submission_id) }}" name="cancel" class="button is-danger is-outlined" value="cancel" aria-label="Cancel" title="Cancel">Cancel</a>
+          <a href="{{ url_for('ui.submission_status', submission_id=submission_id) }}" name="cancel" class="button is-outlined" value="cancel" aria-label="Cancel" title="Cancel">Cancel</a>
           {% if require_confirmation and not confirmed %}
           <button name="action" type="submit" class="button is-link is-outlined" value="submit" aria-label="Edit">Edit</button>
-          <button name="confirmed" type="submit" class="button is-success" value="1" aria-label="Confirm and Save">Confirm & Save</button>
+          <button name="confirmed" type="submit" class="button is-success" value="1" aria-label="Confirm and Submit">Confirm and Submit</button>
           {% else %}
           <button name="action" type="submit" class="button is-link" value="submit" aria-label="Preview Changes">Preview Changes</button>
           {% endif %}

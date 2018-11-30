@@ -28,7 +28,11 @@
         </div>
         {% endif %}
       </div>
-
+      {% if not submission.published %}
+      <li>
+        <a href="{{ get_next_stage_for_submission(submission) }}">Version {{ submission.version }}; updated {{ submission.updated|timesince }}</a>. <span class="tag">{{ submission.status }}</span>
+      </li>
+      {% endif %}
       {% for version in submission.versions %}
         {% if version.published %}
         <li>

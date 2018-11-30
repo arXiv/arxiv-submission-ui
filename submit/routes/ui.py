@@ -94,6 +94,18 @@ def publish(submission_id: int) -> Response:
                     headers={'Location': target})
 
 
+# TODO: remove me!!
+@blueprint.route('/<int:submission_id>/place_on_hold', methods=['GET'])
+@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION,
+                        authorizer=can_edit_submission)
+def place_on_hold(submission_id: int) -> Response:
+    """WARNING WARNING WARNING this is for testing purposes only."""
+    util.place_on_hold(submission_id)
+    target = url_for('ui.submission_status', submission_id=submission_id)
+    return Response(response={}, status=status.HTTP_303_SEE_OTHER,
+                    headers={'Location': target})
+
+
 @blueprint.route('/<int:submission_id>/verify_user',
                  endpoint=Stages.VERIFY_USER.value,
                  methods=['GET', 'POST'])

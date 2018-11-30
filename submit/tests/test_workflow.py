@@ -297,7 +297,7 @@ class TestJREFWorkflow(TestCase):
                                     headers=self.headers)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.content_type, 'text/html; charset=utf-8')
-        self.assertIn(b'Confirm & Submit', response.data)
+        self.assertIn(b'Confirm and Submit', response.data)
         token = self._parse_csrf_token(response)
 
         request_data['confirmed'] = True
@@ -431,7 +431,7 @@ class TestWithdrawalWorkflow(TestCase):
                                     headers=self.headers)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.content_type, 'text/html; charset=utf-8')
-        self.assertIn(b'Confirm & Submit', response.data)
+        self.assertIn(b'Confirm and Submit', response.data)
         token = self._parse_csrf_token(response)
 
         # Confirm the withdrawal request.

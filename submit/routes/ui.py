@@ -43,6 +43,30 @@ def create_submission():
     raise InternalServerError('Something went wrong')
 
 
+@blueprint.route('/<int:submission_id>/delete', methods=['GET', 'POST'])
+@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION)
+def delete_submission(submission_id: int):
+    """Delete, or roll a submission back to the last published state."""
+    request_data = MultiDict(request.form.items(multi=True))
+    data, code, headers = controllers.delete.delete(
+        request.method,
+        request_data,
+        request.session,
+        submission_id
+    )
+    if code in [status.HTTP_200_OK, status.HTTP_400_BAD_REQUEST]:
+        rendered = render_template(
+            "submit/confirm_delete_submission.html",
+            pagetitle='Delete submission or replacement',
+            **data
+        )
+        response = make_response(rendered, code)
+        return response
+    if 'Location' in headers:
+        return redirect(headers['Location'], code=code)
+    raise InternalServerError('Something went wrong')
+
+
 @blueprint.route('/<int:submission_id>/replace', methods=['POST'])
 @auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION)
 def create_replacement(submission_id: int):

@@ -13,8 +13,7 @@ from arxiv.users.domain import Session, User
 
 import arxiv.submission as events
 from . import util
-
-Response = Tuple[Dict[str, Any], int, Dict[str, Any]]   # pylint: disable=C0103
+from .util import Response
 
 logger = logging.getLogger(__name__)    # pylint: disable=C0103
 
@@ -26,11 +25,11 @@ class CreateSubmissionForm(csrf.CSRFForm):
 def create(method: str, params: MultiDict, session: Session) -> Response:
     """Create a new submission, and redirect to workflow."""
     if method == 'GET':     # Display a splash page.
-        user_submissions = events.services.classic.get_user_submissions(session.user.user_id)
-        
+        submissions = events.load_submissions_for_user(session.user.user_id)
+
         response_data = {
             'form': CreateSubmissionForm(),
-            'user_submissions': user_submissions
+            'user_submissions': submissions
         }
         return response_data, status.HTTP_200_OK, {}
 

@@ -1,0 +1,27 @@
+{% extends "submit/base.html" %}
+
+{% import "submit/submit_macros.html" as submit_macros %}
+
+{% block title_preamble %}{% endblock %}
+{% block title -%}{% if submission.version == 1 %}Delete submission{% else %}Revert changes for submission{% endif %} {{ submission.submission_id }}{%- endblock title %}
+
+{% block within_content %}
+<form method="POST" action="{{ url_for('ui.delete_submission', submission_id=submission_id) }}">
+  {{ form.csrf_token }}
+  <div class="container breathe-vertical" style="max-width: 640px">
+    <div class="message is-danger is-inline-block">
+      <div class="message-body">
+        <h3 class="is-size-5 has-text-weight-bold has-text-primary">
+          This action will {% if submission.version == 1 %}delete your submission{% else %}revert your unannounced changes{% endif %} forever.
+        </h3>
+        {{ form.csrf_token }}
+        <input type="hidden" name="confirmed", value="true" />
+        <div class="buttons is-centered">
+            <a class="button" href="{% if url_to_safety %}{{ url_to_safety }}{% else %}{{ url_for('ui.create_submission') }}{% endif %}">{% if submission.version == 1 %}Keep submission{% else %}Keep unannounced changes{% endif %}</a>
+            <button class="button is-primary" type="submit">{% if submission.version == 1 %}Delete submission{% else %}Revert unannounced changes{% endif %} forever</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</form>
+{% endblock within_content %}

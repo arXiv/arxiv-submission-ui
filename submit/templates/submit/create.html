@@ -31,18 +31,18 @@
       {% if not submission.published %}
       <li>
         <a href="{{ get_next_stage_for_submission(submission) }}">Version {{ submission.version }}; updated {{ submission.updated|timesince }}</a>. <span class="tag">{{ submission.status }}</span>
+        <a href="{{ url_for('ui.delete_submission', submission_id=submission.submission_id) }}">
+          <span class="icon">
+            <i class="fa fa-trash" aria-label="Delete"></i>
+          </span>
+        </a>
       </li>
       {% endif %}
       {% for version in submission.versions %}
-        {% if version.published %}
+
         <li>
           arXiv:{{ version.arxiv_id }}v{{ version.version }}; published {{ version.updated|timesince }}. <span class="tag">{{ version.status }}</span>
         </li>
-        {% else %}
-        <li>
-          <a href="{{ get_next_stage_for_submission(version) }}">Version {{ version.version }}; updated {{ version.updated|timesince }}</a>. <span class="tag">{{ version.status }}</span>
-        </li>
-        {% endif %}
       {% endfor %}
     </div>
     {% endfor %}

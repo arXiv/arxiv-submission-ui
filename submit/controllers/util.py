@@ -18,6 +18,8 @@ import arxiv.submission as events
 from ..domain import SubmissionStage
 from ..util import load_submission
 
+Response = Tuple[Dict[str, Any], int, Dict[str, Any]]   # pylint: disable=C0103
+
 
 class OptGroupSelectWidget(Select):
     """Select widget with optgroups."""

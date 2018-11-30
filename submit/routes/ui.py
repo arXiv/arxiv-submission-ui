@@ -419,7 +419,7 @@ def confirm_delete(submission_id: int) -> Response:
 @auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION,
                         authorizer=can_edit_submission)
 def jref(submission_id: Optional[int] = None) -> Response:
-    """Render the submit start page."""
+    """Render the JREF submission page."""
     request_data = MultiDict(request.form.items(multi=True))
     data, code, headers = controllers.jref.jref(
         request.method,
@@ -430,6 +430,26 @@ def jref(submission_id: Optional[int] = None) -> Response:
     if code in [status.HTTP_200_OK, status.HTTP_400_BAD_REQUEST]:
         rendered = render_template("submit/jref.html",
                                    pagetitle='Add journal reference',
+                                   **data)
+        return make_response(rendered, code)
+    return Response(response=data, status=code, headers=headers)
+
+
+@blueprint.route('/<int:submission_id>/withdraw', methods=['GET', 'POST'])
+@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION,
+                        authorizer=can_edit_submission)
+def withdraw(submission_id: Optional[int] = None) -> Response:
+    """Render the withdrawal request page."""
+    request_data = MultiDict(request.form.items(multi=True))
+    data, code, headers = controllers.withdraw.request_withdrawal(
+        request.method,
+        request_data,
+        request.session,
+        submission_id
+    )
+    if code in [status.HTTP_200_OK, status.HTTP_400_BAD_REQUEST]:
+        rendered = render_template("submit/withdraw.html",
+                                   pagetitle='Request withdrawal',
                                    **data)
         return make_response(rendered, code)
     return Response(response=data, status=code, headers=headers)

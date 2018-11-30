@@ -35,7 +35,7 @@ $ git pull
 $ pipenv install ./users
 $ JWT_SECRET=foosecret pipenv run python generate_token.py
 Numeric user ID: 1234
-Email address: jdoe@cornell.edu 
+Email address: jdoe@cornell.edu
 Username: Jane Doe
 First name [Jane]:
 Last name [Doe]:
@@ -94,7 +94,7 @@ session = domain.Session(
                       domain.Category('astro-ph', 'GA')]
     )
 )
-secret = 'foosecret'    # Note this secret.
+secret = 'foosecret'    # Note this secret. 
 
 token = auth.tokens.encode(session, secret)
 ```

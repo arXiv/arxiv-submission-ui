@@ -39,7 +39,9 @@
 ol.file-tree {
   margin: 0 0 1rem 0; }
   ol.file-tree li {
-    margin-top: 0.35em;
+    margin-top: 0;
+    padding-top: 0.15em;
+    padding-bottom: 0.15em;
     background-color: white; }
     ol.file-tree li.even {
       background-color: #E8E8E8; }
@@ -51,7 +53,7 @@ ol.file-tree {
       margin: 0; }
   ol.file-tree > li ol {
     border-left: 2px solid #CCC;
-    margin: 0 0 0.5rem 1rem; }
+    margin: 0 0 0 1rem; }
     ol.file-tree > li ol li {
       padding-left: 1em; }
       ol.file-tree > li ol li:first-child {

@@ -8,29 +8,35 @@
 {% endblock addl_head %}
 
 {% block content %}
-  <h1 class="title">Update journal reference</h1>
-  <p>
-    Articles that have been announced and made public cannot be completely
-    removed. However, you may submit a withdrawal notification for your
-    article.
-  </p>
+  <h1 class="title">Withdraw article</h1>
+
   {% if require_confirmation and not confirmed %}
   <div class="notification is-info">
-    Please review the preview of your paper's abstract page, and confirm that
-    you with to proceed. You can continue to make changes until you are
-    satisfied with the result.
+    <p>This preview shows the abstract page as it will be updated. Please
+    check carefully to ensure that it is correct. You can continue to
+    make changes until you are satisfied with the result.</p>
   </div>
-  {% endif %}
+
+  <div class="box">
+    <p>The abs-page preview goes here, and shows these values in context.</p>
+    <dl>
+      <dt>Withdrawal reason</dt>
+      <dd>{{ form.withdrawal_reason.data }}</dd>
+    </dl>
+  </div>
+  {% else %}
   <h2>arXiv:{{ submission.arxiv_id }}v{{ submission.version }} {{ submission.metadata.title }}</h2>
+  {% endif %}
+
   <content>
     <form method="POST" action="{{ url_for('ui.withdraw', submission_id=submission_id) }}">
       <div class="columns">
         <div class="column">
           {{ form.csrf_token }}
           {% with field = form.withdrawal_reason %}
-          <div class="field is-short-field">
+          <div class="field">
             <div class="control">
-              <label class="label">{{ field.label.text }} <span class="icon has-text-link"><i class="fa fa-question-circle"></i></span></label>
+              <label class="label" for="withdrawal_reason">{{ field.label.text }} (required) <a class="help-bubble" href="{{ url_for('help_withdraw') }}"><i class="fa fa-question-circle is-info"></i><div class="bubble-text">Specific reason for withdrawal will be placed in the Comments display for your article.</div></a></label>
               {% if field.errors %}
                 <div class="help is-danger">
                   {% for error in field.errors %}
@@ -53,25 +59,36 @@
           {% endwith %}
 
         </div>
-        <div class="column">
+        <div class="column" style="align-self: flex-end">
+          <div class="message is-link">
           {% if require_confirmation and not confirmed %}
-          <div class="box">
-            <p>The abs-page preview goes here, and shows these values in context.</p>
-            <dl>
-              <dt>Withdrawal reason</dt>
-              <dd>{{ form.withdrawal_reason.data }}</dd>
-            </dl>
-          </div>
+            <div class="message-header">
+              <p><span class="icon"><i class="fa fa-info-circle"></i></span> Noticed a typo or odd character?</p>
+            </div>
+            <div class="message-body">
+              <p>
+                If the preview doesn't look right, correct it in the form field and use the "Edit" button to make changes.
+              </p>
+            </div>
+          {% else %}
+            <div class="message-body">
+              <p>
+                Articles that have been announced and made public cannot be
+                completely removed. However, you may submit a withdrawal
+                notification for your article. Previously published versions of this article will still be publicly available.
+              </p>
+            </div>
           {% endif %}
+          </div>
         </div>
       </div>
       <div class="buttons submit-nav" role="navigation">
-          <a href="{{ url_for('ui.submission_status', submission_id=submission_id) }}" name="cancel" class="button is-danger" value="cancel" aria-label="Cancel" title="Cancel">Cancel</a>
+          <a href="{{ url_for('ui.submission_status', submission_id=submission_id) }}" name="cancel" class="button is-outlined" value="cancel" aria-label="Cancel">Cancel</a>
           {% if require_confirmation and not confirmed %}
-          <button name="action" type="submit" class="button is-link" value="submit" aria-label="Submit">Update</button>
-          <button name="confirmed" type="submit" class="button is-success" value="1" aria-label="Confirm">Confirm & Submit</button>
+          <button name="action" type="submit" class="button is-link is-outlined" value="submit" aria-label="Edit">Edit</button>
+          <button name="confirmed" type="submit" class="button is-success" value="1" aria-label="Confirm and Submit">Confirm and Submit</button>
           {% else %}
-          <button name="action" type="submit" class="button is-link" value="submit" aria-label="Submit">Proceed</button>
+          <button name="action" type="submit" class="button is-link" value="submit" aria-label="Preview">Preview Withdrawal Notice</button>
           {% endif %}
       </div>
     </form>

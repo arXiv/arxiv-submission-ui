@@ -50,10 +50,10 @@ def request_withdrawal(method: str, params: MultiDict, session: Session,
     # Will raise NotFound if there is no such submission.
     submission, submission_events = load_submission(submission_id)
 
-    # The submission must be published for this to be a real JREF submission.
+    # The submission must be published for this to be a withdrawal request.
     if not submission.published:
         alerts.flash_failure(Markup("Submission must first be published. See "
-                                    "<a href='https://arxiv.org/help/jref'>"
+                                    "<a href='https://arxiv.org/help/withdraw'>"
                                     "the arXiv help pages</a> for details."))
         status_url = url_for('ui.submission_status',
                              submission_id=submission_id)

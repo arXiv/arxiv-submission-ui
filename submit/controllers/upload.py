@@ -55,11 +55,11 @@ def tidy_filesize(size) -> str:
     Returns: formatted string of size in units up through GB
 
     """
+    units = ["B", "KB", "MB", "GB"]
     if size == 0:
         return "0B"
     if size > 1000000000:
         return '{} {}'.format(size, units[3])
-    units = ["B", "KB", "MB", "GB"]
     units_index = 0
     while size > 1000:
         units_index += 1
@@ -161,7 +161,6 @@ def delete_all(method: str, params: MultiDict, session: Session,
     response_data = {
         'submission': submission,
         'submission_id': submission.submission_id,
-
     }
     filemanager.set_auth_token(token)
     if method == 'GET':
@@ -243,7 +242,6 @@ def delete(method: str, params: MultiDict, session: Session,
     response_data = {
         'submission': submission,
         'submission_id': submission.submission_id,
-
     }
     filemanager.set_auth_token(token)
 

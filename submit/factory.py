@@ -27,4 +27,5 @@ def create_ui_web_app() -> Flask:
     app.jinja_env.filters['group_files'] = filters.group_files
     app.jinja_env.filters['timesince'] = filters.timesince
     app.jinja_env.filters['just_updated'] = filters.just_updated
+    app.context_processor(ui.inject_get_next_stage_for_submission)
     return app

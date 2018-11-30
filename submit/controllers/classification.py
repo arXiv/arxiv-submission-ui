@@ -123,7 +123,7 @@ def classification(method: str, params: MultiDict, session: Session,
     response_data = {
         'submission_id': submission_id,
         'form': form,
-
+        'submission': submission
     }
 
     if method == 'POST':

@@ -1,11 +1,48 @@
 {% extends "submit/base.html" %}
 
 {% block within_content %}
-<p class="help-text">Click on the button below to start a new submission.</p>
+<div class="columns">
+  <div class="column is-one-third">
+    <p class="help-text">Click on the button below to start a new submission.</p>
 
-<form class="form" method="POST" action="{{ url_for('ui.create_submission') }}">
-  {{ form.csrf_token }}
-  <button name="new" class="button" value="new" aria-label="New submission">New submission</button>
-</form>
+    <form class="form" method="POST" action="{{ url_for('ui.create_submission') }}">
+      {{ form.csrf_token }}
+      <button name="new" class="button" value="new" aria-label="New submission">New submission</button>
+    </form>
+  </div>
+  <div class="column is-two-thirds">
+    {% for submission in user_submissions %}
+    <div class="box">
+
+      <div class="level">
+        <div class="level-left">
+          Submission {{ submission.submission_id }}; created {{ submission.created|timesince }}
+        </div>
+        {{ submission.status}}
+        {% if submission.published %}
+        <div class="level-right">
+          <form class="form" method="POST" action="{{ url_for('ui.create_replacement', submission_id=submission.submission_id) }}">
+            {{ form.csrf_token }}
+            <button name="new" class="button is-link is-small" value="new" aria-label="New version (replacement)">New version (replacement)</button>
+          </form>
+        </div>
+        {% endif %}
+      </div>
+
+      {% for version in submission.versions %}
+        {% if version.published %}
+        <li>
+          arXiv:{{ version.arxiv_id }}v{{ version.version }}; published {{ version.updated|timesince }}. <span class="tag">{{ version.status }}</span>
+        </li>
+        {% else %}
+        <li>
+          <a href="{{ get_next_stage_for_submission(version) }}">Version {{ version.version }}; updated {{ version.updated|timesince }}</a>. <span class="tag">{{ version.status }}</span>
+        </li>
+        {% endif %}
+      {% endfor %}
+    </div>
+    {% endfor %}
+  </div>
+</div>
 
 {% endblock %}

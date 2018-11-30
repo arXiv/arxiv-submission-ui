@@ -53,7 +53,6 @@ def verify_user(method: str, params: MultiDict, session: Session,
         'form': form,
         'submission': submission,
         'user': session.user,   # We want the most up-to-date representation.
-
     }
 
     # Process event if go to next page.

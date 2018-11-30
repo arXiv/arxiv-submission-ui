@@ -50,6 +50,15 @@ def publish_submission(submission_id: int) -> None:
     session = events.services.classic.current_session()
     db_submission = session.query(events.services.classic.models.Submission) \
         .get(submission_id)
+    if db_submission.doc_paper_id:
+        db_submission_ = session.query(events.services.classic.models.Submission) \
+            .filter(events.services.classic.models.Submission.doc_paper_id == db_submission.doc_paper_id) \
+            .filter(events.services.classic.models.Submission.type != events.services.classic.models.Submission.JOURNAL_REFERENCE) \
+            .order_by(events.services.classic.models.Submission.submission_id.desc()) \
+            .first()
+        db_submission = db_submission_ if db_submission_ else db_submission
+    if db_submission.is_published():
+        return
     db_submission.status = events.services.classic.models.Submission.PUBLISHED
     paper_id = datetime.now().strftime('%s')[-4:] \
         + "." \

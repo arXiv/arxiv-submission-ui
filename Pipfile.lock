@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "da5e04f572f0d1185c5cf64bd52e45c43ba75f482920a879782e06f249025d74"
+            "sha256": "7fc57780840931013240be94c540db4d058c939a2ec1fab6383010cfcd4946a7"
         },
         "pipfile-spec": 6,
         "requires": {},
@@ -14,6 +14,9 @@
         ]
     },
     "default": {
+        "3a3786f": {
+            "path": "./../arxiv-submission-core/core"
+        },
         "arxiv-auth": {
             "hashes": [
                 "sha256:c391381cc94b83a9173c383b78b06d5a77d5d124d5686577ba8466e68012fd80"
@@ -27,13 +30,6 @@
             ],
             "index": "pypi",
             "version": "==0.11.1"
-        },
-        "arxiv-submission-core": {
-            "hashes": [
-                "sha256:3273d17c5e0eb040974b487fd78d939d6a7fcedd8dbc157b7263715a97bed688"
-            ],
-            "index": "pypi",
-            "version": "==0.5.1rc8"
         },
         "bleach": {
             "hashes": [
@@ -197,7 +193,6 @@
                 "sha256:063df5763652e21de43de7d9e00ccf239f953a832941e37be541614732cdfc93",
                 "sha256:88f9287c0174266bb0d8cedd395cfba9c58e87e5ad86b2ce58859bc11be3cf02"
             ],
-            "markers": "python_version >= '2.7'",
             "version": "==2.7.5"
         },
         "pytz": {
@@ -272,6 +267,7 @@
                 "sha256:a68ac5e15e76e7e5dd2b8f94007233e01effe3e50e8daddf69acfd81cb686baf",
                 "sha256:b5725a0bd4ba422ab0e66e89e030c806576753ea3ee08554382c14e685d117b5"
             ],
+            "markers": "python_version >= '3.4'",
             "version": "==1.23"
         },
         "uwsgi": {
@@ -537,7 +533,6 @@
                 "sha256:edb04bdd45bfd76c8292c4d9654568efaedf76fe78eb246dde69bdb13b2dad87",
                 "sha256:f19f2a4f547505fe9072e15f6f4ae714af51b5a681a97f187971f50c283193b6"
             ],
-            "markers": "python_version < '3.7' and implementation_name == 'cpython'",
             "version": "==1.1.0"
         },
         "urllib3": {
@@ -545,6 +540,7 @@
                 "sha256:a68ac5e15e76e7e5dd2b8f94007233e01effe3e50e8daddf69acfd81cb686baf",
                 "sha256:b5725a0bd4ba422ab0e66e89e030c806576753ea3ee08554382c14e685d117b5"
             ],
+            "markers": "python_version >= '3.4'",
             "version": "==1.23"
         },
         "wrapt": {

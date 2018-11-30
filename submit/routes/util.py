@@ -9,14 +9,14 @@ from werkzeug.exceptions import BadRequest
 from arxiv import status
 from arxiv.base import alerts, logging
 from arxiv.base.globals import get_application_global
-from ..domain import SubmissionStage
+from ..domain import SubmissionStage, ReplacementStage, Stages
 from ..util import load_submission
 
 logger = logging.getLogger(__name__)
 
 
-def flow_control(this_stage: SubmissionStage.Stages,
-                 exit_page: str = 'user') -> Callable:
+def flow_control(this_stage: Stages, exit_page: str = 'ui.create_submission') \
+        -> Callable:
     """Get a decorator that handles redirection to next/previous steps."""
     PREVIOUS = 'previous'
     NEXT = 'next'
@@ -29,7 +29,10 @@ def flow_control(this_stage: SubmissionStage.Stages,
             """Update the redirect to the next, previous, or exit page."""
             action = request.form.get('action')
             submission, _ = load_submission(submission_id)
-            stage = SubmissionStage(submission=submission)
+            if submission.version == 1:
+                stage = SubmissionStage(submission=submission)
+            else:
+                stage = ReplacementStage(submission=submission)
 
             # Set the stage handled by this endpoint.
             g = get_application_global()
@@ -37,16 +40,19 @@ def flow_control(this_stage: SubmissionStage.Stages,
                 g.this_stage = this_stage
                 g.stage = stage
 
-            if not stage.can_proceed_to(this_stage):
-                next_stage = stage.next_required_stage.value
-                label = stage.LABELS[next_stage]
-                alerts.flash_warning(
-                    f'Please {label} before proceeding.'
-                )
-                return redirect(url_for(
-                    f'ui.{next_stage}',
-                    submission_id=submission_id
-                ), code=status.HTTP_303_SEE_OTHER)
+            try:
+                if not stage.can_proceed_to(this_stage):
+                    next_stage = stage.next_required_stage.value
+                    label = stage.LABELS[next_stage]
+                    alerts.flash_warning(
+                        f'Please {label} before proceeding.'
+                    )
+                    return redirect(url_for(
+                        f'ui.{next_stage}',
+                        submission_id=submission_id
+                    ), code=status.HTTP_303_SEE_OTHER)
+            except ValueError:
+                raise BadRequest('Request not allowed for this submission')
 
             # If the user selects "go back", we attempt to save their input
             # above. But if the input does not validate, we don't prevent them

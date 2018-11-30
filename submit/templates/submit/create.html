@@ -23,8 +23,11 @@
         <div class="level-right">
           <form class="form" method="POST" action="{{ url_for('ui.create_replacement', submission_id=submission.submission_id) }}">
             {{ form.csrf_token }}
-            <button name="new" class="button is-link is-small" value="new" aria-label="New version (replacement)">New version (replacement)</button>
+            <button name="new" class="button is-link is-small" value="new" aria-label="New version (replacement)">New version</button>
+            <a href="{{ url_for('ui.jref', submission_id=submission.submission_id) }}" class="button is-link is-small" aria-label="Update journal reference">Update journal reference</a>
+            <a href="{{ url_for('ui.withdraw', submission_id=submission.submission_id) }}" class="button is-link is-small" aria-label="Request withdrawal">Request withdrawal</a>
           </form>
+
         </div>
         {% endif %}
       </div>

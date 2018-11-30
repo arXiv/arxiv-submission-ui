@@ -134,12 +134,9 @@ class StageBase(NamedTuple):
         """
         previous = None
         for i, (stage, required, method) in enumerate(self.ORDER):
-            print(stage, required, method)
             if not required:    # Will skip over optional steps.
-                print('skip: not required')
                 continue
             if method and not method(self.submission):
-                print('not complete, return previous')
                 return previous
             previous = stage
         return None

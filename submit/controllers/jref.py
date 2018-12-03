@@ -28,17 +28,24 @@ class JREFForm(csrf.CSRFForm, util.FieldMixin, util.SubmissionMixin):
     """Set DOI and/or journal reference on a published submission."""
 
     doi = TextField('DOI', validators=[optional()],
-                    description="Full DOI of the version of record.")
+                    description=("Full DOI of the version of record. For"
+                                 " example:"
+                                 " <code>10.1016/S0550-3213(01)00405-9</code>"
+                                 ))
     journal_ref = TextField('Journal reference', validators=[optional()],
                             description=(
-                                "See <a href='https://arxiv.org/help/jref'>"
-                                "the arXiv help pages</a> for details."
-                            ))
+                                "For example: <code>Nucl.Phys.Proc.Suppl. 109"
+                                " (2002) 3-9</code>. See"
+                                " <a href='https://arxiv.org/help/jref'>"
+                                "the arXiv help pages</a> for details."))
     report_num = TextField('Report number', validators=[optional()],
                            description=(
-                               "See <a href='https://arxiv.org/help/jref'>"
-                               "the arXiv help pages</a> for details."
-                           ))
+                               "For example: <code>SU-4240-720</code>."
+                               " Multiple report numbers should be separated"
+                               " with a semi-colon and a space, for example:"
+                               " <code>SU-4240-720; LAUR-01-2140</code>."
+                               " See <a href='https://arxiv.org/help/jref'>"
+                               "the arXiv help pages</a> for details."))
     confirmed = BooleanField('Confirmed',
                              false_values=('false', False, 0, '0', ''))
 

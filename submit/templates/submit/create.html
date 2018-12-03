@@ -40,10 +40,6 @@
           </span>
         </a>
       </li>
-      {% else %}
-      <li>
-        arXiv:{{ submission.arxiv_id }}v{{ submission.version }}; published {{ submission.updated|timesince }}. <span class="tag">{{ submission.status }}</span>
-      </li>
       {% endif %}
       {% for version in submission.versions %}
 

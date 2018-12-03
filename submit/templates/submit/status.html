@@ -18,7 +18,7 @@
 
 {% for event in events %}
 <li class="">
-  {{ event.NAMED.capitalize() }} {{ event.created|timesince }}
+  {{ event.NAMED.capitalize() }} {{ event.created|timesince }} ({{event.event_id}})
   <pre>
   {{ event.to_dict()|pprint }}
   </pre>

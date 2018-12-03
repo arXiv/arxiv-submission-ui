@@ -14,7 +14,7 @@ from wtforms import BooleanField, RadioField
 from wtforms.validators import InputRequired, ValidationError, optional
 
 from arxiv import status
-from arxiv.base import logging
+from arxiv.base import logging 
 from arxiv.forms import csrf
 from arxiv.users.domain import Session
 import arxiv.submission as events
@@ -63,6 +63,7 @@ def authorship(method: str, params: MultiDict, session: Session,
     response_data = {
         'submission_id': submission_id,
         'form': form,
+        'submission': submission
     }
 
     if method == 'POST':

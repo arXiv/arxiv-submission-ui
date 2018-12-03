@@ -47,16 +47,33 @@ def load_submission(submission_id: Optional[int]) \
 # TODO: remove me!
 def publish_submission(submission_id: int) -> None:
     """WARNING WARNING WARNING this is for testing purposes only."""
+    dbss = events.services.classic._get_db_submission_rows(submission_id)
+    i = events.services.classic._get_head_idx(dbss)
+    head = dbss[i]
     session = events.services.classic.current_session()
-    db_submission = session.query(events.services.classic.models.Submission) \
-        .get(submission_id)
-    db_submission.status = events.services.classic.models.Submission.PUBLISHED
-    paper_id = datetime.now().strftime('%s')[-4:] \
-        + "." \
-        + datetime.now().strftime('%s')[-5:]
-    db_document = events.services.classic.models.Document(paper_id=paper_id)
-    db_submission.doc_paper_id = paper_id
-    db_submission.document = db_document
-    session.add(db_submission)
-    session.add(db_document)
+    if head.is_published():
+        return
+    head.status = events.services.classic.models.Submission.PUBLISHED
+    if head.document is None:
+        paper_id = datetime.now().strftime('%s')[-4:] \
+            + "." \
+            + datetime.now().strftime('%s')[-5:]
+        head.document = \
+            events.services.classic.models.Document(paper_id=paper_id)
+        head.doc_paper_id = paper_id
+    session.add(head)
+    session.commit()
+
+
+# TODO: remove me!
+def place_on_hold(submission_id: int) -> None:
+    """WARNING WARNING WARNING this is for testing purposes only."""
+    dbss = events.services.classic._get_db_submission_rows(submission_id)
+    i = events.services.classic._get_head_idx(dbss)
+    head = dbss[i]
+    session = events.services.classic.current_session()
+    if head.is_published() or head.is_on_hold():
+        return
+    head.status = events.services.classic.models.Submission.ON_HOLD
+    session.add(head)
     session.commit()

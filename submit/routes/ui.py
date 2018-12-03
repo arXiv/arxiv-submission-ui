@@ -1,6 +1,6 @@
 """Provides routes for the submission user interface."""
 
-from typing import Optional, Callable
+from typing import Optional, Callable, Dict
 
 from werkzeug import MultiDict
 from werkzeug.exceptions import InternalServerError
@@ -12,7 +12,7 @@ from arxiv.users import auth
 import arxiv.submission as events
 
 from .auth import can_edit_submission
-from ..domain import SubmissionStage
+from ..domain import SubmissionStage, Submission, ReplacementStage, Stages
 from .util import flow_control, inject_stage
 from .. import util
 
@@ -34,6 +34,54 @@ def create_submission():
         rendered = render_template(
             "submit/create.html",
             pagetitle='Create a new submission',
+            **data
+        )
+        response = make_response(rendered, code)
+        return response
+    if 'Location' in headers:
+        return redirect(headers['Location'], code=code)
+    raise InternalServerError('Something went wrong')
+
+
+@blueprint.route('/<int:submission_id>/delete', methods=['GET', 'POST'])
+@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION)
+def delete_submission(submission_id: int):
+    """Delete, or roll a submission back to the last published state."""
+    request_data = MultiDict(request.form.items(multi=True))
+    data, code, headers = controllers.delete.delete(
+        request.method,
+        request_data,
+        request.session,
+        submission_id
+    )
+    if code in [status.HTTP_200_OK, status.HTTP_400_BAD_REQUEST]:
+        rendered = render_template(
+            "submit/confirm_delete_submission.html",
+            pagetitle='Delete submission or replacement',
+            **data
+        )
+        response = make_response(rendered, code)
+        return response
+    if 'Location' in headers:
+        return redirect(headers['Location'], code=code)
+    raise InternalServerError('Something went wrong')
+
+
+@blueprint.route('/<int:submission_id>/replace', methods=['POST'])
+@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION)
+def create_replacement(submission_id: int):
+    """Create a replacement submission."""
+    request_data = MultiDict(request.form.items(multi=True))
+    data, code, headers = controllers.create.replace(
+        request.method,
+        request_data,
+        request.session,
+        submission_id
+    )
+    if code in [status.HTTP_200_OK, status.HTTP_400_BAD_REQUEST]:
+        rendered = render_template(
+            "submit/replace.html",
+            pagetitle='Create a new version (replacement)',
             **data
         )
         response = make_response(rendered, code)
@@ -70,12 +118,24 @@ def publish(submission_id: int) -> Response:
                     headers={'Location': target})
 
 
+# TODO: remove me!!
+@blueprint.route('/<int:submission_id>/place_on_hold', methods=['GET'])
+@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION,
+                        authorizer=can_edit_submission)
+def place_on_hold(submission_id: int) -> Response:
+    """WARNING WARNING WARNING this is for testing purposes only."""
+    util.place_on_hold(submission_id)
+    target = url_for('ui.submission_status', submission_id=submission_id)
+    return Response(response={}, status=status.HTTP_303_SEE_OTHER,
+                    headers={'Location': target})
+
+
 @blueprint.route('/<int:submission_id>/verify_user',
-                 endpoint=SubmissionStage.Stages.VERIFY_USER.value,
+                 endpoint=Stages.VERIFY_USER.value,
                  methods=['GET', 'POST'])
 @auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION,
                         authorizer=can_edit_submission)
-@flow_control(SubmissionStage.Stages.VERIFY_USER)
+@flow_control(Stages.VERIFY_USER)
 def verify_user(submission_id: Optional[int] = None) -> Response:
     """Render the submit start page."""
     request_data = MultiDict(request.form.items(multi=True))
@@ -97,11 +157,11 @@ def verify_user(submission_id: Optional[int] = None) -> Response:
 
 
 @blueprint.route('/<int:submission_id>/authorship',
-                 endpoint=SubmissionStage.Stages.AUTHORSHIP.value,
+                 endpoint=Stages.AUTHORSHIP.value,
                  methods=['GET', 'POST'])
 @auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION,
                         authorizer=can_edit_submission)
-@flow_control(SubmissionStage.Stages.AUTHORSHIP)
+@flow_control(Stages.AUTHORSHIP)
 def authorship(submission_id: int) -> Response:
     """Render step 2, authorship."""
     request_data = MultiDict(request.form.items(multi=True))
@@ -124,11 +184,11 @@ def authorship(submission_id: int) -> Response:
 
 
 @blueprint.route('/<int:submission_id>/license',
-                 endpoint=SubmissionStage.Stages.LICENSE.value,
+                 endpoint=Stages.LICENSE.value,
                  methods=['GET', 'POST'])
 @auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION,
                         authorizer=can_edit_submission)
-@flow_control(SubmissionStage.Stages.LICENSE)
+@flow_control(Stages.LICENSE)
 def license(submission_id: int) -> Response:
     """Render step 3, select license."""
     request_data = MultiDict(request.form.items(multi=True))
@@ -151,11 +211,11 @@ def license(submission_id: int) -> Response:
 
 
 @blueprint.route('/<int:submission_id>/policy',
-                 endpoint=SubmissionStage.Stages.POLICY.value,
+                 endpoint=Stages.POLICY.value,
                  methods=['GET', 'POST'])
 @auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION,
                         authorizer=can_edit_submission)
-@flow_control(SubmissionStage.Stages.POLICY)
+@flow_control(Stages.POLICY)
 def policy(submission_id: int) -> Response:
     """Render step 4, policy agreement."""
     request_data = MultiDict(request.form.items(multi=True))
@@ -178,11 +238,11 @@ def policy(submission_id: int) -> Response:
 
 
 @blueprint.route('/<int:submission_id>/classification',
-                 endpoint=SubmissionStage.Stages.CLASSIFICATION.value,
+                 endpoint=Stages.CLASSIFICATION.value,
                  methods=['GET', 'POST'])
 @auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION,
                         authorizer=can_edit_submission)
-@flow_control(SubmissionStage.Stages.CLASSIFICATION)
+@flow_control(Stages.CLASSIFICATION)
 def classification(submission_id: int) -> Response:
     """Render step 5, choose classification."""
     request_data = MultiDict(request.form.items(multi=True))
@@ -204,11 +264,11 @@ def classification(submission_id: int) -> Response:
 
 
 @blueprint.route('/<int:submission_id>/cross_list',
-                 endpoint=SubmissionStage.Stages.CROSS_LIST.value,
+                 endpoint=Stages.CROSS_LIST.value,
                  methods=['GET', 'POST'])
 @auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION,
                         authorizer=can_edit_submission)
-@flow_control(SubmissionStage.Stages.CROSS_LIST)
+@flow_control(Stages.CROSS_LIST)
 def cross_list(submission_id: int) -> Response:
     """Render step 6, secondary classes."""
     request_data = MultiDict(request.form.items(multi=True))
@@ -230,11 +290,11 @@ def cross_list(submission_id: int) -> Response:
 
 
 @blueprint.route('/<int:submission_id>/file_upload',
-                 endpoint=SubmissionStage.Stages.FILE_UPLOAD.value,
+                 endpoint=Stages.FILE_UPLOAD.value,
                  methods=['GET', 'POST'])
 @auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION,
                         authorizer=can_edit_submission)
-@flow_control(SubmissionStage.Stages.FILE_UPLOAD)
+@flow_control(Stages.FILE_UPLOAD)
 def file_upload(submission_id: int) -> Response:
     """Render step 7, file upload."""
     request_data = MultiDict(request.form.items(multi=True))
@@ -256,7 +316,7 @@ def file_upload(submission_id: int) -> Response:
 @blueprint.route('/<int:submission_id>/file_delete', methods=['GET', 'POST'])
 @auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION,
                         authorizer=can_edit_submission)
-@flow_control(SubmissionStage.Stages.FILE_UPLOAD)
+@flow_control(Stages.FILE_UPLOAD)
 def file_delete(submission_id: int) -> Response:
     """Provide the file deletion endpoint, part of the upload step."""
     if request.method == 'GET':
@@ -282,7 +342,7 @@ def file_delete(submission_id: int) -> Response:
                  methods=['GET', 'POST'])
 @auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION,
                         authorizer=can_edit_submission)
-@flow_control(SubmissionStage.Stages.FILE_UPLOAD)
+@flow_control(Stages.FILE_UPLOAD)
 def file_delete_all(submission_id: int) -> Response:
     """Provide endpoint to delete all files, part of the upload step."""
     if request.method == 'GET':
@@ -305,11 +365,11 @@ def file_delete_all(submission_id: int) -> Response:
 
 
 @blueprint.route('/<int:submission_id>/file_process',
-                 endpoint=SubmissionStage.Stages.FILE_PROCESS.value,
+                 endpoint=Stages.FILE_PROCESS.value,
                  methods=['GET'])
 @auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION,
                         authorizer=can_edit_submission)
-@flow_control(SubmissionStage.Stages.FILE_PROCESS)
+@flow_control(Stages.FILE_PROCESS)
 def file_process(submission_id: int) -> Response:
     """Render step 8, file processing."""
     code = status.HTTP_200_OK
@@ -322,11 +382,11 @@ def file_process(submission_id: int) -> Response:
 
 
 @blueprint.route('/<int:submission_id>/add_metadata',
-                 endpoint=SubmissionStage.Stages.ADD_METADATA.value,
+                 endpoint=Stages.ADD_METADATA.value,
                  methods=['GET', 'POST'])
 @auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION,
                         authorizer=can_edit_submission)
-@flow_control(SubmissionStage.Stages.ADD_METADATA)
+@flow_control(Stages.ADD_METADATA)
 def add_metadata(submission_id: int) -> Response:
     """Render step 9, metadata."""
     request_data = MultiDict(request.form.items(multi=True))
@@ -345,11 +405,11 @@ def add_metadata(submission_id: int) -> Response:
 
 
 @blueprint.route('/<int:submission_id>/add_optional_metadata',
-                 endpoint=SubmissionStage.Stages.ADD_OPTIONAL_METADATA.value,
+                 endpoint=Stages.ADD_OPTIONAL_METADATA.value,
                  methods=['GET', 'POST'])
 @auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION,
                         authorizer=can_edit_submission)
-@flow_control(SubmissionStage.Stages.ADD_OPTIONAL_METADATA)
+@flow_control(Stages.ADD_OPTIONAL_METADATA)
 def add_optional_metadata(submission_id: int) -> Response:
     """Render step 9, metadata."""
     request_data = MultiDict(request.form.items(multi=True))
@@ -368,11 +428,11 @@ def add_optional_metadata(submission_id: int) -> Response:
 
 
 @blueprint.route('/<int:submission_id>/final_preview',
-                 endpoint=SubmissionStage.Stages.FINAL_PREVIEW.value,
+                 endpoint=Stages.FINAL_PREVIEW.value,
                  methods=['GET'])
 @auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION,
                         authorizer=can_edit_submission)
-@flow_control(SubmissionStage.Stages.FINAL_PREVIEW)
+@flow_control(Stages.FINAL_PREVIEW)
 def final_preview(submission_id: int) -> Response:
     """Render step 10, preview."""
     rendered = render_template(
@@ -453,3 +513,14 @@ def withdraw(submission_id: Optional[int] = None) -> Response:
                                    **data)
         return make_response(rendered, code)
     return Response(response=data, status=code, headers=headers)
+
+
+def inject_get_next_stage_for_submission() -> Dict[str, Callable]:
+    def get_next_stage_for_submission(this_submission: Submission) -> str:
+        if this_submission.version == 1:
+            stage = SubmissionStage(this_submission)
+        else:
+            stage = ReplacementStage(this_submission)
+        return url_for(f'ui.{stage.next_stage.value}',
+                       submission_id=this_submission.submission_id)
+    return {'get_next_stage_for_submission': get_next_stage_for_submission}

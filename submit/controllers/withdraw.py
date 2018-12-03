@@ -55,8 +55,7 @@ def request_withdrawal(method: str, params: MultiDict, session: Session,
         alerts.flash_failure(Markup("Submission must first be published. See "
                                     "<a href='https://arxiv.org/help/withdraw'>"
                                     "the arXiv help pages</a> for details."))
-        status_url = url_for('ui.submission_status',
-                             submission_id=submission_id)
+        status_url = url_for('ui.create_submission')
         return {}, status.HTTP_303_SEE_OTHER, {'Location': status_url}
 
     # The form should be prepopulated based on the current state of the
@@ -112,8 +111,7 @@ def request_withdrawal(method: str, params: MultiDict, session: Session,
 
             # Success! Send user back to the submission page.
             alerts.flash_success("Withdrawal request submitted.")
-            status_url = url_for('ui.submission_status',
-                                 submission_id=submission_id)
+            status_url = url_for('ui.create_submission')
             return {}, status.HTTP_303_SEE_OTHER, {'Location': status_url}
     logger.debug('Nothing to do, return 200')
     return response_data, status.HTTP_200_OK, {}

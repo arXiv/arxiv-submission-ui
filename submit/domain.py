@@ -10,84 +10,39 @@ import io
 from arxiv.submission.domain import Submission
 
 
-# TODO: many of the instance methods on this class could be classmethods
-#  or staticmethods.
-class SubmissionStage(NamedTuple):
-    """Represents the furthest completed stage reached by a submission."""
+class Stages(Enum):     # type: ignore
+    """Stages in the submission UI workflow."""
+
+    VERIFY_USER = 'verify_user'
+    """The user is asked to verify their personal information."""
+    AUTHORSHIP = 'authorship'
+    """The user is asked to verify their authorship status."""
+    LICENSE = 'license'
+    """The user is asked to select a license."""
+    POLICY = 'policy'
+    """The user is required to agree to arXiv policies."""
+    CLASSIFICATION = 'classification'
+    """The user is asked to select a primary category."""
+    CROSS_LIST = 'cross_list'
+    """The user is given the option of selecting cross-list categories."""
+    FILE_UPLOAD = 'file_upload'
+    """The user is asked to upload files for their submission."""
+    FILE_PROCESS = 'file_process'
+    """Uploaded files are processed; this is primarily to compile LaTeX."""
+    ADD_METADATA = 'add_metadata'
+    """The user is asked to require core metadata fields, like title."""
+    ADD_OPTIONAL_METADATA = 'add_optional_metadata'
+    """The user is given the option of entering optional metadata."""
+    FINAL_PREVIEW = 'final_preview'
+    """The user is asked to review the submission before finalizing."""
+
+
+class StageBase(NamedTuple):
+    """Base class for submission stage representation."""
 
     submission: Submission
 
-    def user_is_verified(self) -> bool:
-        """Determine whether the submitter has verified their information."""
-        return self.submission.submitter_contact_verified is True
-
-    def authorship_is_set(self) -> bool:
-        """Determine whether the submitter has indicated authorship."""
-        return self.submission.submitter_is_author is not None
-
-    def license_is_set(self) -> bool:
-        """Determine whether the submitter has selected a license."""
-        return self.submission.license is not None
-
-    def policy_is_accepted(self) -> bool:
-        """Determine whether the submitter has accepted arXiv policies."""
-        return self.submission.submitter_accepts_policy is True
-
-    def classification_is_set(self) -> bool:
-        """Determine whether the submitter selected a primary category."""
-        return self.submission.primary_classification is not None
-
-    def files_are_uploaded(self) -> bool:
-        """Determine whether the submitter has uploaded files."""
-        return self.submission.source_content is not None
-
-    def files_are_processed(self) -> bool:
-        """Determine whether the submitter has compiled their upload."""
-        return len(self.submission.compiled_content) > 0
-
-    def metadata_is_set(self) -> bool:
-        """Determine whether the submitter has entered required metadata."""
-        return (self.submission.metadata.title is not None
-                and self.submission.metadata.abstract is not None
-                and self.submission.metadata.authors_display is not None)
-
-    def crosslist_is_selected(self) -> bool:
-        """Determine whether a cross-list category has been selected."""
-        return len(self.submission.secondary_classification) > 0
-
-    def optional_metadata_is_set(self) -> bool:
-        """Determine whether the user has set optional metadata fields."""
-        return (self.submission.metadata.doi is not None
-                or self.submission.metadata.msc_class is not None
-                or self.submission.metadata.acm_class is not None
-                or self.submission.metadata.report_num is not None
-                or self.submission.metadata.journal_ref is not None)
-
-    class Stages(Enum):     # type: ignore
-        """Stages in the submission UI workflow."""
-
-        VERIFY_USER = 'verify_user'
-        """The user is asked to verify their personal information."""
-        AUTHORSHIP = 'authorship'
-        """The user is asked to verify their authorship status."""
-        LICENSE = 'license'
-        """The user is asked to select a license."""
-        POLICY = 'policy'
-        """The user is required to agree to arXiv policies."""
-        CLASSIFICATION = 'classification'
-        """The user is asked to select a primary category."""
-        CROSS_LIST = 'cross_list'
-        """The user is given the option of selecting cross-list categories."""
-        FILE_UPLOAD = 'file_upload'
-        """The user is asked to upload files for their submission."""
-        FILE_PROCESS = 'file_process'
-        """Uploaded files are processed; this is primarily to compile LaTeX."""
-        ADD_METADATA = 'add_metadata'
-        """The user is asked to require core metadata fields, like title."""
-        ADD_OPTIONAL_METADATA = 'add_optional_metadata'
-        """The user is given the option of entering optional metadata."""
-        FINAL_PREVIEW = 'final_preview'
-        """The user is asked to review the submission before finalizing."""
+    ORDER = []
 
     LABELS = {
         Stages.VERIFY_USER.value: 'verify your personal information',
@@ -109,26 +64,65 @@ class SubmissionStage(NamedTuple):
     do.
     """
 
-    ORDER = [
-        (Stages.VERIFY_USER, True, user_is_verified),
-        (Stages.AUTHORSHIP, True, authorship_is_set),
-        (Stages.LICENSE, True, license_is_set),
-        (Stages.POLICY, True, policy_is_accepted),
-        (Stages.CLASSIFICATION, True, classification_is_set),
-        (Stages.CROSS_LIST, False, crosslist_is_selected),
-        (Stages.FILE_UPLOAD, True, files_are_uploaded),
-        (Stages.FILE_PROCESS, True, files_are_processed),
-        (Stages.ADD_METADATA, True, metadata_is_set),
-        (Stages.ADD_OPTIONAL_METADATA, optional_metadata_is_set, None),
-        (Stages.FINAL_PREVIEW, True, None)
-    ]
-    """
-    The standard order for submission steps.
+    @staticmethod
+    def user_is_verified(submission: Submission) -> bool:
+        """Determine whether the submitter has verified their information."""
+        return submission.submitter_contact_verified is True
 
-    Within each 3-tuple, the accompanying bool indicates whether that step is
-    required, and the subsequent instance method can be used to verify that
-    the step has been completed.
-    """
+    @staticmethod
+    def authorship_is_set(submission: Submission) -> bool:
+        """Determine whether the submitter has indicated authorship."""
+        return submission.submitter_is_author is not None
+
+    @staticmethod
+    def license_is_set(submission: Submission) -> bool:
+        """Determine whether the submitter has selected a license."""
+        return submission.license is not None
+
+    @staticmethod
+    def policy_is_accepted(submission: Submission) -> bool:
+        """Determine whether the submitter has accepted arXiv policies."""
+        return submission.submitter_accepts_policy is True
+
+    @staticmethod
+    def classification_is_set(submission: Submission) -> bool:
+        """Determine whether the submitter selected a primary category."""
+        return submission.primary_classification is not None
+
+    @staticmethod
+    def files_are_uploaded(submission: Submission) -> bool:
+        """Determine whether the submitter has uploaded files."""
+        return submission.source_content is not None
+
+    @staticmethod
+    def files_are_processed(submission: Submission) -> bool:
+        """Determine whether the submitter has compiled their upload."""
+        return len(submission.compiled_content) > 0
+
+    @staticmethod
+    def metadata_is_set(submission: Submission) -> bool:
+        """Determine whether the submitter has entered required metadata."""
+        return (submission.metadata.title is not None
+                and submission.metadata.abstract is not None
+                and submission.metadata.authors_display is not None)
+
+    @staticmethod
+    def crosslist_is_selected(submission: Submission) -> bool:
+        """Determine whether a cross-list category has been selected."""
+        return len(submission.secondary_classification) > 0
+
+    @staticmethod
+    def optional_metadata_is_set(submission: Submission) -> bool:
+        """Determine whether the user has set optional metadata fields."""
+        return (submission.metadata.doi is not None
+                or submission.metadata.msc_class is not None
+                or submission.metadata.acm_class is not None
+                or submission.metadata.report_num is not None
+                or submission.metadata.journal_ref is not None)
+
+    @classmethod
+    def is_relevant(self, stage: Stages) -> bool:
+        return stage in tuple(zip(*self.ORDER))[0]
 
     @property
     def current_stage(self) -> Optional[Stages]:
@@ -142,7 +136,7 @@ class SubmissionStage(NamedTuple):
         for i, (stage, required, method) in enumerate(self.ORDER):
             if not required:    # Will skip over optional steps.
                 continue
-            if method and not method(self):
+            if method and not method(self.submission):
                 return previous
             previous = stage
         return None
@@ -185,7 +179,7 @@ class SubmissionStage(NamedTuple):
     def get_next_stage(self, stage: Optional[Stages]) -> Optional[Stages]:
         """Get the next stage in the submission process for this submission."""
         if stage is None:     # No stage achieved; start at the beginning.
-            next_stage: SubmissionStage.Stages = self.ORDER[0][0]
+            next_stage: Stages = self.ORDER[0][0]
             return next_stage
 
         stages = self._get_stage_list()
@@ -245,13 +239,67 @@ class SubmissionStage(NamedTuple):
         _, required, method = self.ORDER[i]
 
         if method:
-            return bool(method(self))
+            return bool(method(self.submission))
         return False
 
     def is_required(self, stage: Stages) -> bool:
         """Determine whether or not a stage is required."""
         stages, required, _ = zip(*self.ORDER)
         return bool(dict(zip(stages, required))[stage])
+
+
+# TODO: many of the instance methods on this class could be classmethods
+#  or staticmethods.
+class SubmissionStage(StageBase):
+    """Represents the furthest completed stage reached by a submission."""
+
+    Stages = Stages
+
+    ORDER = [
+        (Stages.VERIFY_USER, True, StageBase.user_is_verified),
+        (Stages.AUTHORSHIP, True, StageBase.authorship_is_set),
+        (Stages.LICENSE, True, StageBase.license_is_set),
+        (Stages.POLICY, True, StageBase.policy_is_accepted),
+        (Stages.CLASSIFICATION, True, StageBase.classification_is_set),
+        (Stages.CROSS_LIST, False, StageBase.crosslist_is_selected),
+        (Stages.FILE_UPLOAD, True, StageBase.files_are_uploaded),
+        (Stages.FILE_PROCESS, True, StageBase.files_are_processed),
+        (Stages.ADD_METADATA, True, StageBase.metadata_is_set),
+        (Stages.ADD_OPTIONAL_METADATA, StageBase.optional_metadata_is_set, None),
+        (Stages.FINAL_PREVIEW, True, None)
+    ]
+    """
+    The standard order for submission steps.
+
+    Within each 3-tuple, the accompanying bool indicates whether that step is
+    required, and the subsequent instance method can be used to verify that
+    the step has been completed.
+    """
+
+
+class ReplacementStage(StageBase):
+    """Represents the furthest completed stage reached by a replacement."""
+
+    Stages = Stages
+
+    ORDER = [
+        (Stages.VERIFY_USER, True, StageBase.user_is_verified),
+        (Stages.AUTHORSHIP, True, StageBase.authorship_is_set),
+        (Stages.LICENSE, True, StageBase.license_is_set),
+        (Stages.POLICY, True, StageBase.policy_is_accepted),
+        (Stages.FILE_UPLOAD, True, StageBase.files_are_uploaded),
+        (Stages.FILE_PROCESS, True, StageBase.files_are_processed),
+        (Stages.ADD_METADATA, True, StageBase.metadata_is_set),
+        (Stages.ADD_OPTIONAL_METADATA, StageBase.optional_metadata_is_set, None),
+        (Stages.FINAL_PREVIEW, True, None)
+    ]
+    """
+    The standard order for replacement steps.
+
+    Within each 3-tuple, the accompanying bool indicates whether that step is
+    required, and the subsequent instance method can be used to verify that
+    the step has been completed.
+    """
 
 
 class FileError(NamedTuple):
@@ -451,4 +499,3 @@ class CompilationProduct(NamedTuple):
 
     checksum: Optional[str] = None
     """The B64-encoded MD5 hash of the compilation product."""
-

@@ -11,12 +11,11 @@ from .upload import delete_all as delete_all_files
 
 from ..util import load_submission
 from . import create, verify_user, authorship, license, policy, \
-    classification, metadata, util, jref, withdraw
+    classification, metadata, util, jref, withdraw, delete
+from .util import Response
 
 __all__ = ('verify_user', 'authorship', 'license', 'policy', 'classification',
-           'metadata', 'create', 'jref')
-
-Response = Tuple[Dict[str, Any], int, Dict[str, Any]]
+           'metadata', 'create', 'jref', 'delete')
 
 
 def submission_status(session: Session, submission_id: int) -> Response:

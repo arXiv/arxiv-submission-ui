@@ -28,17 +28,24 @@ class JREFForm(csrf.CSRFForm, util.FieldMixin, util.SubmissionMixin):
     """Set DOI and/or journal reference on a published submission."""
 
     doi = TextField('DOI', validators=[optional()],
-                    description="Full DOI of the version of record.")
+                    description=("Full DOI of the version of record. For"
+                                 " example:"
+                                 " <code>10.1016/S0550-3213(01)00405-9</code>"
+                                 ))
     journal_ref = TextField('Journal reference', validators=[optional()],
                             description=(
-                                "See <a href='https://arxiv.org/help/jref'>"
-                                "the arXiv help pages</a> for details."
-                            ))
+                                "For example: <code>Nucl.Phys.Proc.Suppl. 109"
+                                " (2002) 3-9</code>. See"
+                                " <a href='https://arxiv.org/help/jref'>"
+                                "the arXiv help pages</a> for details."))
     report_num = TextField('Report number', validators=[optional()],
                            description=(
-                               "See <a href='https://arxiv.org/help/jref'>"
-                               "the arXiv help pages</a> for details."
-                           ))
+                               "For example: <code>SU-4240-720</code>."
+                               " Multiple report numbers should be separated"
+                               " with a semi-colon and a space, for example:"
+                               " <code>SU-4240-720; LAUR-01-2140</code>."
+                               " See <a href='https://arxiv.org/help/jref'>"
+                               "the arXiv help pages</a> for details."))
     confirmed = BooleanField('Confirmed',
                              false_values=('false', False, 0, '0', ''))
 
@@ -80,8 +87,7 @@ def jref(method: str, params: MultiDict, session: Session,
         alerts.flash_failure(Markup("Submission must first be published. See "
                                     "<a href='https://arxiv.org/help/jref'>"
                                     "the arXiv help pages</a> for details."))
-        status_url = url_for('ui.submission_status',
-                             submission_id=submission_id)
+        status_url = url_for('ui.create_submission')
         return {}, status.HTTP_303_SEE_OTHER, {'Location': status_url}
 
     # The form should be prepopulated based on the current state of the
@@ -144,8 +150,7 @@ def jref(method: str, params: MultiDict, session: Session,
 
             # Success! Send user back to the submission page.
             alerts.flash_success("Journal reference updated")
-            status_url = url_for('ui.submission_status',
-                                 submission_id=submission_id)
+            status_url = url_for('ui.create_submission')
             return {}, status.HTTP_303_SEE_OTHER, {'Location': status_url}
     logger.debug('Nothing to do, return 200')
     return response_data, status.HTTP_200_OK, {}

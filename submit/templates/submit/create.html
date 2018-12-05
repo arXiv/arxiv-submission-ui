@@ -21,17 +21,27 @@
         {{ submission.status}}
         {% if submission.published %}
         <div class="level-right">
+          {% if submission.has_active_requests %}
+            {% for request in submission.active_user_requests %}
+            <div class="tags has-addons">
+              <span class="tag is-dark">{{ request.NAME }}</span>
+              <span class="tag is-info">{{ request.status }}</span>
+            </div>
+            {% endfor %}
+          {% else %}
           <form class="form" method="POST" action="{{ url_for('ui.create_replacement', submission_id=submission.submission_id) }}">
             {{ form.csrf_token }}
             <button name="new" class="button is-link is-small" value="new" aria-label="New version (replacement)">New version</button>
             <a href="{{ url_for('ui.jref', submission_id=submission.submission_id) }}" class="button is-link is-small" aria-label="Update journal reference">Update journal reference</a>
             <a href="{{ url_for('ui.withdraw', submission_id=submission.submission_id) }}" class="button is-link is-small" aria-label="Request withdrawal">Request withdrawal</a>
+            <a href="{{ url_for('ui.request_cross', submission_id=submission.submission_id) }}" class="button is-link is-small" aria-label="Request cross-list">Request cross-list</a>
           </form>
+          {% endif %}
 
         </div>
         {% endif %}
       </div>
-      {% if not submission.published %}
+      {% if not submission.published and not submission.has_active_requests %}
       <li>
         <a href="{{ get_next_stage_for_submission(submission) }}">Version {{ submission.version }}; updated {{ submission.updated|timesince }}</a>. <span class="tag">{{ submission.status }}</span>
         <a href="{{ url_for('ui.delete_submission', submission_id=submission.submission_id) }}">
@@ -42,7 +52,6 @@
       </li>
       {% endif %}
       {% for version in submission.versions %}
-
         <li>
           arXiv:{{ version.arxiv_id }}v{{ version.version }}; published {{ version.updated|timesince }}. <span class="tag">{{ version.status }}</span>
         </li>

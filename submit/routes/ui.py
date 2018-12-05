@@ -515,6 +515,26 @@ def withdraw(submission_id: Optional[int] = None) -> Response:
     return Response(response=data, status=code, headers=headers)
 
 
+@blueprint.route('/<int:submission_id>/request_cross', methods=['GET', 'POST'])
+@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION,
+                        authorizer=can_edit_submission)
+def request_cross(submission_id: Optional[int] = None) -> Response:
+    """Render the cross-list request page."""
+    request_data = MultiDict(request.form.items(multi=True))
+    data, code, headers = controllers.cross.request_cross(
+        request.method,
+        request_data,
+        request.session,
+        submission_id
+    )
+    if code in [status.HTTP_200_OK, status.HTTP_400_BAD_REQUEST]:
+        rendered = render_template("submit/request_cross_list.html",
+                                   pagetitle='Request cross-list',
+                                   **data)
+        return make_response(rendered, code)
+    return Response(response=data, status=code, headers=headers)
+
+
 def inject_get_next_stage_for_submission() -> Dict[str, Callable]:
     def get_next_stage_for_submission(this_submission: Submission) -> str:
         if this_submission.version == 1:

@@ -8,20 +8,17 @@
 {% endblock addl_head %}
 
 {% block content %}
-  <h1 class="title">Withdraw article</h1>
+  <h1 class="title">Request cross-list classification</h1>
 
   {% if require_confirmation and not confirmed %}
   <div class="notification is-info">
-    <p>This preview shows the abstract page as it will be updated. Please
-    check carefully to ensure that it is correct. You can continue to
-    make changes until you are satisfied with the result.</p>
+    <p>notify</p>
   </div>
 
   <div class="box">
     <p>The abs-page preview goes here, and shows these values in context.</p>
     <dl>
-      <dt>Withdrawal reason</dt>
-      <dd>{{ form.withdrawal_reason.data }}</dd>
+
     </dl>
   </div>
   {% else %}
@@ -29,14 +26,22 @@
   {% endif %}
 
   <content>
-    <form method="POST" action="{{ url_for('ui.withdraw', submission_id=submission_id) }}">
+    <form method="POST" action="{{ url_for('ui.request_cross', submission_id=submission_id) }}">
       <div class="columns">
         <div class="column">
           {{ form.csrf_token }}
-          {% with field = form.withdrawal_reason %}
+          {% with field = form.categories %}
           <div class="field">
             <div class="control">
-              <label class="label" for="withdrawal_reason">{{ field.label.text }} (required) <a class="help-bubble" href="{{ url_for('help_withdraw') }}"><i class="fa fa-question-circle is-info"></i><div class="bubble-text">Specific reason for withdrawal will be placed in the Comments display for your article.</div></a></label>
+              <label class="label" for="categories">
+                {{ field.label.text }} (required)
+                <a class="help-bubble" href="{{ url_for('help_cross') }}">
+                  <i class="fa fa-question-circle is-info"></i>
+                  <div class="bubble-text">
+                    Help text for cross list
+                  </div>
+                </a>
+              </label>
               {% if field.errors %}
                 <div class="help is-danger">
                   {% for error in field.errors %}
@@ -73,9 +78,7 @@
           {% else %}
             <div class="message-body">
               <p>
-                Articles that have been announced and made public cannot be
-                completely removed. However, you may submit a withdrawal
-                notification for your article. Previously published versions of this article will still be publicly available.
+                Message here
               </p>
             </div>
           {% endif %}
@@ -88,7 +91,7 @@
           <button name="action" type="submit" class="button is-link is-outlined" value="submit" aria-label="Edit">Edit</button>
           <button name="confirmed" type="submit" class="button is-success" value="1" aria-label="Confirm and Submit">Confirm and Submit</button>
           {% else %}
-          <button name="action" type="submit" class="button is-link" value="submit" aria-label="Preview">Preview Withdrawal Notice</button>
+          <button name="action" type="submit" class="button is-link" value="submit" aria-label="Preview">Preview Cross-List Classifications</button>
           {% endif %}
       </div>
     </form>

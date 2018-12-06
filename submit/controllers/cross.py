@@ -130,7 +130,6 @@ def request_cross(method: str, params: MultiDict, session: Session,
 
     # Will raise NotFound if there is no such submission.
     submission, submission_events = load_submission(submission_id)
-    print("active user requests", submission.active_user_requests, submission.has_active_requests)
 
     # The submission must be published for this to be a withdrawal request.
     if not submission.published:

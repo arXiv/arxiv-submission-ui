@@ -59,7 +59,7 @@ class ClassificationForm(csrf.CSRFForm):
         choices = [
             (archive, [
                 (category, display) for category, display in archive_choices
-                if (allowed is None or category in allowed
+                if ((allowed is None or category in allowed)
                     and (primary is None or category != primary.category)
                     and category not in submission.secondary_categories)
                 or category == selected

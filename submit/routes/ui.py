@@ -130,6 +130,53 @@ def place_on_hold(submission_id: int) -> Response:
                     headers={'Location': target})
 
 
+# TODO: remove me!!
+@blueprint.route('/<int:submission_id>/apply_cross', methods=['GET'])
+@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION,
+                        authorizer=can_edit_submission)
+def apply_cross(submission_id: int) -> Response:
+    """WARNING WARNING WARNING this is for testing purposes only."""
+    util.apply_cross(submission_id)
+    target = url_for('ui.submission_status', submission_id=submission_id)
+    return Response(response={}, status=status.HTTP_303_SEE_OTHER,
+                    headers={'Location': target})
+
+
+# TODO: remove me!!
+@blueprint.route('/<int:submission_id>/reject_cross', methods=['GET'])
+@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION,
+                        authorizer=can_edit_submission)
+def reject_cross(submission_id: int) -> Response:
+    """WARNING WARNING WARNING this is for testing purposes only."""
+    util.reject_cross(submission_id)
+    target = url_for('ui.submission_status', submission_id=submission_id)
+    return Response(response={}, status=status.HTTP_303_SEE_OTHER,
+                    headers={'Location': target})
+
+
+# TODO: remove me!!
+@blueprint.route('/<int:submission_id>/apply_withdrawal', methods=['GET'])
+@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION,
+                        authorizer=can_edit_submission)
+def apply_withdrawal(submission_id: int) -> Response:
+    """WARNING WARNING WARNING this is for testing purposes only."""
+    util.apply_withdrawal(submission_id)
+    target = url_for('ui.submission_status', submission_id=submission_id)
+    return Response(response={}, status=status.HTTP_303_SEE_OTHER,
+                    headers={'Location': target})
+
+# TODO: remove me!!
+@blueprint.route('/<int:submission_id>/reject_withdrawal', methods=['GET'])
+@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION,
+                        authorizer=can_edit_submission)
+def reject_withdrawal(submission_id: int) -> Response:
+    """WARNING WARNING WARNING this is for testing purposes only."""
+    util.reject_withdrawal(submission_id)
+    target = url_for('ui.submission_status', submission_id=submission_id)
+    return Response(response={}, status=status.HTTP_303_SEE_OTHER,
+                    headers={'Location': target})
+
+
 @blueprint.route('/<int:submission_id>/verify_user',
                  endpoint=Stages.VERIFY_USER.value,
                  methods=['GET', 'POST'])

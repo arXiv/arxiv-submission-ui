@@ -6,11 +6,14 @@ from werkzeug import MultiDict
 from werkzeug.exceptions import InternalServerError, NotFound
 
 from flask import url_for, Markup
-from wtforms.fields import TextField, TextAreaField, Field, BooleanField
+from wtforms import Form, widgets
+from wtforms.fields import Field, BooleanField, HiddenField
 from wtforms.validators import InputRequired, ValidationError, optional, \
     DataRequired
 
-from arxiv import status, taxonomy
+from arxiv import status
+from arxiv.taxonomy import CATEGORIES_ACTIVE as CATEGORIES
+from arxiv.taxonomy import ARCHIVES_ACTIVE as ARCHIVES
 from arxiv.base import logging, alerts
 from arxiv.forms import csrf
 from arxiv.users.domain import Session
@@ -24,52 +27,95 @@ logger = logging.getLogger(__name__)  # pylint: disable=C0103
 Response = Tuple[Dict[str, Any], int, Dict[str, Any]]  # pylint: disable=C0103
 
 
-class CrossListForm(csrf.CSRFForm, util.FieldMixin, util.SubmissionMixin):
+CONTACT_SUPPORT = Markup(
+    'If you continue to experience problems, please contact'
+    ' <a href="mailto:help@arxiv.org"> arXiv support</a>.'
+)
+
+
+class HiddenListField(HiddenField):
+    def process_formdata(self, valuelist):
+        self.data = list(str(x) for x in valuelist)
+
+    def process_data(self, value):
+        try:
+            self.data = list(str(v) for v in value)
+        except (ValueError, TypeError):
+            self.data = None
+
+    def _value(self):
+        print('value')
+        return ",".join(self.data) if self.data else ""
+
+
+class CrossListForm(csrf.CSRFForm):
     """Submit a cross-list request."""
 
     CATEGORIES = [
         (archive['name'], [
             (category_id, f"{category['name']} ({category_id})")
-            for category_id, category in taxonomy.CATEGORIES_ACTIVE.items()
+            for category_id, category in CATEGORIES.items()
             if category['in_archive'] == archive_id
         ])
-        for archive_id, archive in taxonomy.ARCHIVES_ACTIVE.items()
+        for archive_id, archive in ARCHIVES.items()
     ]
     """Categories grouped by archive."""
 
-    categories = util.OptGroupSelectMultipleField('Categories',
-                                                  choices=CATEGORIES,
-                                                  default='')
+    ADD = 'add'
+    REMOVE = 'remove'
+    OPERATIONS = [
+        (ADD, 'Add'),
+        (REMOVE, 'Remove')
+    ]
+    operation = HiddenField(default=ADD, validators=[optional()])
+    category = util.OptGroupSelectField('Category', choices=CATEGORIES,
+                                        default='', validators=[optional()])
+    selected = HiddenListField()
     confirmed = BooleanField('Confirmed',
                              false_values=('false', False, 0, '0', ''))
 
-    def validate_categories(form: csrf.CSRFForm, field: Field) -> None:
-        """Validate the reason provided for the withdrawal."""
-        if field.data:
-            form._validate_event(events.RequestCrossList,
-                                 categories=field.data)
+    def validate_selected(form: csrf.CSRFForm, field: Field) -> None:
+        for value in field.data:
+            if value not in CATEGORIES:
+                raise ValidationError('Not a valid category')
+
+    def validate_category(form: csrf.CSRFForm, field: Field) -> None:
+        if not form.confirmed.data and not field.data:
+            raise ValidationError('Please select a category')
 
     def filter_choices(self, submission: events.domain.Submission,
                        session: Session,
-                       allowed: Optional[List[str]] = None) -> None:
+                       exclude: Optional[List[str]] = None) -> None:
         """Remove redundant choices, and limit to endorsed categories."""
+        print('filter')
         selected: List[str] = self.category.data
         primary = submission.primary_classification
 
         choices = [
             (archive, [
                 (category, display) for category, display in archive_choices
-                if (allowed is None or category in allowed
+                if (exclude is not None and category not in exclude
                     and (primary is None or category != primary.category)
                     and category not in submission.secondary_categories)
                 or category in selected
             ])
             for archive, archive_choices in self.category.choices
         ]
-        self.categories.choices = [
+        self.category.choices = [
             (archive, _choices) for archive, _choices in choices
             if len(_choices) > 0
         ]
+
+    @classmethod
+    def formset(cls, selected: List[str]) -> Dict[str, 'CrossListForm']:
+        """Generate a set of forms to add/remove categories in the template."""
+        formset = {}
+        for category in selected:
+            subform = cls(operation=cls.REMOVE, category=category)
+            print(subform.operation.data)
+            subform.category.widget = widgets.HiddenInput()
+            formset[category] = subform
+        return formset
 
 
 def request_cross(method: str, params: MultiDict, session: Session,
@@ -90,61 +136,77 @@ def request_cross(method: str, params: MultiDict, session: Session,
         status_url = url_for('ui.create_submission')
         return {}, status.HTTP_303_SEE_OTHER, {'Location': status_url}
 
-    # The form should be prepopulated based on the current state of the
-    # submission.
     if method == 'GET':
         params = MultiDict({})
 
     params.setdefault("confirmed", False)
+    params.setdefault("operation", CrossListForm.ADD)
     form = CrossListForm(params)
-    form.submission = submission
-    form.creator = submitter
+    selected = form.selected.data
+
     response_data = {
         'submission_id': submission_id,
         'submission': submission,
         'form': form,
+        'selected': selected,
+        'formset': CrossListForm.formset(selected)
     }
-    print("data::", form.data)
+    if submission.primary_classification:
+        response_data['primary'] = \
+            CATEGORIES[submission.primary_classification.category]
 
     if method == 'POST':
-        # We require the user to confirm that they wish to proceed.
         if not form.validate():
-            logger.debug('Invalid form data; return bad request')
             return response_data, status.HTTP_400_BAD_REQUEST, {}
-
-        elif not form.events:
-            pass
-        elif not form.confirmed.data:
+        if form.confirmed.data:     # Stop adding new categories, and submit.
+            response_data['form'].operation.data = CrossListForm.ADD
             response_data['require_confirmation'] = True
-            logger.debug('Not confirmed')
-            return response_data, status.HTTP_200_OK, {}
 
-        # form.events get set by the SubmissionMixin during validation.
-        # TODO: that's kind of indirect.
-        elif form.events:   # Metadata has changed.
-            response_data['require_confirmation'] = True
-            logger.debug('Form is valid, with data: %s', str(form.data))
-            try:
-                # Save the events created during form validation.
-                submission, stack = events.save(*form.events,
-                                                submission_id=submission_id)
-            except events.exceptions.InvalidStack as e:
-                logger.error('Could not request withdrawal: %s', str(e))
-                form.errors     # Causes the form to initialize errors.
-                form._errors['events'] = [
-                    ie.message for ie in e.event_exceptions
-                ]
-                logger.debug('InvalidStack; return bad request')
+            try:    # Submit the cross-list request.
+                events.save(
+                    events.RequestCrossList(creator=submitter, client=client,
+                                            categories=form.selected.data),
+                    submission_id=submission_id
+                )
+            except events.exceptions.InvalidEvent as e:
+                # Since we're doing validation on the form, this should only
+                # happen if the user really monkeys with the request or if we
+                # have a programming error.
+                logger.error('Cross request made with bad category: %s', e)
+                alerts.flash_failure(Markup(
+                    "There was a problem with your request. Please try again."
+                    f" {CONTACT_SUPPORT}"
+                ))
                 return response_data, status.HTTP_400_BAD_REQUEST, {}
             except events.exceptions.SaveError as e:
-                logger.error('Could not save metadata event')
-                raise InternalServerError(
-                    'There was a problem saving this operation'
-                ) from e
+                # This would be due to a database error, or something else
+                # that likely isn't the user's fault.
+                logger.error('Could not save cross list request event')
+                alerts.flash_failure(Markup(
+                    "There was a problem processing your request. Please try"
+                    f" again. {CONTACT_SUPPORT}"
+                ))
+                return response_data, status.HTTP_400_BAD_REQUEST, {}
 
             # Success! Send user back to the submission page.
             alerts.flash_success("Cross-list request submitted.")
             status_url = url_for('ui.create_submission')
             return {}, status.HTTP_303_SEE_OTHER, {'Location': status_url}
-    logger.debug('Nothing to do, return 200')
+        else:   # User is adding or removing a category.
+            if form.operation.data:
+                if form.operation.data == CrossListForm.REMOVE:
+                    selected.remove(form.category.data)
+                elif form.operation.data == CrossListForm.ADD:
+                    selected.append(form.category.data)
+                # Update the "remove" formset to reflect the change.
+                response_data['formset'] = CrossListForm.formset(selected)
+                response_data['selected'] = selected
+            # Now that we've handled the request, get a fresh form for adding
+            # more categories or submitting the request.
+            response_data['form'] = CrossListForm()
+            response_data['form'].filter_choices(submission, session,
+                                                 exclude=selected)
+            response_data['form'].operation.data = CrossListForm.ADD
+            response_data['require_confirmation'] = True
+            return response_data, status.HTTP_200_OK, {}
     return response_data, status.HTTP_200_OK, {}

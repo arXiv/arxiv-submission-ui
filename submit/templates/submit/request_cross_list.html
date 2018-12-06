@@ -9,39 +9,72 @@
 
 {% block content %}
   <h1 class="title">Request cross-list classification</h1>
+  <p>
+    You may feel that your article is of direct interest to the readers of
+    a category other than the one to which you submitted your article. In
+    such cases you may cross-list your article to the other category so
+    that your article appears in the regular listing for that category
+    (in the cross-list section).
+  </p>
+  <p>
+    Note that readers consider excessive or inappropriate cross-listing to
+    be bad etiquette, so consider your cross-lists beforehand, and do not
+    cross-list excessively or without good reason. It is rarely appropriate
+    to add more than one or two cross-lists. Also note that you are
+    unlikely to know that a cross-list is appropriate unless you are
+    yourself a reader of the archive to which you are considering a
+    cross-list. Bad cross-lists will be removed.
+  </p>
+
+  <h2>arXiv:{{ submission.arxiv_id }}v{{ submission.version }} {{ submission.metadata.title }}</h2>
 
   {% if require_confirmation and not confirmed %}
-  <div class="notification is-info">
-    <p>notify</p>
-  </div>
 
-  <div class="box">
-    <p>The abs-page preview goes here, and shows these values in context.</p>
-    <dl>
-
-    </dl>
-  </div>
   {% else %}
-  <h2>arXiv:{{ submission.arxiv_id }}v{{ submission.version }} {{ submission.metadata.title }}</h2>
+
   {% endif %}
 
   <content>
-    <form method="POST" action="{{ url_for('ui.request_cross', submission_id=submission_id) }}">
       <div class="columns">
         <div class="column">
+
+          {# This formset is used to send POST requests to REMOVE secondaries from the list. #}
+          {% if formset %}
+            {% for category, subform in formset.items() %}
+            <form method="POST" class="form form-margin" action="{{ url_for('ui.request_cross', submission_id=submission_id) }}">
+              {{ form.csrf_token }}
+              <p>
+                {{ subform.operation }}
+                {% for cat in selected %}
+                  <input name="selected" value="{{ cat }}" type="hidden" />
+                {% endfor %}
+                {{ subform.category()|safe }}
+                  <span class="tag" style="border: 1px solid #999;">{{ subform.category.data }}</span> <span>{{ category|get_category_name }}</span>
+                  <button class="button is-outlined is-link is-small" style="border: 0" title="Remove category">
+                  <span class="icon"><i class="fa fa-trash"></i>
+                </button>
+              </p>
+            </form>
+            {% endfor %}
+          {% endif %}
+
+          {# This form is used to send POST requests to ADD secondaries to the list. #}
+          <form method="POST" action="{{ url_for('ui.request_cross', submission_id=submission_id) }}">
           {{ form.csrf_token }}
-          {% with field = form.categories %}
-          <div class="field">
+          {{ form.operation }}
+          {% for cat in selected %}
+            <input name="selected" value="{{ cat }}" type="hidden" />
+          {% endfor %}
+          {% with field = form.category %}
+          <div class="field has-addons" style="margin-bottom: 3em">
             <div class="control">
-              <label class="label" for="categories">
-                {{ field.label.text }} (required)
-                <a class="help-bubble" href="{{ url_for('help_cross') }}">
-                  <i class="fa fa-question-circle is-info"></i>
-                  <div class="bubble-text">
-                    Help text for cross list
-                  </div>
-                </a>
-              </label>
+              <div class="select">
+              {% if field.errors %}
+                {{ field(class="is-danger")|safe }}
+              {% else %}
+                {{ field()|safe }}
+              {% endif %}
+              </div>
               {% if field.errors %}
                 <div class="help is-danger">
                   {% for error in field.errors %}
@@ -50,29 +83,44 @@
                 </div>
               {% endif %}
               {% if field.description %}
-              <p class="help has-text-grey is-marginless">
+              <p class="help has-text-grey">
                 {{ field.description|safe }}
               </p>
               {% endif %}
-              {% if field.errors %}
-                {{ field(class="textarea is-danger")|safe }}
-              {% else %}
-                {{ field(class="textarea")|safe }}
-              {% endif %}
+            </div>
+            <div class="control">
+              <button class="button is-link">Add</button>
             </div>
           </div>
           {% endwith %}
-
+          </form>
         </div>
-        <div class="column" style="align-self: flex-end">
+        <div class="column">
+          <div class="message is-link">
+            <div class="message-header"><p class="is-size-6 is-white has-text-weight-semibold">Announced Categories</p></div>
+            <div class="message-body">
+              {% if primary %}
+              <p class="has-text-weight-bold" style="margin-bottom: .5em">
+                <span class="tag is-link">{{ submission.primary_classification.category }}</span> {{ submission.primary_classification.category|get_category_name }}
+              </p>
+              {% endif %}
+
+              {% for category in submission.secondary_categories %}
+              <p>
+                  <span class="tag" style="border: 1px solid #999;">{{ category }}</span> <span>{{ category|get_category_name }}</span>
+              </p>
+
+              {% endfor %}
+
+            </div>
+          </div>
+
           <div class="message is-link">
           {% if require_confirmation and not confirmed %}
-            <div class="message-header">
-              <p><span class="icon"><i class="fa fa-info-circle"></i></span> Noticed a typo or odd character?</p>
-            </div>
+
             <div class="message-body">
               <p>
-                If the preview doesn't look right, correct it in the form field and use the "Edit" button to make changes.
+                Message?
               </p>
             </div>
           {% else %}
@@ -88,12 +136,18 @@
       <div class="buttons submit-nav" role="navigation">
           <a href="{{ url_for('ui.submission_status', submission_id=submission_id) }}" name="cancel" class="button is-outlined" value="cancel" aria-label="Cancel">Cancel</a>
           {% if require_confirmation and not confirmed %}
-          <button name="action" type="submit" class="button is-link is-outlined" value="submit" aria-label="Edit">Edit</button>
-          <button name="confirmed" type="submit" class="button is-success" value="1" aria-label="Confirm and Submit">Confirm and Submit</button>
+            <form method="POST" class="form form-margin" action="{{ url_for('ui.request_cross', submission_id=submission_id) }}">
+              {{ form.csrf_token }}
+              {% for cat in selected %}
+                <input name="selected" value="{{ cat }}" type="hidden" />
+              {% endfor %}
+              <button name="confirmed" type="submit" class="button is-success" value="1" aria-label="Confirm and Submit">Confirm and Submit</button>
+            </form>
           {% else %}
-          <button name="action" type="submit" class="button is-link" value="submit" aria-label="Preview">Preview Cross-List Classifications</button>
+            <span>Add cross-list categories using the menu above.</span>
           {% endif %}
+
       </div>
-    </form>
+
   </content>
 {% endblock content %}

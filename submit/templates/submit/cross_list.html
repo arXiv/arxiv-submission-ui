@@ -13,14 +13,14 @@
       </a>
     </p>
 
-    {% for category, (display, subform) in formset.items() %}
+    {% for category, subform in formset.items() %}
 
     <form method="POST" class="form form-margin" action="{{ url_for('ui.cross_list', submission_id=submission_id) }}">
       {{ form.csrf_token }}
       <p>
         {{ subform.operation }}
         {{ subform.category()|safe }}
-          <span class="tag" style="border: 1px solid #999;">{{ subform.category.data }}</span> <span>{{ display }}</span>
+          <span class="tag" style="border: 1px solid #999;">{{ subform.category.data }}</span> <span>{{ category|get_category_name }}</span>
         <button class="button is-outlined is-link is-small" style="border: 0" title="Remove category">
           <span class="icon"><i class="fa fa-trash"></i>
         </button>

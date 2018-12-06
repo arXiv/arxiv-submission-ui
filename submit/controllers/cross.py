@@ -35,11 +35,11 @@ CONTACT_SUPPORT = Markup(
 
 class HiddenListField(HiddenField):
     def process_formdata(self, valuelist):
-        self.data = list(str(x) for x in valuelist)
+        self.data = list(str(x) for x in valuelist if x)
 
     def process_data(self, value):
         try:
-            self.data = list(str(v) for v in value)
+            self.data = list(str(v) for v in value if v)
         except (ValueError, TypeError):
             self.data = None
 
@@ -75,7 +75,10 @@ class CrossListForm(csrf.CSRFForm):
                              false_values=('false', False, 0, '0', ''))
 
     def validate_selected(form: csrf.CSRFForm, field: Field) -> None:
+        if not form.confirmed.data and not field.data:
+            raise ValidationError('Please select a category')
         for value in field.data:
+            print(value)
             if value not in CATEGORIES:
                 raise ValidationError('Not a valid category')
 
@@ -87,7 +90,7 @@ class CrossListForm(csrf.CSRFForm):
                        session: Session,
                        exclude: Optional[List[str]] = None) -> None:
         """Remove redundant choices, and limit to endorsed categories."""
-        print('filter')
+        print(submission.active_user_requests)
         selected: List[str] = self.category.data
         primary = submission.primary_classification
 
@@ -111,8 +114,9 @@ class CrossListForm(csrf.CSRFForm):
         """Generate a set of forms to add/remove categories in the template."""
         formset = {}
         for category in selected:
+            if not category:
+                continue
             subform = cls(operation=cls.REMOVE, category=category)
-            print(subform.operation.data)
             subform.category.widget = widgets.HiddenInput()
             formset[category] = subform
         return formset
@@ -126,6 +130,7 @@ def request_cross(method: str, params: MultiDict, session: Session,
 
     # Will raise NotFound if there is no such submission.
     submission, submission_events = load_submission(submission_id)
+    print("active user requests", submission.active_user_requests, submission.has_active_requests)
 
     # The submission must be published for this to be a withdrawal request.
     if not submission.published:
@@ -142,7 +147,7 @@ def request_cross(method: str, params: MultiDict, session: Session,
     params.setdefault("confirmed", False)
     params.setdefault("operation", CrossListForm.ADD)
     form = CrossListForm(params)
-    selected = form.selected.data
+    selected = [v for v in form.selected.data if v]
 
     response_data = {
         'submission_id': submission_id,
@@ -157,6 +162,7 @@ def request_cross(method: str, params: MultiDict, session: Session,
 
     if method == 'POST':
         if not form.validate():
+            print("errors", form.errors)
             return response_data, status.HTTP_400_BAD_REQUEST, {}
         if form.confirmed.data:     # Stop adding new categories, and submit.
             response_data['form'].operation.data = CrossListForm.ADD

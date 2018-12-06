@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "97f011ad5b95ec213be9cc9625c133ee020a3315ed0232c19de86762714c3650"
+            "sha256": "2a5565f5e32de2f9522ff87fff2b156e03725784d2b61f03531784f21cd9460f"
         },
         "pipfile-spec": 6,
         "requires": {},
@@ -30,10 +30,10 @@
         },
         "arxiv-submission-core": {
             "hashes": [
-                "sha256:610b155af772c4cc1a748914ea3ab694d8672df082719004ac5f48ad99a5c428"
+                "sha256:8fb5a3272f704110c199eff61bff56df29377ddf225376df5f378d19c163fda1"
             ],
             "index": "pypi",
-            "version": "==0.5.3rc2"
+            "version": "==0.5.3rc3"
         },
         "bleach": {
             "hashes": [
@@ -199,7 +199,6 @@
                 "sha256:063df5763652e21de43de7d9e00ccf239f953a832941e37be541614732cdfc93",
                 "sha256:88f9287c0174266bb0d8cedd395cfba9c58e87e5ad86b2ce58859bc11be3cf02"
             ],
-            "markers": "python_version >= '2.7'",
             "version": "==2.7.5"
         },
         "pytz": {

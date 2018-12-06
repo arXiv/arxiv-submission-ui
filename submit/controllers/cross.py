@@ -44,7 +44,6 @@ class HiddenListField(HiddenField):
             self.data = None
 
     def _value(self):
-        print('value')
         return ",".join(self.data) if self.data else ""
 
 
@@ -75,10 +74,9 @@ class CrossListForm(csrf.CSRFForm):
                              false_values=('false', False, 0, '0', ''))
 
     def validate_selected(form: csrf.CSRFForm, field: Field) -> None:
-        if not form.confirmed.data and not field.data:
+        if form.confirmed.data and not field.data:
             raise ValidationError('Please select a category')
         for value in field.data:
-            print(value)
             if value not in CATEGORIES:
                 raise ValidationError('Not a valid category')
 
@@ -90,7 +88,6 @@ class CrossListForm(csrf.CSRFForm):
                        session: Session,
                        exclude: Optional[List[str]] = None) -> None:
         """Remove redundant choices, and limit to endorsed categories."""
-        print(submission.active_user_requests)
         selected: List[str] = self.category.data
         primary = submission.primary_classification
 
@@ -147,6 +144,7 @@ def request_cross(method: str, params: MultiDict, session: Session,
     params.setdefault("operation", CrossListForm.ADD)
     form = CrossListForm(params)
     selected = [v for v in form.selected.data if v]
+    form.filter_choices(submission, session, exclude=selected)
 
     response_data = {
         'submission_id': submission_id,
@@ -161,7 +159,6 @@ def request_cross(method: str, params: MultiDict, session: Session,
 
     if method == 'POST':
         if not form.validate():
-            print("errors", form.errors)
             return response_data, status.HTTP_400_BAD_REQUEST, {}
         if form.confirmed.data:     # Stop adding new categories, and submit.
             response_data['form'].operation.data = CrossListForm.ADD

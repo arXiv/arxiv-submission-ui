@@ -24,8 +24,7 @@ def create_ui_web_app() -> Flask:
     app.register_blueprint(ui.blueprint)
 
     wrap(app, [auth.middleware.AuthMiddleware])
-    app.jinja_env.filters['group_files'] = filters.group_files
-    app.jinja_env.filters['timesince'] = filters.timesince
-    app.jinja_env.filters['just_updated'] = filters.just_updated
+    for filter_name, filter_func in filters.get_filters():
+        app.jinja_env.filters[filter_name] = filter_func
     app.context_processor(ui.inject_get_next_stage_for_submission)
     return app

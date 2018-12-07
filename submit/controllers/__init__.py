@@ -11,7 +11,7 @@ from .upload import delete_all as delete_all_files
 
 from ..util import load_submission
 from . import create, verify_user, authorship, license, policy, \
-    classification, metadata, util, jref, withdraw, delete
+    classification, metadata, util, jref, withdraw, delete, cross
 from .util import Response
 
 __all__ = ('verify_user', 'authorship', 'license', 'policy', 'classification',

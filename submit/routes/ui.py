@@ -130,6 +130,53 @@ def place_on_hold(submission_id: int) -> Response:
                     headers={'Location': target})
 
 
+# TODO: remove me!!
+@blueprint.route('/<int:submission_id>/apply_cross', methods=['GET'])
+@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION,
+                        authorizer=can_edit_submission)
+def apply_cross(submission_id: int) -> Response:
+    """WARNING WARNING WARNING this is for testing purposes only."""
+    util.apply_cross(submission_id)
+    target = url_for('ui.submission_status', submission_id=submission_id)
+    return Response(response={}, status=status.HTTP_303_SEE_OTHER,
+                    headers={'Location': target})
+
+
+# TODO: remove me!!
+@blueprint.route('/<int:submission_id>/reject_cross', methods=['GET'])
+@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION,
+                        authorizer=can_edit_submission)
+def reject_cross(submission_id: int) -> Response:
+    """WARNING WARNING WARNING this is for testing purposes only."""
+    util.reject_cross(submission_id)
+    target = url_for('ui.submission_status', submission_id=submission_id)
+    return Response(response={}, status=status.HTTP_303_SEE_OTHER,
+                    headers={'Location': target})
+
+
+# TODO: remove me!!
+@blueprint.route('/<int:submission_id>/apply_withdrawal', methods=['GET'])
+@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION,
+                        authorizer=can_edit_submission)
+def apply_withdrawal(submission_id: int) -> Response:
+    """WARNING WARNING WARNING this is for testing purposes only."""
+    util.apply_withdrawal(submission_id)
+    target = url_for('ui.submission_status', submission_id=submission_id)
+    return Response(response={}, status=status.HTTP_303_SEE_OTHER,
+                    headers={'Location': target})
+
+# TODO: remove me!!
+@blueprint.route('/<int:submission_id>/reject_withdrawal', methods=['GET'])
+@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION,
+                        authorizer=can_edit_submission)
+def reject_withdrawal(submission_id: int) -> Response:
+    """WARNING WARNING WARNING this is for testing purposes only."""
+    util.reject_withdrawal(submission_id)
+    target = url_for('ui.submission_status', submission_id=submission_id)
+    return Response(response={}, status=status.HTTP_303_SEE_OTHER,
+                    headers={'Location': target})
+
+
 @blueprint.route('/<int:submission_id>/verify_user',
                  endpoint=Stages.VERIFY_USER.value,
                  methods=['GET', 'POST'])
@@ -510,6 +557,26 @@ def withdraw(submission_id: Optional[int] = None) -> Response:
     if code in [status.HTTP_200_OK, status.HTTP_400_BAD_REQUEST]:
         rendered = render_template("submit/withdraw.html",
                                    pagetitle='Request withdrawal',
+                                   **data)
+        return make_response(rendered, code)
+    return Response(response=data, status=code, headers=headers)
+
+
+@blueprint.route('/<int:submission_id>/request_cross', methods=['GET', 'POST'])
+@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION,
+                        authorizer=can_edit_submission)
+def request_cross(submission_id: Optional[int] = None) -> Response:
+    """Render the cross-list request page."""
+    request_data = MultiDict(request.form.items(multi=True))
+    data, code, headers = controllers.cross.request_cross(
+        request.method,
+        request_data,
+        request.session,
+        submission_id
+    )
+    if code in [status.HTTP_200_OK, status.HTTP_400_BAD_REQUEST]:
+        rendered = render_template("submit/request_cross_list.html",
+                                   pagetitle='Request cross-list',
                                    **data)
         return make_response(rendered, code)
     return Response(response=data, status=code, headers=headers)

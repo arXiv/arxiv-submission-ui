@@ -1,9 +1,11 @@
 """Custom Jinja2 filters."""
 
+from typing import List, Tuple, Optional, Union, Dict, Mapping, Callable
 from collections import OrderedDict
 from datetime import datetime, timedelta
 from pytz import UTC
-from typing import List, Tuple, Optional, Union, Dict, Mapping
+
+from arxiv import taxonomy
 from .domain import FileStatus, UploadStatus
 
 NestedFileTree = Mapping[str, Union[FileStatus, 'NestedFileTree']]
@@ -102,3 +104,36 @@ def just_updated(status: FileStatus, seconds: int = 2) -> bool:
     """
     now = datetime.now(tz=UTC)
     return abs((now - status.modified).seconds) < seconds
+
+
+def get_category_name(category: str) -> str:
+    """
+    Get the display name for a category in the :mod:`base:taxonomy`.
+
+    Parameters
+    ----------
+    category : str
+        Canonical category ID, e.g. ``astro-ph.HE``.
+
+    Returns
+    -------
+    str
+        Display name for the category.
+
+    Raises
+    ------
+    KeyError
+        Raised if the specified category is not found in the active categories.
+
+    """
+    return taxonomy.CATEGORIES_ACTIVE[category]['name']
+
+
+def get_filters() -> List[Tuple[str, Callable]]:
+    """Get the filter functions available in this module."""
+    return [
+        ('group_files', group_files),
+        ('timesince', timesince),
+        ('just_updated', just_updated),
+        ('get_category_name', get_category_name)
+    ]

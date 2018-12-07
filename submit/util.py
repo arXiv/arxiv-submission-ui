@@ -77,3 +77,51 @@ def place_on_hold(submission_id: int) -> None:
     head.status = events.services.classic.models.Submission.ON_HOLD
     session.add(head)
     session.commit()
+
+
+# TODO: remove me!
+def apply_cross(submission_id: int) -> None:
+    session = events.services.classic.current_session()
+    dbss = events.services.classic._get_db_submission_rows(submission_id)
+    i = events.services.classic._get_head_idx(dbss)
+    for dbs in dbss[:i]:
+        if dbs.is_crosslist():
+            dbs.status = events.services.classic.models.Submission.PUBLISHED
+            session.add(dbs)
+            session.commit()
+
+
+# TODO: remove me!
+def reject_cross(submission_id: int) -> None:
+    session = events.services.classic.current_session()
+    dbss = events.services.classic._get_db_submission_rows(submission_id)
+    i = events.services.classic._get_head_idx(dbss)
+    for dbs in dbss[:i]:
+        if dbs.is_crosslist():
+            dbs.status = events.services.classic.models.Submission.REMOVED
+            session.add(dbs)
+            session.commit()
+
+
+# TODO: remove me!
+def apply_withdrawal(submission_id: int) -> None:
+    session = events.services.classic.current_session()
+    dbss = events.services.classic._get_db_submission_rows(submission_id)
+    i = events.services.classic._get_head_idx(dbss)
+    for dbs in dbss[:i]:
+        if dbs.is_withdrawal():
+            dbs.status = events.services.classic.models.Submission.PUBLISHED
+            session.add(dbs)
+            session.commit()
+
+
+# TODO: remove me!
+def reject_withdrawal(submission_id: int) -> None:
+    session = events.services.classic.current_session()
+    dbss = events.services.classic._get_db_submission_rows(submission_id)
+    i = events.services.classic._get_head_idx(dbss)
+    for dbs in dbss[:i]:
+        if dbs.is_withdrawal():
+            dbs.status = events.services.classic.models.Submission.REMOVED
+            session.add(dbs)
+            session.commit()

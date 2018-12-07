@@ -32,11 +32,10 @@ class ClassificationForm(csrf.CSRFForm):
     CATEGORIES = [
         (archive['name'], [
             (category_id, f"{category['name']} ({category_id})")
-            for category_id, category in taxonomy.CATEGORIES.items()
-            if category['is_active'] and category['in_archive'] == archive_id
+            for category_id, category in taxonomy.CATEGORIES_ACTIVE.items()
+            if category['in_archive'] == archive_id
         ])
-        for archive_id, archive in taxonomy.ARCHIVES.items()
-        if 'end_date' not in archive
+        for archive_id, archive in taxonomy.ARCHIVES_ACTIVE.items()
     ]
     """Categories grouped by archive."""
 
@@ -55,16 +54,14 @@ class ClassificationForm(csrf.CSRFForm):
             -> None:
         """Remove redundant choices, and limit to endorsed categories."""
         selected = self.category.data
-        secondaries = [kls.category for kls
-                       in submission.secondary_classification]
         primary = submission.primary_classification
 
         choices = [
             (archive, [
                 (category, display) for category, display in archive_choices
-                if (allowed is None or category in allowed
+                if ((allowed is None or category in allowed)
                     and (primary is None or category != primary.category)
-                    and category not in secondaries)
+                    and category not in submission.secondary_categories)
                 or category == selected
             ])
             for archive, archive_choices in self.category.choices
@@ -74,6 +71,20 @@ class ClassificationForm(csrf.CSRFForm):
             if len(_choices) > 0
         ]
 
+    @classmethod
+    def formset(cls, submission: events.domain.Submission) \
+            -> Dict[str, 'ClassificationForm']:
+        """Generate a set of forms used to remove cross-list categories."""
+        formset = {}
+        if hasattr(submission, 'secondary_classification') and \
+                submission.secondary_classification:
+            for secondary in submission.secondary_classification:
+                this_category = str(secondary.category)
+                subform = cls(operation=cls.REMOVE, category=this_category)
+                subform.category.widget = widgets.HiddenInput()
+                formset[secondary.category] = subform
+        return formset
+
 
 def _data_from_submission(params: MultiDict,
                           submission: events.domain.Submission) -> MultiDict:
@@ -81,22 +92,6 @@ def _data_from_submission(params: MultiDict,
             and submission.primary_classification.category:
         params['category'] = submission.primary_classification.category
     return params
-
-
-def _formset_from_submission(submission: events.domain.Submission) \
-        -> Dict[str, Tuple[str, ClassificationForm]]:
-    """Generate a set of forms used to remove cross-lists in the template."""
-    formset = {}
-    if hasattr(submission, 'secondary_classification') and \
-            submission.secondary_classification:
-        for secondary in submission.secondary_classification:
-            this_category = str(secondary.category)
-            subform = ClassificationForm(operation=ClassificationForm.REMOVE,
-                                         category=this_category)
-            subform.category.widget = widgets.HiddenInput()
-            display = taxonomy.CATEGORIES.get(this_category, {}).get('name')
-            formset[secondary.category] = (display, subform)
-    return formset
 
 
 def classification(method: str, params: MultiDict, session: Session,
@@ -173,7 +168,7 @@ def cross_list(method: str, params: MultiDict, session: Session,
     submission, submission_events = load_submission(submission_id)
 
     # We need forms for existing secondaries, to generate removal requests.
-    formset = _formset_from_submission(submission)
+    formset = ClassificationForm.formset(submission)
 
     # This form handles additions and removals.
     form = ClassificationForm(params)
@@ -232,7 +227,8 @@ def cross_list(method: str, params: MultiDict, session: Session,
                     ) from e
 
                 # Re-build the formset, to reflect changes that we just made.
-                response_data['formset'] = _formset_from_submission(submission)
+                response_data['formset'] = \
+                    ClassificationForm.formset(submission)
                 # We want a fresh form here, since the POSTed data should now
                 # be reflected in the formset.
                 form = ClassificationForm()

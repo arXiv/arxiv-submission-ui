@@ -12,7 +12,7 @@ from wtforms import StringField, PasswordField, SelectField, \
     SelectMultipleField, Form, validators
 from wtforms.fields.core import UnboundField
 
-from arxiv import status
+from arxiv import status, taxonomy
 from arxiv.users.domain import Session
 import arxiv.submission as events
 from ..domain import SubmissionStage
@@ -56,6 +56,24 @@ class OptGroupSelectField(SelectField):
 
     def _value(self) -> str:
         data: str = self.data
+        return data
+
+
+class OptGroupSelectMultipleField(SelectMultipleField):
+    """A multiple select field with optgroups."""
+
+    widget = OptGroupSelectWidget(multiple=True)
+
+    # def pre_validate(self, form: Form) -> None:
+    #     """Don't forget to validate also values from embedded lists."""
+    #     for group_label, items in self.choices:
+    #         for value, label in items:
+    #             if value == self.data:
+    #                 return
+    #     raise ValueError(self.gettext('Not a valid choice'))
+
+    def _value(self) -> List[str]:
+        data: List[str] = self.data
         return data
 
 

@@ -128,11 +128,11 @@ def request_cross(method: str, params: MultiDict, session: Session,
     # Will raise NotFound if there is no such submission.
     submission, submission_events = load_submission(submission_id)
 
-    # The submission must be published for this to be a withdrawal request.
+    # The submission must be published for this to be a cross-list request.
     if not submission.published:
         alerts.flash_failure(
             Markup("Submission must first be published. See <a"
-                   " href='https://arxiv.org/help/withdraw'>the arXiv help"
+                   " href='https://arxiv.org/help/cross'>the arXiv help"
                    " pages</a> for details."))
         status_url = url_for('ui.create_submission')
         return {}, status.HTTP_303_SEE_OTHER, {'Location': status_url}

@@ -89,14 +89,21 @@
       <p class="title is-4 breathe-vertical has-text-centered">
         There's nothing here!
       </p>
+      {% endif %}
       <div class="message is-link">
+        <div class="message-header">
+          <p><span class="icon"><i class="fa fa-exclamation-triangle"></i></span>Submitting TeX</p>
+        </div>
         <div class="message-body">
-          <p><span class="icon has-text-link"><i class="fa fa-exclamation-triangle"></i></span>If this submission was written in TeX, TeX source must be submitted to be compiled by arXiv.
-          PDF documents created from TeX will not be accepted.
-          <a href="{{ url_for('help_whytex') }}">Why?</a></p>
+          <ul>
+            <li>TeX and (La)TeX submissions are highly encouraged. This format is the most likely to retain readability and high-quality output in the future.</li>
+            <li>PDF documents created from TeX will not be accepted. The TeX source must be submitted and compiled by arXiv.
+            <a href="{{ url_for('help_whytex') }}">Why?</a></li>
+            <li>TeX source uploaded to arXiv will be made publicly available.
+            <a href="{{ url_for('help_whytex') }}">Why?</a></li>
+          </ul>
         </div>
       </div>
-      {% endif %}
     </div>
     <div class="column is-one-third-desktop is-one-quarter-tablet">
       <div class="message is-info">

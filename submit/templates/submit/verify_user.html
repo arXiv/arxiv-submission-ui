@@ -46,7 +46,18 @@
         </div>
       <p>Check this information carefully!</p>
       <p>A <span class="has-text-weight-bold">current email address is required</span> to complete your submission.</p>
-      <p><a class="button" href="{{ url_for('account') }}">Edit User Information</a>
+      <p><a class="button" href="{{ url_for('account') }}">Edit User Information</a></p>
+      </div>
+    </div>
+    <div class="message is-warning">
+      <div class="message-header">
+        <p>Endorsements</p>
+      </div>
+      <div class="message-body">
+        <div class="is-pulled-left">
+          <span class="icon has-text-link"><i class="fa fa-exclamation-triangle"></i></span>
+        </div>
+      <p>You are endorsed for: {{ authorization.endorsements }}</p>
       </div>
     </div>
   </div>

@@ -38,11 +38,24 @@
     </div>
 
     <div class="column is-one-third-tablet is-half-desktop">
+      {% if not authorization.endorsements %}
+        <div class="message is-link">
+          <div class="message-body">
+            <p>No list options means no endorsement. It should be impossible to get to this page without endorsement, but if one does, show an appropriate message.</p>
+          </div>
+        </div>
+      {% endif %}
+      {% if set(taxonomy.CATEGORIES.active) - set(authorization.endorsements) %}
+        <div class="message is-link">
+          <div class="message-body">
+            <p>This list shows categories for which you are endorsed. If you wish to submit to a category not shown here, you will need to seek endorsement prior to submission.</p>
+          </div>
+        </div>
+      {% endif %}
       <div class="message is-link submit-nav">
         <div class="message-body">
-          <p><span class="icon has-text-link"><i class="fa fa-info-circle"></i></span>
-          You are registered to submit to < groups >.</p>
-          <p>You may add groups and change defaults in your <a href="{{ url_for('account') }}">user account settings</a>.</p>
+          <p class="has-text-weight-bold"><span class="icon has-text-link"><i class="fa fa-info-circle"></i></span>Favorites</p>
+          <p>Favorite categories are placed at the top of the selection list. You may add or remove favorites in your <a href="{{ url_for('account') }}">user account settings</a>.</p>
         </div>
       </div>
       <div class="message is-link">

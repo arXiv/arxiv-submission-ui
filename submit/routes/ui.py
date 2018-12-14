@@ -422,7 +422,8 @@ def file_process(submission_id: int) -> Response:
     code = status.HTTP_200_OK
     rendered = render_template(
         "submit/file_process.html",
-        pagetitle='Process Files'
+        pagetitle='Process Files',
+        submission_id=submission_id
     )
     response = make_response(rendered, code)
     return response

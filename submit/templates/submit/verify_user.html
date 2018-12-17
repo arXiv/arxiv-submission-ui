@@ -49,27 +49,38 @@
       <p><a class="button" href="{{ url_for('account') }}">Edit User Information</a></p>
       </div>
     </div>
-    <div class="message is-warning">
+    {% if submitter.endorsements|endorsetype == 'Some' %}
+      <div class="message is-warning">
+        <div class="message-header">
+          <p>Endorsements</p>
+        </div>
+        <div class="message-body">
+          <div class="is-pulled-left">
+            <span class="icon has-text-link"><i class="fa fa-exclamation-triangle"></i></span>
+          </div>
+          <p>You are currently endorsed for: </p>
+          <ul>
+          {% for endorsement in submitter.endorsements %}
+            <li>{{ endorsement }}</li>
+          {% endfor %}
+          </ul>
+          <p>If you wish to submit to a category other than those listed, you will need to <a href="{{ url_for('help_endorse') }}">seek endorsement</a> before submitting.</p>
+        </div>
+      </div>
+    {% endif %}
+    {% if submitter.endorsements|endorsetype == 'None' %}
+    <div class="message is-danger">
       <div class="message-header">
         <p>Endorsements</p>
       </div>
       <div class="message-body">
         <div class="is-pulled-left">
-          <span class="icon has-text-link"><i class="fa fa-exclamation-triangle"></i></span>
+          <span class="icon"><i class="fa fa-exclamation-triangle"></i></span>
         </div>
-      <p>You are endorsed for: </p>
-      <ul>
-      {% for endorsement in submitter.endorsements %}
-        <li>{{ endorsement }}</li>
-      {% endfor %}
-      </ul>
-      <p>If you wish to submit to a category not listed here, you will need to seek endorsement before submitting.</p>
-      <p>Type: {{ submitter.endorsements|endorsetype }}</p>
-      {% if submitter.endorsements|endorsetype == 'Some' %}
-      <p>Boo!</p>
-      {% endif %}
+        <p>Your account does not currently have any endorsed categories. You will need to <a href="{{ url_for('help_endorse') }}">seek endorsement</a> before submitting.</p>
       </div>
     </div>
+    {% endif %}
   </div>
 </div>
 

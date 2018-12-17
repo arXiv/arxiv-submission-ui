@@ -57,7 +57,17 @@
         <div class="is-pulled-left">
           <span class="icon has-text-link"><i class="fa fa-exclamation-triangle"></i></span>
         </div>
-      <p>You are endorsed for: {{ authorization.endorsements }}</p>
+      <p>You are endorsed for: </p>
+      <ul>
+      {% for endorsement in submitter.endorsements %}
+        <li>{{ endorsement }}</li>
+      {% endfor %}
+      </ul>
+      <p>If you wish to submit to a category not listed here, you will need to seek endorsement before submitting.</p>
+      <p>Type: {{ submitter.endorsements|endorsetype }}</p>
+      {% if submitter.endorsements|endorsetype == 'Some' %}
+      <p>Boo!</p>
+      {% endif %}
       </div>
     </div>
   </div>

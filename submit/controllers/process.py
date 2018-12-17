@@ -1,5 +1,51 @@
 """
 Controllers for process-related requests.
+
+# Domain Changes
+Submision.compilations
+
+Compilation
+task_id
+source_etag
+format
+start_time
+status
+
+# Controller
+- no history, is there a compilation that matches current source package
+
+# GET
+submit.controllers.file_process.status
+
+if no Compilation, just show page
+if Compilation running, then show status, no restart
+if Compilation success, then show preview
+if Compilation failure, then show errors, opportunity to restart
+
+# POST
+submit.controllers.file_process.compile
+if Compilation matching etag, short-circuit
+if no Compilation matching etag, create compilation
+
+use CSRF form from arxiv.base to render the form, include a csrf_token.
+
+
+plan of attack
+-----------------
+1. Update domain in submission.core
+2. Add GET functionality in controllers
+3. Add POST functionality in controller
+
+  1  update submission core domain
+  2a initial landing page
+  3a create task
+  2b get status of task
+  2c show error
+  2d show success
+  3b short-circuit if task exists
+
+2. Release updated domain in submission.core
+
 """
 
 from typing import Tuple, Dict, Any, Optional

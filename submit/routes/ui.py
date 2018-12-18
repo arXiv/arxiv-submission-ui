@@ -419,34 +419,18 @@ def file_delete_all(submission_id: int) -> Response:
 @flow_control(Stages.FILE_PROCESS)
 def file_process(submission_id: int) -> Response:
     """Render step 8, file processing."""
-    if request.method == 'GET':
-        # Initial display of processing form
-        request_data = MultiDict(request.args.items(multi=True))
-
-
-        code = status.HTTP_200_OK
+    data, code, headers = controllers.process.file_process(
+        request.method,
+        request.session,
+        submission_id,
+        request.environ['token']
+    )
+    if code in [status.HTTP_200_OK, status.HTTP_400_BAD_REQUEST]:
         rendered = render_template(
             "submit/file_process.html",
             pagetitle='Process Files',
             submission_id=submission_id
         )
-
-    elif request.method == 'POST':
-        # POST requests trigger submission of task to compiler service
-        request_data = MultiDict(request.form.items(multi=True))
-
-        data, code, headers = controllers.file_process(
-            request.method,
-            request.session,
-            submission_id,
-            request.environ['token']
-        )
-        if code in [status.HTTP_200_OK, status.HTTP_400_BAD_REQUEST]:
-            rendered = render_template(
-                "submit/file_process.html",
-                pagetitle='Process Files',
-                submission_id=submission_id
-            )
 
     response = make_response(rendered, code)
     return response

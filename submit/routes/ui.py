@@ -594,10 +594,19 @@ def inject_get_next_stage_for_submission() -> Dict[str, Callable]:
 
 
 @blueprint.app_template_filter()
-def endorsetype(endorsements):
+def endorsetype(endorsements: List[str]) -> str:
     """
     Transmit endorsement status to template for message filtering.
-    Returns a string, for now.
+
+    Parameters
+    ----------
+    endorsements : list
+        The list of categories (str IDs) for which the user is endorsed.
+
+    Returns
+    -------
+    str
+        For now.
     """
     if(len(endorsements) == 0):
         return 'None'

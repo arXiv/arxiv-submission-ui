@@ -419,7 +419,7 @@ def file_delete_all(submission_id: int) -> Response:
 @flow_control(Stages.FILE_PROCESS)
 def file_process(submission_id: int) -> Response:
     """Render step 8, file processing."""
-    data, code, headers = controllers.process.file_process(
+    data, code, headers = controllers.file_process(
         request.method,
         request.session,
         submission_id,

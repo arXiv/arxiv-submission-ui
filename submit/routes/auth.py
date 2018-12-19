@@ -9,4 +9,5 @@ from submit.util import load_submission
 def can_edit_submission(session: Session, submission_id: str, **kw) -> bool:
     """Check whether the user has privileges to edit a submission."""
     submission, submission_events = load_submission(submission_id)
-    return submission.owner.native_id == session.user.user_id
+    print(submission.owner.native_id, session.user.user_id, submission.owner.native_id == session.user.user_id)
+    return str(submission.owner.native_id) == session.user.user_id

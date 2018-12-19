@@ -18,17 +18,22 @@
   </div>
 
   <div class="box">
-    <p>The abs-page preview goes here, and shows these values in context.</p>
-    <dl>
-      <dt>DOI</dt>
-      <dd>{{ form.doi.data }}</dd>
-
-      <dt>Journal Reference</dt>
-      <dd>{{ form.journal_ref.data }}</dd>
-
-      <dt>Report Number</dt>
-      <dd>{{ form.report_num.data }}</dd>
-    </dl>
+    {{ macros.abs(
+      submission.arxiv_id,
+      submission.metadata.title,
+      submission.metadata.authors_display,
+      submission.metadata.abstract,
+      submission.created,
+      submission.primary_classification.category,
+      comments = submission.metadata.comments,
+      msc_class = submission.metadata.msc_class,
+      acm_class = submission.metadata.acm_class,
+      journal_ref = submission.metadata.journal_ref,
+      doi = submission.metadata.doi,
+      report_num = submission.metadata.report_num,
+      version = submission.version,
+      submission_history = [],
+      secondary_categories = submission.secondary_categories) }}
   </div>
   {% else %}
     <h2>arXiv:{{ submission.arxiv_id }}v{{ submission.version }} {{ submission.metadata.title }}</h2>

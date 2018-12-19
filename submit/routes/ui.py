@@ -1,6 +1,6 @@
 """Provides routes for the submission user interface."""
 
-from typing import Optional, Callable, Dict
+from typing import Optional, Callable, Dict, List
 
 from werkzeug import MultiDict
 from werkzeug.exceptions import InternalServerError

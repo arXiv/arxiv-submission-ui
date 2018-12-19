@@ -2,6 +2,10 @@
 
 {% import "submit/submit_macros.html" as submit_macros %}
 
+{%- macro comments_preview(comments, withdrawal_reason) -%}
+{{ comments }} Withdrawn: {{ withdrawal_reason}}
+{% endmacro %}
+
 {% block addl_head %}
  <link rel="stylesheet" href="{{ url_for('static', filename='css/submit.css')}}" />
  <script src="{{ url_for('static', filename='js/filewidget.js') }}"></script>
@@ -25,7 +29,7 @@
       submission.metadata.abstract,
       submission.created,
       submission.primary_classification.category,
-      comments = submission.metadata.comments,
+      comments = comments_preview(submission.metadata.comments, form.withdrawal_reason.data),
       msc_class = submission.metadata.msc_class,
       acm_class = submission.metadata.acm_class,
       journal_ref = submission.metadata.journal_ref,

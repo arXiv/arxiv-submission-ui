@@ -28,9 +28,9 @@
       comments = submission.metadata.comments,
       msc_class = submission.metadata.msc_class,
       acm_class = submission.metadata.acm_class,
-      journal_ref = submission.metadata.journal_ref,
-      doi = submission.metadata.doi,
-      report_num = submission.metadata.report_num,
+      journal_ref = form.journal_ref.data,
+      doi = form.doi.data,
+      report_num = form.report_num.data,
       version = submission.version,
       submission_history = [],
       secondary_categories = submission.secondary_categories) }}

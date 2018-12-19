@@ -49,7 +49,7 @@ def request_withdrawal(method: str, params: MultiDict, session: Session,
 
     # Will raise NotFound if there is no such submission.
     submission, submission_events = load_submission(submission_id)
-    print("meta", submission.metadata)
+
     # The submission must be published for this to be a withdrawal request.
     if not submission.published:
         alerts.flash_failure(Markup("Submission must first be published. See "

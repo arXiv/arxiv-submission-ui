@@ -1,12 +1,12 @@
 """Provides routes for the submission user interface."""
 
-from typing import Optional, Callable, Dict
+from typing import Optional, Callable, Dict, List
 
 from werkzeug import MultiDict
 from werkzeug.exceptions import InternalServerError
 from flask import Blueprint, make_response, redirect, request, \
                   render_template, url_for, Response, g
-from arxiv import status
+from arxiv import status, taxonomy
 from submit import controllers
 from arxiv.users import auth
 import arxiv.submission as events
@@ -592,3 +592,28 @@ def inject_get_next_stage_for_submission() -> Dict[str, Callable]:
         return url_for(f'ui.{stage.next_stage.value}',
                        submission_id=this_submission.submission_id)
     return {'get_next_stage_for_submission': get_next_stage_for_submission}
+
+
+@blueprint.app_template_filter()
+def endorsetype(endorsements: List[str]) -> str:
+    """
+    Transmit endorsement status to template for message filtering.
+
+    Parameters
+    ----------
+    endorsements : list
+        The list of categories (str IDs) for which the user is endorsed.
+
+    Returns
+    -------
+    str
+        For now.
+    """
+    if(len(endorsements) == 0):
+        return 'None'
+    elif(len(taxonomy.CATEGORIES_ACTIVE.keys()) - len(endorsements) == 0):
+        return 'All'
+    elif(len(taxonomy.CATEGORIES_ACTIVE.keys()) - len(endorsements) > 0):
+        return 'Some'
+    else:
+        return 'Error'

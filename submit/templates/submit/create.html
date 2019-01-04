@@ -46,7 +46,7 @@
         <a href="{{ get_next_stage_for_submission(submission) }}">Version {{ submission.version }}; updated {{ submission.updated|timesince }}</a>. <span class="tag">{{ submission.status }}</span>
         <a href="{{ url_for('ui.delete_submission', submission_id=submission.submission_id) }}">
           <span class="icon">
-            <i class="fa fa-trash" aria-label="Delete"></i>
+            <i class="fa fa-trash" aria-label="Delete"><span class="sr-only">Delete this submission</span></i>
           </span>
         </a>
       </li>

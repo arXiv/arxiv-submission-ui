@@ -12,8 +12,11 @@
   {{ submit_macros.progress_bar(submission_id, stage, this_stage) }}
 {% endif %}
   <h1 class="title">
-    {% block title_preamble %}{% if submission and submission.version > 1 %}Submit a New Version{% else %}Submit an Article{% endif %}: {% endblock %}{% block title %}{% endblock title %}
+    {% block title_preamble %}{% if submission and submission.version > 1 %}Submit a Replacement{% else %}Submit an Article{% endif %}: {% endblock %}{% block title %}{% endblock title %}
   </h1>
+  {% if submission and submission.version > 1 %}
+    <p class="replacement is-size-5 has-text-dark">Replacement for: arXiv:{{ submission.arxiv_id }}v{{ submission.version }} {{ submission.metadata.title }}</p>
+  {% endif %}
   <content>
     {% if form and form.errors %}
       {% if form.errors.events %}

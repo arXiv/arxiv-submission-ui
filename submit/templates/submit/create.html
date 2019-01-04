@@ -31,10 +31,10 @@
           {% else %}
           <form class="form" method="POST" action="{{ url_for('ui.create_replacement', submission_id=submission.submission_id) }}">
             {{ form.csrf_token }}
-            <button name="new" class="button is-link is-small" value="new" aria-label="New version (replacement)">New version</button>
-            <a href="{{ url_for('ui.jref', submission_id=submission.submission_id) }}" class="button is-link is-small" aria-label="Update journal reference">JREF</a>
+            <button name="new" class="button is-link is-small" value="new" aria-label="New version (replacement)">Replace</button>
+            <a href="{{ url_for('ui.jref', submission_id=submission.submission_id) }}" class="button is-link is-small" aria-label="Update journal reference">Add Journal Reference</a>
             <a href="{{ url_for('ui.withdraw', submission_id=submission.submission_id) }}" class="button is-link is-small" aria-label="Request withdrawal">Withdraw</a>
-            <a href="{{ url_for('ui.request_cross', submission_id=submission.submission_id) }}" class="button is-link is-small" aria-label="Request cross-list">Cross-list</a>
+            <a href="{{ url_for('ui.request_cross', submission_id=submission.submission_id) }}" class="button is-link is-small" aria-label="Request cross-list">Add cross-list</a>
           </form>
           {% endif %}
 

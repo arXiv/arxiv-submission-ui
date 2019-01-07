@@ -9,7 +9,7 @@
     <p class="has-text-weight-bold" style="margin-bottom: .5em">
       <span class="tag is-link">{{ primary.id }}</span> {{ primary.name }}
       <a class="button is-outlined is-link is-small" style="border: 0" title="Change primary category" href="{{ url_for('ui.classification', submission_id=submission_id)}}">
-        <span class="icon"><i class="fa fa-pencil"></i>
+        <span class="icon"><i class="fa fa-pencil"><span class="sr-only">Edit primary classification</span></i>
       </a>
     </p>
 
@@ -22,7 +22,7 @@
         {{ subform.category()|safe }}
           <span class="tag" style="border: 1px solid #999;">{{ subform.category.data }}</span> <span>{{ category|get_category_name }}</span>
         <button class="button is-outlined is-link is-small" style="border: 0" title="Remove category">
-          <span class="icon"><i class="fa fa-trash"></i>
+          <span class="icon"><i class="fa fa-trash"><span class="sr-only">Remove category</span></i>
         </button>
       </p>
     </form>
@@ -37,7 +37,7 @@
   <div class="columns">
     <div class="column is-two-thirds-tablet">
       {% with field = form.category %}
-      <label class="label" style="margin-top: 3em">Add a cross-list category
+      <label class="label" id="crosslist" style="margin-top: 3em">Add a cross-list category
       <a href="{{ url_for('help_cross') }}" class="help-bubble"><i class="fa fa-question-circle is-info"></i><div class="bubble-text">Cross-list suggestions indicate areas of overlapping interest for the submission.</div></a></label>
       <div class="field has-addons" style="margin-bottom: 3em">
         <div class="control">

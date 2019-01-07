@@ -1,5 +1,5 @@
 """
-Controller for classification actinos.
+Controller for classification actions.
 
 Creates an event of type `core.events.event.SetPrimaryClassification`
 Creates an event of type `core.events.event.AddSecondaryClassification`

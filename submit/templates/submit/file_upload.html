@@ -16,7 +16,7 @@
             <div class="column has-text-centered is-1">
              <a href="{{ url_for('ui.file_delete', submission_id=submission_id) }}?path={{ item.path }}">
                <span class="icon">
-                 <i class="fa fa-trash" aria-label="Delete"></i>
+                 <i class="fa fa-trash"><span class="sr-only">Delete this file</span></i>
                </span>
              </a>
             </div>

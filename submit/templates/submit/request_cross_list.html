@@ -26,23 +26,7 @@
   <content>
       <div class="columns">
         <div class="column">
-          <!-- <div class="message is-link">
-            <div class="message-header"><p>Announced Categories</p></div>
-            <div class="message-body">
-              {% if primary %}
-              <p class="has-text-weight-bold" style="margin-bottom: .5em">
-                <span class="tag is-link">{{ submission.primary_classification.category }}</span> {{ submission.primary_classification.category|get_category_name }}
-              </p>
-              {% endif %}
-              {% for category in submission.secondary_categories %}
-              <p>
-                  <span class="tag" style="border: 1px solid #999;">{{ category }}</span> <span>{{ category|get_category_name }}</span>
-              </p>
-              {% endfor %}
-            </div>
-          </div> -->
-
-          <h2 class="is-size-5">New cross-list(s)</h2>
+          <h2 id="crosslist" class="is-size-5">New cross-list(s)</h2>
 
           {# This formset is used to send POST requests to REMOVE secondaries from the list. #}
           {% if formset %}
@@ -78,7 +62,7 @@
                 {% if field.errors %}
                   {{ field(class="is-danger")|safe }}
                 {% else %}
-                  {{ field()|safe }}
+                  {{ field(**{"aria-labelledby": "crosslist"})|safe }}
                 {% endif %}
                 </div>
                 {% if field.errors %}

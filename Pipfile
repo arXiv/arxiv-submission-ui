@@ -15,7 +15,7 @@ SQLAlchemy = "*"
 bleach = "*"
 requests = "==2.19.1"
 arxiv-auth = "==0.2.0rc1"
-arxiv-base = "==0.12.1rc2"
+arxiv-base = "==0.12.1"
 arxiv-submission-core = "==0.5.3rc4"
 
 [dev-packages]

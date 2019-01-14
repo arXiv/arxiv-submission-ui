@@ -9,24 +9,13 @@
 
 {% block content %}
   <h1 class="title">Request cross-list classification</h1>
-  <p>
-    You may feel that your article is of direct interest to the readers of
-    a category other than the one to which you submitted your article. In
-    such cases you may cross-list your article to the other category so
-    that your article appears in the regular listing for that category
-    (in the cross-list section).
-  </p>
-  <p>
-    Note that readers consider excessive or inappropriate cross-listing to
-    be bad etiquette, so consider your cross-lists beforehand, and do not
-    cross-list excessively or without good reason. It is rarely appropriate
-    to add more than one or two cross-lists. Also note that you are
-    unlikely to know that a cross-list is appropriate unless you are
-    yourself a reader of the archive to which you are considering a
-    cross-list. Bad cross-lists will be removed.
-  </p>
-
-  <h2>arXiv:{{ submission.arxiv_id }}v{{ submission.version }} {{ submission.metadata.title }}</h2>
+  <h2 class="replacement is-size-5">{% if primary %}
+  <span class="tag is-link has-text-weight-bold" style="vertical-align: text-bottom; font-style: normal;">{{ submission.primary_classification.category }}</span>
+  {% endif %}
+  {% for category in submission.secondary_categories %}
+      <span class="tag" style="border: 1px solid #999; vertical-align: text-bottom; font-style: normal;">{{ category }}</span>
+  {% endfor %}
+  arXiv:{{ submission.arxiv_id }}v{{ submission.version }} {{ submission.metadata.title }}</h2>
 
   {% if require_confirmation and not confirmed %}
 
@@ -37,6 +26,7 @@
   <content>
       <div class="columns">
         <div class="column">
+          <h2 id="crosslist" class="is-size-5">New cross-list(s)</h2>
 
           {# This formset is used to send POST requests to REMOVE secondaries from the list. #}
           {% if formset %}
@@ -51,7 +41,7 @@
                 {{ subform.category()|safe }}
                   <span class="tag" style="border: 1px solid #999;">{{ subform.category.data }}</span> <span>{{ category|get_category_name }}</span>
                   <button class="button is-outlined is-link is-small" style="border: 0" title="Remove category">
-                  <span class="icon"><i class="fa fa-trash"></i>
+                  <span class="icon"><i class="fa fa-trash"><span class="sr-only">Remove this category</span></i>
                 </button>
               </p>
             </form>
@@ -60,74 +50,61 @@
 
           {# This form is used to send POST requests to ADD secondaries to the list. #}
           <form method="POST" action="{{ url_for('ui.request_cross', submission_id=submission_id) }}">
-          {{ form.csrf_token }}
-          {{ form.operation }}
-          {% for cat in selected %}
-            <input name="selected" value="{{ cat }}" type="hidden" />
-          {% endfor %}
-          {% with field = form.category %}
-          <div class="field has-addons" style="margin-bottom: 3em">
-            <div class="control">
-              <div class="select">
-              {% if field.errors %}
-                {{ field(class="is-danger")|safe }}
-              {% else %}
-                {{ field()|safe }}
-              {% endif %}
-              </div>
-              {% if field.errors %}
-                <div class="help is-danger">
-                  {% for error in field.errors %}
-                      {{ error }}
-                  {% endfor %}
+            {{ form.csrf_token }}
+            {{ form.operation }}
+            {% for cat in selected %}
+              <input name="selected" value="{{ cat }}" type="hidden" />
+            {% endfor %}
+            {% with field = form.category %}
+            <div class="field has-addons" style="margin-bottom: 3em">
+              <div class="control">
+                <div class="select">
+                {% if field.errors %}
+                  {{ field(class="is-danger")|safe }}
+                {% else %}
+                  {{ field(**{"aria-labelledby": "crosslist"})|safe }}
+                {% endif %}
                 </div>
-              {% endif %}
-              {% if field.description %}
-              <p class="help has-text-grey">
-                {{ field.description|safe }}
-              </p>
-              {% endif %}
+                {% if field.errors %}
+                  <div class="help is-danger">
+                    {% for error in field.errors %}
+                        {{ error }}
+                    {% endfor %}
+                  </div>
+                {% endif %}
+                {% if field.description %}
+                <p class="help has-text-grey">
+                  {{ field.description|safe }}
+                </p>
+                {% endif %}
+              </div>
+              <div class="control">
+                <button class="button is-link">Add</button>
+              </div>
             </div>
-            <div class="control">
-              <button class="button is-link">Add</button>
-            </div>
-          </div>
-          {% endwith %}
+            {% endwith %}
           </form>
         </div>
+
         <div class="column">
           <div class="message is-link">
-            <div class="message-header"><p class="is-size-6 is-white has-text-weight-semibold">Announced Categories</p></div>
-            <div class="message-body">
-              {% if primary %}
-              <p class="has-text-weight-bold" style="margin-bottom: .5em">
-                <span class="tag is-link">{{ submission.primary_classification.category }}</span> {{ submission.primary_classification.category|get_category_name }}
-              </p>
-              {% endif %}
-
-              {% for category in submission.secondary_categories %}
-              <p>
-                  <span class="tag" style="border: 1px solid #999;">{{ category }}</span> <span>{{ category|get_category_name }}</span>
-              </p>
-
-              {% endfor %}
-
-            </div>
-          </div>
-
-          <div class="message is-link">
           {% if require_confirmation and not confirmed %}
-
             <div class="message-body">
-              <p>
-                Message?
+              <p><span class="icon"><i class="fa fa-info-circle"></i></span>
+                Add or remove categories until you are ready, then submit your request. New cross lists will not appear for your article until they are approved.
               </p>
+              <p><a href="{{ url_for('help_cross') }}">More information on cross lists</a></p>
             </div>
           {% else %}
             <div class="message-body">
-              <p>
-                Message here
+              <p class="has-text-weight-bold">
+                <span class="icon is-link"><i class="fa fa-info-circle"></i></span>
+                Tips for Choosing Cross-lists
               </p>
+              <p>
+                Sometimes an article will be of direct interest to more than one arXiv category. Cross-lists provide a way to choose secondary categories for this purpose.
+              </p>
+              <p><a href="{{ url_for('help_cross') }}">More information on cross lists</a></p>
             </div>
           {% endif %}
           </div>
@@ -144,7 +121,7 @@
               <button name="confirmed" type="submit" class="button is-success" value="1" aria-label="Confirm and Submit">Confirm and Submit</button>
             </form>
           {% else %}
-            <span>Add cross-list categories using the menu above.</span>
+            <button name="confirmed" type="submit" class="button" disabled aria-label="Submit Cross-list Request">Submit Cross-list Request</button>
           {% endif %}
 
       </div>

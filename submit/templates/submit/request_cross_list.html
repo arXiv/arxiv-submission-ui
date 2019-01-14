@@ -9,8 +9,13 @@
 
 {% block content %}
   <h1 class="title">Request cross-list classification</h1>
-
-  <h2 class="subtitle has-text-dark is-size-5">arXiv:{{ submission.arxiv_id }}v{{ submission.version }} {{ submission.metadata.title }}</h2>
+  <h2 class="replacement is-size-5">{% if primary %}
+  <span class="tag is-link has-text-weight-bold" style="vertical-align: text-bottom; font-style: normal;">{{ submission.primary_classification.category }}</span>
+  {% endif %}
+  {% for category in submission.secondary_categories %}
+      <span class="tag" style="border: 1px solid #999; vertical-align: text-bottom; font-style: normal;">{{ category }}</span>
+  {% endfor %}
+  arXiv:{{ submission.arxiv_id }}v{{ submission.version }} {{ submission.metadata.title }}</h2>
 
   {% if require_confirmation and not confirmed %}
 
@@ -21,7 +26,7 @@
   <content>
       <div class="columns">
         <div class="column">
-          <div class="message is-link">
+          <!-- <div class="message is-link">
             <div class="message-header"><p>Announced Categories</p></div>
             <div class="message-body">
               {% if primary %}
@@ -35,12 +40,12 @@
               </p>
               {% endfor %}
             </div>
-          </div>
+          </div> -->
+
+          <h2 class="is-size-5">New cross-list(s)</h2>
 
           {# This formset is used to send POST requests to REMOVE secondaries from the list. #}
           {% if formset %}
-          <div class="box">
-            <h2 class="is-7">Request to Add Cross-lists</h2>
             {% for category, subform in formset.items() %}
             <form method="POST" class="form form-margin" action="{{ url_for('ui.request_cross', submission_id=submission_id) }}">
               {{ form.csrf_token }}
@@ -57,7 +62,6 @@
               </p>
             </form>
             {% endfor %}
-          </div>
           {% endif %}
 
           {# This form is used to send POST requests to ADD secondaries to the list. #}

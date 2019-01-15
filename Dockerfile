@@ -13,7 +13,7 @@ RUN pipenv install
 
 ENV PATH "/opt/arxiv:${PATH}"
 
-ADD wsgi.py uwsgi.ini /opt/arxiv/
+ADD wsgi.py uwsgi.ini app.py /opt/arxiv/
 ADD submit/ /opt/arxiv/submit/
 
 EXPOSE 8000

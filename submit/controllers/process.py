@@ -95,15 +95,15 @@ def file_process(method: str, session: Session, submission_id: int, token: str) 
         applicable.
     """
     if method == "GET":
-        return status(session, submission_id, token)
-    elif method == "POST":
-        return compile(seesion, submission_id, token)
+        return compile_status(session, submission_id, token)
+    #elif method == "POST":
+    #    return compile(seesion, submission_id, token)
     else:
         return {}, status.HTTP_400_BAD_REQUEST, {}
 
-def status(session: Session, submission_id: int, token: str) -> Response:
+def compile_status(session: Session, submission_id: int, token: str) -> Response:
     """
-    Begins a compilation.
+    Returns the status of a compilation.
 
     Parameters
     ----------

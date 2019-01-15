@@ -1,0 +1,106 @@
+version: '3.4'
+x-base-service:
+  &base-service
+  stdin_open: true
+  tty: true
+  environment:
+    SECRET_KEY: "not secure only use for development"
+    DOCKER_HOST: "unix:///var/run/docker.sock"
+    REDIS_ENDPOINT: "submission-ui-redis"
+    COMPILER_DOCKER_IMAGE: "${COMPILER_DOCKER_IMAGE}"
+    FILE_MANAGER_ENDPOINT: "http://arxiv-filemanager:8000/filemanager/api"
+    FILE_MANAGER_CONTENT_PATH: "/src/{source_id}"
+    LOGLEVEL: 10
+    FLASK_APP: /opt/arxiv/app.py
+    FLASK_DEBUG: 1
+    HOST_SOURCE_ROOT: "${HOST_SOURCE_ROOT}"
+    VERBOSE_COMPILE: 1
+    JWT_SECRET: "foosecret"
+    CLASSIC_DATABASE_URI: "mysql+mysqldb://foouser:foopass@submission-ui-maria:3306/submission?charset=utf8"
+    FLASK_SECRET: 'what'
+    SESSION_COOKIE_SECURE: 0
+
+services:
+  submission-ui-redis:
+    image: redis
+    container_name: submission-ui-redis
+    networks:
+      - arxiv-submission-ui
+
+  submission-ui-maria:
+    image: mariadb:10.3
+    container_name: submission-ui-maria
+    networks:
+      - arxiv-submission-ui
+    environment:
+      MYSQL_USER: foouser
+      MYSQL_PASSWORD: foopass
+      MYSQL_ROOT_PASSWORD: foorootpassword
+      MYSQL_DATABASE: submission
+    command: ["mysqld", "--character-set-server=utf8mb4", "--collation-server=utf8mb4_unicode_ci"]
+
+  filemanager:
+    << : *base-service
+    # image: arxiv/filemanager
+    # Alternatively, you can uncomment these lines (and comment the `image`
+    # line) to build this from a local repo. You may need to update `context`.
+    build:
+      context: ../arxiv-filemanager
+      dockerfile: Dockerfile
+    container_name: arxiv-filemanager
+    networks:
+      - arxiv-submission-ui
+
+  compiler-api:
+    << : *base-service
+    build:
+      context: ../arxiv-compiler
+      dockerfile: Dockerfile
+    container_name: arxiv-compiler-api
+    command: pipenv run flask run -h 0.0.0.0 -p 8000
+    networks:
+      - arxiv-submission-ui
+  
+  compiler-worker:
+    << : *base-service
+    build:
+      context: ../arxiv-compiler
+      dockerfile: Dockerfile
+    container_name: arxiv-compiler-worker
+    command: /opt/arxiv/start_worker.sh -A compiler.worker.celery_app --loglevel=INFO -E --concurrency=2
+    networks:
+      - arxiv-submission-ui
+    volumes:
+      - "${HOST_SOURCE_ROOT}:/tmp"
+      - /var/run/docker.sock:/var/run/docker.sock
+    depends_on:
+      - compiler-api
+
+  # This just runs once at the beginning to set up the database, then exits 0.
+  submission-ui-create-database:
+    << : *base-service
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: submission-ui-create-database
+    command: python app.py
+    networks:
+      - arxiv-submission-ui
+
+  submission-ui:
+    << : *base-service
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: arxiv-submission-ui
+    command: uwsgi --http-socket :8000 -M -t 3000 --manage-script-name --processes 8 --threads 1 --async 100 --ugreen  --mount /=wsgi.py --logformat "%(addr) %(addr) - %(user_id)|%(session_id) [%(rtime)] [%(uagent)] \"%(method) %(uri) %(proto)\" %(status) %(size) %(micros) %(ttfb)"
+    ports:
+      - 8000:8000
+    networks:
+      - arxiv-submission-ui
+    depends_on:
+      - submission-ui-create-database
+
+
+networks:
+  arxiv-submission-ui:

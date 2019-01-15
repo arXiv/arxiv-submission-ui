@@ -41,31 +41,37 @@ services:
 
   filemanager:
     << : *base-service
-    # image: arxiv/filemanager
-    # Alternatively, you can uncomment these lines (and comment the `image`
-    # line) to build this from a local repo. You may need to update `context`.
-    build:
-      context: ../arxiv-filemanager
-      dockerfile: Dockerfile
+    image: arxiv/filemanager
+    # You can uncomment these lines to build this from a local
+    # repo. You may need to update `context`.
+    # build:
+    #   context: ../arxiv-filemanager
+    #   dockerfile: Dockerfile
     container_name: arxiv-filemanager
     networks:
       - arxiv-submission-ui
 
   compiler-api:
     << : *base-service
-    build:
-      context: ../arxiv-compiler
-      dockerfile: Dockerfile
+    image: arxiv/compiler
+    # You can uncomment these lines to build this from a local
+    # repo. You may need to update `context`.
+    # build:
+    #   context: ../arxiv-compiler
+    #   dockerfile: Dockerfile
     container_name: arxiv-compiler-api
     command: pipenv run flask run -h 0.0.0.0 -p 8000
     networks:
       - arxiv-submission-ui
-  
+
   compiler-worker:
     << : *base-service
-    build:
-      context: ../arxiv-compiler
-      dockerfile: Dockerfile
+    image: arxiv/compiler
+    # You can uncomment these lines to build this from a local
+    # repo. You may need to update `context`.
+    # build:
+    #   context: ../arxiv-compiler
+    #   dockerfile: Dockerfile
     container_name: arxiv-compiler-worker
     command: /opt/arxiv/start_worker.sh -A compiler.worker.celery_app --loglevel=INFO -E --concurrency=2
     networks:
@@ -79,6 +85,7 @@ services:
   # This just runs once at the beginning to set up the database, then exits 0.
   submission-ui-create-database:
     << : *base-service
+    image: arxiv/submission-ui
     build:
       context: .
       dockerfile: Dockerfile
@@ -89,6 +96,7 @@ services:
 
   submission-ui:
     << : *base-service
+    image: arxiv/submission-ui
     build:
       context: .
       dockerfile: Dockerfile

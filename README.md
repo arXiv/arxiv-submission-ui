@@ -22,7 +22,7 @@ $ cd arxiv-submission-ui
 $ # Check out branch you are evaluating and be sure to pull recent changes
 $ git pull
 $ pipenv install --dev
-$ CLASSIC_DATABASE_URI='sqlite:///db.sqlite' LOGLEVEL=10 FLASK_APP=app.py FLASK_DEBUG=1 pipenv run flask run
+$ JWT_SECRET=foosecret CLASSIC_DATABASE_URI='sqlite:///db.sqlite' LOGLEVEL=10 FLASK_APP=app.py FLASK_DEBUG=1 pipenv run flask run
 ```
 
 ## Generating an auth token

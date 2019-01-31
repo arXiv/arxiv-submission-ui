@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "5dda34735d0f14fe7b58f0e4eb10e81b9f030ecce711490c44f114ac3c7908a9"
+            "sha256": "3d851fdf75042949e9c6b6545df80ce13bc8500a801d7844062c10e4c9893643"
         },
         "pipfile-spec": 6,
         "requires": {},
@@ -14,9 +14,6 @@
         ]
     },
     "default": {
-        "825942b": {
-            "path": "./../arxiv-auth/users"
-        },
         "amqp": {
             "hashes": [
                 "sha256:9f181e4aef6562e6f9f45660578fc1556150ca06e836ecb9e733e6ea10b48464",
@@ -26,9 +23,10 @@
         },
         "arxiv-auth": {
             "hashes": [
-                "sha256:5e4d2e2155fde458653142613c614fced9f3bc6021d8e3e1c0dd2cd9b0279701"
+                "sha256:b547f31fb6ca1acb365550bce130bdde3e0aaa6ac05a57a9b84c306e2daad92d"
             ],
-            "version": "==0.2.5"
+            "index": "pypi",
+            "version": "==0.2.6rc1"
         },
         "arxiv-base": {
             "hashes": [
@@ -308,6 +306,7 @@
                 "sha256:a68ac5e15e76e7e5dd2b8f94007233e01effe3e50e8daddf69acfd81cb686baf",
                 "sha256:b5725a0bd4ba422ab0e66e89e030c806576753ea3ee08554382c14e685d117b5"
             ],
+            "markers": "python_version >= '3.4'",
             "version": "==1.23"
         },
         "uwsgi": {
@@ -586,6 +585,7 @@
                 "sha256:a68ac5e15e76e7e5dd2b8f94007233e01effe3e50e8daddf69acfd81cb686baf",
                 "sha256:b5725a0bd4ba422ab0e66e89e030c806576753ea3ee08554382c14e685d117b5"
             ],
+            "markers": "python_version >= '3.4'",
             "version": "==1.23"
         },
         "wrapt": {

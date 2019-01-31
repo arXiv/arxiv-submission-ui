@@ -107,7 +107,7 @@ def classification(method: str, params: MultiDict, session: Session,
     if method == 'GET':
         params = _data_from_submission(params, submission)
         if 'category' not in params:
-            params['category'] = session.user.profile.default_category.compound
+            params['category'] = session.user.profile.default_category
 
     params['operation'] = ClassificationForm.ADD     # Always add a primary.
 

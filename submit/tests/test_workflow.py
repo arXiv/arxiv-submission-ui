@@ -43,8 +43,8 @@ class TestSubmissionWorkflow(TestCase):
                                            scopes.WRITE_UPLOAD,
                                            scopes.DELETE_UPLOAD_FILE],
                                     endorsements=[
-                                        Category('astro-ph', 'GA'),
-                                        Category('astro-ph', 'CO'),
+                                        Category('astro-ph.GA'),
+                                        Category('astro-ph.CO'),
                                     ])
         self.headers = {'Authorization': self.token}
         self.client = self.app.test_client()
@@ -205,8 +205,8 @@ class TestJREFWorkflow(TestCase):
                                            scopes.WRITE_UPLOAD,
                                            scopes.DELETE_UPLOAD_FILE],
                                     endorsements=[
-                                        Category('astro-ph', 'GA'),
-                                        Category('astro-ph', 'CO'),
+                                        Category('astro-ph.GA'),
+                                        Category('astro-ph.CO'),
                                     ])
         self.headers = {'Authorization': self.token}
         self.client = self.app.test_client()
@@ -333,8 +333,8 @@ class TestWithdrawalWorkflow(TestCase):
                                            scopes.WRITE_UPLOAD,
                                            scopes.DELETE_UPLOAD_FILE],
                                     endorsements=[
-                                        Category('astro-ph', 'GA'),
-                                        Category('astro-ph', 'CO'),
+                                        Category('astro-ph.GA'),
+                                        Category('astro-ph.CO'),
                                     ])
         self.headers = {'Authorization': self.token}
         self.client = self.app.test_client()

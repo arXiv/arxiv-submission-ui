@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "3d851fdf75042949e9c6b6545df80ce13bc8500a801d7844062c10e4c9893643"
+            "sha256": "b81e71c76abd07fef345161f5850366f6b4adad75e42548d369de6624a7f0a4f"
         },
         "pipfile-spec": 6,
         "requires": {},
@@ -37,10 +37,10 @@
         },
         "arxiv-submission-core": {
             "hashes": [
-                "sha256:b188c3e4852136e773b553b47b2733583acabadde4ee4bda7a77f212c106b325"
+                "sha256:f7d21d2ab23d8ea1771f029c26a79eb1c0c4a1d9384fd14cbcfc0e54eac9de03"
             ],
             "index": "pypi",
-            "version": "==0.6.1"
+            "version": "==0.6.2rc1"
         },
         "billiard": {
             "hashes": [
@@ -577,7 +577,6 @@
                 "sha256:f5be39a0146be663cbf210a4d95c3c58b2d7df7b043c9047c5448e358f0550a2",
                 "sha256:fcd198bf19d9213e5cbf2cde2b9ef20a9856e716f76f9476157f90ae6de06cc6"
             ],
-            "markers": "python_version < '3.7' and implementation_name == 'cpython'",
             "version": "==1.2.0"
         },
         "urllib3": {

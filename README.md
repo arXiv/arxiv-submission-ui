@@ -82,7 +82,7 @@ session = domain.Session(
             affiliation="FSU",
             rank=3,
             country="de",
-            default_category=domain.Category('astro-ph', 'GA'),
+            default_category=domain.Category('astro-ph.GA'),
             submission_groups=['grp_physics']
         )
     ),
@@ -90,8 +90,8 @@ session = domain.Session(
         scopes=[auth.scopes.CREATE_SUBMISSION,
                 auth.scopes.EDIT_SUBMISSION,
                 auth.scopes.VIEW_SUBMISSION],
-        endorsements=[domain.Category('astro-ph', 'CO'),
-                      domain.Category('astro-ph', 'GA')]
+        endorsements=[domain.Category('astro-ph.CO'),
+                      domain.Category('astro-ph.GA')]
     )
 )
 secret = 'foosecret'    # Note this secret. 

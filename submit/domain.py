@@ -94,10 +94,12 @@ class StageBase(NamedTuple):
         """Determine whether the submitter has uploaded files."""
         return submission.source_content is not None
 
+    # TODO: this needs a bit more work, since the compilation may have failed
+    # or may not be complete for the current state of the upload workspace.
     @staticmethod
     def files_are_processed(submission: Submission) -> bool:
         """Determine whether the submitter has compiled their upload."""
-        return len(submission.compiled_content) > 0
+        return len(submission.compilations) > 0
 
     @staticmethod
     def metadata_is_set(submission: Submission) -> bool:

@@ -59,8 +59,9 @@ class ClassificationForm(csrf.CSRFForm):
             (archive, [
                 (category, display) for category, display in archive_choices
                 if session.authorizations.endorsed_for(category)
-                and (primary is None or category != primary.category)
-                and category not in submission.secondary_categories
+                and (((primary is None or category != primary.category)
+                      and category not in submission.secondary_categories)
+                     or category == selected)
             ])
             for archive, archive_choices in self.category.choices
         ]

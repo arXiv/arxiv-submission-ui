@@ -127,8 +127,8 @@ class FileManagementService(object):
             completed=dateutil.parser.parse(data['completion_datetime']),
             created=dateutil.parser.parse(data['created_datetime']),
             modified=dateutil.parser.parse(data['modified_datetime']),
-            status=data['upload_status'],
-            lifecycle=data['workspace_state'],
+            status=Upload.Status(data['upload_status']),
+            lifecycle=Upload.LifecycleStates(data['workspace_state']),
             locked=bool(data['lock_state'] == 'LOCKED'),
             identifier=data['upload_id'],
             files=[

@@ -374,7 +374,7 @@ class FileStatus(NamedTuple):
 class Upload(NamedTuple):
     """Represents the state of an upload workspace."""
 
-    class Statuses(Enum):   # type: ignore
+    class Status(Enum):   # type: ignore
         """The status of the upload workspace with respect to submission."""
 
         READY = 'READY'
@@ -392,7 +392,7 @@ class Upload(NamedTuple):
     completed: datetime
     created: datetime
     modified: datetime
-    status: 'Upload.Statuses'
+    status: 'Upload.Status'
     lifecycle: 'Upload.LifecycleStates'
     locked: bool
     identifier: int
@@ -449,7 +449,7 @@ class CompilationStatus(NamedTuple):
     """Represents the state of a compilation product in the store."""
 
     # This is intended as a fixed class attributes, not a slot.
-    class Statuses(Enum):      # type: ignore
+    class Status(Enum):      # type: ignore
         COMPLETED = "completed"
         IN_PROGRESS = "in_progress"
         FAILED = "failed"
@@ -457,7 +457,7 @@ class CompilationStatus(NamedTuple):
     # Here are the actual slots/fields.
     upload_id: str
 
-    status: 'CompilationStatus.Statuses'
+    status: 'CompilationStatus.Status'
     """
     The status of the compilation.
 

@@ -253,7 +253,7 @@ class CompilerService(object):
         return CompilationStatus(
             upload_id=upload_id,
             task_id=task_id,
-            status=CompilationStatus.Statuses(data['status'])
+            status=CompilationStatus.Status(data['status'])
         )
 
 

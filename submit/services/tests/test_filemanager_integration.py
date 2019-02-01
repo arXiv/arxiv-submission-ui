@@ -68,7 +68,7 @@ class TestFileManagerIntegration(TestCase):
         self.fm._session.headers.update({'Authorization': self.token})
         data = self.fm.upload_package(pointer)
         self.assertIsInstance(data, Upload)
-        self.assertEqual(data.status, Upload.Statuses.READY)
+        self.assertEqual(data.status, Upload.Status.READY)
         self.assertEqual(data.lifecycle, Upload.LifecycleStates.ACTIVE)
         self.assertFalse(data.locked)
 
@@ -105,7 +105,7 @@ class TestFileManagerIntegration(TestCase):
 
         status = self.fm.get_upload_status(data.identifier)
         self.assertIsInstance(status, Upload)
-        self.assertEqual(status.status, Upload.Statuses.READY)
+        self.assertEqual(status.status, Upload.Status.READY)
         self.assertEqual(status.lifecycle, Upload.LifecycleState.ACTIVE)
         self.assertFalse(status.locked)
 
@@ -154,6 +154,6 @@ class TestFileManagerIntegration(TestCase):
                                content_type='text/plain')
         status = self.fm.add_file(data.identifier, pointer2)
         self.assertIsInstance(status, Upload)
-        self.assertEqual(status.status, Upload.Statuses.READY)
+        self.assertEqual(status.status, Upload.Status.READY)
         self.assertEqual(status.lifecycle, Upload.LifecycleState.ACTIVE)
         self.assertFalse(status.locked)

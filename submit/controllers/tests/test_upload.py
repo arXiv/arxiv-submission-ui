@@ -98,7 +98,7 @@ class TestUpload(TestCase):
                 completed=datetime.now(),
                 created=datetime.now(),
                 modified=datetime.now(),
-                status=Upload.Statuses.READY,
+                status=Upload.Status.READY,
                 lifecycle=Upload.LifecycleStates.ACTIVE,
                 locked=False,
                 files=[FileStatus(
@@ -154,7 +154,7 @@ class TestUpload(TestCase):
             completed=datetime.now(),
             created=datetime.now(),
             modified=datetime.now(),
-            status=Upload.Statuses.READY,
+            status=Upload.Status.READY,
             lifecycle=Upload.LifecycleStates.ACTIVE,
             locked=False,
             files=[FileStatus(

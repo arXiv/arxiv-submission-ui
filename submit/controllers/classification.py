@@ -50,8 +50,7 @@ class ClassificationForm(csrf.CSRFForm):
                                         default='')
 
     def filter_choices(self, submission: events.domain.Submission,
-                       session: Session, allowed: Optional[List[str]] = None) \
-            -> None:
+                       session: Session) -> None:
         """Remove redundant choices, and limit to endorsed categories."""
         selected = self.category.data
         primary = submission.primary_classification
@@ -59,10 +58,9 @@ class ClassificationForm(csrf.CSRFForm):
         choices = [
             (archive, [
                 (category, display) for category, display in archive_choices
-                if ((allowed is None or category in allowed)
-                    and (primary is None or category != primary.category)
-                    and category not in submission.secondary_categories)
-                or category == selected
+                if session.authorizations.endorsed_for(category)
+                and (primary is None or category != primary.category)
+                and category not in submission.secondary_categories
             ])
             for archive, archive_choices in self.category.choices
         ]
@@ -114,7 +112,7 @@ def classification(method: str, params: MultiDict, session: Session,
     form = ClassificationForm(params)
     # We want categories in dot-delimited "compound" format.
 
-    form.filter_choices(submission, session, submitter.endorsements)
+    form.filter_choices(submission, session)
     response_data = {
         'submission_id': submission_id,
         'form': form,

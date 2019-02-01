@@ -24,7 +24,7 @@ from arxiv.base import logging
 from arxiv.base.globals import get_application_config, get_application_global
 from werkzeug.datastructures import FileStorage
 
-from submit.domain import UploadStatus, FileStatus, FileError
+from submit.domain import Upload, FileStatus, FileError
 
 logger = logging.getLogger(__name__)
 
@@ -113,7 +113,7 @@ class FileManagementService(object):
         self._endpoint = endpoint
         self._session.headers.update(headers)
 
-    def _parse_upload_status(self, data: dict) -> UploadStatus:
+    def _parse_upload_status(self, data: dict) -> Upload:
         file_errors = defaultdict(list)
         non_file_errors = []
         for etype, filename, message in data['errors']:
@@ -122,7 +122,7 @@ class FileManagementService(object):
             else:
                 non_file_errors.append(FileError(etype.upper(), message))
 
-        return UploadStatus(
+        return Upload(
             started=dateutil.parser.parse(data['start_datetime']),
             completed=dateutil.parser.parse(data['completion_datetime']),
             created=dateutil.parser.parse(data['created_datetime']),
@@ -204,7 +204,7 @@ class FileManagementService(object):
         """Get the status of the file management service."""
         return self.request('get', 'status')
 
-    def upload_package(self, pointer: FileStorage) -> UploadStatus:
+    def upload_package(self, pointer: FileStorage) -> Upload:
         """
         Stream an upload to the file management service.
 
@@ -230,7 +230,7 @@ class FileManagementService(object):
                                      expected_code=status.HTTP_201_CREATED)
         return self._parse_upload_status(data)
 
-    def get_upload_status(self, upload_id: int) -> UploadStatus:
+    def get_upload_status(self, upload_id: int) -> Upload:
         """
         Retrieve metadata about an accepted and processed upload package.
 
@@ -252,7 +252,7 @@ class FileManagementService(object):
         return upload_status
 
     def add_file(self, upload_id: int, pointer: FileStorage,
-                 ancillary: bool = False) -> UploadStatus:
+                 ancillary: bool = False) -> Upload:
         """
         Upload a file or package to an existing upload workspace.
 
@@ -421,26 +421,26 @@ def set_auth_token(token: str) -> None:
 
 
 @wraps(FileManagementService.get_upload_status)
-def get_upload_status(upload_id: int) -> UploadStatus:
+def get_upload_status(upload_id: int) -> Upload:
     """See :meth:`FileManagementService.get_upload_status`."""
     return current_session().get_upload_status(upload_id)
 
 
 @wraps(FileManagementService.upload_package)
-def upload_package(pointer: FileStorage) -> UploadStatus:
+def upload_package(pointer: FileStorage) -> Upload:
     """See :meth:`FileManagementService.upload_package`."""
     return current_session().upload_package(pointer)
 
 
 @wraps(FileManagementService.add_file)
 def add_file(upload_id: int, pointer: FileStorage, ancillary: bool = False) \
-        -> UploadStatus:
+        -> Upload:
     """See :meth:`FileManagementService.add_file`."""
     return current_session().add_file(upload_id, pointer, ancillary=ancillary)
 
 
 @wraps(FileManagementService.delete_file)
-def delete_file(upload_id: int, file_path: str) -> UploadStatus:
+def delete_file(upload_id: int, file_path: str) -> Upload:
     """See :meth:`FileManagementService.delete_file`."""
     return current_session().delete_file(upload_id, file_path)
 

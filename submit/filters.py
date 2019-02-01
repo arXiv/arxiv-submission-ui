@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 from pytz import UTC
 
 from arxiv import taxonomy
-from .domain import FileStatus, UploadStatus
+from .domain import FileStatus, Upload
 
 NestedFileTree = Mapping[str, Union[FileStatus, 'NestedFileTree']]
 

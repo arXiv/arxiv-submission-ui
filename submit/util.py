@@ -66,7 +66,6 @@ def publish_submission(submission_id: int) -> None:
     head.comments = "We added these comments when faking the publish."
     head.doi = "10.1109/5.771073"
     head.authors = "J. Bloggs, F. Doe, N. Body (FSU)"
-    print(head.__dict__)
     if head.document is None:
         paper_id = datetime.now().strftime('%s')[-4:] \
             + "." \

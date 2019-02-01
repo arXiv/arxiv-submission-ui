@@ -23,7 +23,7 @@ from arxiv.base import logging
 from arxiv.base.globals import get_application_config, get_application_global
 from werkzeug.datastructures import FileStorage
 
-from submit.domain import CompilationStatus, UploadStatus, FileStatus, \
+from submit.domain import CompilationStatus, Upload, FileStatus, \
     CompilationProduct, FileError
 
 logger = logging.getLogger(__name__)

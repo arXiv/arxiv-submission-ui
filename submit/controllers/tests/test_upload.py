@@ -11,7 +11,7 @@ from wtforms import Form
 from arxiv import status
 from arxiv.users import auth, domain
 from arxiv.submission.domain.submission import SubmissionContent
-from submit.domain import UploadStatus, FileStatus, FileError
+from submit.domain import Upload, FileStatus, FileError
 from submit.services import filemanager
 from .. import upload
 
@@ -90,7 +90,7 @@ class TestUpload(TestCase):
             ), []
         )
         mock_filemanager.get_upload_status.return_value = (
-            UploadStatus(
+            Upload(
                 identifier=25,
                 checksum='a1s2d3f4',
                 size=593920,
@@ -98,8 +98,8 @@ class TestUpload(TestCase):
                 completed=datetime.now(),
                 created=datetime.now(),
                 modified=datetime.now(),
-                status=UploadStatus.Statuses.READY,
-                lifecycle=UploadStatus.LifecycleStates.ACTIVE,
+                status=Upload.Statuses.READY,
+                lifecycle=Upload.LifecycleStates.ACTIVE,
                 locked=False,
                 files=[FileStatus(
                     path='',
@@ -146,7 +146,7 @@ class TestUpload(TestCase):
         )
         mock_load.return_value = (mock_submission, [])
         mock_save.return_value = (mock_submission, [])
-        mock_filemanager.add_file.return_value = UploadStatus(
+        mock_filemanager.add_file.return_value = Upload(
             identifier=25,
             checksum='a1s2d3f4',
             size=593920,
@@ -154,8 +154,8 @@ class TestUpload(TestCase):
             completed=datetime.now(),
             created=datetime.now(),
             modified=datetime.now(),
-            status=UploadStatus.Statuses.READY,
-            lifecycle=UploadStatus.LifecycleStates.ACTIVE,
+            status=Upload.Statuses.READY,
+            lifecycle=Upload.LifecycleStates.ACTIVE,
             locked=False,
             files=[FileStatus(
                 path='',

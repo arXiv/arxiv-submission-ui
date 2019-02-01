@@ -31,7 +31,7 @@ from arxiv.users.domain import Session
 from . import util
 from ..util import load_submission
 from ..services import filemanager
-from ..domain import UploadStatus, SubmissionStage
+from ..domain import Upload, SubmissionStage
 
 logger = logging.getLogger(__name__)
 
@@ -235,6 +235,7 @@ def delete(method: str, params: MultiDict, session: Session,
         Extra headers to add/update on the response. This should include
         the `Location` header for use in the 303 redirect response, if
         applicable.
+
     """
     logger.debug('%s delete with params %s', method, params)
     submission, submission_events = load_submission(submission_id)
@@ -310,7 +311,7 @@ class DeleteAllFilesForm(csrf.CSRFForm):
                              validators=[validators.DataRequired()])
 
 
-def _update_submission(submission: Submission, upload_status: UploadStatus,
+def _update_submission(submission: Submission, upload_status: Upload,
                        submitter: User, client: Optional[Client] = None) \
         -> Submission:
     """
@@ -325,7 +326,7 @@ def _update_submission(submission: Submission, upload_status: UploadStatus,
     Parameters
     ----------
     submission : :class:`Submission`
-    upload_status : :class:`UploadStatus`
+    upload_status : :class:`Upload`
     submitter : :class:`User`
     client : :class:`Client` or None
 
@@ -396,7 +397,7 @@ def _get_upload(params: MultiDict, session: Session, submission: Submission) \
     status_data = alerts.get_hidden_alerts('status')
     logger.debug('Got status data from hidden alert: %s', status_data)
     if type(status_data) is dict and status_data['identifier'] == upload_id:
-        upload_status = UploadStatus.from_dict(status_data)
+        upload_status = Upload.from_dict(status_data)
     else:
         try:
             upload_status = filemanager.get_upload_status(upload_id)

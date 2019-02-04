@@ -467,13 +467,13 @@ def _post_new_upload(params: MultiDict, pointer: FileStorage, session: Session,
             alerts.flash_warning(
                 f'Unpacked {upload_status.file_count} files. Total submission'
                 f' package size is {converted_size}. See below for warnings.',
-                title='Upload successful, with warnings'
+                title='Upload complete, with warnings'
             )
         elif upload_status.status is Upload.Status.ERRORS:
             alerts.flash_warning(
                 f'Unpacked {upload_status.file_count} files. Total submission'
                 f' package size is {converted_size}. See below for errors.',
-                title='Upload successful, with errors'
+                title='Upload complete, with errors'
             )
         alerts.flash_hidden(upload_status.to_dict(), 'status')
     except filemanager.RequestFailed as e:
@@ -551,13 +551,13 @@ def _post_new_file(params: MultiDict, pointer: FileStorage, session: Session,
             alerts.flash_warning(
                 f'Uploaded {pointer.filename} successfully. Total submission'
                 f' package size is {converted_size}. See below for warnings.',
-                title='Upload successful, with warnings'
+                title='Upload complete, with warnings'
             )
         elif upload_status.status is Upload.Status.ERRORS:
             alerts.flash_warning(
                 f'Uploaded {pointer.filename} successfully. Total submission'
                 f' package size is {converted_size}. See below for errors.',
-                title='Upload successful, with errors'
+                title='Upload complete, with errors'
             )
         status_data = upload_status.to_dict()
         logger.debug('Stashing status data for next page: %s', status_data)

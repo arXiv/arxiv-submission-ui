@@ -37,7 +37,7 @@ class TestRequestCompilation(TestCase):
         self.assertEqual(comp_status.upload_id, upload_id)
         self.assertEqual(comp_status.task_id, task_id)
         self.assertEqual(comp_status.status,
-                         domain.CompilationStatus.Statuses.IN_PROGRESS)
+                         domain.CompilationStatus.Status.IN_PROGRESS)
         self.assertEqual(mock_session.post.call_count, 1)
         self.assertEqual(mock_session.get.call_count, 1)
 
@@ -71,7 +71,7 @@ class TestRequestCompilation(TestCase):
         self.assertEqual(comp_status.upload_id, upload_id)
         self.assertEqual(comp_status.task_id, task_id)
         self.assertEqual(comp_status.status,
-                         domain.CompilationStatus.Statuses.IN_PROGRESS)
+                         domain.CompilationStatus.Status.IN_PROGRESS)
         self.assertEqual(mock_session.post.call_count, 1)
         self.assertEqual(mock_session.get.call_count, 1)
 
@@ -102,7 +102,7 @@ class TestGetTaskStatus(TestCase):
         self.assertEqual(comp_status.upload_id, upload_id)
         self.assertEqual(comp_status.task_id, task_id)
         self.assertEqual(comp_status.status,
-                         domain.CompilationStatus.Statuses.FAILED)
+                         domain.CompilationStatus.Status.FAILED)
         self.assertEqual(mock_session.get.call_count, 1)
 
     @mock.patch(f'{compiler.__name__}.requests.Session')
@@ -128,7 +128,7 @@ class TestGetTaskStatus(TestCase):
         self.assertEqual(comp_status.upload_id, upload_id)
         self.assertEqual(comp_status.task_id, task_id)
         self.assertEqual(comp_status.status,
-                         domain.CompilationStatus.Statuses.IN_PROGRESS)
+                         domain.CompilationStatus.Status.IN_PROGRESS)
         self.assertEqual(mock_session.get.call_count, 1)
 
     @mock.patch(f'{compiler.__name__}.requests.Session')
@@ -154,7 +154,7 @@ class TestGetTaskStatus(TestCase):
         self.assertEqual(comp_status.upload_id, upload_id)
         self.assertEqual(comp_status.task_id, task_id)
         self.assertEqual(comp_status.status,
-                         domain.CompilationStatus.Statuses.COMPLETED)
+                         domain.CompilationStatus.Status.COMPLETED)
         self.assertEqual(mock_session.get.call_count, 1)
 
     @mock.patch(f'{compiler.__name__}.requests.Session')

@@ -99,7 +99,7 @@ def file_process(method: str, session: Session, submission_id: int, token: str) 
     #elif method == "POST":
     #    return compile(seesion, submission_id, token)
     else:
-        return {}, status.HTTP_400_BAD_REQUEST, {}
+        return {status: ""}, status.HTTP_400_BAD_REQUEST, {}
 
 def compile_status(session: Session, submission_id: int, token: str) -> Response:
     """
@@ -128,7 +128,10 @@ def compile_status(session: Session, submission_id: int, token: str) -> Response
         applicable.
     """
     compiler.set_auth_token(token)
-    compiler.request_compilation(submission_id)
+    try:
+        compiler.request_compilation(submission_id)
+    except:
+        return {'status': 'failed'}, status.HTTP_400_BAD_REQUEST, {}
 
     redirect = url_for('ui.file_process', submission_id=submission_id)
     return {}, status.HTTP_303_SEE_OTHER, {'Location': redirect}

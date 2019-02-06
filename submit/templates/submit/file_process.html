@@ -18,6 +18,16 @@
       </div>
     </div>
 
+
+
+    {% if not status %}
+    <div class="message is-info">
+      <div class="message-body">
+        <p>arXiv's processing system runs TeX Live 2016 and natbib 8.31. Authors are strongly encouraged to upgrade if older versions of these packages are being used to generate files.</p>
+      </div>
+    </div>
+
+    {% elif status == "failed" %}
     <div class="message is-danger">
       <div class="message-header">
         <p><span class="icon"><i class="fa fa-exclamation-triangle"></i></span>Processing Failed</p></div>
@@ -34,12 +44,7 @@
       </div>
     </div>
 
-    <div class="message is-info">
-      <div class="message-body">
-        <p>arXiv's processing system runs TeX Live 2016 and natbib 8.31. Authors are strongly encouraged to upgrade if older versions of these packages are being used to generate files.</p>
-      </div>
-    </div>
-
+    {% elif status == "warning" %}
     <div class="message is-warning">
       <div class="message-header">
         <p><span class="icon"><i class="fa fa-exclamation-triangle"></i></span>Completed With Warnings</p>
@@ -51,7 +56,8 @@
         </ul>
       </div>
     </div>
-
+    
+    {% elif status == "success" %}
     <div class="message is-success">
       <div class="message-header">
         <p><span class="icon"><i class="fa fa-check-circle"></i></span>Processing Successful</p></div>
@@ -62,6 +68,7 @@
         <p class="has-text-centered"><a class="button is-link" href="{{ url_for('ui.file_upload', submission_id=8) }}">View PDF</a></p>
       </div>
     </div>
+    {% endif %}
   </div>
 
   <div class="column">
@@ -91,14 +98,18 @@
           <a class="button">View complete log</a>
         </div>
       </div>
+      {% if errors %}
       <article class="has-text-danger">
         <h4 class="has-text-danger">Errors</h4>
         <p>error 1 with information</p>
       </article>
+      {% endif %}
+      {% if warnings %}
       <article class="has-text-warning">
         <h4 class="has-text-warning">Warnings</h4>
         <p>and warnings go here</p>
       </article>
+      {% endif %}
       <article>
         <h4>Messages with no particular status</h4>
         <p>Not even sure what this would be like, but there should be some place for just notifications</p>

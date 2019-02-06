@@ -429,7 +429,8 @@ def file_process(submission_id: int) -> Response:
         rendered = render_template(
             "submit/file_process.html",
             pagetitle='Process Files',
-            submission_id=submission_id
+            submission_id=submission_id,
+            **data
         )
 
     response = make_response(rendered, code)

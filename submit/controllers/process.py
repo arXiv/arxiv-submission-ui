@@ -99,7 +99,7 @@ def file_process(method: str, session: Session, submission_id: int, token: str) 
     #elif method == "POST":
     #    return compile(seesion, submission_id, token)
     else:
-        return {status: ""}, status.HTTP_400_BAD_REQUEST, {}
+        return {}, status.HTTP_400_BAD_REQUEST, {}
 
 def compile_status(session: Session, submission_id: int, token: str) -> Response:
     """

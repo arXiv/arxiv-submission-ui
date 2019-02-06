@@ -4,7 +4,7 @@ FROM arxiv/base:latest
 
 WORKDIR /opt/arxiv/
 
-RUN yum install -y which mariadb-devel
+RUN yum install -y which mariadb-devel sqlite
 ADD Pipfile Pipfile.lock /opt/arxiv/
 RUN pip install -U pip pipenv
 ENV LC_ALL en_US.utf-8

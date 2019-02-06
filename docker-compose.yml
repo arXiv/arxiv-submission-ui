@@ -16,7 +16,8 @@ x-base-service:
     HOST_SOURCE_ROOT: "${HOST_SOURCE_ROOT}"
     VERBOSE_COMPILE: 1
     JWT_SECRET: "foosecret"
-    CLASSIC_DATABASE_URI: "mysql+mysqldb://foouser:foopass@submission-ui-maria:3306/submission?charset=utf8"
+    # CLASSIC_DATABASE_URI: "mysql+mysqldb://foouser:foopass@submission-ui-maria:3306/submission?charset=utf8"
+    CLASSIC_DATABASE_URI: "sqlite:///db.sqlite"
     FLASK_SECRET: 'what'
     SESSION_COOKIE_SECURE: 0
 
@@ -83,16 +84,16 @@ services:
       - compiler-api
 
   # This just runs once at the beginning to set up the database, then exits 0.
-  submission-ui-create-database:
-    << : *base-service
-    image: arxiv/submission-ui
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: submission-ui-create-database
-    command: python app.py
-    networks:
-      - arxiv-submission-ui
+  #  submission-ui-create-database:
+  #    << : *base-service
+  #    image: arxiv/submission-ui
+  #    build:
+  #      context: .
+  #      dockerfile: Dockerfile
+  #    container_name: submission-ui-create-database
+  #    command: python app.py
+  #    networks:
+  #      - arxiv-submission-ui
 
   submission-ui:
     << : *base-service
@@ -101,13 +102,14 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: arxiv-submission-ui
-    command: uwsgi --http-socket :8000 -M -t 3000 --manage-script-name --processes 8 --threads 1 --async 100 --ugreen  --mount /=wsgi.py --logformat "%(addr) %(addr) - %(user_id)|%(session_id) [%(rtime)] [%(uagent)] \"%(method) %(uri) %(proto)\" %(status) %(size) %(micros) %(ttfb)"
+    #command: uwsgi --http-socket :8000 -M -t 3000 --manage-script-name --processes 8 --threads 1 --async 100 --ugreen  --mount /=wsgi.py --logformat "%(addr) %(addr) - %(user_id)|%(session_id) [%(rtime)] [%(uagent)] \"%(method) %(uri) %(proto)\" %(status) %(size) %(micros) %(ttfb)"
+    command: flask run -p 8000 -h 0.0.0.0
     ports:
       - 8000:8000
     networks:
       - arxiv-submission-ui
-    depends_on:
-      - submission-ui-create-database
+  #  depends_on:
+  #    - submission-ui-create-database
 
 
 networks:

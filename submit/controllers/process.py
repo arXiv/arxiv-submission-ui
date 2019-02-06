@@ -130,7 +130,8 @@ def compile_status(session: Session, submission_id: int, token: str) -> Response
     compiler.set_auth_token(token)
     try:
         compiler.request_compilation(submission_id)
-    except:
+    except compiler.BadRequest as e:
+        logger.debug(f'Bad request to compiler for {submission_id}')
         return {'status': 'failed'}, status.HTTP_400_BAD_REQUEST, {}
 
     redirect = url_for('ui.file_process', submission_id=submission_id)

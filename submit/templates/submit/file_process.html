@@ -44,7 +44,7 @@
       </div>
     </div>
 
-    {% elif status == "warning" %}
+    {% elif status == "success" and warnings %}
     <div class="message is-warning">
       <div class="message-header">
         <p><span class="icon"><i class="fa fa-exclamation-triangle"></i></span>Completed With Warnings</p>
@@ -72,6 +72,7 @@
   </div>
 
   <div class="column">
+    {% if not status %}
     <div class="message is-info">
       <div class="message-body">
         <p><span class="icon has-text-link"><i class="fa fa-info-circle"></i></span>
@@ -89,6 +90,8 @@
           leave this default alone.</p>
       </div>
     </div>
+    {% endif %}
+    {% if status %}
     <div class="box texlive-summary">
       <div class="level">
         <div class="level-left">
@@ -117,13 +120,14 @@
       {% if messages %}
       <article>
         <h4>Messages with no particular status</h4>
-        {% for message in messages}
+        {% for message in messages %}
         <p>{{ message }}</p>
         <p class="has-text-weight-bold">Perhaps step completion notices in bold</p>
         {% endfor %}
       </article>
       {% endif %}
     </div>
+    {% endif %}
   </div>
 </div>
 

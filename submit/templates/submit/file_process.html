@@ -101,20 +101,28 @@
       {% if errors %}
       <article class="has-text-danger">
         <h4 class="has-text-danger">Errors</h4>
-        <p>error 1 with information</p>
+        {% for error in errors %}
+        <p>{{ error }}</p>
+        {% endfor %}
       </article>
       {% endif %}
       {% if warnings %}
       <article class="has-text-warning">
         <h4 class="has-text-warning">Warnings</h4>
-        <p>and warnings go here</p>
+        {% for warning in warnings %}
+        <p>{{ warning }}</p>
+        {% endfor %}
       </article>
       {% endif %}
+      {% if messages %}
       <article>
         <h4>Messages with no particular status</h4>
-        <p>Not even sure what this would be like, but there should be some place for just notifications</p>
+        {% for message in messages}
+        <p>{{ message }}</p>
         <p class="has-text-weight-bold">Perhaps step completion notices in bold</p>
+        {% endfor %}
       </article>
+      {% endif %}
     </div>
   </div>
 </div>

@@ -46,9 +46,41 @@
         </div>
       <p>Check this information carefully!</p>
       <p>A <span class="has-text-weight-bold">current email address is required</span> to complete your submission.</p>
-      <p><a class="button" href="{{ url_for('account') }}">Edit User Information</a>
+      <p><a class="button" href="{{ url_for('account') }}">Edit User Information</a></p>
       </div>
     </div>
+    {% if submitter.endorsements|endorsetype == 'Some' %}
+      <div class="message is-warning">
+        <div class="message-header">
+          <p>Endorsements</p>
+        </div>
+        <div class="message-body">
+          <div class="is-pulled-left">
+            <span class="icon has-text-link"><i class="fa fa-exclamation-triangle"></i></span>
+          </div>
+          <p>You are currently endorsed for: </p>
+          <ul>
+          {% for endorsement in submitter.endorsements %}
+            <li>{{ endorsement.display }}</li>
+          {% endfor %}
+          </ul>
+          <p>If you wish to submit to a category other than those listed, you will need to <a href="{{ url_for('help_endorse') }}">seek endorsement</a> before submitting.</p>
+        </div>
+      </div>
+    {% endif %}
+    {% if submitter.endorsements|endorsetype == 'None' %}
+    <div class="message is-danger">
+      <div class="message-header">
+        <p>Endorsements</p>
+      </div>
+      <div class="message-body">
+        <div class="is-pulled-left">
+          <span class="icon"><i class="fa fa-exclamation-triangle"></i></span>
+        </div>
+        <p>Your account does not currently have any endorsed categories. You will need to <a href="{{ url_for('help_endorse') }}">seek endorsement</a> before submitting.</p>
+      </div>
+    </div>
+    {% endif %}
   </div>
 </div>
 

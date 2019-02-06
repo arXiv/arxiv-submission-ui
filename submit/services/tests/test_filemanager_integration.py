@@ -8,7 +8,7 @@ from arxiv.base.globals import get_application_config
 from arxiv.users.helpers import generate_token
 from arxiv.users.auth import scopes
 from .. import filemanager
-from ...domain import UploadStatus, FileStatus, FileError
+from ...domain import Upload, FileStatus, FileError
 
 
 class TestFileManagerIntegration(TestCase):
@@ -67,9 +67,9 @@ class TestFileManagerIntegration(TestCase):
                               content_type='application/tar+gz')
         self.fm._session.headers.update({'Authorization': self.token})
         data = self.fm.upload_package(pointer)
-        self.assertIsInstance(data, UploadStatus)
-        self.assertEqual(data.status, UploadStatus.Statuses.READY)
-        self.assertEqual(data.lifecycle, UploadStatus.LifecycleStates.ACTIVE)
+        self.assertIsInstance(data, Upload)
+        self.assertEqual(data.status, Upload.Status.READY)
+        self.assertEqual(data.lifecycle, Upload.LifecycleStates.ACTIVE)
         self.assertFalse(data.locked)
 
     def test_upload_package_without_authorization(self):
@@ -104,9 +104,9 @@ class TestFileManagerIntegration(TestCase):
         data = self.fm.upload_package(pointer)
 
         status = self.fm.get_upload_status(data.identifier)
-        self.assertIsInstance(status, UploadStatus)
-        self.assertEqual(status.status, UploadStatus.Statuses.READY)
-        self.assertEqual(status.lifecycle, UploadStatus.LifecycleState.ACTIVE)
+        self.assertIsInstance(status, Upload)
+        self.assertEqual(status.status, Upload.Status.READY)
+        self.assertEqual(status.lifecycle, Upload.LifecycleState.ACTIVE)
         self.assertFalse(status.locked)
 
     def test_get_upload_status_without_authorization(self):
@@ -153,7 +153,7 @@ class TestFileManagerIntegration(TestCase):
         pointer2 = FileStorage(open(fpath2, 'rb'), filename='test.txt',
                                content_type='text/plain')
         status = self.fm.add_file(data.identifier, pointer2)
-        self.assertIsInstance(status, UploadStatus)
-        self.assertEqual(status.status, UploadStatus.Statuses.READY)
-        self.assertEqual(status.lifecycle, UploadStatus.LifecycleState.ACTIVE)
+        self.assertIsInstance(status, Upload)
+        self.assertEqual(status.status, Upload.Status.READY)
+        self.assertEqual(status.lifecycle, Upload.LifecycleState.ACTIVE)
         self.assertFalse(status.locked)

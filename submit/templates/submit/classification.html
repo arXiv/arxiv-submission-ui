@@ -38,13 +38,35 @@
     </div>
 
     <div class="column is-one-third-tablet is-half-desktop">
-      <div class="message is-link submit-nav">
+      {% if submitter.endorsements|endorsetype == 'None' %}
+      <div class="message is-danger">
+        <div class="message-header">
+          <p>Endorsements</p>
+        </div>
         <div class="message-body">
-          <p><span class="icon has-text-link"><i class="fa fa-info-circle"></i></span>
-          You are registered to submit to < groups >.</p>
-          <p>You may add groups and change defaults in your <a href="{{ url_for('account') }}">user account settings</a>.</p>
+          <div class="is-pulled-left">
+            <span class="icon"><i class="fa fa-exclamation-triangle"></i></span>
+          </div>
+          <p>Your account does not currently have any endorsed categories. You will need to <a href="{{ url_for('help_endorse') }}">seek endorsement</a> before submitting.</p>
         </div>
       </div>
+      {% endif %}
+      {% if submitter.endorsements|endorsetype == 'Some' %}
+        <div class="message is-link">
+          <div class="message-body">
+            <p class="has-text-weight-bold"><span class="icon has-text-link"><i class="fa fa-info-circle"></i></span>Endorsements</p>
+            <p>This list shows only the categories for which you are endorsed. If you wish to submit to a category not shown here, you will need to <a href="{{ url_for('help_endorse') }}">seek endorsement</a> prior to submission.</p>
+          </div>
+        </div>
+      {% endif %}
+      {% if submitter.endorsements|endorsetype != 'None'  %}
+        <div class="message is-link submit-nav">
+          <div class="message-body">
+            <p class="has-text-weight-bold"><span class="icon has-text-link"><i class="fa fa-info-circle"></i></span>Favorites</p>
+            <p>Preferred categories are placed at the top of the selection list. You may add or remove favorites in your <a href="{{ url_for('account') }}">user account settings</a>.</p>
+          </div>
+        </div>
+      {% endif %}
       <div class="message is-link">
         <div class="message-header">
           <p><span class="icon"><i class="fa fa-info-circle"></i></span> Choosing a Good Category</p>

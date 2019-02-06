@@ -16,7 +16,7 @@
             <div class="column has-text-centered is-1">
              <a href="{{ url_for('ui.file_delete', submission_id=submission_id) }}?path={{ item.path }}">
                <span class="icon">
-                 <i class="fa fa-trash" aria-label="Delete"></i>
+                 <i class="fa fa-trash"><span class="sr-only">Delete this file</span></i>
                </span>
              </a>
             </div>
@@ -46,6 +46,26 @@
 {% block title -%}Upload files{%- endblock title %}
 
 {% block within_content %}
+
+{% if status and status.status == status.Status.ERRORS %}
+<div class="notification is-danger" role="alert">
+  <h2 class="is-size-5 is-marginless">Unresolved errors</h2>
+  <p>
+    There are unresolved problems with your submission files. Please correct
+    the errors below before proceeding.
+  </p>
+ </div>
+{% endif %}
+{% if status and status.status == status.Status.READY_WITH_WARNINGS %}
+<div class="notification is-warning" role="alert">
+  <h2 class="is-size-5 is-marginless">Warnings</h2>
+  <p>
+    There is one or more unresolved warning, below. You may proceed with your
+    submission, but please note that these issues may cause delays in
+    processing and/or announcement.
+  </p>
+ </div>
+{% endif %}
 
 <form class="form" action="{{ url_for('ui.file_upload', submission_id=submission_id) }}" method="POST" enctype="multipart/form-data">
   <div class="columns">
@@ -89,14 +109,20 @@
       <p class="title is-4 breathe-vertical has-text-centered">
         There's nothing here!
       </p>
+      {% endif %}
       <div class="message is-link">
+        <div class="message-header">
+          <p><span class="icon"><i class="fa fa-exclamation-triangle"></i></span>Submitting TeX</p>
+        </div>
         <div class="message-body">
-          <p><span class="icon has-text-link"><i class="fa fa-exclamation-triangle"></i></span>If this submission was written in TeX, TeX source must be submitted to be compiled by arXiv.
-          PDF documents created from TeX will not be accepted.
-          <a href="{{ url_for('help_whytex') }}">Why?</a></p>
+          <ul>
+            <li>TeX and (La)TeX submissions are highly encouraged. This format is the most likely to retain readability and high-quality output in the future.</li>
+            <li>PDF documents created from TeX are not typically accepted. The TeX source must be submitted and compiled by arXiv.
+            <a href="{{ url_for('help_whytex') }}">Why?</a></li>
+            <li>TeX source uploaded to arXiv will be made publicly available.</li>
+          </ul>
         </div>
       </div>
-      {% endif %}
     </div>
     <div class="column is-one-third-desktop is-one-quarter-tablet">
       <div class="message is-info">
@@ -105,8 +131,7 @@
           <ul>
             <li><a href="{{ url_for('help_submit_tex') }}">(La)TeX, AMS(La)TeX, PDFLaTeX</a></li>
             <li><a href="{{ url_for('help_submit_pdf') }}">PDF</a></li>
-            <li><a href="{{ url_for('help_submit_ps') }}">PostScript</a></li>
-            <li><a href="{{ url_for('help_submit_html') }}">HTML</a></li>
+            <li><a href="{{ url_for('help_submit_html') }}">HTML (for proceedings index only)</a></li>
           </ul>
 
           <p class="has-text-weight-semibold"><span class="icon has-text-link"><i class="fa fa-info-circle"></i></span>Accepted formats for figures</p>

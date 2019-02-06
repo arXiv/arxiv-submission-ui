@@ -52,6 +52,7 @@ def verify_user(method: str, params: MultiDict, session: Session,
         'submission_id': submission_id,
         'form': form,
         'submission': submission,
+        'submitter': submitter,
         'user': session.user,   # We want the most up-to-date representation.
     }
 
@@ -92,7 +93,8 @@ def verify_user(method: str, params: MultiDict, session: Session,
             return response_data, status.HTTP_400_BAD_REQUEST, {}
         response_data.update({
             'submission_id': submission_id,
-            'submission': submission
+            'submission': submission,
+            'submitter': submitter
         })
         return response_data, status.HTTP_303_SEE_OTHER, {}
     return response_data, status.HTTP_200_OK, {}

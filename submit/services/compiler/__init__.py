@@ -260,15 +260,15 @@ class CompilerService(object):
 def init_app(app: object = None) -> None:
     """Set default configuration parameters for an application instance."""
     config = get_application_config(app)
-    config.setdefault('FILE_MANAGER_ENDPOINT', 'https://arxiv.org/')
-    config.setdefault('FILE_MANAGER_VERIFY', True)
+    config.setdefault('COMPILER_ENDPOINT', 'http://arxiv-compiler:8000/')
+    config.setdefault('COMPILER_VERIFY', True)
 
 
 def get_session(app: object = None) -> CompilerService:
     """Get a new session with the compiler endpoint."""
     config = get_application_config(app)
-    endpoint = config.get('FILE_MANAGER_ENDPOINT', 'https://arxiv.org/')
-    verify_cert = config.get('FILE_MANAGER_VERIFY', True)
+    endpoint = config.get('COMPILER_ENDPOINT', 'http://arxiv-compiler:8000/')
+    verify_cert = config.get('COMPILER_VERIFY', True)
     logger.debug('Create CompilerService with endpoint %s', endpoint)
     return CompilerService(endpoint, verify_cert=verify_cert)
 

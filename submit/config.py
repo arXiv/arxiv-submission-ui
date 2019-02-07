@@ -72,6 +72,16 @@ FILE_MANAGER_ENDPOINT = os.environ.get(
 )
 FILE_MANAGER_VERIFY = bool(int(os.environ.get('FILE_MANAGER_VERIFY', '1')))
 
+COMPILER_HOST = os.environ.get('COMPILER_HOST', 'arxiv.org')
+COMPILER_PORT = os.environ.get('COMPILER_PORT', '443')
+COMPILER_PROTO = os.environ.get('COMPILER_PROTO', 'https')
+COMPILER_PATH = os.environ.get('COMPILER_PATH', '')
+COMPILER_ENDPOINT = os.environ.get(
+    'COMPILER_ENDPOINT',
+    f'{COMPILER_PROTO}://{COMPILER_HOST}:{COMPILER_PORT}/{COMPILER_PATH}'
+)
+COMPILER_VERIFY = bool(int(os.environ.get('COMPILER_VERIFY', '1')))
+
 SESSION_COOKIE_NAME = 'submission_ui_session'
 
 EXTERNAL_URL_SCHEME = os.environ.get('EXTERNAL_URL_SCHEME', 'https')

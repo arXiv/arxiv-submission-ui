@@ -142,7 +142,8 @@ class FileManagementService(object):
                 ) for fdata in data['files']
             ],
             errors=non_file_errors,
-            size=data['upload_total_size']
+            size=data['upload_total_size'],
+            checksum=data['checksum']
         )
 
     def _path(self, path: str, query: dict = {}) -> str:

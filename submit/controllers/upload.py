@@ -25,7 +25,7 @@ from arxiv.submission import save
 from arxiv.base import logging, alerts
 from arxiv.forms import csrf
 from arxiv.submission.domain import Submission, User, Client
-from arxiv.submission.domain.event import SetUploadPackage
+from arxiv.submission.domain.event import SetUploadPackage, UpdateUploadPackage
 from arxiv.submission.exceptions import InvalidStack, SaveError
 from arxiv.users.domain import Session
 from . import util
@@ -332,19 +332,27 @@ def _update_submission(submission: Submission, upload_status: Upload,
 
     """
     existing_upload = getattr(submission.source_content, 'identifier', None)
-    if existing_upload == upload_status.identifier:
-        return submission
 
     try:
-        submission, stack = save(  # pylint: disable=W0612
-            SetUploadPackage(
-                creator=submitter,
-                identifier=upload_status.identifier,
-                checksum=upload_status.checksum,
-                size=upload_status.size,
-            ),
-            submission_id=submission.submission_id
-        )
+        if existing_upload == upload_status.identifier:
+            submission, stack = save(  # pylint: disable=W0612
+                UpdateUploadPackage(
+                    creator=submitter,
+                    checksum=upload_status.checksum,
+                    size=upload_status.size
+                ),
+                submission_id=submission.submission_id
+            )
+        else:
+            submission, stack = save(  # pylint: disable=W0612
+                SetUploadPackage(
+                    creator=submitter,
+                    identifier=upload_status.identifier,
+                    checksum=upload_status.checksum,
+                    size=upload_status.size,
+                ),
+                submission_id=submission.submission_id
+            )
     except InvalidStack as e:   # TODO: get more specific
         raise BadRequest('Whoops') from e
     except SaveError as e:      # TODO: get more specific

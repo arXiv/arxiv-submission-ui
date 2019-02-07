@@ -419,22 +419,26 @@ def file_delete_all(submission_id: int) -> Response:
 @flow_control(Stages.FILE_PROCESS)
 def file_process(submission_id: int) -> Response:
     """Render step 8, file processing."""
+    if request.method == 'GET':
+        request_data = MultiDict(request.args.items(multi=True))
+    elif request.method == 'POST':
+        request_data = MultiDict(request.form.items(multi=True))
     data, code, headers = controllers.file_process(
         request.method,
+        request_data,
         request.session,
         submission_id,
         request.environ['token']
     )
-    if True or code in [status.HTTP_200_OK, status.HTTP_400_BAD_REQUEST, status.HTTP_404_NOT_FOUND]:
+    if code in [status.HTTP_200_OK, status.HTTP_400_BAD_REQUEST, status.HTTP_404_NOT_FOUND]:
         rendered = render_template(
             "submit/file_process.html",
             pagetitle='Process Files',
-            submission_id=submission_id,
             **data
         )
-
-    response = make_response(rendered, code)
-    return response
+        return make_response(rendered, code)
+    if 'Location' in headers:
+        return redirect(headers['Location'], code=code)
 
 
 @blueprint.route('/<int:submission_id>/add_metadata',

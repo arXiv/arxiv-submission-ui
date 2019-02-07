@@ -206,8 +206,9 @@ class CompilerService(object):
             The current state of the compilation.
 
         """
-        data, headers = self.request('post', f'/{upload_id}/{self.format}',
-                                     json={'compiler': compiler},
+        logger.debug(f"Requesting Compilation for {upload_id}.{self.format}")
+        data, headers = self.request('post', f'/',
+                                     json={'source_id': upload_id, 'format': self.format, 'checksum': 'this doesnt matter right now'},
                                      expected_codes=[
                                         status.HTTP_202_ACCEPTED,
                                         status.HTTP_302_FOUND,
@@ -260,14 +261,14 @@ class CompilerService(object):
 def init_app(app: object = None) -> None:
     """Set default configuration parameters for an application instance."""
     config = get_application_config(app)
-    config.setdefault('COMPILER_ENDPOINT', 'http://arxiv-compiler:8000/')
+    config.setdefault('COMPILER_ENDPOINT', 'http://compiler-api:8100/')
     config.setdefault('COMPILER_VERIFY', True)
 
 
 def get_session(app: object = None) -> CompilerService:
     """Get a new session with the compiler endpoint."""
     config = get_application_config(app)
-    endpoint = config.get('COMPILER_ENDPOINT', 'http://arxiv-compiler:8000/')
+    endpoint = config.get('COMPILER_ENDPOINT', 'http://compiler-api:8100/')
     verify_cert = config.get('COMPILER_VERIFY', True)
     logger.debug('Create CompilerService with endpoint %s', endpoint)
     return CompilerService(endpoint, verify_cert=verify_cert)

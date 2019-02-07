@@ -425,7 +425,7 @@ def file_process(submission_id: int) -> Response:
         submission_id,
         request.environ['token']
     )
-    if code in [status.HTTP_200_OK, status.HTTP_400_BAD_REQUEST, status.HTTP_404_NOT_FOUND]:
+    if True or code in [status.HTTP_200_OK, status.HTTP_400_BAD_REQUEST, status.HTTP_404_NOT_FOUND]:
         rendered = render_template(
             "submit/file_process.html",
             pagetitle='Process Files',

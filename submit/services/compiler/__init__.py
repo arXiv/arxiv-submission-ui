@@ -207,16 +207,19 @@ class CompilerService(object):
             The current state of the compilation.
 
         """
+        checksum = 'not-right-now'
         logger.debug(f"Requesting Compilation for {upload_id}.{self.format}")
         data, headers = self.request('post', f'/',
-                                     json={'source_id': upload_id, 'format': self.format, 'checksum': 'this doesnt matter right now'},
+                                     json={'source_id': upload_id,
+                                           'checksum': checksum,
+                                           'format': self.format},
                                      expected_codes=[
                                         status.HTTP_202_ACCEPTED,
                                         status.HTTP_302_FOUND,
                                         status.HTTP_303_SEE_OTHER,
                                      ])
         task_id = self._parse_task_id(headers['Location'])
-        return self.get_task_status(upload_id, task_id)
+        return self.get_task_status(upload_id, checksum, self.format)
 
     def get_compilation_product(self, upload_id: int) \
             -> Union[CompilationStatus, CompilationProduct]:
@@ -244,18 +247,19 @@ class CompilerService(object):
             stream=Download(response)
         )
 
-    def get_task_status(self, upload_id: int, task_id: str) \
+    def get_task_status(self, upload_id: int, checksum: str, format: str) \
             -> CompilationStatus:
         """Get the status of a compilation task."""
-        data, headers = self.request('get', f'/task/{task_id}',
+        data, headers = self.request('get', f'/task/{upload_id}/{checksum}/{format}',
                                      expected_codes=[
                                         status.HTTP_200_OK,
                                         status.HTTP_303_SEE_OTHER
                                      ])
         return CompilationStatus(
-            upload_id=upload_id,
-            task_id=task_id,
-            status=CompilationStatus.Statuses(data['status'])
+            source_id=upload_id,
+            checksum=checksum,
+            format=format,
+            status=CompilationStatus.Statuses(data['status']['status'])
         )
 
 

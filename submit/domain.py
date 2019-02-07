@@ -453,7 +453,7 @@ class CompilationStatus(NamedTuple):
         FAILED = "failed"
 
     # Here are the actual slots/fields.
-    upload_id: str
+    source_id: str
 
     status: 'CompilationStatus.Statuses'
     """
@@ -465,8 +465,8 @@ class CompilationStatus(NamedTuple):
     compilation status is the product of this compilation.
     """
 
-    task_id: Optional[str] = None
-    """If a task exists for this compilation, the unique task ID."""
+    checksum: str
+    format: str
 
     @property
     def content_type(self):
@@ -480,10 +480,9 @@ class CompilationStatus(NamedTuple):
     def to_dict(self) -> dict:
         """Generate a dict representation of this object."""
         return {
-            'upload_id': self.upload_id,
-            'format': self.format.value,
-            'source_checksum': self.source_checksum,
-            'task_id': self.task_id,
+            'source_id': self.source_id,
+            'format': self.format,
+            'checksum': self.checksum,
             'status': self.status.value
         }
 

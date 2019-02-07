@@ -15,7 +15,7 @@ x-base-service:
     S3_ENDPOINT: "https://compiler-localstack:4572"
     S3_VERIFY: 0
     FILE_MANAGER_ENDPOINT: "http://arxiv-filemanager:8000/filemanager/api"
-    FILE_MANAGER_CONTENT_PATH: "/src/{source_id}"
+    FILE_MANAGER_CONTENT_PATH: "/{source_id}"
     LOGLEVEL: 10
     FLASK_APP: /opt/arxiv/app.py
     FLASK_DEBUG: 1
@@ -51,10 +51,12 @@ services:
     image: arxiv/filemanager
     # You can uncomment these lines to build this from a local
     # repo. You may need to update `context`.
-    # build:
-    #   context: ../arxiv-filemanager
-    #   dockerfile: Dockerfile
+    build:
+      context: ../arxiv-filemanager
+      dockerfile: Dockerfile
     container_name: arxiv-filemanager
+    volumes:
+      - ./../arxiv-filemanager/filemanager/:/opt/arxiv/filemanager/
     networks:
       - arxiv-submission-ui
 
@@ -80,6 +82,8 @@ services:
        dockerfile: Dockerfile
     container_name: arxiv-compiler-api
     command: pipenv run flask run -h 0.0.0.0 -p 8100
+    volumes:
+      - ./../arxiv-compiler/compiler/:/opt/arxiv/compiler/
     ports:
       - 8100:8100
     depends_on:
@@ -98,6 +102,8 @@ services:
        dockerfile: Dockerfile
     container_name: arxiv-compiler-worker
     command: /opt/arxiv/start_worker.sh -A compiler.worker.celery_app --loglevel=INFO -E --concurrency=2
+    volumes:
+      - ./../arxiv-compiler/compiler/:/opt/arxiv/compiler/
     networks:
       - arxiv-submission-ui
     volumes:

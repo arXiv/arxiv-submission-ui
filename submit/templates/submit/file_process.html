@@ -2,7 +2,7 @@
 
 {% block within_content %}
 <h2 class="is-size-4">Process Files</h2>
-<form method="POST" action="{{ url_for('ui.file_process', submission_id=8) }}">
+<form method="POST" action="{{ url_for('ui.file_process', submission_id=submission_id) }}">
 <div class="columns">
   <div class="column is-one-third-desktop is-one-half-tablet">
     <div class="field is-grouped">
@@ -18,6 +18,16 @@
       </div>
     </div>
 
+
+
+    {% if not status %}
+    <div class="message is-info">
+      <div class="message-body">
+        <p>arXiv's processing system runs TeX Live 2016 and natbib 8.31. Authors are strongly encouraged to upgrade if older versions of these packages are being used to generate files.</p>
+      </div>
+    </div>
+
+    {% elif status == "failed" %}
     <div class="message is-danger">
       <div class="message-header">
         <p><span class="icon"><i class="fa fa-exclamation-triangle"></i></span>Processing Failed</p></div>
@@ -34,12 +44,7 @@
       </div>
     </div>
 
-    <div class="message is-info">
-      <div class="message-body">
-        <p>arXiv's processing system runs TeX Live 2016 and natbib 8.31. Authors are strongly encouraged to upgrade if older versions of these packages are being used to generate files.</p>
-      </div>
-    </div>
-
+    {% elif status == "success" and warnings %}
     <div class="message is-warning">
       <div class="message-header">
         <p><span class="icon"><i class="fa fa-exclamation-triangle"></i></span>Completed With Warnings</p>
@@ -51,7 +56,8 @@
         </ul>
       </div>
     </div>
-
+    
+    {% elif status == "success" %}
     <div class="message is-success">
       <div class="message-header">
         <p><span class="icon"><i class="fa fa-check-circle"></i></span>Processing Successful</p></div>
@@ -62,9 +68,11 @@
         <p class="has-text-centered"><a class="button is-link" href="{{ url_for('ui.file_upload', submission_id=8) }}">View PDF</a></p>
       </div>
     </div>
+    {% endif %}
   </div>
 
   <div class="column">
+    {% if not status %}
     <div class="message is-info">
       <div class="message-body">
         <p><span class="icon has-text-link"><i class="fa fa-info-circle"></i></span>
@@ -82,6 +90,8 @@
           leave this default alone.</p>
       </div>
     </div>
+    {% endif %}
+    {% if status %}
     <div class="box texlive-summary">
       <div class="level">
         <div class="level-left">
@@ -91,20 +101,33 @@
           <a class="button">View complete log</a>
         </div>
       </div>
+      {% if errors %}
       <article class="has-text-danger">
         <h4 class="has-text-danger">Errors</h4>
-        <p>error 1 with information</p>
+        {% for error in errors %}
+        <p>{{ error }}</p>
+        {% endfor %}
       </article>
+      {% endif %}
+      {% if warnings %}
       <article class="has-text-warning">
         <h4 class="has-text-warning">Warnings</h4>
-        <p>and warnings go here</p>
+        {% for warning in warnings %}
+        <p>{{ warning }}</p>
+        {% endfor %}
       </article>
+      {% endif %}
+      {% if messages %}
       <article>
         <h4>Messages with no particular status</h4>
-        <p>Not even sure what this would be like, but there should be some place for just notifications</p>
+        {% for message in messages %}
+        <p>{{ message }}</p>
         <p class="has-text-weight-bold">Perhaps step completion notices in bold</p>
+        {% endfor %}
       </article>
+      {% endif %}
     </div>
+    {% endif %}
   </div>
 </div>
 

@@ -5,9 +5,11 @@ from typing import Tuple, Dict, Any
 from arxiv import status
 from arxiv.users.domain import Session
 
+from .process import file_process
 from .upload import upload_files
 from .upload import delete as delete_file
 from .upload import delete_all as delete_all_files
+
 
 from ..util import load_submission
 from . import create, verify_user, authorship, license, policy, \
@@ -15,7 +17,7 @@ from . import create, verify_user, authorship, license, policy, \
 from .util import Response
 
 __all__ = ('verify_user', 'authorship', 'license', 'policy', 'classification',
-           'metadata', 'create', 'jref', 'delete')
+           'metadata', 'create', 'jref', 'delete', 'process')
 
 
 def submission_status(session: Session, submission_id: int) -> Response:

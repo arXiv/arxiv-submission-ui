@@ -33,7 +33,7 @@ class TestSetPrimaryClassification(TestCase):
                     affiliation="FSU",
                     rank=3,
                     country="de",
-                    default_category=domain.Category('astro-ph', 'GA'),
+                    default_category=domain.Category('astro-ph.GA'),
                     submission_groups=['grp_physics']
                 )
             ),
@@ -41,8 +41,8 @@ class TestSetPrimaryClassification(TestCase):
                 scopes=[auth.scopes.CREATE_SUBMISSION,
                         auth.scopes.EDIT_SUBMISSION,
                         auth.scopes.VIEW_SUBMISSION],
-                endorsements=[domain.Category('astro-ph', 'CO'),
-                              domain.Category('astro-ph', 'GA')]
+                endorsements=[domain.Category('astro-ph.CO'),
+                              domain.Category('astro-ph.GA')]
             )
         )
 
@@ -114,9 +114,11 @@ class TestSetPrimaryClassification(TestCase):
         redirect_url = 'https://foo.bar.com/yes'
         mock_url_for.return_value = redirect_url
 
-        form_data = MultiDict({'category': 'astro-ph.EP',
+        form_data = MultiDict({'category': 'astro-ph.CO',
                                'action': 'next'})
-        data, code, headers = classification.classification('POST', form_data, self.session, submission_id)
+        data, code, headers = classification.classification(
+            'POST', form_data, self.session, submission_id
+        )
         self.assertEqual(code, status.HTTP_303_SEE_OTHER,
                          "Returns 303 redirect")
 
@@ -146,7 +148,7 @@ class TestSetPrimaryClassification(TestCase):
             )
 
         mock_save.side_effect = raise_on_set
-        form_data = MultiDict({'category': 'astro-ph.EP',
+        form_data = MultiDict({'category': 'astro-ph.CO',
                                'action': 'next'})
         data, code, headers = classification.classification('POST', form_data, self.session, 2)
         self.assertEqual(code, status.HTTP_400_BAD_REQUEST,

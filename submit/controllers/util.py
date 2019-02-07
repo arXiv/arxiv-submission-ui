@@ -179,6 +179,6 @@ def user_and_client_from_session(session: Session) \
         forename=getattr(session.user.name, 'forename', None),
         surname=getattr(session.user.name, 'surname', None),
         suffix=getattr(session.user.name, 'suffix', None),
-        endorsements=[c.compound for c in session.authorizations.endorsements]
+        endorsements=session.authorizations.endorsements
     )
     return user, None

@@ -39,11 +39,17 @@
 
     <div class="column is-one-third-tablet is-half-desktop">
       {% if submitter.endorsements|endorsetype == 'None' %}
-        <div class="message is-link">
-          <div class="message-body">
-            <p>No list options means no endorsement. It should be impossible to get to this page without endorsement, but if one does, show an appropriate message.</p>
-          </div>
+      <div class="message is-danger">
+        <div class="message-header">
+          <p>Endorsements</p>
         </div>
+        <div class="message-body">
+          <div class="is-pulled-left">
+            <span class="icon"><i class="fa fa-exclamation-triangle"></i></span>
+          </div>
+          <p>Your account does not currently have any endorsed categories. You will need to <a href="{{ url_for('help_endorse') }}">seek endorsement</a> before submitting.</p>
+        </div>
+      </div>
       {% endif %}
       {% if submitter.endorsements|endorsetype == 'Some' %}
         <div class="message is-link">

@@ -140,3 +140,4 @@ def compile_status(session: Session, submission_id: int, token: str) -> Response
 def compile(session: Session, submission_id: int, token: str) -> Response:
     redirect = url_for('ui.file_process', submission_id=submission_id)
     return {}, status.HTTP_303_SEE_OTHER, {'Location': redirect}
+

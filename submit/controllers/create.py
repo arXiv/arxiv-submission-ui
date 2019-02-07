@@ -25,7 +25,7 @@ class CreateSubmissionForm(csrf.CSRFForm):
 def create(method: str, params: MultiDict, session: Session) -> Response:
     """Create a new submission, and redirect to workflow."""
     if method == 'GET':     # Display a splash page.
-        submissions = events.load_submissions_for_user(session.user.user_id)
+        submissions = events.core.load_submissions_for_user(session.user.user_id)
 
         response_data = {
             'form': CreateSubmissionForm(),

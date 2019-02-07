@@ -31,7 +31,7 @@ from arxiv.users.domain import Session
 from . import util
 from ..util import load_submission
 from ..services import filemanager
-from ..domain import UploadStatus, SubmissionStage
+from ..domain import Upload, SubmissionStage
 
 logger = logging.getLogger(__name__)
 
@@ -235,6 +235,7 @@ def delete(method: str, params: MultiDict, session: Session,
         Extra headers to add/update on the response. This should include
         the `Location` header for use in the 303 redirect response, if
         applicable.
+
     """
     logger.debug('%s delete with params %s', method, params)
     submission, submission_events = load_submission(submission_id)
@@ -310,7 +311,7 @@ class DeleteAllFilesForm(csrf.CSRFForm):
                              validators=[validators.DataRequired()])
 
 
-def _update_submission(submission: Submission, upload_status: UploadStatus,
+def _update_submission(submission: Submission, upload_status: Upload,
                        submitter: User, client: Optional[Client] = None) \
         -> Submission:
     """
@@ -325,7 +326,7 @@ def _update_submission(submission: Submission, upload_status: UploadStatus,
     Parameters
     ----------
     submission : :class:`Submission`
-    upload_status : :class:`UploadStatus`
+    upload_status : :class:`Upload`
     submitter : :class:`User`
     client : :class:`Client` or None
 
@@ -396,10 +397,12 @@ def _get_upload(params: MultiDict, session: Session, submission: Submission) \
     status_data = alerts.get_hidden_alerts('status')
     logger.debug('Got status data from hidden alert: %s', status_data)
     if type(status_data) is dict and status_data['identifier'] == upload_id:
-        upload_status = UploadStatus.from_dict(status_data)
+        print('! got status data from alert')
+        upload_status = Upload.from_dict(status_data)
     else:
         try:
             upload_status = filemanager.get_upload_status(upload_id)
+            print('! got status data from fm service', upload_status)
         except filemanager.RequestFailed as e:
             # TODO: handle specific failure cases.
             logger.error('Encountered RequestFailed getting data for'
@@ -454,11 +457,24 @@ def _post_new_upload(params: MultiDict, pointer: FileStorage, session: Session,
         submission = _update_submission(submission, upload_status, submitter,
                                         client)
         converted_size = tidy_filesize(upload_status.size)
-        alerts.flash_success(
-            f'Unpacked {upload_status.file_count} files. Total submission'
-            f' package size is {converted_size}',
-            title='Upload successful'
-        )
+        if upload_status.status is Upload.Status.READY:
+            alerts.flash_success(
+                f'Unpacked {upload_status.file_count} files. Total submission'
+                f' package size is {converted_size}',
+                title='Upload successful'
+            )
+        elif upload_status.status is Upload.Status.READY_WITH_WARNINGS:
+            alerts.flash_warning(
+                f'Unpacked {upload_status.file_count} files. Total submission'
+                f' package size is {converted_size}. See below for warnings.',
+                title='Upload complete, with warnings'
+            )
+        elif upload_status.status is Upload.Status.ERRORS:
+            alerts.flash_warning(
+                f'Unpacked {upload_status.file_count} files. Total submission'
+                f' package size is {converted_size}. See below for errors.',
+                title='Upload complete, with errors'
+            )
         alerts.flash_hidden(upload_status.to_dict(), 'status')
     except filemanager.RequestFailed as e:
         alerts.flash_failure(Markup(
@@ -510,7 +526,9 @@ def _post_new_file(params: MultiDict, pointer: FileStorage, session: Session,
     form = UploadForm(params)
     if not form.validate():
         logger.error('Invalid upload form: %s', form.errors)
-        alerts.flash_failure(Markup(form.errors[0]))
+
+        alerts.flash_failure("Something went wrong. Please try again.",
+                             title="Whoops")
         redirect = url_for('ui.file_upload',
                            submission_id=submission.submission_id)
         return {}, status.HTTP_303_SEE_OTHER, {'Location': redirect}
@@ -522,11 +540,25 @@ def _post_new_file(params: MultiDict, pointer: FileStorage, session: Session,
         submission = _update_submission(submission, upload_status, submitter,
                                         client)
         converted_size = tidy_filesize(upload_status.size)
-        alerts.flash_success(
-            f'Uploaded {pointer.filename} successfully. Total submission'
-            f' package size is {converted_size}',
-            title='Upload successful'
-        )
+        print(upload_status.status)
+        if upload_status.status is Upload.Status.READY:
+            alerts.flash_success(
+                f'Uploaded {pointer.filename} successfully. Total submission'
+                f' package size is {converted_size}',
+                title='Upload successful'
+            )
+        elif upload_status.status is Upload.Status.READY_WITH_WARNINGS:
+            alerts.flash_warning(
+                f'Uploaded {pointer.filename} successfully. Total submission'
+                f' package size is {converted_size}. See below for warnings.',
+                title='Upload complete, with warnings'
+            )
+        elif upload_status.status is Upload.Status.ERRORS:
+            alerts.flash_warning(
+                f'Uploaded {pointer.filename} successfully. Total submission'
+                f' package size is {converted_size}. See below for errors.',
+                title='Upload complete, with errors'
+            )
         status_data = upload_status.to_dict()
         logger.debug('Stashing status data for next page: %s', status_data)
         alerts.flash_hidden(status_data, 'status')
@@ -576,7 +608,7 @@ def _post_upload(params: MultiDict, files: MultiDict, session: Session,
     logger.debug('POST upload with submission %s', submission)
     try:    # Make sure that we have a file to work with.
         pointer = files['file']
-    except KeyError as e:
+    except KeyError as e:   # User is going back, saving/exiting, or next step.
         headers = {}
 
         # Don't flash a message if the user is just trying to go back to the

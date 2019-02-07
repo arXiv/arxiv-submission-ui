@@ -94,6 +94,8 @@ class StageBase(NamedTuple):
         """Determine whether the submitter has uploaded files."""
         return submission.source_content is not None
 
+    # TODO: this needs a bit more work, since the compilation may have failed
+    # or may not be complete for the current state of the upload workspace.
     @staticmethod
     def files_are_processed(submission: Submission) -> bool:
         """Determine whether the submitter has compiled their upload."""
@@ -359,20 +361,20 @@ class FileStatus(NamedTuple):
         return data
 
     @classmethod
-    def from_dict(cls: type, data: dict) -> 'UploadStatus':
+    def from_dict(cls: type, data: dict) -> 'Upload':
         """Instantiate a :class:`FileStatus` from a dict."""
         if 'errors' in data:
             data['errors'] = [FileError.from_dict(e) for e in data['errors']]
         if 'modified' in data and type(data['modified']) is str:
             data['modified'] = dateutil.parser.parse(data['modified'])
-        instance: UploadStatus = cls(**data)
+        instance: Upload = cls(**data)
         return instance
 
 
-class UploadStatus(NamedTuple):
+class Upload(NamedTuple):
     """Represents the state of an upload workspace."""
 
-    class Statuses(Enum):   # type: ignore
+    class Status(Enum):   # type: ignore
         """The status of the upload workspace with respect to submission."""
 
         READY = 'READY'
@@ -390,8 +392,8 @@ class UploadStatus(NamedTuple):
     completed: datetime
     created: datetime
     modified: datetime
-    status: 'UploadStatus.Statuses'
-    lifecycle: 'UploadStatus.LifecycleStates'
+    status: 'Upload.Status'
+    lifecycle: 'Upload.LifecycleStates'
     locked: bool
     identifier: int
     checksum: Optional[str] = None
@@ -411,8 +413,8 @@ class UploadStatus(NamedTuple):
             'completed': self.completed.isoformat(),
             'created': self.created.isoformat(),
             'modified': self.modified.isoformat(),
-            'status': self.status,
-            'lifecycle': self.lifecycle,
+            'status': self.status.value,
+            'lifecycle': self.lifecycle.value,
             'locked': self.locked,
             'identifier': self.identifier,
             'checksum': self.checksum,
@@ -430,8 +432,8 @@ class UploadStatus(NamedTuple):
         return data
 
     @classmethod
-    def from_dict(cls: type, data: dict) -> 'UploadStatus':
-        """Instantiate an :class:`UploadStatus` from a dict."""
+    def from_dict(cls: type, data: dict) -> 'Upload':
+        """Instantiate an :class:`Upload` from a dict."""
         if 'files' in data:
             data['files'] = [FileStatus.from_dict(f) for f in data['files']]
         if 'errors' in data:
@@ -439,7 +441,7 @@ class UploadStatus(NamedTuple):
         for key in ['started', 'completed', 'created', 'modified']:
             if key in data and type(data[key]) is str:
                 data[key] = dateutil.parser.parse(data[key])
-        instance: UploadStatus = cls(**data)
+        instance: Upload = cls(**data)
         return instance
 
 
@@ -447,7 +449,7 @@ class CompilationStatus(NamedTuple):
     """Represents the state of a compilation product in the store."""
 
     # This is intended as a fixed class attributes, not a slot.
-    class Statuses(Enum):      # type: ignore
+    class Status(Enum):      # type: ignore
         COMPLETED = "completed"
         IN_PROGRESS = "in_progress"
         FAILED = "failed"
@@ -455,7 +457,7 @@ class CompilationStatus(NamedTuple):
     # Here are the actual slots/fields.
     source_id: str
 
-    status: 'CompilationStatus.Statuses'
+    status: 'CompilationStatus.Status'
     """
     The status of the compilation.
 

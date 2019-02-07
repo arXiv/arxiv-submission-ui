@@ -617,11 +617,9 @@ def endorsetype(endorsements: List[str]) -> str:
     str
         For now.
     """
-    if(len(endorsements) == 0):
+    if len(endorsements) == 0:
         return 'None'
-    elif(len(taxonomy.CATEGORIES_ACTIVE.keys()) - len(endorsements) == 0):
+    elif '*.*' in endorsements:
         return 'All'
-    elif(len(taxonomy.CATEGORIES_ACTIVE.keys()) - len(endorsements) > 0):
-        return 'Some'
     else:
-        return 'Error'
+        return 'Some'

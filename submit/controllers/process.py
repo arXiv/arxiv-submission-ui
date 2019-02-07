@@ -133,6 +133,8 @@ def compile_status(session: Session, submission_id: int, token: str) -> Response
     except compiler.BadRequest as e:
         logger.debug(f'Bad request to compiler for {submission_id}')
         return {'status': 'failed', 'warnings' : ['This is only a test.']}, status.HTTP_400_BAD_REQUEST, {}
+    except compiler.NoSuchResource as e:
+        return {'status': 'failed', 'errors' : [e.data['reason']]}, status.HTTP_404_NOT_FOUND, {}
 
     redirect = url_for('ui.file_process', submission_id=submission_id)
     return {}, status.HTTP_303_SEE_OTHER, {'Location': redirect}

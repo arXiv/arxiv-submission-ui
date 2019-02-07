@@ -158,7 +158,8 @@ class CompilerService(object):
         elif resp.status_code == status.HTTP_403_FORBIDDEN:
             raise RequestForbidden(f'Forbidden: {resp.content}')
         elif resp.status_code == status.HTTP_404_NOT_FOUND:
-            raise NoSuchResource('Resource does not exist')
+            logger.debug(resp.json())
+            raise NoSuchResource('Resource does not exist', data=resp.json())
         elif resp.status_code >= status.HTTP_400_BAD_REQUEST:
             raise BadRequest(f'Bad request: {resp.content}',
                              data=resp.content)

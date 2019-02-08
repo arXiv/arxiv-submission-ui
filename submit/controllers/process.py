@@ -180,7 +180,8 @@ def start_compilation(params: MultiDict, session: Session, submission_id: int,
     response_data = {
         'submission_id': submission_id,
         'submission': submission,
-        'form': form
+        'form': form,
+        'compilations': submission.compilations
     }
     if not form.validate():
         logger.debug("Invalid form data")
@@ -194,7 +195,7 @@ def start_compilation(params: MultiDict, session: Session, submission_id: int,
             submission.source_content.checksum
         )
         logger.debug("Requested compilation, %s", compilation_status)
-        if compilation_status.status is Compilation.Status.FAILED:
+        if compilation_status.status is compiler.Status.FAILED:
             alerts.flash_failure(f"Compilation failed")
     except compiler.BadRequest as e:
         logger.debug('Bad request to compiler for %s: %s', submission_id, e)
@@ -209,20 +210,21 @@ def start_compilation(params: MultiDict, session: Session, submission_id: int,
             title="Compilation failed"
         )
 
-    submission, stack = events.save(  # pylint: disable=W0612
-        events.AddProcessStatus(
-            creator=submitter,
-            process=events.AddProcessStatus.Process.COMPILATION,
-            service=compiler.NAME,
-            version=compiler.VERSION,
-            identifier=compilation_status.identifier
-        ),
-        submission_id=submission_id
-    )
-    alerts.flash_success(
-        "We are compiling your submission. Please be patient.",
-        title="Compilation started"
-    )
+    if compilation_status.status is compiler.Status.IN_PROGRESS:
+        submission, stack = events.save(  # pylint: disable=W0612
+            events.AddProcessStatus(
+                creator=submitter,
+                process=events.AddProcessStatus.Process.COMPILATION,
+                service=compiler.NAME,
+                version=compiler.VERSION,
+                identifier=compilation_status.identifier
+            ),
+            submission_id=submission_id
+        )
+        alerts.flash_success(
+            "We are compiling your submission. Please be patient.",
+            title="Compilation started"
+        )
     alerts.flash_hidden(compilation_status.to_dict(), 'status')
     redirect = url_for('ui.file_process', submission_id=submission_id)
     return response_data, status.HTTP_303_SEE_OTHER, {'Location': redirect}

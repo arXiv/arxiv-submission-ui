@@ -13,7 +13,7 @@
         <div class="select">
           {{ form.compiler(**{"aria-labelledby": "compiler"})|safe }}
         </div>
-        
+
         <button class="button is-link" type="submit" value="process">Process</button>
       </div>
     </div>
@@ -39,7 +39,7 @@
           <li>edit your files if needed</li>
           <li>re-upload any corrected files</li>
         </ul>
-        <p class="has-text-centered"><a class="button is-link" href="{{ url_for('ui.file_upload', submission_id=8) }}">Go back to Upload Files</a></p>
+        <p class="has-text-centered"><a class="button is-link" href="{{ url_for('ui.file_upload', submission_id=submission_id) }}">Go back to Upload Files</a></p>
         <p class="has-text-centered"><a class="button" href="#help">Help: Common TeX Errors</a></p>
       </div>
     </div>
@@ -69,6 +69,16 @@
       </div>
     </div>
     {% endif %}
+    {% for compilation in compilations[::-1] %}
+      <li>
+        {% if compilation.checksum == submission.source_content.checksum %}Current package{% endif %} started {{ compilation.start_time|timesince }}
+        {%- if compilation.status == compilation.Status.SUCCEEDED or compilation.status == compilation.Status.FAILED -%}
+          , {{ compilation.status|compilation_status_display }} after {{ (compilation.end_time - compilation.start_time)|duration }}.
+        {%- else -%}
+          .
+        {%- endif %}
+      </li>
+    {% endfor %}
   </div>
 
   <div class="column">

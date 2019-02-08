@@ -6,6 +6,8 @@ from datetime import datetime, timedelta
 from pytz import UTC
 
 from arxiv import taxonomy
+from arxiv.submission.domain.process import ProcessStatus
+from arxiv.submission.domain.submission import Compilation
 from .domain import FileStatus, Upload
 
 NestedFileTree = Mapping[str, Union[FileStatus, 'NestedFileTree']]
@@ -72,6 +74,15 @@ def timesince(timestamp: datetime, default: str = "just now") -> str:
     return default
 
 
+def duration(delta: timedelta) -> str:
+    s = ""
+    for period in ['days', 'hours', 'minutes', 'seconds']:
+        value = getattr(delta, period, 0)
+        if value > 0:
+            s += f"{value} {period}"
+    return s
+
+
 def just_updated(status: FileStatus, seconds: int = 2) -> bool:
     """
     Filter to determine whether a specific file was just touched.
@@ -129,11 +140,35 @@ def get_category_name(category: str) -> str:
     return taxonomy.CATEGORIES_ACTIVE[category]['name']
 
 
+def process_status_display(status: ProcessStatus.Status) -> str:
+    if status is ProcessStatus.Status.REQUESTED:
+        return "in progress"
+    elif status is ProcessStatus.Status.FAILED:
+        return "failed"
+    elif status is ProcessStatus.Status.SUCCEEDED:
+        return "suceeded"
+    raise ValueError("Unknown status")
+
+
+def compilation_status_display(status: Compilation.Status) -> str:
+    if status is Compilation.Status.STARTED:
+        return "in progress"
+    elif status is Compilation.Status.FAILED:
+        return "failed"
+    elif status is Compilation.Status.SUCCEEDED:
+        return "suceeded"
+    raise ValueError("Unknown status")
+
+
 def get_filters() -> List[Tuple[str, Callable]]:
     """Get the filter functions available in this module."""
     return [
         ('group_files', group_files),
         ('timesince', timesince),
         ('just_updated', just_updated),
-        ('get_category_name', get_category_name)
+        ('get_category_name', get_category_name),
+        ('process_status_display', process_status_display),
+        ('compilation_status_display', compilation_status_display),
+        ('duration', duration)
+
     ]

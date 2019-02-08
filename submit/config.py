@@ -111,3 +111,13 @@ if these pages seem relevant to other services.
 
 For details, see :mod:`arxiv.base.urls`.
 """
+
+ENABLE_ASYNC = os.environ.get('ENABLE_ASYNC', '0')
+"""
+If ``1``, asynchronous callbacks will be dispatched to the worker.
+
+Otherwise they will be executed in the thread in which they are called.
+"""
+
+ENABLE_CALLBACKS = os.environ.get('ENABLE_CALLBACKS', '0')
+"""If ``0``, callbacks bound to events will not be executed."""

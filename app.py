@@ -2,6 +2,11 @@
 
 from submit.factory import create_ui_web_app
 from arxiv.submission.services import classic
+import logging
+
+logging.getLogger('arxiv.submission.services.classic.interpolate') \
+    .setLevel(logging.ERROR)
+logging.getLogger('arxiv.base.alerts').setLevel(logging.ERROR)
 
 app = create_ui_web_app()
 

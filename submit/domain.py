@@ -332,6 +332,23 @@ class FileError(NamedTuple):
         return instance
 
 
+class SourceFormat(Enum):
+    """Supported source formats."""
+
+    UNKNOWN = None
+    """We could not determine the source format."""
+    INVALID = "invalid"
+    """We are able to infer the source format, and it is not supported."""
+    TEX = "tex"
+    """A flavor of TeX."""
+    POSTSCRIPT = "ps"
+    """A postscript source."""
+    HTML = "html"
+    """An HTML source."""
+    PDF = "ps"
+    """A PDF-only source."""
+
+
 class FileStatus(NamedTuple):
     """Represents the state of an uploaded file."""
 
@@ -396,6 +413,7 @@ class Upload(NamedTuple):
     lifecycle: 'Upload.LifecycleStates'
     locked: bool
     identifier: int
+    source_format: SourceFormat = SourceFormat.UNKNOWN
     checksum: Optional[str] = None
     size: Optional[int] = None
     files: List[FileStatus] = []

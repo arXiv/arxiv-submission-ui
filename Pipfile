@@ -11,19 +11,22 @@ uWSGI = "*"
 WTForms = "==2.1"
 PyYAML = "*"
 pytz = "*"
-SQLAlchemy = "*"
+SQLAlchemy = "==1.2.17"
 bleach = "*"
 requests = "==2.19.1"
 arxiv-base = "==0.12.1"
 mypy_extensions = "*"
 arxiv-auth = "==0.2.6rc1"
 "3a3786f" = {path = "./../arxiv-submission-core/core"}
+mysqlclient = "==1.4.2"
 
 [dev-packages]
-pylint = "*"
 pydocstyle = "*"
-mypy = "*"
+mypy = "==0.670"
 mimesis = "*"
 coveralls = "*"
 coverage = "*"
 "nose2" = "*"
+
+[pipenv]
+allow_prereleases = true

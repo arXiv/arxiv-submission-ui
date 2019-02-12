@@ -80,6 +80,8 @@ def duration(delta: timedelta) -> str:
         value = getattr(delta, period, 0)
         if value > 0:
             s += f"{value} {period}"
+    if not s:
+        return "less than a second"
     return s
 
 
@@ -151,7 +153,7 @@ def process_status_display(status: ProcessStatus.Status) -> str:
 
 
 def compilation_status_display(status: Compilation.Status) -> str:
-    if status is Compilation.Status.STARTED:
+    if status is Compilation.Status.IN_PROGRESS:
         return "in progress"
     elif status is Compilation.Status.FAILED:
         return "failed"

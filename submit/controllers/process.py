@@ -48,7 +48,8 @@ from werkzeug.exceptions import InternalServerError, BadRequest,\
 
 from flask import url_for, Markup
 from wtforms import SelectField, widgets, HiddenField, validators
-
+import bleach
+import re
 from arxiv import status
 from arxiv.base import logging, alerts
 from arxiv.forms import csrf
@@ -105,6 +106,10 @@ def file_process(method: str, params: MultiDict, session: Session,
     if method == "GET":
         return compile_status(params, session, submission_id, token)
     elif method == "POST":
+        if params.get('action') in ['previous', 'next', 'save_exit']:
+            # User is not actually trying to process anything; let flow control
+            # in the routes handle the response.
+            return {}, status.HTTP_303_SEE_OTHER, {}
         return start_compilation(params, session, submission_id, token)
     #elif method == "POST":
     #    return compile(seesion, submission_id, token)
@@ -154,6 +159,8 @@ def compile_status(params: MultiDict, session: Session, submission_id: int,
     }
 
     compilation = submission.latest_compilation
+    is_current = compilation and \
+        compilation.checksum == submission.source_content.checksum
     logger.debug('submission has processes %s', submission.processes)
     logger.debug('Submission has compilations %s', submission.compilations)
     logger.debug('Submission has latest compilation %s', compilation)
@@ -161,13 +168,20 @@ def compile_status(params: MultiDict, session: Session, submission_id: int,
         return response_data, status.HTTP_200_OK, {}
 
     # if Compilation failure, then show errors, opportunity to restart
-    if compilation.status is Compilation.Status.FAILED:
+    if compilation.status is Compilation.Status.FAILED and is_current:
         response_data['status'] = "failed"
     # if Compilation success, then show preview
-    elif compilation.status is Compilation.Status.SUCCEEDED:
+    elif compilation.status is Compilation.Status.SUCCEEDED and is_current:
         response_data['status'] = "success"
-    else:  # if Compilation running, then show status, no restart
+        log = compiler.get_log(submission.source_content.identifier,
+                               submission.source_content.checksum)
+        # Make linebreaks but escape everything else.
+        log_output = log.stream.read().decode('utf-8') #.replace('\n', '<br />')
+        response_data['log_output'] = log_output# Markup(bleach.clean(log_output, ['br']))
+    elif compilation.status is Compilation.Status.IN_PROGRESS and is_current:
         response_data['status'] = "in_progress"
+    else:  # if Compilation running, then show status, no restart
+        response_data['status'] = None
     return response_data, status.HTTP_200_OK, {}
 
 
@@ -183,6 +197,7 @@ def start_compilation(params: MultiDict, session: Session, submission_id: int,
         'form': form,
         'compilations': submission.compilations
     }
+
     if not form.validate():
         logger.debug("Invalid form data")
         return response_data, status.HTTP_400_BAD_REQUEST, {}
@@ -190,7 +205,7 @@ def start_compilation(params: MultiDict, session: Session, submission_id: int,
         logger.debug('Request compilation of source %s at checksum %s',
                      submission.source_content.identifier,
                      submission.source_content.checksum)
-        compilation_status = compiler.request_compilation(
+        compilation_status = compiler.compile(
             submission.source_content.identifier,
             submission.source_content.checksum
         )
@@ -210,7 +225,11 @@ def start_compilation(params: MultiDict, session: Session, submission_id: int,
             title="Compilation failed"
         )
 
-    if compilation_status.status is compiler.Status.IN_PROGRESS:
+    failed = compilation_status.status is compiler.Status.FAILED
+    in_progress = compilation_status.status is compiler.Status.IN_PROGRESS
+    previous = [c.identifier for c in submission.compilations]
+    new_compilation = compilation_status.identifier not in previous
+    if in_progress or (failed and new_compilation):
         submission, stack = events.save(  # pylint: disable=W0612
             events.AddProcessStatus(
                 creator=submitter,
@@ -225,13 +244,35 @@ def start_compilation(params: MultiDict, session: Session, submission_id: int,
             "We are compiling your submission. Please be patient.",
             title="Compilation started"
         )
-    alerts.flash_hidden(compilation_status.to_dict(), 'status')
+    alerts.flash_hidden(compilation_status.to_dict(), 'compilation_status')
     redirect = url_for('ui.file_process', submission_id=submission_id)
     return response_data, status.HTTP_303_SEE_OTHER, {'Location': redirect}
 
 
+def file_preview(params, session: Session, submission_id: int, token: str) \
+        -> Response:
+    submitter, client = util.user_and_client_from_session(session)
+    submission, submission_events = load_submission(submission_id)
+    compiler.set_auth_token(token)
+    prod = compiler.get_product(submission.source_content.identifier,
+                                submission.source_content.checksum)
+    headers = {'Content-Type': prod.content_type}
+    return prod.stream, status.HTTP_200_OK, headers
 
-def compile(params: MultiDict, session: Session, submission_id: int, token: str) -> Response:
+
+def compilation_log(params, session: Session, submission_id: int, token: str) \
+        -> Response:
+    submitter, client = util.user_and_client_from_session(session)
+    submission, submission_events = load_submission(submission_id)
+    compiler.set_auth_token(token)
+    log = compiler.get_log(submission.source_content.identifier,
+                           submission.source_content.checksum)
+    headers = {'Content-Type': log.content_type}
+    return log.stream, status.HTTP_200_OK, headers
+
+
+def compile(params: MultiDict, session: Session, submission_id: int,
+            token: str) -> Response:
     redirect = url_for('ui.file_process', submission_id=submission_id)
     return {}, status.HTTP_303_SEE_OTHER, {'Location': redirect}
 

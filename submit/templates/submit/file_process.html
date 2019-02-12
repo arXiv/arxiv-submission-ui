@@ -1,29 +1,40 @@
 {% extends "submit/base.html" %}
 
+{% block title -%}Process submission files{%- endblock title %}
+
 {% block within_content %}
 <h2 class="is-size-4">Process Files</h2>
 <form method="POST" action="{{ url_for('ui.file_process', submission_id=submission_id) }}">
   {{ form.csrf_token }}
 <div class="columns">
   <div class="column is-one-third-desktop is-one-half-tablet">
+    {% if not status %}
     <div class="field is-grouped">
       <div class="control">
+        <!-- Selecting a preferred compiler is not supported in v0.1
         <label class="label" id="compiler">Compiler: <span class="icon has-text-link"><i class="fa fa-question-circle"></i></span></label>
-
         <div class="select">
           {{ form.compiler(**{"aria-labelledby": "compiler"})|safe }}
-        </div>
+        </div> -->
 
-        <button class="button is-link" type="submit" value="process">Process</button>
+        <button class="button is-link" type="submit" value="process" {% if status == "failed" %}disabled=true{% endif %}>Process my submission files</button>
       </div>
     </div>
-
-
+    {% endif %}
 
     {% if not status %}
     <div class="message is-info">
       <div class="message-body">
         <p>arXiv's processing system runs TeX Live 2016 and natbib 8.31. Authors are strongly encouraged to upgrade if older versions of these packages are being used to generate files.</p>
+      </div>
+    </div>
+
+    {% elif status == "in_progress" %}
+    <div class="message is-warning">
+      <div class="message-header">
+        <p><span class="icon"><i class="fa fa-tasks"></i></span>Processing Underway</p></div>
+      <div class="message-body">
+        <p>We are currently processing your submission. This may take up to a minute or two. Please check back.</p>
       </div>
     </div>
 
@@ -65,13 +76,17 @@
         <p>Be sure to check the compiled preview carefully for any undesired artifacts or errors.</p>
         <p>If you need to make corrections, return to the previous step and adjust your files, then reprocess your submission.</p>
 
-        <p class="has-text-centered"><a class="button is-link" href="{{ url_for('ui.file_upload', submission_id=8) }}">View PDF</a></p>
+        <p class="has-text-centered">
+          <a class="button is-link" href="{{ url_for('ui.file_preview', submission_id=submission_id) }}" target="_blank">
+            View PDF
+          </a>
+        </p>
       </div>
     </div>
     {% endif %}
     {% for compilation in compilations[::-1] %}
       <li>
-        {% if compilation.checksum == submission.source_content.checksum %}Current package{% endif %} started {{ compilation.start_time|timesince }}
+        {% if compilation.checksum == submission.source_content.checksum %}Current package{% else %}Previous package{% endif %} started {{ compilation.start_time|timesince }}
         {%- if compilation.status == compilation.Status.SUCCEEDED or compilation.status == compilation.Status.FAILED -%}
           , {{ compilation.status|compilation_status_display }} after {{ (compilation.end_time - compilation.start_time)|duration }}.
         {%- else -%}
@@ -81,15 +96,18 @@
     {% endfor %}
   </div>
 
-  <div class="column">
+  <div class="column is-two-thirds-desktop is-one-half-tablet">
     {% if not status %}
     <div class="message is-info">
       <div class="message-body">
         <p><span class="icon has-text-link"><i class="fa fa-info-circle"></i></span>
         This step runs all files through a series of automatic checks.<br />
          Additionally, TeX and LaTeX source packages will be compiled into a PDF.</p>
+
+         {{ submission.source_content }}
       </div>
     </div>
+    <!-- Selection of preferred compiler is not supported in v0.1
     <div class="message is-info">
       <div class="message-body">
         <p><span class="icon has-text-link"><i class="fa fa-info-circle"></i></span>
@@ -99,7 +117,7 @@
           choose that compiler. If you do not know which compiler will process best,
           leave this default alone.</p>
       </div>
-    </div>
+    </div> -->
     {% endif %}
     {% if status %}
     <div class="box texlive-summary">
@@ -108,9 +126,16 @@
           <h3>TeXLive Compiler Summary</h3>
         </div>
         <div class="level-right">
-          <a class="button">View complete log</a>
+          <a class="button" href="{{ url_for('ui.compilation_log', submission_id=submission_id) }}" target="_blank">
+            View raw log
+          </a>
         </div>
       </div>
+      <!-- TODO: don't hard-code this. -->
+      <div style="max-height: 50vh; height: 50vh; overflow-y: scroll; color: black; max-width: 100%;">
+        <pre><code class="article">{{ log_output }}</code></pre>
+      </div>
+      <!-- Log parsing is not supported in v0.1
       {% if errors %}
       <article class="has-text-danger">
         <h4 class="has-text-danger">Errors</h4>
@@ -135,7 +160,7 @@
         <p class="has-text-weight-bold">Perhaps step completion notices in bold</p>
         {% endfor %}
       </article>
-      {% endif %}
+      {% endif %} -->
     </div>
     {% endif %}
   </div>

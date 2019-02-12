@@ -24,7 +24,7 @@ from arxiv.base import logging
 from arxiv.base.globals import get_application_config, get_application_global
 from werkzeug.datastructures import FileStorage
 
-from submit.domain import Upload, FileStatus, FileError
+from submit.domain import Upload, FileStatus, FileError, SourceFormat
 
 logger = logging.getLogger(__name__)
 
@@ -143,7 +143,8 @@ class FileManagementService(object):
             ],
             errors=non_file_errors,
             size=data['upload_total_size'],
-            checksum=data['checksum']
+            checksum=data['checksum'],
+            source_format=SourceFormat(data['source_format'])
         )
 
     def _path(self, path: str, query: dict = {}) -> str:
@@ -300,9 +301,10 @@ class FileManagementService(object):
             Unique long-lived identifier for the upload.
 
         """
-        self.request('post', f'/{upload_id}/delete_all',
-                     expected_code=status.HTTP_204_NO_CONTENT)
-        return
+        data, headers = self.request('post', f'/{upload_id}/delete_all',
+                                     expected_code=status.HTTP_200_OK)
+        upload_status = self._parse_upload_status(data)
+        return upload_status
 
     def get_file_content(self, upload_id: str, file_path: str) \
             -> Tuple[Download, dict]:
@@ -345,8 +347,10 @@ class FileManagementService(object):
         dict
             Response headers.
         """
-        return self.request('delete', f'/{upload_id}/{file_path}',
-                            expected_code=status.HTTP_204_NO_CONTENT)
+        data, headers = self.request('delete', f'/{upload_id}/{file_path}',
+                                     expected_code=status.HTTP_200_OK)
+        upload_status = self._parse_upload_status(data)
+        return upload_status
 
     def get_upload_content(self, upload_id: str) -> Tuple[Download, dict]:
         """

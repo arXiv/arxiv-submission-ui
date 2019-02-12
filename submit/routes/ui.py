@@ -5,7 +5,7 @@ from typing import Optional, Callable, Dict, List
 from werkzeug import MultiDict
 from werkzeug.exceptions import InternalServerError
 from flask import Blueprint, make_response, redirect, request, \
-                  render_template, url_for, Response, g
+                  render_template, url_for, Response, g, send_file
 from arxiv import status, taxonomy
 from submit import controllers
 from arxiv.users import auth
@@ -430,15 +430,41 @@ def file_process(submission_id: int) -> Response:
         submission_id,
         request.environ['token']
     )
-    if code in [status.HTTP_200_OK, status.HTTP_400_BAD_REQUEST, status.HTTP_404_NOT_FOUND]:
+    if code in [status.HTTP_200_OK, status.HTTP_400_BAD_REQUEST,
+                status.HTTP_404_NOT_FOUND]:
         rendered = render_template(
             "submit/file_process.html",
             pagetitle='Process Files',
             **data
         )
         return make_response(rendered, code)
-    if 'Location' in headers:
-        return redirect(headers['Location'], code=code)
+    return Response(response=data, status=code, headers=headers)
+
+
+@blueprint.route('/<int:submission_id>/file_preview', methods=['GET'])
+@auth.decorators.scoped(auth.scopes.VIEW_SUBMISSION,
+                        authorizer=can_edit_submission)
+def file_preview(submission_id: int) -> Response:
+    data, code, headers = controllers.file_preview(
+        MultiDict(request.args.items(multi=True)),
+        request.session,
+        submission_id,
+        request.environ['token']
+    )
+    return send_file(data, mimetype=headers['Content-Type'])
+
+
+@blueprint.route('/<int:submission_id>/compilation_log', methods=['GET'])
+@auth.decorators.scoped(auth.scopes.VIEW_SUBMISSION,
+                        authorizer=can_edit_submission)
+def compilation_log(submission_id: int) -> Response:
+    data, code, headers = controllers.compilation_log(
+        MultiDict(request.args.items(multi=True)),
+        request.session,
+        submission_id,
+        request.environ['token']
+    )
+    return send_file(data, mimetype=headers['Content-Type'])
 
 
 @blueprint.route('/<int:submission_id>/add_metadata',

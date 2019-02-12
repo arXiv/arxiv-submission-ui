@@ -46,27 +46,6 @@
 {% block title -%}Upload files{%- endblock title %}
 
 {% block within_content %}
-
-{% if status and status.status == status.Status.ERRORS %}
-<div class="notification is-danger" role="alert">
-  <h2 class="is-size-5 is-marginless">Unresolved errors</h2>
-  <p>
-    There are unresolved problems with your submission files. Please correct
-    the errors below before proceeding.
-  </p>
- </div>
-{% endif %}
-{% if status and status.status == status.Status.READY_WITH_WARNINGS %}
-<div class="notification is-warning" role="alert">
-  <h2 class="is-size-5 is-marginless">Warnings</h2>
-  <p>
-    There is one or more unresolved warning, below. You may proceed with your
-    submission, but please note that these issues may cause delays in
-    processing and/or announcement.
-  </p>
- </div>
-{% endif %}
-
 <form class="form" action="{{ url_for('ui.file_upload', submission_id=submission_id) }}" method="POST" enctype="multipart/form-data">
   <div class="columns">
     <div class="column is-two-thirds-desktop is-three-quarters-tablet">

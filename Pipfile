@@ -16,9 +16,10 @@ bleach = "*"
 requests = "==2.19.1"
 arxiv-base = "==0.12.1"
 mypy_extensions = "*"
-arxiv-auth = "==0.2.6rc1"
-"3a3786f" = {path = "./../arxiv-submission-core/core"}
+arxiv-auth = "==0.2.7rc1"
 mysqlclient = "==1.4.2"
+arxiv-submission-core = "==0.6.2rc5"
+mimesis = "==2.1.0"
 
 [dev-packages]
 pydocstyle = "*"

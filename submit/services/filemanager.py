@@ -160,18 +160,25 @@ class FileManagementService(object):
         try:
             resp = getattr(self._session, method)(self._path(path), **kw)
         except requests.exceptions.SSLError as e:
+            logger.error('SSL failed: %s' % e)
             raise SecurityException('SSL failed: %s' % e) from e
         except requests.exceptions.ConnectionError as e:
+            logger.error('Could not connect: %s' % e)
             raise ConnectionFailed('Could not connect: %s' % e) from e
         if resp.status_code >= status.HTTP_500_INTERNAL_SERVER_ERROR:
+            logger.error(f'Status: {resp.status_code}; {resp.content}')
             raise RequestFailed(f'Status: {resp.status_code}; {resp.content}')
         elif resp.status_code == status.HTTP_401_UNAUTHORIZED:
+            logger.error(f'Status: {resp.status_code}; {resp.content}')
             raise RequestUnauthorized(f'Not authorized: {resp.content}')
         elif resp.status_code == status.HTTP_403_FORBIDDEN:
+            logger.error(f'Status: {resp.status_code}; {resp.content}')
             raise RequestForbidden(f'Forbidden: {resp.content}')
         elif resp.status_code == status.HTTP_413_REQUEST_ENTITY_TOO_LARGE:
+            logger.error(f'Status: {resp.status_code}; {resp.content}')
             raise Oversize(f'Too large: {resp.content}')
         elif resp.status_code >= status.HTTP_400_BAD_REQUEST:
+            logger.error(f'Status: {resp.status_code}; {resp.content}')
             raise BadRequest(f'Bad request: {resp.content}',
                              data=resp.content)
         elif resp.status_code is not expected_code:

@@ -85,7 +85,7 @@ class TestUpload(TestCase):
                     identifier='5433',
                     checksum='a1s2d3f4',
                     size=593920,
-                    format=''
+                    source_format=SubmissionContent.Format.TEX
                 )
             ), []
         )
@@ -111,7 +111,7 @@ class TestUpload(TestCase):
                     errors=[]
                 )],
                 errors=[]
-            ), {}
+            )
         )
         params = MultiDict({})
         files = MultiDict({})
@@ -141,7 +141,7 @@ class TestUpload(TestCase):
                 identifier='5433',
                 checksum='a1s2d3f4',
                 size=593920,
-                format=''
+                source_format=SubmissionContent.Format.TEX
             )
         )
         mock_load.return_value = (mock_submission, [])
@@ -227,7 +227,7 @@ class TestDelete(TestCase):
                     identifier='5433',
                     checksum='a1s2d3f4',
                     size=593920,
-                    format=''
+                    source_format=SubmissionContent.Format.TEX
                 )
             ), []
         )
@@ -256,7 +256,7 @@ class TestDelete(TestCase):
                     identifier='5433',
                     checksum='a1s2d3f4',
                     size=593920,
-                    format=''
+                    source_format=SubmissionContent.Format.TEX
                 )
             ), []
         )
@@ -275,9 +275,10 @@ class TestDelete(TestCase):
     @mock.patch(f'{upload.__name__}.DeleteFileForm.Meta.csrf', False)
     @mock.patch(f'{upload.__name__}.url_for')
     @mock.patch(f'{upload.__name__}.filemanager')
+    @mock.patch(f'{upload.__name__}.save')
     @mock.patch('arxiv.submission.load')
-    def test_post_delete_confirmed(self, mock_load, mock_filemanager,
-                                   mock_url_for):
+    def test_post_delete_confirmed(self, mock_load, mock_save,
+                                   mock_filemanager, mock_url_for):
         """POST request to delete a file without confirmation."""
         redirect_uri = '/foo'
         mock_url_for.return_value = redirect_uri
@@ -293,7 +294,18 @@ class TestDelete(TestCase):
                     identifier=upload_id,
                     checksum='a1s2d3f4',
                     size=593920,
-                    format=''
+                    source_format=SubmissionContent.Format.TEX
+                )
+            ), []
+        )
+        mock_save.return_value = (
+            mock.MagicMock(
+                submission_id=submission_id,
+                source_content=SubmissionContent(
+                    identifier=upload_id,
+                    checksum='a1s2d3f4',
+                    size=593920,
+                    source_format=SubmissionContent.Format.TEX
                 )
             ), []
         )

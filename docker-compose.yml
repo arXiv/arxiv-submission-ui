@@ -8,6 +8,8 @@ x-base-service:
     DOCKER_HOST: "unix:///var/run/docker.sock"
     REDIS_ENDPOINT: "submission-ui-redis"
     SUBMISSION_BROKER_URL: "redis://submission-ui-redis:6379/0"
+    ENABLE_ASYNC: 1
+    ENABLE_CALLBACKS: 1
     AWS_SECRET_ACCESS_KEY: "${AWS_SECRET_ACCESS_KEY}"
     AWS_ACCESS_KEY_ID: "${AWS_ACCESS_KEY_ID}"
     COMPILER_DOCKER_IMAGE: "${COMPILER_DOCKER_IMAGE}"
@@ -16,7 +18,7 @@ x-base-service:
     S3_ENDPOINT: "https://compiler-localstack:4572"
     S3_VERIFY: 0
     FILE_MANAGER_ENDPOINT: "http://arxiv-filemanager:8000/filemanager/api"
-    FILE_MANAGER_CONTENT_PATH: "/{source_id}"
+    FILE_MANAGER_CONTENT_PATH: "/{source_id}/content"
     LOGLEVEL: 10
     # FLASK_APP: /opt/arxiv/app.py
     # FLASK_DEBUG: 1
@@ -26,7 +28,7 @@ x-base-service:
     # CLASSIC_DATABASE_URI: "sqlite:///db.sqlite"
     FLASK_SECRET: 'what'
     SESSION_COOKIE_SECURE: 0
-    COMPILER_ENDPOINT: "http://compiler-api:8100/"
+    COMPILER_ENDPOINT: "http://compiler-api:8000/"
     FILE_MANAGMENT_SQLALCHEMY_DATABASE_URI: "mysql+mysqldb://foouser:foopass@filemanager-maria:3306/uploads?charset=utf8"
 
 services:
@@ -101,7 +103,7 @@ services:
     # volumes:
     #   - ./../arxiv-compiler/compiler/:/opt/arxiv/compiler/
     ports:
-      - 8100:8100
+      - 8100:8000
     depends_on:
       - compiler-localstack
       - compiler-worker
@@ -160,6 +162,14 @@ services:
     networks:
       - arxiv-submission-ui
 
+  compiler-bootstrap:
+    << : *base-service
+    image: arxiv/compiler:0.0
+    container_name: compiler-bootstrap
+    command: pipenv run python bootstrap.py
+    networks:
+      - arxiv-submission-ui
+
   submission-ui:
     << : *base-service
     image: arxiv/submission-ui
@@ -167,7 +177,7 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: arxiv-submission-ui
-    command: uwsgi --http-socket :8000 -M -t 3000 --manage-script-name --processes 8 --threads 1 --async 100 --ugreen  --mount /=wsgi.py --logformat "%(addr) %(addr) - %(user_id)|%(session_id) [%(rtime)] [%(uagent)] \"%(method) %(uri) %(proto)\" %(status) %(size) %(micros) %(ttfb)"
+    command: uwsgi --http-socket :8000 -M -t 3000 --manage-script-name --wsgi-disable-file-wrapper --processes 8 --threads 1 --async 100 --ugreen  --mount /=wsgi.py --logformat "%(addr) %(addr) - %(user_id)|%(session_id) [%(rtime)] [%(uagent)] \"%(method) %(uri) %(proto)\" %(status) %(size) %(micros) %(ttfb)"
     # command: flask run -p 8000 -h 0.0.0.0
     # volumes:
     #   - ./submit/:/opt/arxiv/submit/

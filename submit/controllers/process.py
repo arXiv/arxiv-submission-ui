@@ -173,10 +173,13 @@ def compile_status(params: MultiDict, session: Session, submission_id: int,
     # if Compilation success, then show preview
     elif compilation.status is Compilation.Status.SUCCEEDED and is_current:
         response_data['status'] = "success"
-        log = compiler.get_log(submission.source_content.identifier,
-                               submission.source_content.checksum)
-        # Make linebreaks but escape everything else.
-        log_output = log.stream.read().decode('utf-8') #.replace('\n', '<br />')
+        try:
+            log = compiler.get_log(submission.source_content.identifier,
+                                   submission.source_content.checksum)
+            # Make linebreaks but escape everything else.
+            log_output = log.stream.read().decode('utf-8') #.replace('\n', '<br />')
+        except compiler.NoSuchResource:
+            log_output = "No log available."
         response_data['log_output'] = log_output# Markup(bleach.clean(log_output, ['br']))
     elif compilation.status is Compilation.Status.IN_PROGRESS and is_current:
         response_data['status'] = "in_progress"

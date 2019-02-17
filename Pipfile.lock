@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "baa0052b13954ecadef76e5739b1e18da41d3e5d3585698f8d5ac86b293b43f4"
+            "sha256": "3fdbaf79980f7eb28f7ed88f3ee855ce99a0b8215ef4799b5e21a43707466355"
         },
         "pipfile-spec": 6,
         "requires": {},
@@ -30,10 +30,10 @@
         },
         "arxiv-base": {
             "hashes": [
-                "sha256:f8fa599e50550e0c6ee9de53030c22c0b8921fca7ac1268753a6b2b0fef177e9"
+                "sha256:4c2ca540aeed0a06394e6eea12364562e2e4733d4803812f5d7542475dd55d09"
             ],
             "index": "pypi",
-            "version": "==0.12.1"
+            "version": "==0.14.3"
         },
         "arxiv-submission-core": {
             "hashes": [
@@ -65,17 +65,17 @@
         },
         "boto3": {
             "hashes": [
-                "sha256:0bed0db8c10b88b3daa042adaa1fb6c3262caed39d28086e8548015405c71744",
-                "sha256:70e71e0192a68f65754ab9d2a335be3c6856a1e8a15f3bd6263ea12e2f442bc7"
+                "sha256:6bcde55eed4a7e5fdf73a324c19a8e62a76f17fff6267d50c6d21d7acb00bb30",
+                "sha256:c103241394d396ee08548b03d5d1f0f89a7ad1dfa7ccca88a47131f329cca093"
             ],
-            "version": "==1.9.93"
+            "version": "==1.9.96"
         },
         "botocore": {
             "hashes": [
-                "sha256:4df39ef9bcd7766e3a71a9e7f976ca6c9e926f451914a9c073aa50e9519436ca",
-                "sha256:d3cea95919892eac30e2ff8c5a8908022d5a93f917df3cff4ed06a6926dcc0e5"
+                "sha256:55c1594041e6716847d5a8b38181e3cc44e245edbf4598ae2b99e3040073b2cf",
+                "sha256:c72dfa1f1f6be34b8d91606fa823ab5d3e0ea0d74b700a7868b4c5a642b23041"
             ],
-            "version": "==1.12.93"
+            "version": "==1.12.96"
         },
         "celery": {
             "hashes": [
@@ -253,7 +253,6 @@
                 "sha256:7e6584c74aeed623791615e26efd690f29817a27c73085b78e4bad02493df2fb",
                 "sha256:c89805f6f4d64db21ed966fda138f8a5ed7a4fdbc1a8ee329ce1b74e3c74da9e"
             ],
-            "markers": "python_version >= '2.7'",
             "version": "==2.8.0"
         },
         "pytz": {

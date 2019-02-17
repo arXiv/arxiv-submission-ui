@@ -676,8 +676,8 @@ def _get_notifications(upload_status: Upload) -> List[Dict[str, str]]:
         notifications.append({
             'title': 'Warnings',
             'severity': 'warning',
-            'body': 'There is one or more unresolved warning, below. You'
-                    ' may proceed with your submission, but please note'
+            'body': 'There is one or more unresolved warning in the file list.'
+                    ' You may proceed with your submission, but please note'
                     ' that these issues may cause delays in processing'
                     ' and/or announcement.'
         })

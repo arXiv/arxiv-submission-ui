@@ -5,7 +5,7 @@ from typing import Tuple, Dict, Any
 from arxiv import status
 from arxiv.users.domain import Session
 
-from .process import file_process
+from .process import file_process, file_preview, compilation_log
 from .upload import upload_files
 from .upload import delete as delete_file
 from .upload import delete_all as delete_all_files

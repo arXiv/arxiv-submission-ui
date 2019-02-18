@@ -24,7 +24,7 @@ from arxiv.base import logging
 from arxiv.base.globals import get_application_config, get_application_global
 from werkzeug.datastructures import FileStorage
 
-from submit.domain import Upload, FileStatus, FileError
+from submit.domain import Upload, FileStatus, FileError, SourceFormat
 
 logger = logging.getLogger(__name__)
 
@@ -142,7 +142,9 @@ class FileManagementService(object):
                 ) for fdata in data['files']
             ],
             errors=non_file_errors,
-            size=data['upload_total_size']
+            size=data['upload_total_size'],
+            checksum=data['checksum'],
+            source_format=SourceFormat(data['source_format'])
         )
 
     def _path(self, path: str, query: dict = {}) -> str:
@@ -158,18 +160,25 @@ class FileManagementService(object):
         try:
             resp = getattr(self._session, method)(self._path(path), **kw)
         except requests.exceptions.SSLError as e:
+            logger.error('SSL failed: %s' % e)
             raise SecurityException('SSL failed: %s' % e) from e
         except requests.exceptions.ConnectionError as e:
+            logger.error('Could not connect: %s' % e)
             raise ConnectionFailed('Could not connect: %s' % e) from e
         if resp.status_code >= status.HTTP_500_INTERNAL_SERVER_ERROR:
+            logger.error(f'Status: {resp.status_code}; {resp.content}')
             raise RequestFailed(f'Status: {resp.status_code}; {resp.content}')
         elif resp.status_code == status.HTTP_401_UNAUTHORIZED:
+            logger.error(f'Status: {resp.status_code}; {resp.content}')
             raise RequestUnauthorized(f'Not authorized: {resp.content}')
         elif resp.status_code == status.HTTP_403_FORBIDDEN:
+            logger.error(f'Status: {resp.status_code}; {resp.content}')
             raise RequestForbidden(f'Forbidden: {resp.content}')
         elif resp.status_code == status.HTTP_413_REQUEST_ENTITY_TOO_LARGE:
+            logger.error(f'Status: {resp.status_code}; {resp.content}')
             raise Oversize(f'Too large: {resp.content}')
         elif resp.status_code >= status.HTTP_400_BAD_REQUEST:
+            logger.error(f'Status: {resp.status_code}; {resp.content}')
             raise BadRequest(f'Bad request: {resp.content}',
                              data=resp.content)
         elif resp.status_code is not expected_code:
@@ -299,9 +308,10 @@ class FileManagementService(object):
             Unique long-lived identifier for the upload.
 
         """
-        self.request('post', f'/{upload_id}/delete_all',
-                     expected_code=status.HTTP_204_NO_CONTENT)
-        return
+        data, headers = self.request('post', f'/{upload_id}/delete_all',
+                                     expected_code=status.HTTP_200_OK)
+        upload_status = self._parse_upload_status(data)
+        return upload_status
 
     def get_file_content(self, upload_id: str, file_path: str) \
             -> Tuple[Download, dict]:
@@ -344,8 +354,10 @@ class FileManagementService(object):
         dict
             Response headers.
         """
-        return self.request('delete', f'/{upload_id}/{file_path}',
-                            expected_code=status.HTTP_204_NO_CONTENT)
+        data, headers = self.request('delete', f'/{upload_id}/{file_path}',
+                                     expected_code=status.HTTP_200_OK)
+        upload_status = self._parse_upload_status(data)
+        return upload_status
 
     def get_upload_content(self, upload_id: str) -> Tuple[Download, dict]:
         """

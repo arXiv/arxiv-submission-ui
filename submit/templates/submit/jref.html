@@ -39,7 +39,7 @@
     <h2>arXiv:{{ submission.arxiv_id }}v{{ submission.version }} {{ submission.metadata.title }}</h2>
   {% endif %}
 
-  <content>
+  <main>
     <form method="POST" action="{{ url_for('ui.jref', submission_id=submission_id) }}">
       <div class="columns">
         <div class="column">

@@ -332,6 +332,23 @@ class FileError(NamedTuple):
         return instance
 
 
+class SourceFormat(Enum):
+    """Supported source formats."""
+
+    UNKNOWN = None
+    """We could not determine the source format."""
+    INVALID = "invalid"
+    """We are able to infer the source format, and it is not supported."""
+    TEX = "tex"
+    """A flavor of TeX."""
+    POSTSCRIPT = "ps"
+    """A postscript source."""
+    HTML = "html"
+    """An HTML source."""
+    PDF = "ps"
+    """A PDF-only source."""
+
+
 class FileStatus(NamedTuple):
     """Represents the state of an uploaded file."""
 
@@ -396,6 +413,7 @@ class Upload(NamedTuple):
     lifecycle: 'Upload.LifecycleStates'
     locked: bool
     identifier: int
+    source_format: SourceFormat = SourceFormat.UNKNOWN
     checksum: Optional[str] = None
     size: Optional[int] = None
     files: List[FileStatus] = []
@@ -443,61 +461,3 @@ class Upload(NamedTuple):
                 data[key] = dateutil.parser.parse(data[key])
         instance: Upload = cls(**data)
         return instance
-
-
-class CompilationStatus(NamedTuple):
-    """Represents the state of a compilation product in the store."""
-
-    # This is intended as a fixed class attributes, not a slot.
-    class Status(Enum):      # type: ignore
-        COMPLETED = "completed"
-        IN_PROGRESS = "in_progress"
-        FAILED = "failed"
-
-    # Here are the actual slots/fields.
-    upload_id: str
-
-    status: 'CompilationStatus.Status'
-    """
-    The status of the compilation.
-
-    One of :attr:`COMPLETED`, :attr:`IN_PROGRESS`, or :attr:`FAILED`.
-
-    If :attr:`COMPLETED`, the current file corresponding to the format of this
-    compilation status is the product of this compilation.
-    """
-
-    task_id: Optional[str] = None
-    """If a task exists for this compilation, the unique task ID."""
-
-    @property
-    def content_type(self):
-        _ctypes = {
-            CompilationStatus.Formats.PDF: 'application/pdf',
-            CompilationStatus.Formats.DVI: 'application/x-dvi',
-            CompilationStatus.Formats.PS: 'application/postscript'
-        }
-        return _ctypes[self.format]
-
-    def to_dict(self) -> dict:
-        """Generate a dict representation of this object."""
-        return {
-            'upload_id': self.upload_id,
-            'format': self.format.value,
-            'source_checksum': self.source_checksum,
-            'task_id': self.task_id,
-            'status': self.status.value
-        }
-
-
-class CompilationProduct(NamedTuple):
-    """Content of a compilation product itself."""
-
-    stream: io.BytesIO
-    """Readable buffer with the product content."""
-
-    status: Optional[CompilationStatus] = None
-    """Status information about the product."""
-
-    checksum: Optional[str] = None
-    """The B64-encoded MD5 hash of the compilation product."""

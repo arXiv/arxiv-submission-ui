@@ -7,18 +7,29 @@ x-base-service:
     SECRET_KEY: "not secure only use for development"
     DOCKER_HOST: "unix:///var/run/docker.sock"
     REDIS_ENDPOINT: "submission-ui-redis"
+    SUBMISSION_BROKER_URL: "redis://submission-ui-redis:6379/0"
+    ENABLE_ASYNC: 1
+    ENABLE_CALLBACKS: 1
+    AWS_SECRET_ACCESS_KEY: "${AWS_SECRET_ACCESS_KEY}"
+    AWS_ACCESS_KEY_ID: "${AWS_ACCESS_KEY_ID}"
     COMPILER_DOCKER_IMAGE: "${COMPILER_DOCKER_IMAGE}"
-    FILE_MANAGER_ENDPOINT: "http://arxiv-filemanager:8000/filemanager/api"
-    FILE_MANAGER_CONTENT_PATH: "/src/{source_id}"
-    LOGLEVEL: 10
-    FLASK_APP: /opt/arxiv/app.py
-    FLASK_DEBUG: 1
     HOST_SOURCE_ROOT: "${HOST_SOURCE_ROOT}"
+    AWS_S3_REGION_NAME: "us-east-1"
+    S3_ENDPOINT: "https://compiler-localstack:4572"
+    S3_VERIFY: 0
+    FILE_MANAGER_ENDPOINT: "http://arxiv-filemanager:8000/filemanager/api"
+    FILE_MANAGER_CONTENT_PATH: "/{source_id}/content"
+    LOGLEVEL: 10
+    # FLASK_APP: /opt/arxiv/app.py
+    # FLASK_DEBUG: 1
     VERBOSE_COMPILE: 1
     JWT_SECRET: "foosecret"
     CLASSIC_DATABASE_URI: "mysql+mysqldb://foouser:foopass@submission-ui-maria:3306/submission?charset=utf8"
+    # CLASSIC_DATABASE_URI: "sqlite:///db.sqlite"
     FLASK_SECRET: 'what'
     SESSION_COOKIE_SECURE: 0
+    COMPILER_ENDPOINT: "http://compiler-api:8000/"
+    FILE_MANAGMENT_SQLALCHEMY_DATABASE_URI: "mysql+mysqldb://foouser:foopass@filemanager-maria:3306/uploads?charset=utf8"
 
 services:
   submission-ui-redis:
@@ -39,58 +50,123 @@ services:
       MYSQL_DATABASE: submission
     command: ["mysqld", "--character-set-server=utf8mb4", "--collation-server=utf8mb4_unicode_ci"]
 
+  filemanager-maria:
+    image: mariadb:10.3
+    container_name: filemanager-maria
+    networks:
+      - arxiv-submission-ui
+    environment:
+      MYSQL_USER: foouser
+      MYSQL_PASSWORD: foopass
+      MYSQL_ROOT_PASSWORD: foorootpassword
+      MYSQL_DATABASE: uploads
+    command: ["mysqld", "--character-set-server=utf8mb4", "--collation-server=utf8mb4_unicode_ci"]
+
   filemanager:
     << : *base-service
-    image: arxiv/filemanager
+    image: arxiv/filemanager:0.1rc2
     # You can uncomment these lines to build this from a local
     # repo. You may need to update `context`.
     # build:
     #   context: ../arxiv-filemanager
     #   dockerfile: Dockerfile
     container_name: arxiv-filemanager
+    # volumes:
+    #   - ./../arxiv-filemanager/filemanager/:/opt/arxiv/filemanager/
     networks:
       - arxiv-submission-ui
+    ports:
+      - "8001:8000"
+
+  compiler-localstack:
+    image: atlassianlabs/localstack
+    container_name: compiler-localstack
+    networks:
+      - arxiv-submission-ui
+    ports:
+      - "4572:4572"
+      - "4568:4568"
+    environment:
+      USE_SSL: 'true'
+      DEBUG: 'true'
 
   compiler-api:
     << : *base-service
-    image: arxiv/compiler
+    image: arxiv/compiler:0.0
     # You can uncomment these lines to build this from a local
     # repo. You may need to update `context`.
     # build:
-    #   context: ../arxiv-compiler
-    #   dockerfile: Dockerfile
+    #    context: ../arxiv-compiler
+    #    dockerfile: Dockerfile
     container_name: arxiv-compiler-api
-    command: pipenv run flask run -h 0.0.0.0 -p 8000
+    # command: pipenv run flask run -h 0.0.0.0 -p 8100
+    # volumes:
+    #   - ./../arxiv-compiler/compiler/:/opt/arxiv/compiler/
+    ports:
+      - 8100:8000
+    depends_on:
+      - compiler-localstack
+      - compiler-worker
     networks:
       - arxiv-submission-ui
 
   compiler-worker:
     << : *base-service
-    image: arxiv/compiler
+    image: arxiv/compiler:0.0
     # You can uncomment these lines to build this from a local
     # repo. You may need to update `context`.
     # build:
-    #   context: ../arxiv-compiler
-    #   dockerfile: Dockerfile
+    #    context: ../arxiv-compiler
+    #    dockerfile: Dockerfile
     container_name: arxiv-compiler-worker
     command: /opt/arxiv/start_worker.sh -A compiler.worker.celery_app --loglevel=INFO -E --concurrency=2
+    # volumes:
+    #   - ./../arxiv-compiler/compiler/:/opt/arxiv/compiler/
     networks:
       - arxiv-submission-ui
     volumes:
       - "${HOST_SOURCE_ROOT}:/tmp"
       - /var/run/docker.sock:/var/run/docker.sock
     depends_on:
-      - compiler-api
+      - compiler-localstack
+
+  submission-worker:
+    << : *base-service
+    image: arxiv/submission-worker:0.0
+    container_name: arxiv-submission-worker
+    networks:
+      - arxiv-submission-ui
+    volumes:
+      - "${HOST_SOURCE_ROOT}:/tmp"
+      - /var/run/docker.sock:/var/run/docker.sock
+    depends_on:
+      - submission-ui-redis
 
   # This just runs once at the beginning to set up the database, then exits 0.
-  submission-ui-create-database:
+  submission-bootstrap:
     << : *base-service
     image: arxiv/submission-ui
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: submission-ui-create-database
-    command: python app.py
+    container_name: submission-bootstrap
+    command: python bootstrap.py
+    networks:
+      - arxiv-submission-ui
+
+  filemanager-bootstrap:
+    << : *base-service
+    image: arxiv/filemanager:0.1rc2
+    container_name: filemanager-bootstrap
+    command: python bootstrap.py
+    networks:
+      - arxiv-submission-ui
+
+  compiler-bootstrap:
+    << : *base-service
+    image: arxiv/compiler:0.0
+    container_name: compiler-bootstrap
+    command: pipenv run python bootstrap.py
     networks:
       - arxiv-submission-ui
 
@@ -101,13 +177,16 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: arxiv-submission-ui
-    command: uwsgi --http-socket :8000 -M -t 3000 --manage-script-name --processes 8 --threads 1 --async 100 --ugreen  --mount /=wsgi.py --logformat "%(addr) %(addr) - %(user_id)|%(session_id) [%(rtime)] [%(uagent)] \"%(method) %(uri) %(proto)\" %(status) %(size) %(micros) %(ttfb)"
+    command: uwsgi --http-socket :8000 -M -t 3000 --manage-script-name --wsgi-disable-file-wrapper --processes 8 --threads 1 --async 100 --ugreen  --mount /=wsgi.py --logformat "%(addr) %(addr) - %(user_id)|%(session_id) [%(rtime)] [%(uagent)] \"%(method) %(uri) %(proto)\" %(status) %(size) %(micros) %(ttfb)"
+    # command: flask run -p 8000 -h 0.0.0.0
+    # volumes:
+    #   - ./submit/:/opt/arxiv/submit/
     ports:
       - 8000:8000
     networks:
       - arxiv-submission-ui
-    depends_on:
-      - submission-ui-create-database
+  #  depends_on:
+  #    - submission-bootstrap
 
 
 networks:

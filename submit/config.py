@@ -72,6 +72,16 @@ FILE_MANAGER_ENDPOINT = os.environ.get(
 )
 FILE_MANAGER_VERIFY = bool(int(os.environ.get('FILE_MANAGER_VERIFY', '1')))
 
+COMPILER_HOST = os.environ.get('COMPILER_HOST', 'arxiv.org')
+COMPILER_PORT = os.environ.get('COMPILER_PORT', '443')
+COMPILER_PROTO = os.environ.get('COMPILER_PROTO', 'https')
+COMPILER_PATH = os.environ.get('COMPILER_PATH', '')
+COMPILER_ENDPOINT = os.environ.get(
+    'COMPILER_ENDPOINT',
+    f'{COMPILER_PROTO}://{COMPILER_HOST}:{COMPILER_PORT}/{COMPILER_PATH}'
+)
+COMPILER_VERIFY = bool(int(os.environ.get('COMPILER_VERIFY', '1')))
+
 SESSION_COOKIE_NAME = 'submission_ui_session'
 
 EXTERNAL_URL_SCHEME = os.environ.get('EXTERNAL_URL_SCHEME', 'https')
@@ -92,7 +102,8 @@ URLS = [
     ("help_metadata", "/help/prep", BASE_SERVER),
     ("help_jref", "/help/jref", BASE_SERVER),
     ("help_withdraw", "/help/withdraw", BASE_SERVER),
-    ("help_endorse", "/help/endorsement", BASE_SERVER)
+    ("help_endorse", "/help/endorsement", BASE_SERVER),
+    ("clickthrough", "/ct?url=<url>&v=<v>", BASE_SERVER)
 ]
 """
 URLs for external services, for use with :func:`flask.url_for`.
@@ -101,3 +112,13 @@ if these pages seem relevant to other services.
 
 For details, see :mod:`arxiv.base.urls`.
 """
+
+ENABLE_ASYNC = os.environ.get('ENABLE_ASYNC', '0')
+"""
+If ``1``, asynchronous callbacks will be dispatched to the worker.
+
+Otherwise they will be executed in the thread in which they are called.
+"""
+
+ENABLE_CALLBACKS = os.environ.get('ENABLE_CALLBACKS', '0')
+"""If ``0``, callbacks bound to events will not be executed."""

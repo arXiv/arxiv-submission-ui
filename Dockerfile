@@ -4,7 +4,7 @@ FROM arxiv/base:latest
 
 WORKDIR /opt/arxiv/
 
-RUN yum install -y which mariadb-devel
+RUN yum install -y which mariadb-devel sqlite
 ADD Pipfile Pipfile.lock /opt/arxiv/
 RUN pip install -U pip pipenv
 ENV LC_ALL en_US.utf-8
@@ -13,7 +13,7 @@ RUN pipenv install
 
 ENV PATH "/opt/arxiv:${PATH}"
 
-ADD wsgi.py uwsgi.ini app.py /opt/arxiv/
+ADD wsgi.py uwsgi.ini app.py bootstrap.py /opt/arxiv/
 ADD submit/ /opt/arxiv/submit/
 
 EXPOSE 8000

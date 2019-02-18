@@ -14,7 +14,7 @@ from arxiv.users.domain import Category
 from arxiv import status
 from arxiv.submission.domain.event import *
 from arxiv.submission.domain.agent import User
-from arxiv.submission.domain.submission import Author
+from arxiv.submission.domain.submission import Author, SubmissionContent
 from arxiv.submission import save
 
 CSRF_PATTERN = (r'\<input id="csrf_token" name="csrf_token" type="hidden"'
@@ -413,7 +413,7 @@ class TestJREFWorkflow(TestCase):
                 SetUploadPackage(
                     creator=self.user,
                     checksum="a9s9k342900skks03330029k",
-                    format='tex',
+                    source_format=SubmissionContent.Format.TEX,
                     identifier=123,
                     size=593992
                 ),
@@ -541,7 +541,7 @@ class TestWithdrawalWorkflow(TestCase):
                 SetUploadPackage(
                     creator=self.user,
                     checksum="a9s9k342900skks03330029k",
-                    format='tex',
+                    source_format=SubmissionContent.Format.TEX,
                     identifier=123,
                     size=593992
                 ),

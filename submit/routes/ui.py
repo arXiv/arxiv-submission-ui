@@ -5,7 +5,7 @@ from typing import Optional, Callable, Dict, List
 from werkzeug import MultiDict
 from werkzeug.exceptions import InternalServerError
 from flask import Blueprint, make_response, redirect, request, \
-                  render_template, url_for, Response, g
+                  render_template, url_for, Response, g, send_file
 from arxiv import status, taxonomy
 from submit import controllers
 from arxiv.users import auth
@@ -419,22 +419,52 @@ def file_delete_all(submission_id: int) -> Response:
 @flow_control(Stages.FILE_PROCESS)
 def file_process(submission_id: int) -> Response:
     """Render step 8, file processing."""
+    if request.method == 'GET':
+        request_data = MultiDict(request.args.items(multi=True))
+    elif request.method == 'POST':
+        request_data = MultiDict(request.form.items(multi=True))
     data, code, headers = controllers.file_process(
         request.method,
+        request_data,
         request.session,
         submission_id,
         request.environ['token']
     )
-    if code in [status.HTTP_200_OK, status.HTTP_400_BAD_REQUEST]:
+    if code in [status.HTTP_200_OK, status.HTTP_400_BAD_REQUEST,
+                status.HTTP_404_NOT_FOUND]:
         rendered = render_template(
             "submit/file_process.html",
             pagetitle='Process Files',
-            submission_id=submission_id,
             **data
         )
+        return make_response(rendered, code)
+    return Response(response=data, status=code, headers=headers)
 
-    response = make_response(rendered, code)
-    return response
+
+@blueprint.route('/<int:submission_id>/file_preview', methods=['GET'])
+@auth.decorators.scoped(auth.scopes.VIEW_SUBMISSION,
+                        authorizer=can_edit_submission)
+def file_preview(submission_id: int) -> Response:
+    data, code, headers = controllers.file_preview(
+        MultiDict(request.args.items(multi=True)),
+        request.session,
+        submission_id,
+        request.environ['token']
+    )
+    return send_file(data, mimetype=headers['Content-Type'])
+
+
+@blueprint.route('/<int:submission_id>/compilation_log', methods=['GET'])
+@auth.decorators.scoped(auth.scopes.VIEW_SUBMISSION,
+                        authorizer=can_edit_submission)
+def compilation_log(submission_id: int) -> Response:
+    data, code, headers = controllers.compilation_log(
+        MultiDict(request.args.items(multi=True)),
+        request.session,
+        submission_id,
+        request.environ['token']
+    )
+    return send_file(data, mimetype=headers['Content-Type'])
 
 
 @blueprint.route('/<int:submission_id>/add_metadata',

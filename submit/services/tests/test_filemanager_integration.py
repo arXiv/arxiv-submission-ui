@@ -1,6 +1,7 @@
 import os
 from unittest import TestCase
 import subprocess
+import time
 
 from werkzeug.datastructures import FileStorage
 
@@ -21,26 +22,27 @@ class TestFileManagerIntegration(TestCase):
 
         os.environ['JWT_SECRET'] = 'foosecret'
         os.environ['FILE_MANAGER_HOST'] = 'localhost'
-        os.environ['FILE_MANAGER_PORT'] = '8002'
+        os.environ['FILE_MANAGER_PORT'] = '8003'
         os.environ['FILE_MANAGER_PROTO'] = 'http'
-        os.environ['FILE_MANAGER_PATH'] = '/filemanager/api'
-        os.environ['FILE_MANAGER_ENDPOINT'] = 'http://localhost:8002/filemanager/api'
+        os.environ['FILE_MANAGER_CONTENT_PATH'] = '/{source_id}'
+        os.environ['FILE_MANAGER_ENDPOINT'] = 'http://localhost:8003/filemanager/api'
         os.environ['FILE_MANAGER_VERIFY'] = '0'
 
-        # print('starting file management service')
-        # start_fm = subprocess.run(
-        #     "docker run -d -p 8002:8000 arxiv/filemanager:0.1rc0",
-        #     stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
-        #
-        # if start_fm.returncode != 0:
-        #     print(start_fm.stdout, start_fm.stderr)
-        #     raise RuntimeError(
-        #         f'Could not start file management service: {start_fm.stdout}.'
-        #         f' Is one already running? Is port 8002 available?'
-        #     )
-        #
-        # cls.fm_container = start_fm.stdout.decode('ascii').strip()
-        # print(f'file management service started as {cls.fm_container}')
+        print('starting file management service')
+        start_fm = subprocess.run(
+            'docker run -d -e JWT_SECRET=foosecret -p 8003:8000 arxiv/filemanager:0.1rc2 /bin/bash -c \'python bootstrap.py; uwsgi --http-socket :8000 -M -t 3000 --manage-script-name --processes 8 --threads 1 --async 100 --ugreen --mount /=/opt/arxiv/wsgi.py --logformat "%(addr) %(addr) - %(user_id)|%(session_id) [%(rtime)] [%(uagent)] \\"%(method) %(uri) %(proto)\\" %(status) %(size) %(micros) %(ttfb)"\'',
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+
+        if start_fm.returncode != 0:
+            print(start_fm.stdout, start_fm.stderr)
+            raise RuntimeError(
+                f'Could not start file management service: {start_fm.stdout}.'
+                f' Is one already running? Is port 8003 available?'
+            )
+        time.sleep(2)
+
+        cls.fm_container = start_fm.stdout.decode('ascii').strip()
+        print(f'file management service started as {cls.fm_container}')
 
         cls.fm = filemanager.current_session()
         cls.token = generate_token('1', 'u@ser.com', 'theuser',
@@ -50,10 +52,10 @@ class TestFileManagerIntegration(TestCase):
     @classmethod
     def tearDownClass(cls):
         """Tear down file management service once all tests have run."""
-        # stop_fm = subprocess.run(f"docker rm -f {cls.fm_container}",
-        #                          stdout=subprocess.PIPE,
-        #                          stderr=subprocess.PIPE,
-        #                          shell=True)
+        stop_fm = subprocess.run(f"docker rm -f {cls.fm_container}",
+                                 stdout=subprocess.PIPE,
+                                 stderr=subprocess.PIPE,
+                                 shell=True)
 
     def test_status(self):
         data, headers = self.fm.get_service_status()
@@ -106,7 +108,7 @@ class TestFileManagerIntegration(TestCase):
         status = self.fm.get_upload_status(data.identifier)
         self.assertIsInstance(status, Upload)
         self.assertEqual(status.status, Upload.Status.READY)
-        self.assertEqual(status.lifecycle, Upload.LifecycleState.ACTIVE)
+        self.assertEqual(status.lifecycle, Upload.LifecycleStates.ACTIVE)
         self.assertFalse(status.locked)
 
     def test_get_upload_status_without_authorization(self):
@@ -155,5 +157,5 @@ class TestFileManagerIntegration(TestCase):
         status = self.fm.add_file(data.identifier, pointer2)
         self.assertIsInstance(status, Upload)
         self.assertEqual(status.status, Upload.Status.READY)
-        self.assertEqual(status.lifecycle, Upload.LifecycleState.ACTIVE)
+        self.assertEqual(status.lifecycle, Upload.LifecycleStates.ACTIVE)
         self.assertFalse(status.locked)

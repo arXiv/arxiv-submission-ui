@@ -28,6 +28,8 @@ mimesis = "*"
 coveralls = "*"
 coverage = "*"
 "nose2" = "*"
+sphinx = "*"
+sphinx-autodoc-typehints = "*"
 
 [pipenv]
 allow_prereleases = true

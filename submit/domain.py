@@ -345,7 +345,7 @@ class SourceFormat(Enum):
     """A postscript source."""
     HTML = "html"
     """An HTML source."""
-    PDF = "ps"
+    PDF = "pdf"
     """A PDF-only source."""
 
 

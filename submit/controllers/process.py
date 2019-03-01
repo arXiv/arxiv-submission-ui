@@ -73,7 +73,7 @@ PLEASE_CONTACT_SUPPORT = Markup(
 
 
 def file_process(method: str, params: MultiDict, session: Session,
-                 submission_id: int, token: str) -> Response:
+                 submission_id: int, token: str, **kwargs) -> Response:
     """
     Process the file compilation project.
 
@@ -116,7 +116,7 @@ def file_process(method: str, params: MultiDict, session: Session,
 
 
 def compile_status(params: MultiDict, session: Session, submission_id: int,
-                   token: str) -> Response:
+                   token: str, **kwargs) -> Response:
     """
     Returns the status of a compilation.
 
@@ -185,7 +185,7 @@ def compile_status(params: MultiDict, session: Session, submission_id: int,
 
 
 def start_compilation(params: MultiDict, session: Session, submission_id: int,
-                      token: str) -> Response:
+                      token: str, **kwargs) -> Response:
     compiler.set_auth_token(token)
     submitter, client = util.user_and_client_from_session(session)
     submission, submission_events = load_submission(submission_id)
@@ -258,8 +258,8 @@ def _get_log(identifier: str, checksum: str) -> dict:
     return {'log_output': log_output}
 
 
-def file_preview(params, session: Session, submission_id: int, token: str) \
-        -> Response:
+def file_preview(params, session: Session, submission_id: int, token: str,
+                 **kwargs) -> Response:
     submitter, client = util.user_and_client_from_session(session)
     submission, submission_events = load_submission(submission_id)
     compiler.set_auth_token(token)
@@ -269,8 +269,8 @@ def file_preview(params, session: Session, submission_id: int, token: str) \
     return prod.stream, status.HTTP_200_OK, headers
 
 
-def compilation_log(params, session: Session, submission_id: int, token: str) \
-        -> Response:
+def compilation_log(params, session: Session, submission_id: int, token: str,
+                    **kwargs) -> Response:
     submitter, client = util.user_and_client_from_session(session)
     submission, submission_events = load_submission(submission_id)
     compiler.set_auth_token(token)
@@ -281,7 +281,7 @@ def compilation_log(params, session: Session, submission_id: int, token: str) \
 
 
 def compile(params: MultiDict, session: Session, submission_id: int,
-            token: str) -> Response:
+            token: str, **kwargs) -> Response:
     redirect = url_for('ui.file_process', submission_id=submission_id)
     return {}, status.HTTP_303_SEE_OTHER, {'Location': redirect}
 

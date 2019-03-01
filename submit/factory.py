@@ -21,7 +21,7 @@ def create_ui_web_app() -> Flask:
 
     Base(app)
     auth.Auth(app)
-    app.register_blueprint(ui.blueprint)
+    app.register_blueprint(ui.ui)
 
     wrap(app, [auth.middleware.AuthMiddleware])
     for filter_name, filter_func in filters.get_filters():

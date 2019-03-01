@@ -74,7 +74,7 @@ class JREFForm(csrf.CSRFForm, util.FieldMixin, util.SubmissionMixin):
 
 
 def jref(method: str, params: MultiDict, session: Session,
-         submission_id: int) -> Response:
+         submission_id: int, **kwargs) -> Response:
     """Set journal reference metadata on a published submission."""
     submitter, client = util.user_and_client_from_session(session)
     logger.debug(f'method: {method}, submission: {submission_id}. {params}')

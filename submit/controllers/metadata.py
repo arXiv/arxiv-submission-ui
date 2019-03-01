@@ -155,7 +155,7 @@ def _data_from_submission(params: MultiDict, submission: events.Submission,
 
 
 def metadata(method: str, params: MultiDict, session: Session,
-             submission_id: int) -> Response:
+             submission_id: int, **kwargs) -> Response:
     """Update metadata on the submission."""
     submitter, client = util.user_and_client_from_session(session)
     logger.debug(f'method: {method}, submission: {submission_id}. {params}')
@@ -212,7 +212,7 @@ def metadata(method: str, params: MultiDict, session: Session,
 
 
 def optional(method: str, params: MultiDict, session: Session,
-             submission_id: int) -> Response:
+             submission_id: int, **kwargs) -> Response:
     """Update optional metadata on the submission."""
     submitter, client = util.user_and_client_from_session(session)
 

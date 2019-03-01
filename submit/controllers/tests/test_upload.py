@@ -84,7 +84,8 @@ class TestUpload(TestCase):
                 source_content=SubmissionContent(
                     identifier='5433',
                     checksum='a1s2d3f4',
-                    size=593920,
+                    uncompressed_size=593920,
+                    compressed_size=1000,
                     source_format=SubmissionContent.Format.TEX
                 )
             ), []
@@ -116,7 +117,8 @@ class TestUpload(TestCase):
         params = MultiDict({})
         files = MultiDict({})
         response_data, code, headers = upload.upload_files(
-            'GET', params, files, self.session, submission_id, 'footoken'
+            'GET', params, self.session, submission_id, files=files,
+            token='footoken'
         )
         self.assertEqual(code, status.HTTP_200_OK, 'Returns 200 OK')
         self.assertEqual(mock_filemanager.get_upload_status.call_count, 1,
@@ -140,7 +142,8 @@ class TestUpload(TestCase):
             source_content=SubmissionContent(
                 identifier='5433',
                 checksum='a1s2d3f4',
-                size=593920,
+                uncompressed_size=593920,
+                compressed_size=1000,
                 source_format=SubmissionContent.Format.TEX
             )
         )
@@ -172,7 +175,8 @@ class TestUpload(TestCase):
         mock_file = mock.MagicMock()
         files = MultiDict({'file': mock_file})
         response_data, code, headers = upload.upload_files(
-            'POST', params, files, self.session, submission_id, 'footoken'
+            'POST', params, self.session, submission_id, files=files,
+            token='footoken'
         )
         self.assertEqual(code, status.HTTP_303_SEE_OTHER, 'Returns 303')
         self.assertEqual(mock_filemanager.add_file.call_count, 1,
@@ -226,7 +230,8 @@ class TestDelete(TestCase):
                 source_content=SubmissionContent(
                     identifier='5433',
                     checksum='a1s2d3f4',
-                    size=593920,
+                    uncompressed_size=593920,
+                    compressed_size=1000,
                     source_format=SubmissionContent.Format.TEX
                 )
             ), []
@@ -255,7 +260,8 @@ class TestDelete(TestCase):
                 source_content=SubmissionContent(
                     identifier='5433',
                     checksum='a1s2d3f4',
-                    size=593920,
+                    uncompressed_size=593920,
+                    compressed_size=1000,
                     source_format=SubmissionContent.Format.TEX
                 )
             ), []
@@ -293,7 +299,8 @@ class TestDelete(TestCase):
                 source_content=SubmissionContent(
                     identifier=upload_id,
                     checksum='a1s2d3f4',
-                    size=593920,
+                    uncompressed_size=593920,
+                    compressed_size=1000,
                     source_format=SubmissionContent.Format.TEX
                 )
             ), []
@@ -304,7 +311,8 @@ class TestDelete(TestCase):
                 source_content=SubmissionContent(
                     identifier=upload_id,
                     checksum='a1s2d3f4',
-                    size=593920,
+                    uncompressed_size=593920,
+                    compressed_size=1000,
                     source_format=SubmissionContent.Format.TEX
                 )
             ), []

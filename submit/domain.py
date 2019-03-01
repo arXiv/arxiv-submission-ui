@@ -28,11 +28,11 @@ class Stages(Enum):     # type: ignore
     """The user is given the option of selecting cross-list categories."""
     FILE_UPLOAD = 'file_upload'
     """The user is asked to upload files for their submission."""
-    FILE_PROCESS = 'file_process'
+    PROCESS = 'file_process'
     """Uploaded files are processed; this is primarily to compile LaTeX."""
-    ADD_METADATA = 'add_metadata'
+    METADATA = 'add_metadata'
     """The user is asked to require core metadata fields, like title."""
-    ADD_OPTIONAL_METADATA = 'add_optional_metadata'
+    OPTIONAL = 'add_optional_metadata'
     """The user is given the option of entering optional metadata."""
     FINAL_PREVIEW = 'final_preview'
     """The user is asked to review the submission before finalizing."""
@@ -53,9 +53,9 @@ class StageBase(NamedTuple):
         Stages.CLASSIFICATION.value: 'select a primary category',
         Stages.CROSS_LIST.value: 'add cross-list categories',
         Stages.FILE_UPLOAD.value: 'upload your submission files',
-        Stages.FILE_PROCESS.value: 'process your submission files',
-        Stages.ADD_METADATA.value: 'add required metadata',
-        Stages.ADD_OPTIONAL_METADATA.value: 'add optional metadata',
+        Stages.PROCESS.value: 'process your submission files',
+        Stages.METADATA.value: 'add required metadata',
+        Stages.OPTIONAL.value: 'add optional metadata',
         Stages.FINAL_PREVIEW.value: 'preview and approve your submission'
     }
     """
@@ -267,9 +267,9 @@ class SubmissionStage(StageBase):
         (Stages.CLASSIFICATION, True, StageBase.classification_is_set),
         (Stages.CROSS_LIST, False, StageBase.crosslist_is_selected),
         (Stages.FILE_UPLOAD, True, StageBase.files_are_uploaded),
-        (Stages.FILE_PROCESS, True, StageBase.files_are_processed),
-        (Stages.ADD_METADATA, True, StageBase.metadata_is_set),
-        (Stages.ADD_OPTIONAL_METADATA, StageBase.optional_metadata_is_set, None),
+        (Stages.PROCESS, True, StageBase.files_are_processed),
+        (Stages.METADATA, True, StageBase.metadata_is_set),
+        (Stages.OPTIONAL, False, StageBase.optional_metadata_is_set),
         (Stages.FINAL_PREVIEW, True, None)
     ]
     """
@@ -292,9 +292,9 @@ class ReplacementStage(StageBase):
         (Stages.LICENSE, True, StageBase.license_is_set),
         (Stages.POLICY, True, StageBase.policy_is_accepted),
         (Stages.FILE_UPLOAD, True, StageBase.files_are_uploaded),
-        (Stages.FILE_PROCESS, True, StageBase.files_are_processed),
-        (Stages.ADD_METADATA, True, StageBase.metadata_is_set),
-        (Stages.ADD_OPTIONAL_METADATA, StageBase.optional_metadata_is_set, None),
+        (Stages.PROCESS, True, StageBase.files_are_processed),
+        (Stages.METADATA, True, StageBase.metadata_is_set),
+        (Stages.OPTIONAL, False, StageBase.optional_metadata_is_set),
         (Stages.FINAL_PREVIEW, True, None)
     ]
     """

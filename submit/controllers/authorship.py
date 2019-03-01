@@ -14,7 +14,7 @@ from wtforms import BooleanField, RadioField
 from wtforms.validators import InputRequired, ValidationError, optional
 
 from arxiv import status
-from arxiv.base import logging 
+from arxiv.base import logging
 from arxiv.forms import csrf
 from arxiv.users.domain import Session
 import arxiv.submission as events
@@ -46,7 +46,7 @@ def _data_from_submission(params: MultiDict,
 
 
 def authorship(method: str, params: MultiDict, session: Session,
-               submission_id: int) -> Response:
+               submission_id: int, **kwargs) -> Response:
     """Convert authorship form data into an `ConfirmAuthorship` event."""
     logger.debug(f'method: {method}, submission: {submission_id}. {params}')
     user, client = util.user_and_client_from_session(session)

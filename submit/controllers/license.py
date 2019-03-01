@@ -37,7 +37,7 @@ def _data_from_submission(params: MultiDict,
 
 
 def license(method: str, params: MultiDict, session: Session,
-            submission_id: int) -> Response:
+            submission_id: int, **kwargs) -> Response:
     """Convert license form data into a `SetLicense` event."""
     submitter, client = util.user_and_client_from_session(session)
 

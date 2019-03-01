@@ -28,8 +28,8 @@ logger = logging.getLogger(__name__)    # pylint: disable=C0103
 Response = Tuple[Dict[str, Any], int, Dict[str, Any]]   # pylint: disable=C0103
 
 
-def verify_user(method: str, params: MultiDict, session: Session,
-                submission_id: int) -> Response:
+def verify(method: str, params: MultiDict, session: Session,
+           submission_id: int, **kwargs) -> Response:
     """
     Prompt the user to verify their contact information.
 

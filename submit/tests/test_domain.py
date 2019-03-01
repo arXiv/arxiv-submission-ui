@@ -44,7 +44,7 @@ class TestSubmissionStage(TestCase):
             submission_stage.on_or_after(submission_stage.current_stage)
         )
 
-    def test_verify_user(self):
+    def test_verify(self):
         """The user has verified their information."""
         submission = Submission(
             creator=User('12345', 'foo@user.edu'),

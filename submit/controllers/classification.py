@@ -94,7 +94,7 @@ def _data_from_submission(params: MultiDict,
 
 
 def classification(method: str, params: MultiDict, session: Session,
-                   submission_id: int) -> Response:
+                   submission_id: int, **kwargs) -> Response:
     """Generate a `SetPrimaryClassification` event."""
     submitter, client = util.user_and_client_from_session(session)
 
@@ -160,7 +160,7 @@ def classification(method: str, params: MultiDict, session: Session,
 
 
 def cross_list(method: str, params: MultiDict, session: Session,
-               submission_id: int) -> Response:
+               submission_id: int, **kwargs) -> Response:
     """Generate an `AddSecondaryClassification` event."""
     submitter, client = util.user_and_client_from_session(session)
 

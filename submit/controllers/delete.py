@@ -22,7 +22,7 @@ class DeleteForm(csrf.CSRFForm):
 
 
 def delete(method: str, params: MultiDict, session: Session,
-           submission_id: int) -> Response:
+           submission_id: int, **kwargs) -> Response:
     """
     Delete a submission, replacement, or other request.
 

@@ -27,7 +27,7 @@ Response = Tuple[Dict[str, Any], int, Dict[str, Any]]  # pylint: disable=C0103
 
 
 def policy(method: str, params: MultiDict, session: Session,
-           submission_id: int) -> Response:
+           submission_id: int, **kwargs) -> Response:
     """Convert policy form data into an `ConfirmPolicy` event."""
     submitter, client = util.user_and_client_from_session(session)
 

@@ -2,6 +2,8 @@
 
 from typing import Tuple, Dict, Any
 
+from werkzeug import MultiDict
+
 from arxiv import status
 from arxiv.users.domain import Session
 
@@ -12,7 +14,7 @@ from .upload import delete_all as delete_all_files
 
 
 from ..util import load_submission
-from . import create, verify_user, authorship, license, policy, \
+from . import create, verify_user, authorship, license, policy, final, \
     classification, metadata, util, jref, withdraw, delete, cross
 from .util import Response
 
@@ -20,7 +22,8 @@ __all__ = ('verify_user', 'authorship', 'license', 'policy', 'classification',
            'metadata', 'create', 'jref', 'delete', 'process')
 
 
-def submission_status(session: Session, submission_id: int) -> Response:
+def submission_status(method: str, params: MultiDict, session: Session,
+                      submission_id: int) -> Response:
     user, client = util.user_and_client_from_session(session)
 
     # Will raise NotFound if there is no such submission.

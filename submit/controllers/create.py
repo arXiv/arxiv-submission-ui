@@ -22,10 +22,12 @@ class CreateSubmissionForm(csrf.CSRFForm):
     """Submission creation form."""
 
 
-def create(method: str, params: MultiDict, session: Session) -> Response:
+def create(method: str, params: MultiDict, session: Session, *args, **kwargs) \
+        -> Response:
     """Create a new submission, and redirect to workflow."""
     if method == 'GET':     # Display a splash page.
-        submissions = events.core.load_submissions_for_user(session.user.user_id)
+        submissions = \
+            events.core.load_submissions_for_user(session.user.user_id)
 
         response_data = {
             'form': CreateSubmissionForm(),
@@ -55,7 +57,7 @@ def create(method: str, params: MultiDict, session: Session) -> Response:
 
 
 def replace(method: str, params: MultiDict, session: Session,
-            submission_id: int) -> Response:
+            submission_id: int, **kwargs) -> Response:
     """Create a new version, and redirect to workflow."""
     if method == 'GET':     # Display a splash page.
         raise MethodNotAllowed('GET requests not supported at this endpoint')

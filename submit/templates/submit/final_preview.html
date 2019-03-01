@@ -6,9 +6,9 @@
 <h2 class="is-size-4">Preview and approve your submission</h2>
 
 {% if submission.version > 1 %}
-  {% let arxiv_id = submission.arxiv_id %}
+  {% set arxiv_id = submission.arxiv_id %}
 {% else %}
-  {% let arxiv_id = "0000.00000" %}
+  {% set arxiv_id = "0000.00000" %}
 {% endif %}
 
 {{ macros.abs(

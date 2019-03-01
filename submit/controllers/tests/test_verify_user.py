@@ -56,7 +56,7 @@ class TestVerifyUser(TestCase):
                            submitter_contact_verified=False),
             []
         )
-        data, code, headers = verify_user.verify_user('GET', MultiDict(),
+        data, code, headers = verify_user.verify('GET', MultiDict(),
                                                       self.session,
                                                       submission_id)
         self.assertEqual(code, status.HTTP_200_OK, "Returns 200 OK")
@@ -73,7 +73,7 @@ class TestVerifyUser(TestCase):
                            submitter_contact_verified=False),
             []
         )
-        data, code, headers = verify_user.verify_user('POST', MultiDict(),
+        data, code, headers = verify_user.verify('POST', MultiDict(),
                                                       self.session,
                                                       submission_id)
         self.assertEqual(code, status.HTTP_400_BAD_REQUEST,
@@ -104,7 +104,7 @@ class TestVerifyUser(TestCase):
         mock_url_for.return_value = redirect_url
 
         form_data = MultiDict({'verify_user': 'y', 'action': 'next'})
-        data, code, headers = verify_user.verify_user('POST', form_data,
+        data, code, headers = verify_user.verify('POST', form_data,
                                                       self.session,
                                                       submission_id)
         self.assertEqual(code, status.HTTP_303_SEE_OTHER,
@@ -139,7 +139,7 @@ class TestVerifyUser(TestCase):
 
         mock_save.side_effect = raise_on_verify
         form_data = MultiDict({'verify_user': 'y', 'action': 'next'})
-        data, code, headers = verify_user.verify_user('POST', form_data,
+        data, code, headers = verify_user.verify('POST', form_data,
                                                       self.session, 2)
         self.assertEqual(code, status.HTTP_400_BAD_REQUEST,
                          "Returns 400 bad request")

@@ -166,7 +166,7 @@ class TestSubmissionWorkflow(TestCase):
 
         # Get the next page in the process. This is the cross list stage.
         next_page = urlparse(response.headers['Location'])
-        self.assertIn('cross_list', next_page.path)
+        self.assertIn('cross', next_page.path)
         response = self.client.get(next_page.path, headers=self.headers)
         self.assertIn(b'Choose cross-list classifications', response.data)
         token = self._parse_csrf_token(response)
@@ -181,7 +181,7 @@ class TestSubmissionWorkflow(TestCase):
 
         # Get the next page in the process. This is the file upload stage.
         next_page = urlparse(response.headers['Location'])
-        self.assertIn('file_upload', next_page.path)
+        self.assertIn('upload', next_page.path)
         response = self.client.get(next_page.path, headers=self.headers)
         self.assertIn(b'Upload files', response.data)
         token = self._parse_csrf_token(response)
@@ -415,7 +415,8 @@ class TestJREFWorkflow(TestCase):
                     checksum="a9s9k342900skks03330029k",
                     source_format=SubmissionContent.Format.TEX,
                     identifier=123,
-                    size=593992
+                    uncompressed_size=593992,
+                    compressed_size=59392,
                 ),
                 SetTitle(creator=self.user, title='foo title'),
                 SetAbstract(creator=self.user, abstract='ab stract' * 20),
@@ -543,7 +544,8 @@ class TestWithdrawalWorkflow(TestCase):
                     checksum="a9s9k342900skks03330029k",
                     source_format=SubmissionContent.Format.TEX,
                     identifier=123,
-                    size=593992
+                    uncompressed_size=593992,
+                    compressed_size=59392,
                 ),
                 SetTitle(creator=self.user, title='foo title'),
                 SetAbstract(creator=self.user, abstract='ab stract' * 20),

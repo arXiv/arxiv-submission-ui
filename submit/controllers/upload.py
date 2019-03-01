@@ -68,8 +68,9 @@ def tidy_filesize(size) -> str:
     return '{} {}'.format(size, units[units_index])
 
 
-def upload_files(method: str, params: MultiDict, files: MultiDict,
-                 session: Session, submission_id: int, token: str) -> Response:
+def upload_files(method: str, params: MultiDict, session: Session,
+                 submission_id: int, files: Optional[MultiDict] = None,
+                 token: Optional[str] = None, **kwargs) -> Response:
     """
     Handle a file upload request.
 
@@ -110,6 +111,8 @@ def upload_files(method: str, params: MultiDict, files: MultiDict,
         applicable.
 
     """
+    if files is None or token is None:
+        raise BadRequest("Missing files or auth token")
     logger.debug('%s upload request for submission %i', method, submission_id)
     submission, submission_events = load_submission(submission_id)
     logger.debug('Loaded submission with ID %i', submission.submission_id)
@@ -130,7 +133,8 @@ def upload_files(method: str, params: MultiDict, files: MultiDict,
 
 
 def delete_all(method: str, params: MultiDict, session: Session,
-               submission_id: int, token: str) -> Response:
+               submission_id: int, token: Optional[str] = None, **kwargs)\
+        -> Response:
     """
     Handle a request to delete all files in the workspace.
 
@@ -161,6 +165,8 @@ def delete_all(method: str, params: MultiDict, session: Session,
         applicable.
 
     """
+    if token is None:
+        raise BadRequest('Missing auth token')
     logger.debug('%s delete all files with params %s', method, params)
     submission, submission_events = load_submission(submission_id)
     upload_id = submission.source_content.identifier
@@ -212,7 +218,8 @@ def delete_all(method: str, params: MultiDict, session: Session,
 
 
 def delete(method: str, params: MultiDict, session: Session,
-           submission_id: int, token: str) -> Response:
+           submission_id: int, token: Optional[str] = None, **kwargs) \
+        -> Response:
     """
     Handle a request to delete a file.
 
@@ -252,6 +259,8 @@ def delete(method: str, params: MultiDict, session: Session,
         applicable.
 
     """
+    if token is None:
+        raise BadRequest('Missing auth token')
     logger.debug('%s delete with params %s', method, params)
     submission, submission_events = load_submission(submission_id)
     upload_id = submission.source_content.identifier

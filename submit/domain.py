@@ -426,7 +426,7 @@ class Upload(NamedTuple):
 
     def to_dict(self) -> dict:
         """Generate a dict representation of this status object."""
-        data = {
+        return {
             'started': self.started.isoformat(),
             'completed': self.completed.isoformat(),
             'created': self.created.isoformat(),
@@ -435,19 +435,12 @@ class Upload(NamedTuple):
             'lifecycle': self.lifecycle.value,
             'locked': self.locked,
             'identifier': self.identifier,
+            'source_format': self.source_format.value,
             'checksum': self.checksum,
             'size': self.size,
             'files': [d.to_dict() for d in self.files],
             'errors': [d.to_dict() for d in self.errors]
         }
-        # for key in ['started', 'completed', 'created', 'modified']:
-        #     if data[key]:
-        #         data[key] = data[key]
-        # if data['files']:
-        #     data['files'] = [d.to_dict() for d in data['files']]
-        # if data['errors']:
-        #     data['errors'] = [d.to_dict() for d in data['errors']]
-        return data
 
     @classmethod
     def from_dict(cls: type, data: dict) -> 'Upload':
@@ -459,5 +452,7 @@ class Upload(NamedTuple):
         for key in ['started', 'completed', 'created', 'modified']:
             if key in data and type(data[key]) is str:
                 data[key] = dateutil.parser.parse(data[key])
+        if 'source_format' in data:
+            data['source_format'] = SourceFormat(data['source_format'])
         instance: Upload = cls(**data)
         return instance

@@ -177,13 +177,12 @@ def delete_all(method: str, params: MultiDict, session: Session,
         form = DeleteAllFilesForm(params)
         if form.validate() and form.confirmed.data:
             try:
-                upload_status = filemanager.delete_all(upload_id)
+                _status = filemanager.delete_all(upload_id)
                 submission, stack = save(  # pylint: disable=W0612
-                    UpdateUploadPackage(
-                        creator=submitter,
-                        checksum=upload_status.checksum,
-                        size=upload_status.size
-                    ),
+                    UpdateUploadPackage(creator=submitter,
+                                        checksum=_status.checksum,
+                                        uncompressed_size=_status.size,
+                                        source_format=_status.source_format),
                     submission_id=submission.submission_id
                 )
             except filemanager.RequestForbidden as e:
@@ -273,21 +272,14 @@ def delete(method: str, params: MultiDict, session: Session,
     elif method == 'POST':
         form = DeleteFileForm(params)
         if form.validate() and form.confirmed.data:
+            _status: Optional[Upload] = None
             try:
-                upload_status = filemanager.delete_file(upload_id,
-                                                        form.file_path.data)
+                _status = filemanager.delete_file(upload_id,
+                                                  form.file_path.data)
                 alerts.flash_success(
                     f'File <code>{form.file_path.data}</code> was deleted'
                     ' successfully', title='Deleted file successfully',
                     safe=True
-                )
-                submission, stack = save(  # pylint: disable=W0612
-                    UpdateUploadPackage(
-                        creator=submitter,
-                        checksum=upload_status.checksum,
-                        size=upload_status.size
-                    ),
-                    submission_id=submission.submission_id
                 )
             except filemanager.RequestForbidden as e:
                 alerts.flash_failure(Markup(
@@ -307,6 +299,15 @@ def delete(method: str, params: MultiDict, session: Session,
                     f' again. {PLEASE_CONTACT_SUPPORT}'
                 ))
                 logger.error('Encountered RequestFailed: %s', e)
+
+            if _status is not None:
+                submission, stack = save(  # pylint: disable=W0612
+                    UpdateUploadPackage(creator=submitter,
+                                        checksum=_status.checksum,
+                                        uncompressed_size=_status.size,
+                                        source_format=_status.source_format),
+                    submission_id=submission.submission_id
+                )
             redirect = url_for('ui.file_upload', submission_id=submission_id)
             return {}, status.HTTP_303_SEE_OTHER, {'Location': redirect}
         response_data.update({'form': form})
@@ -336,7 +337,7 @@ class DeleteAllFilesForm(csrf.CSRFForm):
                              validators=[validators.DataRequired()])
 
 
-def _update_submission(submission: Submission, upload_status: Upload,
+def _update_submission(submission: Submission, _status: Upload,
                        submitter: User, client: Optional[Client] = None) \
         -> Submission:
     """
@@ -351,7 +352,7 @@ def _update_submission(submission: Submission, upload_status: Upload,
     Parameters
     ----------
     submission : :class:`Submission`
-    upload_status : :class:`Upload`
+    _status : :class:`Upload`
     submitter : :class:`User`
     client : :class:`Client` or None
 
@@ -359,23 +360,21 @@ def _update_submission(submission: Submission, upload_status: Upload,
     existing_upload = getattr(submission.source_content, 'identifier', None)
 
     try:
-        if existing_upload == upload_status.identifier:
+        if existing_upload == _status.identifier:
             submission, stack = save(  # pylint: disable=W0612
-                UpdateUploadPackage(
-                    creator=submitter,
-                    checksum=upload_status.checksum,
-                    size=upload_status.size
-                ),
+                UpdateUploadPackage(creator=submitter,
+                                    checksum=_status.checksum,
+                                    uncompressed_size=_status.size,
+                                    source_format=_status.source_format),
                 submission_id=submission.submission_id
             )
         else:
             submission, stack = save(  # pylint: disable=W0612
-                SetUploadPackage(
-                    creator=submitter,
-                    identifier=upload_status.identifier,
-                    checksum=upload_status.checksum,
-                    size=upload_status.size,
-                ),
+                SetUploadPackage(creator=submitter,
+                                 identifier=_status.identifier,
+                                 checksum=_status.checksum,
+                                 uncompressed_size=_status.size,
+                                 source_format=_status.source_format),
                 submission_id=submission.submission_id
             )
     except InvalidStack as e:   # TODO: get more specific
@@ -427,22 +426,22 @@ def _get_upload(params: MultiDict, session: Session, submission: Submission) \
         # Nothing to show; should generate a blank-slate upload screen.
         return response_data, status.HTTP_200_OK, {}
     upload_id = submission.source_content.identifier
-    status_data = alerts.get_hidden_alerts('upload_status')
+    status_data = alerts.get_hidden_alerts('_status')
     logger.debug('Got status data from hidden alert: %s', status_data)
     if type(status_data) is dict and status_data['identifier'] == upload_id:
-        upload_status = Upload.from_dict(status_data)
+        _status = Upload.from_dict(status_data)
     else:
         try:
-            upload_status = filemanager.get_upload_status(upload_id)
+            _status = filemanager.get_upload_status(upload_id)
         except filemanager.RequestFailed as e:
             # TODO: handle specific failure cases.
             logger.error('Encountered RequestFailed getting data for'
                          ' for %i: %s', submission.submission_id, e)
             raise InternalServerError('Whoops') from e
-    response_data.update({'status': upload_status})
-    if upload_status:
+    response_data.update({'status': _status})
+    if _status:
         response_data.update({'immediate_notifications':
-                              _get_notifications(upload_status)})
+                              _get_notifications(_status)})
 
     return response_data, status.HTTP_200_OK, {}
 
@@ -488,29 +487,29 @@ def _post_new_upload(params: MultiDict, pointer: FileStorage, session: Session,
         raise BadRequest('Invalid upload request')
 
     try:
-        upload_status = filemanager.upload_package(pointer)
-        submission = _update_submission(submission, upload_status, submitter,
+        _status = filemanager.upload_package(pointer)
+        submission = _update_submission(submission, _status, submitter,
                                         client)
-        converted_size = tidy_filesize(upload_status.size)
-        if upload_status.status is Upload.Status.READY:
+        converted_size = tidy_filesize(_status.size)
+        if _status.status is Upload.Status.READY:
             alerts.flash_success(
-                f'Unpacked {upload_status.file_count} files. Total submission'
+                f'Unpacked {_status.file_count} files. Total submission'
                 f' package size is {converted_size}',
                 title='Upload successful'
             )
-        elif upload_status.status is Upload.Status.READY_WITH_WARNINGS:
+        elif _status.status is Upload.Status.READY_WITH_WARNINGS:
             alerts.flash_warning(
-                f'Unpacked {upload_status.file_count} files. Total submission'
+                f'Unpacked {_status.file_count} files. Total submission'
                 f' package size is {converted_size}. See below for warnings.',
                 title='Upload complete, with warnings'
             )
-        elif upload_status.status is Upload.Status.ERRORS:
+        elif _status.status is Upload.Status.ERRORS:
             alerts.flash_warning(
-                f'Unpacked {upload_status.file_count} files. Total submission'
+                f'Unpacked {_status.file_count} files. Total submission'
                 f' package size is {converted_size}. See below for errors.',
                 title='Upload complete, with errors'
             )
-        alerts.flash_hidden(upload_status.to_dict(), 'upload_status')
+        alerts.flash_hidden(_status.to_dict(), '_status')
     except filemanager.RequestFailed as e:
         alerts.flash_failure(Markup(
             'There was a problem carrying out your request. Please try'
@@ -570,32 +569,32 @@ def _post_new_file(params: MultiDict, pointer: FileStorage, session: Session,
     ancillary: bool = form.ancillary.data
 
     try:
-        upload_status = filemanager.add_file(upload_id, pointer,
+        _status = filemanager.add_file(upload_id, pointer,
                                              ancillary=ancillary)
-        submission = _update_submission(submission, upload_status, submitter,
+        submission = _update_submission(submission, _status, submitter,
                                         client)
-        converted_size = tidy_filesize(upload_status.size)
-        if upload_status.status is Upload.Status.READY:
+        converted_size = tidy_filesize(_status.size)
+        if _status.status is Upload.Status.READY:
             alerts.flash_success(
                 f'Uploaded {pointer.filename} successfully. Total submission'
                 f' package size is {converted_size}',
                 title='Upload successful'
             )
-        elif upload_status.status is Upload.Status.READY_WITH_WARNINGS:
+        elif _status.status is Upload.Status.READY_WITH_WARNINGS:
             alerts.flash_warning(
                 f'Uploaded {pointer.filename} successfully. Total submission'
                 f' package size is {converted_size}. See below for warnings.',
                 title='Upload complete, with warnings'
             )
-        elif upload_status.status is Upload.Status.ERRORS:
+        elif _status.status is Upload.Status.ERRORS:
             alerts.flash_warning(
                 f'Uploaded {pointer.filename} successfully. Total submission'
                 f' package size is {converted_size}. See below for errors.',
                 title='Upload complete, with errors'
             )
-        status_data = upload_status.to_dict()
+        status_data = _status.to_dict()
         logger.debug('Stashing status data for next page: %s', status_data)
-        alerts.flash_hidden(status_data, 'upload_status')
+        alerts.flash_hidden(status_data, '_status')
     except filemanager.RequestFailed as e:
         alerts.flash_failure(Markup(
             'There was a problem carrying out your request. Please try'
@@ -661,10 +660,12 @@ def _post_upload(params: MultiDict, files: MultiDict, session: Session,
     return _post_new_file(params, pointer, session, submission)
 
 
-def _get_notifications(upload_status: Upload) -> List[Dict[str, str]]:
+def _get_notifications(_status: Upload) -> List[Dict[str, str]]:
     # TODO: these need wordsmithing.
     notifications = []
-    if upload_status.status is Upload.Status.ERRORS:
+    if not _status.files:   # Nothing in the upload workspace.
+        return notifications
+    if _status.status is Upload.Status.ERRORS:
         notifications.append({
             'title': 'Unresolved errors',
             'severity': 'danger',
@@ -672,7 +673,7 @@ def _get_notifications(upload_status: Upload) -> List[Dict[str, str]]:
                     ' files. Please correct the errors below before'
                     ' proceeding.'
         })
-    elif upload_status.status is Upload.Status.READY_WITH_WARNINGS:
+    elif _status.status is Upload.Status.READY_WITH_WARNINGS:
         notifications.append({
             'title': 'Warnings',
             'severity': 'warning',
@@ -681,7 +682,7 @@ def _get_notifications(upload_status: Upload) -> List[Dict[str, str]]:
                     ' that these issues may cause delays in processing'
                     ' and/or announcement.'
         })
-    if upload_status.source_format is SourceFormat.UNKNOWN:
+    if _status.source_format is SourceFormat.UNKNOWN:
         notifications.append({
             'title': 'Unknown submission type',
             'severity': 'warning',
@@ -689,7 +690,7 @@ def _get_notifications(upload_status: Upload) -> List[Dict[str, str]]:
                     ' submission. Please note that only TeX, PDF, PS, and'
                     ' HTML submissions are supported.'
         })
-    elif upload_status.source_format is SourceFormat.INVALID:
+    elif _status.source_format is SourceFormat.INVALID:
         notifications.append({
             'title': 'Unsupported submission type',
             'severity': 'danger',
@@ -699,7 +700,7 @@ def _get_notifications(upload_status: Upload) -> List[Dict[str, str]]:
         })
     else:
         notifications.append({
-            'title': f'Detected {upload_status.source_format.value.upper()}',
+            'title': f'Detected {_status.source_format.value.upper()}',
             'severity': 'success',
             'body': 'Your submission content is supported.'
         })

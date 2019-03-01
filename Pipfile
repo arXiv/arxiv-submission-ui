@@ -18,7 +18,7 @@ arxiv-base = "==0.14.3"
 mypy_extensions = "*"
 arxiv-auth = "==0.2.7rc1"
 mysqlclient = "==1.4.2"
-arxiv-submission-core = "==0.6.2rc5"
+arxiv-submission-core = "==0.6.2rc7"
 mimesis = "==2.1.0"
 
 [dev-packages]

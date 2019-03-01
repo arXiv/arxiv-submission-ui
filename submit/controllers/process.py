@@ -170,17 +170,13 @@ def compile_status(params: MultiDict, session: Session, submission_id: int,
     # if Compilation failure, then show errors, opportunity to restart
     if compilation.status is Compilation.Status.FAILED and is_current:
         response_data['status'] = "failed"
+        response_data.update(_get_log(submission.source_content.identifier,
+                                      submission.source_content.checksum))
     # if Compilation success, then show preview
     elif compilation.status is Compilation.Status.SUCCEEDED and is_current:
         response_data['status'] = "success"
-        try:
-            log = compiler.get_log(submission.source_content.identifier,
-                                   submission.source_content.checksum)
-            # Make linebreaks but escape everything else.
-            log_output = log.stream.read().decode('utf-8') #.replace('\n', '<br />')
-        except compiler.NoSuchResource:
-            log_output = "No log available."
-        response_data['log_output'] = log_output# Markup(bleach.clean(log_output, ['br']))
+        response_data.update(_get_log(submission.source_content.identifier,
+                                      submission.source_content.checksum))
     elif compilation.status is Compilation.Status.IN_PROGRESS and is_current:
         response_data['status'] = "in_progress"
     else:  # if Compilation running, then show status, no restart
@@ -250,6 +246,16 @@ def start_compilation(params: MultiDict, session: Session, submission_id: int,
     alerts.flash_hidden(compilation_status.to_dict(), 'compilation_status')
     redirect = url_for('ui.file_process', submission_id=submission_id)
     return response_data, status.HTTP_303_SEE_OTHER, {'Location': redirect}
+
+
+def _get_log(identifier: str, checksum: str) -> dict:
+    try:
+        log = compiler.get_log(identifier, checksum)
+        # Make linebreaks but escape everything else.
+        log_output = log.stream.read().decode('utf-8')
+    except compiler.NoSuchResource:
+        log_output = "No log available."
+    return {'log_output': log_output}
 
 
 def file_preview(params, session: Session, submission_id: int, token: str) \

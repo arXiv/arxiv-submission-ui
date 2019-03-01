@@ -6,6 +6,8 @@
 <h2 class="is-size-4">Process Files</h2>
 <form method="POST" action="{{ url_for('ui.file_process', submission_id=submission_id) }}">
   {{ form.csrf_token }}
+
+{% if must_process %}
 <div class="columns">
   <div class="column is-one-third-desktop is-one-half-tablet">
     {% if not status %}
@@ -165,6 +167,13 @@
     {% endif %}
   </div>
 </div>
+{% else %}
+<div class="box">
+  <!-- Liz: this is the language on the legacy interface for PDF-only
+       submissions. Not super informative, but... -->
+  Source has already been processed.
+</div>
+{% endif %}
 
 {{ submit_macros.submit_nav(submission_id) }}
 </form>

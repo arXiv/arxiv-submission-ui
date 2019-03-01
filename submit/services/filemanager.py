@@ -20,11 +20,12 @@ import requests
 from requests.packages.urllib3.util.retry import Retry
 
 from arxiv import status
+from arxiv.submission.domain.submission import SubmissionContent
 from arxiv.base import logging
 from arxiv.base.globals import get_application_config, get_application_global
 from werkzeug.datastructures import FileStorage
 
-from submit.domain import Upload, FileStatus, FileError, SourceFormat
+from submit.domain import Upload, FileStatus, FileError
 
 logger = logging.getLogger(__name__)
 
@@ -144,7 +145,7 @@ class FileManagementService(object):
             errors=non_file_errors,
             size=data['upload_total_size'],
             checksum=data['checksum'],
-            source_format=SourceFormat(data['source_format'])
+            source_format=SubmissionContent.Format(data['source_format'])
         )
 
     def _path(self, path: str, query: dict = {}) -> str:

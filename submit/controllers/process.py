@@ -57,7 +57,7 @@ from arxiv.users.domain import Session
 import arxiv.submission as events
 from arxiv.submission.tasks import is_async
 from arxiv.submission.services import compiler
-from arxiv.submission.domain.submission import Compilation
+from arxiv.submission.domain.submission import Compilation, SubmissionContent
 from ..util import load_submission
 from . import util
 
@@ -111,8 +111,6 @@ def file_process(method: str, params: MultiDict, session: Session,
             # in the routes handle the response.
             return {}, status.HTTP_303_SEE_OTHER, {}
         return start_compilation(params, session, submission_id, token)
-    #elif method == "POST":
-    #    return compile(seesion, submission_id, token)
     else:
         return {}, status.HTTP_400_BAD_REQUEST, {}
 
@@ -147,7 +145,7 @@ def compile_status(params: MultiDict, session: Session, submission_id: int,
     # GET
     # submit.controllers.file_process.status
 
-    compiler.set_auth_token(token)
+    compiler.set_auth_token(token)  # TODO: this is not stateless!
     submitter, client = util.user_and_client_from_session(session)
     submission, submission_events = load_submission(submission_id)
     form = CompilationForm()
@@ -164,6 +162,8 @@ def compile_status(params: MultiDict, session: Session, submission_id: int,
     logger.debug('submission has processes %s', submission.processes)
     logger.debug('Submission has compilations %s', submission.compilations)
     logger.debug('Submission has latest compilation %s', compilation)
+    response_data['must_process'] = (submission.source_content.source_format
+                                     is not SubmissionContent.Format.PDF)
     if not compilation:    # if not Compilation, just show page
         return response_data, status.HTTP_200_OK, {}
 

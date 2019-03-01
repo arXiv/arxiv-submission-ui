@@ -25,13 +25,14 @@ from arxiv.submission import save
 from arxiv.base import logging, alerts
 from arxiv.forms import csrf
 from arxiv.submission.domain import Submission, User, Client
+from arxiv.submission.domain.submission import SubmissionContent
 from arxiv.submission.domain.event import SetUploadPackage, UpdateUploadPackage
 from arxiv.submission.exceptions import InvalidStack, SaveError
 from arxiv.users.domain import Session
 from . import util
 from ..util import load_submission
 from ..services import filemanager
-from ..domain import Upload, SubmissionStage, SourceFormat
+from ..domain import Upload, SubmissionStage
 
 logger = logging.getLogger(__name__)
 
@@ -682,7 +683,7 @@ def _get_notifications(_status: Upload) -> List[Dict[str, str]]:
                     ' that these issues may cause delays in processing'
                     ' and/or announcement.'
         })
-    if _status.source_format is SourceFormat.UNKNOWN:
+    if _status.source_format is SubmissionContent.Format.UNKNOWN:
         notifications.append({
             'title': 'Unknown submission type',
             'severity': 'warning',
@@ -690,7 +691,7 @@ def _get_notifications(_status: Upload) -> List[Dict[str, str]]:
                     ' submission. Please note that only TeX, PDF, PS, and'
                     ' HTML submissions are supported.'
         })
-    elif _status.source_format is SourceFormat.INVALID:
+    elif _status.source_format is SubmissionContent.Format.INVALID:
         notifications.append({
             'title': 'Unsupported submission type',
             'severity': 'danger',

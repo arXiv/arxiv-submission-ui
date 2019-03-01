@@ -8,6 +8,7 @@ from enum import Enum
 import io
 
 from arxiv.submission.domain import Submission
+from arxiv.submission.domain.submission import SubmissionContent
 
 
 class Stages(Enum):     # type: ignore
@@ -99,7 +100,8 @@ class StageBase(NamedTuple):
     @staticmethod
     def files_are_processed(submission: Submission) -> bool:
         """Determine whether the submitter has compiled their upload."""
-        return len(submission.compilations) > 0
+        return len(submission.compilations) > 0 \
+            or submission.source_content and submission.source_content.source_format is SubmissionContent.Format.PDF
 
     @staticmethod
     def metadata_is_set(submission: Submission) -> bool:
@@ -332,23 +334,6 @@ class FileError(NamedTuple):
         return instance
 
 
-class SourceFormat(Enum):
-    """Supported source formats."""
-
-    UNKNOWN = None
-    """We could not determine the source format."""
-    INVALID = "invalid"
-    """We are able to infer the source format, and it is not supported."""
-    TEX = "tex"
-    """A flavor of TeX."""
-    POSTSCRIPT = "ps"
-    """A postscript source."""
-    HTML = "html"
-    """An HTML source."""
-    PDF = "pdf"
-    """A PDF-only source."""
-
-
 class FileStatus(NamedTuple):
     """Represents the state of an uploaded file."""
 
@@ -413,7 +398,7 @@ class Upload(NamedTuple):
     lifecycle: 'Upload.LifecycleStates'
     locked: bool
     identifier: int
-    source_format: SourceFormat = SourceFormat.UNKNOWN
+    source_format: SubmissionContent.Format = SubmissionContent.Format.UNKNOWN
     checksum: Optional[str] = None
     size: Optional[int] = None
     files: List[FileStatus] = []
@@ -453,6 +438,7 @@ class Upload(NamedTuple):
             if key in data and type(data[key]) is str:
                 data[key] = dateutil.parser.parse(data[key])
         if 'source_format' in data:
-            data['source_format'] = SourceFormat(data['source_format'])
+            data['source_format'] = \
+                SubmissionContent.Format(data['source_format'])
         instance: Upload = cls(**data)
         return instance

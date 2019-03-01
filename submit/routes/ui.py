@@ -476,9 +476,12 @@ def compilation_log(submission_id: int) -> Response:
 def add_metadata(submission_id: int) -> Response:
     """Render step 9, metadata."""
     request_data = MultiDict(request.form.items(multi=True))
-    data, code, headers = controllers.metadata(request.method, request_data,
-                                               request.session,
-                                               submission_id)
+    data, code, headers = controllers.metadata.metadata(
+        request.method,
+        request_data,
+        request.session,
+        submission_id
+    )
     if code in [status.HTTP_200_OK, status.HTTP_400_BAD_REQUEST]:
         rendered = render_template(
             "submit/add_metadata.html",

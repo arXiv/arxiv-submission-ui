@@ -697,16 +697,16 @@ def _get_notifications(_status: Upload) -> List[Dict[str, str]]:
             'title': 'Unknown submission type',
             'severity': 'warning',
             'body': 'We could not determine the source type of your'
-                    ' submission. Please note that only TeX, PDF, PS, and'
-                    ' HTML submissions are supported.'
+                    ' submission. Please check your files carefully. We may'
+                    ' not be able to process your files.'
         })
     elif _status.source_format is SubmissionContent.Format.INVALID:
         notifications.append({
             'title': 'Unsupported submission type',
             'severity': 'danger',
-            'body': 'Your submission content is not supported. Please note'
-                    ' that only TeX, PDF, PS, and HTML submissions are'
-                    ' supported.'
+            'body': 'It is likely that your submission content is not'
+                    ' supported. Please check your files carefully. We may not'
+                    ' be able to process your files.'
         })
     else:
         notifications.append({

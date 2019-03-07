@@ -1,6 +1,6 @@
 {% extends "submit/base.html" %}
 
-{% block title -%}Choose cross-list classifications (optional){%- endblock title %}
+{% block title -%}Choose Cross-List Classifications (Optional){%- endblock title %}
 
 {% block within_content %}
 <div class="message is-link is-inline-block submit-nav">
@@ -35,7 +35,7 @@
   {{ form.csrf_token }}
   {{ form.operation }}
   <div class="columns">
-    <div class="column is-two-thirds-tablet">
+    <div class="column">
       {% with field = form.category %}
       <label class="label" id="crosslist" style="margin-top: 3em">Add a cross-list category
       <a href="{{ url_for('help_cross') }}" class="help-bubble"><i class="fa fa-question-circle is-info"></i><div class="bubble-text">Cross-list suggestions indicate areas of overlapping interest for the submission.</div></a></label>
@@ -66,18 +66,6 @@
         </div>
       </div>
         {% endwith %}
-    </div>
-
-    <div class="column is-one-third-tablet">
-      <div class="message is-info submit-nav">
-        <div class="message-body">
-          <p>
-            <span class="icon has-text-link"><i class="fa fa-info-circle"></i></span>
-            Adding more than three cross-list classifications will result in a delay
-            in the acceptance of your submission.
-          </p>
-        </div>
-      </div>
     </div>
   </div> <!-- end columns -->
 

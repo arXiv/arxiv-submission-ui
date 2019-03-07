@@ -43,7 +43,7 @@
   {% endif %}
 {% endmacro %}
 
-{% block title -%}Upload files{%- endblock title %}
+{% block title -%}Upload Files{%- endblock title %}
 
 {% block within_content %}
 <form class="form" action="{{ url_for('ui.file_upload', submission_id=submission_id) }}" method="POST" enctype="multipart/form-data">
@@ -104,6 +104,16 @@
       </div>
     </div>
     <div class="column is-one-third-desktop is-one-quarter-tablet">
+      {% if immediate_notifications %}
+        {% for notification in immediate_notifications %}
+        <div class="notification is-{{ notification.severity }}" role="alert">
+          {% if notification.title %}<h2 class="is-size-5 is-marginless">{{ notification.title }}</h2>{% endif %}
+          <p>
+            {{ notification.body}}
+          </p>
+        </div>
+        {% endfor %}
+      {% endif %}
       <div class="message is-info">
         <div class="message-body">
           <p class="has-text-weight-semibold"><span class="icon has-text-link"><i class="fa fa-info-circle"></i></span>Accepted formats, in order of preference</p>

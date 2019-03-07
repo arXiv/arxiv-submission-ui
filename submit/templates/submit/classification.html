@@ -1,6 +1,6 @@
 {% extends "submit/base.html" %}
 
-{% block title -%}Choose a primary classification{%- endblock title %}
+{% block title -%}Choose a Primary Classification{%- endblock title %}
 
 {% block within_content %}
 <form method="POST" action="{{ url_for('ui.classification', submission_id=submission_id) }}">
@@ -8,10 +8,16 @@
   <div class="columns">
     <div class="column is-two-thirds-tablet is-half-desktop">
       {% with field = form.category %}
-      <div class="field breathe-vertical">
+      <div class="field">
         <div class="control">
           <div class="is-block">
-          {{ field.label(class_="label is-inline-block") }} <a href="help link as modal" class="help-bubble"><i class="fa fa-question-circle is-info"></i><div class="bubble-text">I couldn't find any help pages about categories, info needed.</div></a>
+          {{ field.label(class_="label is-inline-block") }}
+          <a href="{{ url_for('account') }}" class="help-bubble">
+            <i class="fa fa-question-circle is-info"></i>
+            <div class="bubble-text">
+              Preferred categories are placed at the top of the selection list. Click on this bubble to add or remove favorites in your user account settings.
+            </div>
+          </a>
         </div>
           <div class="select">
           {% if field.errors %}
@@ -56,14 +62,6 @@
           <div class="message-body">
             <p class="has-text-weight-bold"><span class="icon has-text-link"><i class="fa fa-info-circle"></i></span>Endorsements</p>
             <p>This list shows only the categories for which you are endorsed. If you wish to submit to a category not shown here, you will need to <a href="{{ url_for('help_endorse') }}">seek endorsement</a> prior to submission.</p>
-          </div>
-        </div>
-      {% endif %}
-      {% if submitter.endorsements|endorsetype != 'None'  %}
-        <div class="message is-link submit-nav">
-          <div class="message-body">
-            <p class="has-text-weight-bold"><span class="icon has-text-link"><i class="fa fa-info-circle"></i></span>Favorites</p>
-            <p>Preferred categories are placed at the top of the selection list. You may add or remove favorites in your <a href="{{ url_for('account') }}">user account settings</a>.</p>
           </div>
         </div>
       {% endif %}

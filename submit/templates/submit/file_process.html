@@ -1,9 +1,8 @@
 {% extends "submit/base.html" %}
 
-{% block title -%}Process submission files{%- endblock title %}
+{% block title -%}Process Files{%- endblock title %}
 
 {% block within_content %}
-<h2 class="is-size-4">Process Files</h2>
 <form method="POST" action="{{ url_for('ui.file_process', submission_id=submission_id) }}">
   {{ form.csrf_token }}
 
@@ -24,14 +23,7 @@
     </div>
     {% endif %}
 
-    {% if not status %}
-    <div class="message is-info">
-      <div class="message-body">
-        <p>arXiv's processing system runs TeX Live 2016 and natbib 8.31. Authors are strongly encouraged to upgrade if older versions of these packages are being used to generate files.</p>
-      </div>
-    </div>
-
-    {% elif status == "in_progress" %}
+    {% if status == "in_progress" %}
     <div class="message is-warning">
       <div class="message-header">
         <p><span class="icon"><i class="fa fa-tasks"></i></span>Processing Underway</p></div>
@@ -112,9 +104,9 @@
       <div class="message-body">
         <p><span class="icon has-text-link"><i class="fa fa-info-circle"></i></span>
         This step runs all files through a series of automatic checks.<br />
-         Additionally, TeX and LaTeX source packages will be compiled into a PDF.</p>
-
-         {{ submission.source_content }}
+         Additionally, TeX and LaTeX source packages will be compiled into a PDF.<br />
+         <a href="{{ url_for('help_texlive') }}">View information about our compiler and included packages</a>.
+        </p>
       </div>
     </div>
     <!-- Selection of preferred compiler is not supported in v0.1

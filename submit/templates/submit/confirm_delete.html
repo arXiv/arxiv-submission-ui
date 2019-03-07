@@ -2,7 +2,7 @@
 
 {% import "submit/submit_macros.html" as submit_macros %}
 
-{% block title -%}Delete files{%- endblock title %}
+{% block title -%}Delete Files{%- endblock title %}
 
 {% block within_content %}
 <form method="POST" action="{{ url_for('ui.file_delete', submission_id=submission_id) }}">

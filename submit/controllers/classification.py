@@ -7,12 +7,12 @@ Creates an event of type `core.events.event.AddSecondaryClassification`
 from typing import Tuple, Dict, Any, List, Optional
 from werkzeug import MultiDict
 from werkzeug.exceptions import InternalServerError
-from flask import url_for
+from flask import url_for, Markup
 from wtforms import SelectField, widgets, HiddenField, validators
 
 from arxiv import status, taxonomy
 from arxiv.forms import csrf
-from arxiv.base import logging
+from arxiv.base import logging, alerts
 from arxiv.users.domain import Session
 import arxiv.submission as events
 from ..domain import SubmissionStage
@@ -235,6 +235,13 @@ def cross_list(method: str, params: MultiDict, session: Session,
                 form.operation._value = lambda: form.operation.data
                 form.filter_choices(submission, session)
                 response_data['form'] = form
+
+                if len(submission.secondary_categories) > 3:
+                    alerts.flash_warning(Markup(
+                        'Adding more than three cross-list classifications'
+                        ' will result in a delay in the acceptance of your'
+                        ' submission.'
+                    ))
 
             else:   # Form data were invalid.
                 logger.debug('Invalid form data; return bad request')

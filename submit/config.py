@@ -93,6 +93,7 @@ URLS = [
     ("help_cross", "/help/cross", BASE_SERVER),
     ("help_submit", "/help/submit", BASE_SERVER),
     ("help_ancillary_files", "/help/ancillary_files", BASE_SERVER),
+    ("help_texlive", "/help/faq/texlive", BASE_SERVER),
     ("help_whytex", "/help/faq/whytex", BASE_SERVER),
     ("help_default_packages", "/help/submit_tex#wegotem", BASE_SERVER),
     ("help_submit_tex", "/help/submit_tex", BASE_SERVER),

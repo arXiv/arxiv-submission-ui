@@ -1,10 +1,9 @@
 {% extends "submit/base.html" %}
 
 
+{% block title -%}Add or Edit Optional Metadata{%- endblock title %}
 
 {% block within_content %}
-<h2 class="is-size-4">Add or edit optional metadata</h2>
-
 <form method="POST" action="{{ url_for('ui.add_optional_metadata', submission_id=submission_id) }}">
   {{ form.csrf_token }}
 

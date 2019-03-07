@@ -145,7 +145,6 @@ def compile_status(params: MultiDict, session: Session, submission_id: int,
     # GET
     # submit.controllers.file_process.status
 
-    compiler.set_auth_token(token)  # TODO: this is not stateless!
     submitter, client = util.user_and_client_from_session(session)
     submission, submission_events = load_submission(submission_id)
     form = CompilationForm()
@@ -171,12 +170,14 @@ def compile_status(params: MultiDict, session: Session, submission_id: int,
     if compilation.status is Compilation.Status.FAILED and is_current:
         response_data['status'] = "failed"
         response_data.update(_get_log(submission.source_content.identifier,
-                                      submission.source_content.checksum))
+                                      submission.source_content.checksum,
+                                      token))
     # if Compilation success, then show preview
     elif compilation.status is Compilation.Status.SUCCEEDED and is_current:
         response_data['status'] = "success"
         response_data.update(_get_log(submission.source_content.identifier,
-                                      submission.source_content.checksum))
+                                      submission.source_content.checksum,
+                                      token))
     elif compilation.status is Compilation.Status.IN_PROGRESS and is_current:
         response_data['status'] = "in_progress"
     else:  # if Compilation running, then show status, no restart
@@ -186,7 +187,6 @@ def compile_status(params: MultiDict, session: Session, submission_id: int,
 
 def start_compilation(params: MultiDict, session: Session, submission_id: int,
                       token: str, **kwargs) -> Response:
-    compiler.set_auth_token(token)
     submitter, client = util.user_and_client_from_session(session)
     submission, submission_events = load_submission(submission_id)
     form = CompilationForm(params)
@@ -206,7 +206,8 @@ def start_compilation(params: MultiDict, session: Session, submission_id: int,
                      submission.source_content.checksum)
         compilation_status = compiler.compile(
             submission.source_content.identifier,
-            submission.source_content.checksum
+            submission.source_content.checksum,
+            token
         )
         logger.debug("Requested compilation, %s", compilation_status)
         if compilation_status.status is compiler.Status.FAILED:
@@ -248,9 +249,9 @@ def start_compilation(params: MultiDict, session: Session, submission_id: int,
     return response_data, status.HTTP_303_SEE_OTHER, {'Location': redirect}
 
 
-def _get_log(identifier: str, checksum: str) -> dict:
+def _get_log(identifier: str, checksum: str, token: str) -> dict:
     try:
-        log = compiler.get_log(identifier, checksum)
+        log = compiler.get_log(identifier, checksum, token)
         # Make linebreaks but escape everything else.
         log_output = log.stream.read().decode('utf-8')
     except compiler.NoSuchResource:
@@ -262,9 +263,8 @@ def file_preview(params, session: Session, submission_id: int, token: str,
                  **kwargs) -> Response:
     submitter, client = util.user_and_client_from_session(session)
     submission, submission_events = load_submission(submission_id)
-    compiler.set_auth_token(token)
     prod = compiler.get_product(submission.source_content.identifier,
-                                submission.source_content.checksum)
+                                submission.source_content.checksum, token)
     headers = {'Content-Type': prod.content_type}
     return prod.stream, status.HTTP_200_OK, headers
 
@@ -273,10 +273,10 @@ def compilation_log(params, session: Session, submission_id: int, token: str,
                     **kwargs) -> Response:
     submitter, client = util.user_and_client_from_session(session)
     submission, submission_events = load_submission(submission_id)
-    compiler.set_auth_token(token)
     checksum = params.get('checksum', submission.source_content.checksum)
     try:
-        log = compiler.get_log(submission.source_content.identifier, checksum)
+        log = compiler.get_log(submission.source_content.identifier, checksum,
+                               token)
         headers = {'Content-Type': log.content_type}
         return log.stream, status.HTTP_200_OK, headers
     except compiler.NoSuchResource:

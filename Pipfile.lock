@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "e3a631b7e58911f1d941900124b073ec99ba16e32987192abab36a4fa0d61c40"
+            "sha256": "6209c234877df25627c0da6ae2c7d43bdfce3eadf6620ce1e89eb07d1f82d0b5"
         },
         "pipfile-spec": 6,
         "requires": {},
@@ -23,10 +23,10 @@
         },
         "arxiv-auth": {
             "hashes": [
-                "sha256:5a07d0836d46de2a2bccb36ff36b44c4866d87ade31632c89eb05e37b90f4e58"
+                "sha256:c614ac30a985e9ee2b4ebfbc9128024b025716c7e74580a5b91d393b7bdada3a"
             ],
             "index": "pypi",
-            "version": "==0.3.2rc1"
+            "version": "==0.3.2rc3"
         },
         "arxiv-base": {
             "hashes": [
@@ -37,10 +37,10 @@
         },
         "arxiv-submission-core": {
             "hashes": [
-                "sha256:930909ad5976e620c1037bf61c9e150c898e2e95f865213e12a2a7d41e114397"
+                "sha256:7507d4157632f8e6e8902e8a4411617594547d771518be4658ee75aa3f7a3170"
             ],
             "index": "pypi",
-            "version": "==0.6.2rc13"
+            "version": "==0.6.2rc17"
         },
         "attrs": {
             "hashes": [
@@ -65,17 +65,17 @@
         },
         "boto3": {
             "hashes": [
-                "sha256:52a93f08096199b83eb8de787230dd65523fe21bf87e76fc15bdc2d0150655d4",
-                "sha256:9bd71622338f007f22c1192ecf8518bb5d5e3f0840adfeac847d40c18004b71d"
+                "sha256:084fcb90fb1a8d4834cff2fbd842ec546f5bad334acf740ed8a16fc0ebf47f61",
+                "sha256:1a1da1d9ec446e50ec04b21a6ec6eaf37f614161d24a8ba92b92e93ad78e18fc"
             ],
-            "version": "==1.9.109"
+            "version": "==1.9.110"
         },
         "botocore": {
             "hashes": [
-                "sha256:2da1a61785dde17b3bb18deb8e5fdfdd096033f5c3860c2a9117318af3969b2a",
-                "sha256:85c063a49cd24a8bf0c560b39d2738943c2adb48299ac42e283c243d78d63719"
+                "sha256:995c29b9913f8ae9dc95408db48034c7040fb1b5378a2e9e1e4030167c6b80ee",
+                "sha256:b18d7b0949a613331160af20e9517a3663e0009a2edb4cb1e1177ab4fdff6c9d"
             ],
-            "version": "==1.12.109"
+            "version": "==1.12.110"
         },
         "celery": {
             "hashes": [

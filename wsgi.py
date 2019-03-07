@@ -9,9 +9,15 @@ logging.getLogger('arxiv.submission.services.classic.interpolate') \
 logging.getLogger('arxiv.base.alerts').setLevel(logging.ERROR)
 
 
+_application = create_ui_web_app()
+
+
 def application(environ, start_response):
     """WSGI application factory."""
     for key, value in environ.items():
-        os.environ[key] = str(value)
-    app = create_ui_web_app()
-    return app(environ, start_response)
+        if key == 'SERVER_NAME':
+            continue
+        if key in _application.config:
+            _application.config[key] = value
+    print(_application.config)
+    return _application(environ, start_response)

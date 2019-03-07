@@ -21,7 +21,7 @@ with app.app_context():
     session = classic.current_session()
     engine = classic.util.current_engine()
     logger.info('Waiting for database server to be available')
-    logger.info(app.config['CLASSIC_DATABASE_URI'])
+    logger.info(app.config['SQLALCHEMY_DATABASE_URI'])
     wait = 2
     while True:
         try:

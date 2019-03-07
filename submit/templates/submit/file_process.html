@@ -91,6 +91,14 @@
         {% if compilation.checksum == submission.source_content.checksum %}Current package{% else %}Previous package{% endif %} started {{ compilation.start_time|timesince }}
         {%- if compilation.status == compilation.Status.SUCCEEDED or compilation.status == compilation.Status.FAILED -%}
           , {{ compilation.status|compilation_status_display }} after {{ (compilation.end_time - compilation.start_time)|duration }}.
+          {%- if compilation.status == compilation.Status.SUCCEEDED -%}
+          <a href="{{ url_for('ui.file_preview', submission_id=submission_id) }}?checksum={{ compilation.checksum }}" target="_blank">
+            View PDF.
+          </a>
+          {%- endif -%}
+          <a href="{{ url_for('ui.compilation_log', submission_id=submission_id) }}?checksum={{ compilation.checksum }}" target="_blank">
+            View log.
+          </a>
         {%- else -%}
           .
         {%- endif %}

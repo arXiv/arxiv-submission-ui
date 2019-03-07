@@ -11,7 +11,7 @@ from submit import controllers
 from arxiv.users import auth
 import arxiv.submission as events
 
-from .auth import can_edit
+from .auth import is_owner
 from ..domain import SubmissionStage, Submission, ReplacementStage, Stages
 from .util import flow_control, inject_stage
 from .. import util
@@ -83,7 +83,7 @@ def create_submission():
 
 
 @ui.route(path('delete'), methods=GET_POST)
-@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION)
+@auth.decorators.scoped(auth.scopes.DELETE_SUBMISSION)
 def delete_submission(submission_id: int):
     """Delete, or roll a submission back to the last published state."""
     return handle(controllers.delete.delete,
@@ -100,7 +100,7 @@ def create_replacement(submission_id: int):
 
 
 @ui.route(path(), methods=GET)
-@auth.decorators.scoped(auth.scopes.VIEW_SUBMISSION, authorizer=can_edit)
+@auth.decorators.scoped(auth.scopes.VIEW_SUBMISSION, authorizer=is_owner)
 def submission_status(submission_id: int) -> Response:
     """Display the current state of the submission."""
     return handle(controllers.submission_status, 'submit/status.html',
@@ -109,7 +109,7 @@ def submission_status(submission_id: int) -> Response:
 
 # TODO: remove me!!
 @ui.route(path('publish'), methods=GET)
-@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION, authorizer=can_edit)
+@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION, authorizer=is_owner)
 def publish(submission_id: int) -> Response:
     """WARNING WARNING WARNING this is for testing purposes only."""
     util.publish_submission(submission_id)
@@ -120,7 +120,7 @@ def publish(submission_id: int) -> Response:
 
 # TODO: remove me!!
 @ui.route(path('/place_on_hold'), methods=GET)
-@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION, authorizer=can_edit)
+@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION, authorizer=is_owner)
 def place_on_hold(submission_id: int) -> Response:
     """WARNING WARNING WARNING this is for testing purposes only."""
     util.place_on_hold(submission_id)
@@ -131,7 +131,7 @@ def place_on_hold(submission_id: int) -> Response:
 
 # TODO: remove me!!
 @ui.route(path('apply_cross'), methods=GET)
-@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION, authorizer=can_edit)
+@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION, authorizer=is_owner)
 def apply_cross(submission_id: int) -> Response:
     """WARNING WARNING WARNING this is for testing purposes only."""
     util.apply_cross(submission_id)
@@ -142,7 +142,7 @@ def apply_cross(submission_id: int) -> Response:
 
 # TODO: remove me!!
 @ui.route(path('reject_cross'), methods=GET)
-@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION, authorizer=can_edit)
+@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION, authorizer=is_owner)
 def reject_cross(submission_id: int) -> Response:
     """WARNING WARNING WARNING this is for testing purposes only."""
     util.reject_cross(submission_id)
@@ -153,7 +153,7 @@ def reject_cross(submission_id: int) -> Response:
 
 # TODO: remove me!!
 @ui.route(path('apply_withdrawal'), methods=GET)
-@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION, authorizer=can_edit)
+@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION, authorizer=is_owner)
 def apply_withdrawal(submission_id: int) -> Response:
     """WARNING WARNING WARNING this is for testing purposes only."""
     util.apply_withdrawal(submission_id)
@@ -164,7 +164,7 @@ def apply_withdrawal(submission_id: int) -> Response:
 
 # TODO: remove me!!
 @ui.route(path('reject_withdrawal'), methods=GET)
-@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION, authorizer=can_edit)
+@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION, authorizer=is_owner)
 def reject_withdrawal(submission_id: int) -> Response:
     """WARNING WARNING WARNING this is for testing purposes only."""
     util.reject_withdrawal(submission_id)
@@ -175,7 +175,7 @@ def reject_withdrawal(submission_id: int) -> Response:
 
 @ui.route(path('verify_user'), endpoint=Stages.VERIFY_USER.value,
           methods=GET_POST)
-@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION, authorizer=can_edit)
+@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION, authorizer=is_owner)
 @flow_control(Stages.VERIFY_USER)
 def verify(submission_id: Optional[int] = None) -> Response:
     """Render the submit start page."""
@@ -186,7 +186,7 @@ def verify(submission_id: Optional[int] = None) -> Response:
 @ui.route(path('authorship'), endpoint=Stages.AUTHORSHIP.value,
           methods=GET_POST)
 @auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION,
-                        authorizer=can_edit)
+                        authorizer=is_owner)
 @flow_control(Stages.AUTHORSHIP)
 def authorship(submission_id: int) -> Response:
     """Render step 2, authorship."""
@@ -195,7 +195,7 @@ def authorship(submission_id: int) -> Response:
 
 
 @ui.route(path('license'), endpoint=Stages.LICENSE.value, methods=GET_POST)
-@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION, authorizer=can_edit)
+@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION, authorizer=is_owner)
 @flow_control(Stages.LICENSE)
 def license(submission_id: int) -> Response:
     """Render step 3, select license."""
@@ -204,7 +204,7 @@ def license(submission_id: int) -> Response:
 
 
 @ui.route(path('policy'), endpoint=Stages.POLICY.value, methods=GET_POST)
-@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION, authorizer=can_edit)
+@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION, authorizer=is_owner)
 @flow_control(Stages.POLICY)
 def policy(submission_id: int) -> Response:
     """Render step 4, policy agreement."""
@@ -214,7 +214,7 @@ def policy(submission_id: int) -> Response:
 
 @ui.route(path('classification'), endpoint=Stages.CLASSIFICATION.value,
           methods=GET_POST)
-@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION, authorizer=can_edit)
+@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION, authorizer=is_owner)
 @flow_control(Stages.CLASSIFICATION)
 def classification(submission_id: int) -> Response:
     """Render step 5, choose classification."""
@@ -225,7 +225,7 @@ def classification(submission_id: int) -> Response:
 
 @ui.route(path('cross'), endpoint=Stages.CROSS_LIST.value, methods=GET_POST)
 @auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION,
-                        authorizer=can_edit)
+                        authorizer=is_owner)
 @flow_control(Stages.CROSS_LIST)
 def cross_list(submission_id: int) -> Response:
     """Render step 6, secondary classes."""
@@ -235,7 +235,7 @@ def cross_list(submission_id: int) -> Response:
 
 
 @ui.route(path('upload'), endpoint=Stages.FILE_UPLOAD.value, methods=GET_POST)
-@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION, authorizer=can_edit)
+@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION, authorizer=is_owner)
 @flow_control(Stages.FILE_UPLOAD)
 def file_upload(submission_id: int) -> Response:
     """Render step 7, file upload."""
@@ -245,7 +245,7 @@ def file_upload(submission_id: int) -> Response:
 
 
 @ui.route(path('file_delete'), methods=GET_POST)
-@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION, authorizer=can_edit)
+@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION, authorizer=is_owner)
 @flow_control(Stages.FILE_UPLOAD)
 def file_delete(submission_id: int) -> Response:
     """Provide the file deletion endpoint, part of the upload step."""
@@ -255,7 +255,7 @@ def file_delete(submission_id: int) -> Response:
 
 
 @ui.route(path('file_delete_all'), methods=GET_POST)
-@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION, authorizer=can_edit)
+@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION, authorizer=is_owner)
 @flow_control(Stages.FILE_UPLOAD)
 def file_delete_all(submission_id: int) -> Response:
     """Provide endpoint to delete all files, part of the upload step."""
@@ -266,7 +266,7 @@ def file_delete_all(submission_id: int) -> Response:
 
 
 @ui.route(path('process'), endpoint=Stages.PROCESS.value, methods=GET_POST)
-@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION, authorizer=can_edit)
+@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION, authorizer=is_owner)
 @flow_control(Stages.PROCESS)
 def file_process(submission_id: int) -> Response:
     """Render step 8, file processing."""
@@ -276,7 +276,7 @@ def file_process(submission_id: int) -> Response:
 
 
 @ui.route(path('preview'), methods=GET)
-@auth.decorators.scoped(auth.scopes.VIEW_SUBMISSION, authorizer=can_edit)
+@auth.decorators.scoped(auth.scopes.VIEW_SUBMISSION, authorizer=is_owner)
 def file_preview(submission_id: int) -> Response:
     data, code, headers = controllers.file_preview(
         MultiDict(request.args.items(multi=True)),
@@ -288,7 +288,7 @@ def file_preview(submission_id: int) -> Response:
 
 
 @ui.route(path('compilation_log'), methods=GET)
-@auth.decorators.scoped(auth.scopes.VIEW_SUBMISSION, authorizer=can_edit)
+@auth.decorators.scoped(auth.scopes.VIEW_SUBMISSION, authorizer=is_owner)
 def compilation_log(submission_id: int) -> Response:
     data, code, headers = controllers.compilation_log(
         MultiDict(request.args.items(multi=True)),
@@ -300,7 +300,7 @@ def compilation_log(submission_id: int) -> Response:
 
 
 @ui.route(path('metadata'), endpoint=Stages.METADATA.value, methods=GET_POST)
-@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION, authorizer=can_edit)
+@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION, authorizer=is_owner)
 @flow_control(Stages.METADATA)
 def add_metadata(submission_id: int) -> Response:
     """Render step 9, metadata."""
@@ -309,7 +309,7 @@ def add_metadata(submission_id: int) -> Response:
 
 
 @ui.route(path('optional'), endpoint=Stages.OPTIONAL.value, methods=GET_POST)
-@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION, authorizer=can_edit)
+@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION, authorizer=is_owner)
 @flow_control(Stages.OPTIONAL)
 def add_optional_metadata(submission_id: int) -> Response:
     """Render step 9, metadata."""
@@ -319,7 +319,7 @@ def add_optional_metadata(submission_id: int) -> Response:
 
 
 @ui.route(path('finalize'), endpoint=Stages.FINAL_PREVIEW.value, methods=GET)
-@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION, authorizer=can_edit)
+@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION, authorizer=is_owner)
 @flow_control(Stages.FINAL_PREVIEW)
 def final_preview(submission_id: int) -> Response:
     """Render step 10, preview."""
@@ -328,7 +328,7 @@ def final_preview(submission_id: int) -> Response:
 
 
 @ui.route(path('confirm_submit'), methods=['GET'])
-@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION, authorizer=can_edit)
+@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION, authorizer=is_owner)
 def confirm_submit(submission_id: int) -> Response:
     """Render the final confirmation page."""
     rendered = render_template("submit/confirm_submit.html",
@@ -340,7 +340,7 @@ def confirm_submit(submission_id: int) -> Response:
 
 @ui.route(path('jref'), methods=GET_POST)
 @auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION,
-                        authorizer=can_edit)
+                        authorizer=is_owner)
 def jref(submission_id: Optional[int] = None) -> Response:
     """Render the JREF submission page."""
     return handle(controllers.jref.jref, 'submit/jref.html',
@@ -349,7 +349,7 @@ def jref(submission_id: Optional[int] = None) -> Response:
 
 @ui.route(path('withdraw'), methods=GET_POST)
 @auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION,
-                        authorizer=can_edit)
+                        authorizer=is_owner)
 def withdraw(submission_id: Optional[int] = None) -> Response:
     """Render the withdrawal request page."""
     return handle(controllers.withdraw.request_withdrawal,
@@ -358,7 +358,7 @@ def withdraw(submission_id: Optional[int] = None) -> Response:
 
 @ui.route(path('request_cross'), methods=GET_POST)
 @auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION,
-                        authorizer=can_edit)
+                        authorizer=is_owner)
 def request_cross(submission_id: Optional[int] = None) -> Response:
     """Render the cross-list request page."""
     return handle(controllers.cross.request_cross,

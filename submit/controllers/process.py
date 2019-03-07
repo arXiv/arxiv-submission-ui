@@ -41,9 +41,9 @@ plan of attack
 """
 
 from typing import Tuple, Dict, Any, Optional
-
+import io
 from werkzeug import MultiDict
-from werkzeug.exceptions import InternalServerError, BadRequest,\
+from werkzeug.exceptions import InternalServerError, BadRequest, NotFound, \
     MethodNotAllowed
 
 from flask import url_for, Markup
@@ -274,10 +274,13 @@ def compilation_log(params, session: Session, submission_id: int, token: str,
     submitter, client = util.user_and_client_from_session(session)
     submission, submission_events = load_submission(submission_id)
     compiler.set_auth_token(token)
-    log = compiler.get_log(submission.source_content.identifier,
-                           submission.source_content.checksum)
-    headers = {'Content-Type': log.content_type}
-    return log.stream, status.HTTP_200_OK, headers
+    checksum = params.get('checksum', submission.source_content.checksum)
+    try:
+        log = compiler.get_log(submission.source_content.identifier, checksum)
+        headers = {'Content-Type': log.content_type}
+        return log.stream, status.HTTP_200_OK, headers
+    except compiler.NoSuchResource:
+        raise NotFound("No log output produced")
 
 
 def compile(params: MultiDict, session: Session, submission_id: int,

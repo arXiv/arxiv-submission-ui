@@ -17,7 +17,7 @@
   {% if submission and submission.version > 1 %}
     <h2 class="replacement is-size-5 has-text-dark">Replacement for: arXiv:{{ submission.arxiv_id }}v{{ submission.version }} {{ submission.metadata.title }}</h2>
   {% endif %}
-  <main>
+  <!-- <main> -->
     {% if immediate_notifications %}
       {% for notification in immediate_notifications %}
       <div class="notification is-{{ notification.severity }}" role="alert">
@@ -40,5 +40,5 @@
     {% block within_content %}
       Specific content here
     {% endblock within_content %}
-  </content>
+  <!-- </main> -->
 {% endblock content %}

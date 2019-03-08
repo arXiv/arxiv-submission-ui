@@ -27,9 +27,32 @@
   submission_history = [],
   secondary_categories = submission.secondary_categories) }}
 
-Final PDF Preview
+<form method="POST" action="{{ url_for('ui.final_preview', submission_id=submission_id) }}">
+  {{ form.csrf_token }}
+  {% if form.proceed.errors %}<div class="notification is-danger">{% endif %}
+  <div class="field">
+    <div class="control">
+      <div class="checkbox">
+        {{ form.proceed }}
+        {{ form.proceed.label }}
+      </div>
+      {% for error in form.proceed.errors %}
+        <p class="help is-danger">{{ error }}</p>
+      {% endfor %}
+    </div>
+  </div>
+  {% if form.proceed.errors %}</div>{% endif %}
 
-message - check carefully!
+  <div class="buttons submit-nav" role="navigation">
+      <a href="{{ url_for('ui.delete_submission', submission_id=submission_id) }}" name="cancel" class="button has-text-grey is-light is-outlined" style="border:0" value="cancel" aria-label="Cancel submission" title="Cancel submission"><span class="icon"><i class="fa fa-trash fa-lg"></i></a>
+      <button name="action" class="button" value="previous" aria-label="Go back one step">Go Back</button>
+      <button name="action" type="submit" class="button" value="save_exit" aria-label="Save and Exit">Save and Exit</button>
+      <button name="action" class="button is-link" value="next" aria-label="Save and continue" style="background-color: #20ff05; color: #000;">
+        Submit to arXiv
+        <img src="https://arxiv.org/favicon.ico" style="height: 20px; margin-left: 2px;" />
+      </button>
+  </div>
 
-{{ submit_macros.submit_nav(submission_id) }}
+</form>
+
 {% endblock within_content %}

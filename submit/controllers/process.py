@@ -54,9 +54,11 @@ from arxiv import status
 from arxiv.base import logging, alerts
 from arxiv.forms import csrf
 from arxiv.users.domain import Session
+from arxiv.integration.api import exceptions
 import arxiv.submission as events
 from arxiv.submission.tasks import is_async
-from arxiv.submission.services import compiler
+from arxiv.submission.services.compiler import Compiler
+from arxiv.submission.domain.compilation import Status
 from arxiv.submission.domain.submission import Compilation, SubmissionContent
 from ..util import load_submission
 from . import util
@@ -102,7 +104,8 @@ def file_process(method: str, params: MultiDict, session: Session,
         applicable.
 
     """
-    logger.debug("%s: %s, %s, %s, %s", method, params, session, submission_id,  token)
+    logger.debug("%s: %s, %s, %s, %s", method, params, session, submission_id,
+                 token)
     if method == "GET":
         return compile_status(params, session, submission_id, token)
     elif method == "POST":
@@ -204,29 +207,29 @@ def start_compilation(params: MultiDict, session: Session, submission_id: int,
         logger.debug('Request compilation of source %s at checksum %s',
                      submission.source_content.identifier,
                      submission.source_content.checksum)
-        compilation_status = compiler.compile(
+        compilation_status = Compiler.compile(
             submission.source_content.identifier,
             submission.source_content.checksum,
             token
         )
         logger.debug("Requested compilation, %s", compilation_status)
-        if compilation_status.status is compiler.Status.FAILED:
+        if compilation_status.status is Status.FAILED:
             alerts.flash_failure(f"Compilation failed")
-    except compiler.BadRequest as e:
+    except exceptions.BadRequest as e:
         logger.debug('Bad request to compiler for %s: %s', submission_id, e)
         alerts.flash_failure(
             f"We could not compile your submission. {PLEASE_CONTACT_SUPPORT}",
             title="Compilation failed"
         )
-    except compiler.NoSuchResource as e:
+    except exceptions.NotFound as e:
         logger.debug('No such resource error for %s: %s', submission_id, e)
         alerts.flash_failure(
             f"We could not compile your submission. {PLEASE_CONTACT_SUPPORT}",
             title="Compilation failed"
         )
 
-    failed = compilation_status.status is compiler.Status.FAILED
-    in_progress = compilation_status.status is compiler.Status.IN_PROGRESS
+    failed = compilation_status.status is Status.FAILED
+    in_progress = compilation_status.status is Status.IN_PROGRESS
     previous = [c.identifier for c in submission.compilations]
     new_compilation = compilation_status.identifier not in previous
     if in_progress or (failed and new_compilation):
@@ -234,14 +237,16 @@ def start_compilation(params: MultiDict, session: Session, submission_id: int,
             events.AddProcessStatus(
                 creator=submitter,
                 process=events.AddProcessStatus.Process.COMPILATION,
-                service=compiler.NAME,
-                version=compiler.VERSION,
+                service=Compiler.NAME,
+                version=Compiler.VERSION,
                 identifier=compilation_status.identifier
             ),
             submission_id=submission_id
         )
         alerts.flash_success(
-            "We are compiling your submission. Please be patient.",
+            "We are compiling your submission. This may take a minute or two."
+            " This page will refresh automatically every 5 seconds. You can "
+            " also refresh this page manually to check the current status. ",
             title="Compilation started"
         )
     alerts.flash_hidden(compilation_status.to_dict(), 'compilation_status')
@@ -251,10 +256,10 @@ def start_compilation(params: MultiDict, session: Session, submission_id: int,
 
 def _get_log(identifier: str, checksum: str, token: str) -> dict:
     try:
-        log = compiler.get_log(identifier, checksum, token)
+        log = Compiler.get_log(identifier, checksum, token)
         # Make linebreaks but escape everything else.
         log_output = log.stream.read().decode('utf-8')
-    except compiler.NoSuchResource:
+    except exceptions.NotFound:
         log_output = "No log available."
     return {'log_output': log_output}
 
@@ -263,7 +268,7 @@ def file_preview(params, session: Session, submission_id: int, token: str,
                  **kwargs) -> Response:
     submitter, client = util.user_and_client_from_session(session)
     submission, submission_events = load_submission(submission_id)
-    prod = compiler.get_product(submission.source_content.identifier,
+    prod = Compiler.get_product(submission.source_content.identifier,
                                 submission.source_content.checksum, token)
     headers = {'Content-Type': prod.content_type}
     return prod.stream, status.HTTP_200_OK, headers
@@ -275,11 +280,11 @@ def compilation_log(params, session: Session, submission_id: int, token: str,
     submission, submission_events = load_submission(submission_id)
     checksum = params.get('checksum', submission.source_content.checksum)
     try:
-        log = compiler.get_log(submission.source_content.identifier, checksum,
+        log = Compiler.get_log(submission.source_content.identifier, checksum,
                                token)
         headers = {'Content-Type': log.content_type}
         return log.stream, status.HTTP_200_OK, headers
-    except compiler.NoSuchResource:
+    except exceptions.NotFound:
         raise NotFound("No log output produced")
 
 

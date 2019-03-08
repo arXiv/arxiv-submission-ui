@@ -318,7 +318,7 @@ def add_optional_metadata(submission_id: int) -> Response:
                   'Add or Edit Metadata', submission_id)
 
 
-@ui.route(path('finalize'), endpoint=Stages.FINAL_PREVIEW.value, methods=GET)
+@ui.route(path('finalize'), endpoint=Stages.FINAL_PREVIEW.value, methods=GET_POST)
 @auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION, authorizer=is_owner)
 @flow_control(Stages.FINAL_PREVIEW)
 def final_preview(submission_id: int) -> Response:

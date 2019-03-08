@@ -56,7 +56,7 @@ def policy(method: str, params: MultiDict, session: Session,
                         submission_id=submission_id
                     )
                 except events.exceptions.InvalidStack as e:
-                    logger.error('Could not ConfirmAuthorship: %s', str(e))
+                    logger.error('Could not accept policy: %s', str(e))
                     form.errors     # Causes the form to initialize errors.
                     form._errors['events'] = [ie.message for ie
                                               in e.event_exceptions]

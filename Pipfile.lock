@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "539e3b4030e5e512ac6a4ec745af1e8c95ed49cf4c28fe5c9fca6a03a02b2d6a"
+            "sha256": "d775fb3011d75780a3234158a124df9f7d116d98d49b0b000189c961bc4bbfb5"
         },
         "pipfile-spec": 6,
         "requires": {},
@@ -30,17 +30,17 @@
         },
         "arxiv-base": {
             "hashes": [
-                "sha256:4c2ca540aeed0a06394e6eea12364562e2e4733d4803812f5d7542475dd55d09"
+                "sha256:dc13116fb6db50b9cfa65137cd0a3e02e26f8cc7ec32b7ff22265b4049114e10"
             ],
             "index": "pypi",
-            "version": "==0.14.3"
+            "version": "==0.15.3rc3"
         },
         "arxiv-submission-core": {
             "hashes": [
-                "sha256:05379c7cc33dc940f94cbe1ef39ccb9e805aa89c9318e4d588a7e136123fcd88"
+                "sha256:af6e705adb08fde53951c0534a3c27facfacf8dca24d8c9b12f24a2d6796fd40"
             ],
             "index": "pypi",
-            "version": "==0.6.2rc19"
+            "version": "==0.6.2rc21"
         },
         "attrs": {
             "hashes": [
@@ -285,11 +285,11 @@
         },
         "pytz": {
             "hashes": [
-                "sha256:32b0891edff07e28efe91284ed9c31e123d84bea3fd98e1f72be2508f43ef8d9",
-                "sha256:d5f05e487007e29e03409f9398d074e158d920d36eb82eaf66fb1136b0c5374c"
+                "sha256:31cb35c89bd7d333cd32c5f278fca91b523b0834369e757f4c5641ea252236ca",
+                "sha256:8e0f8568c118d3077b46be7d654cc8167fa916092e28320cde048e54bfc9f1e6"
             ],
             "index": "pypi",
-            "version": "==2018.9"
+            "version": "==2018.7"
         },
         "pyyaml": {
             "hashes": [
@@ -627,11 +627,11 @@
         },
         "pytz": {
             "hashes": [
-                "sha256:32b0891edff07e28efe91284ed9c31e123d84bea3fd98e1f72be2508f43ef8d9",
-                "sha256:d5f05e487007e29e03409f9398d074e158d920d36eb82eaf66fb1136b0c5374c"
+                "sha256:31cb35c89bd7d333cd32c5f278fca91b523b0834369e757f4c5641ea252236ca",
+                "sha256:8e0f8568c118d3077b46be7d654cc8167fa916092e28320cde048e54bfc9f1e6"
             ],
             "index": "pypi",
-            "version": "==2018.9"
+            "version": "==2018.7"
         },
         "requests": {
             "hashes": [

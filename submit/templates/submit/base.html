@@ -5,6 +5,7 @@
 {% block addl_head %}
  <link rel="stylesheet" href="{{ url_for('static', filename='css/submit.css')}}" />
  <script src="{{ url_for('static', filename='js/filewidget.js') }}"></script>
+ {% block extra_head %}{% endblock %}
 {% endblock addl_head %}
 
 {% block content %}

@@ -2,6 +2,12 @@
 
 {% block title -%}Process Files{%- endblock title %}
 
+{% block extra_head %}
+  {% if status == "in_progress" %}
+  <meta http-equiv="refresh" content="5;url={{ url_for('ui.file_process', submission_id=submission_id) }}" />
+  {% endif %}
+{% endblock extra_head %}
+
 {% block within_content %}
 <form method="POST" action="{{ url_for('ui.file_process', submission_id=submission_id) }}">
   {{ form.csrf_token }}
@@ -28,7 +34,11 @@
       <div class="message-header">
         <p><span class="icon"><i class="fa fa-tasks"></i></span>Processing Underway</p></div>
       <div class="message-body">
-        <p>We are currently processing your submission. This may take up to a minute or two. Please check back.</p>
+        <p>
+          We are currently processing your submission. This may take up to a minute or two.
+          This page will refresh automatically every 5 seconds. You can also refresh this
+          page manually to check the current status.
+        </p>
       </div>
     </div>
 

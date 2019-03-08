@@ -11,6 +11,10 @@ from arxiv.submission.services import classic
 
 from submit.routes import ui
 from . import filters
+import logging
+
+logging.getLogger('arxiv.submission.services.classic.interpolate').setLevel(40)
+logging.getLogger('arxiv.submission.domain.event.event').setLevel(40)
 
 
 def create_ui_web_app() -> Flask:

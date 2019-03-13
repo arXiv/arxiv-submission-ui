@@ -30,5 +30,4 @@ def create_ui_web_app() -> Flask:
     wrap(app, [auth.middleware.AuthMiddleware])
     for filter_name, filter_func in filters.get_filters():
         app.jinja_env.filters[filter_name] = filter_func
-    app.context_processor(ui.inject_get_next_stage_for_submission)
     return app

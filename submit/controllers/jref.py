@@ -1,9 +1,9 @@
 """Controller for JREF submissions."""
 
-from typing import Tuple, Dict, Any, Optional
+from typing import Tuple, Dict, Any, Optional, List
 
 from werkzeug import MultiDict
-from werkzeug.exceptions import InternalServerError, NotFound
+from werkzeug.exceptions import InternalServerError, NotFound, BadRequest
 
 from flask import url_for, Markup
 from wtforms.fields import TextField, TextAreaField, Field, BooleanField
@@ -14,17 +14,19 @@ from arxiv import status
 from arxiv.base import logging, alerts
 from arxiv.forms import csrf
 from arxiv.users.domain import Session
-import arxiv.submission as events
+from arxiv.submission import save, Event, SetDOI, SetJournalReference, \
+    SetReportNumber, User, Client, Submission
+from arxiv.submission.exceptions import SaveError
 
 from ..util import load_submission
-from . import util
+from .util import user_and_client_from_session, FieldMixin, validate_command
 
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 
 Response = Tuple[Dict[str, Any], int, Dict[str, Any]]  # pylint: disable=C0103
 
 
-class JREFForm(csrf.CSRFForm, util.FieldMixin, util.SubmissionMixin):
+class JREFForm(csrf.CSRFForm, FieldMixin):
     """Set DOI and/or journal reference on a published submission."""
 
     doi = TextField('DOI', validators=[optional()],
@@ -49,34 +51,11 @@ class JREFForm(csrf.CSRFForm, util.FieldMixin, util.SubmissionMixin):
     confirmed = BooleanField('Confirmed',
                              false_values=('false', False, 0, '0', ''))
 
-    def validate_doi(form: csrf.CSRFForm, field: Field) -> None:
-        """Validate DOI input using core events."""
-        if field.data == form.submission.metadata.doi:     # Nothing to do.
-            return
-        if field.data:
-            form._validate_event(events.SetDOI, doi=field.data)
-
-    def validate_journal_ref(form: csrf.CSRFForm, field: Field) -> None:
-        """Validate journal reference input using core events."""
-        if field.data == form.submission.metadata.journal_ref:
-            return
-        if field.data:
-            form._validate_event(events.SetJournalReference,
-                                 journal_ref=field.data)
-
-    def validate_report_num(form: csrf.CSRFForm, field: Field) -> None:
-        """Validate report number input using core events."""
-        if field.data == form.submission.metadata.report_num:
-            return
-        if field.data:
-            form._validate_event(events.SetReportNumber,
-                                 report_num=field.data)
-
 
 def jref(method: str, params: MultiDict, session: Session,
          submission_id: int, **kwargs) -> Response:
     """Set journal reference metadata on a published submission."""
-    submitter, client = util.user_and_client_from_session(session)
+    creator, client = user_and_client_from_session(session)
     logger.debug(f'method: {method}, submission: {submission_id}. {params}')
 
     # Will raise NotFound if there is no such submission.
@@ -101,8 +80,6 @@ def jref(method: str, params: MultiDict, session: Session,
 
     params.setdefault("confirmed", False)
     form = JREFForm(params)
-    form.submission = submission
-    form.creator = submitter
     response_data = {
         'submission_id': submission_id,
         'submission': submission,
@@ -116,37 +93,28 @@ def jref(method: str, params: MultiDict, session: Session,
         # confirm and submit.
         if not form.validate():
             logger.debug('Invalid form data; return bad request')
-            return response_data, status.HTTP_400_BAD_REQUEST, {}
+            raise BadRequest(response_data)
 
-        elif not form.events:
-            pass
-        elif not form.confirmed.data:
+        if not form.confirmed.data:
             response_data['require_confirmation'] = True
             logger.debug('Not confirmed')
             return response_data, status.HTTP_200_OK, {}
 
-        # form.events get set by the SubmissionMixin during validation.
-        # TODO: that's kind of indirect.
-        elif form.events:   # Metadata has changed.
+        commands, valid = _generate_commands(form, submission, creator, client)
+
+        if commands:    # Metadata has changed; we have things to do.
+            if not all(valid):
+                raise BadRequest(response_data)
+
             response_data['require_confirmation'] = True
             logger.debug('Form is valid, with data: %s', str(form.data))
             try:
                 # Save the events created during form validation.
-                submission, stack = events.save(*form.events,
-                                                submission_id=submission_id)
-            except events.exceptions.InvalidStack as e:
-                logger.error('Could not add JREF: %s', str(e))
-                form.errors     # Causes the form to initialize errors.
-                form._errors['events'] = [
-                    ie.message for ie in e.event_exceptions
-                ]
-                logger.debug('InvalidStack; return bad request')
-                return response_data, status.HTTP_400_BAD_REQUEST, {}
-            except events.exceptions.SaveError as e:
+                submission, _ = save(*commands, submission_id=submission_id)
+            except SaveError as e:
                 logger.error('Could not save metadata event')
-                raise InternalServerError(
-                    'There was a problem saving this operation'
-                ) from e
+                raise InternalServerError(response_data) from e
+            response_data['submission'] = submission
 
             # Success! Send user back to the submission page.
             alerts.flash_success("Journal reference updated")
@@ -154,3 +122,31 @@ def jref(method: str, params: MultiDict, session: Session,
             return {}, status.HTTP_303_SEE_OTHER, {'Location': status_url}
     logger.debug('Nothing to do, return 200')
     return response_data, status.HTTP_200_OK, {}
+
+
+def _generate_commands(form: JREFForm, submission: Submission, creator: User,
+                       client: Client) -> Tuple[List[Event], List[bool]]:
+    commands: List[Event] = []
+    valid: List[bool] = []
+
+    if form.report_num.data and submission.metadata \
+            and form.report_num.data != submission.metadata.report_num:
+        command = SetReportNumber(report_num=form.report_num.data,
+                                  creator=creator, client=client)
+        valid.append(validate_command(form, command, submission, 'report_num'))
+        commands.append(command)
+
+    if form.journal_ref.data and submission.metadata \
+            and form.journal_ref.data != submission.metadata.journal_ref:
+        command = SetJournalReference(journal_ref=form.journal_ref.data,
+                                      creator=creator, client=client)
+        valid.append(validate_command(form, command, submission,
+                                      'journal_ref'))
+        commands.append(command)
+
+    if form.doi.data and submission.metadata \
+            and form.doi.data != submission.metadata.doi:
+        command = SetDOI(doi=form.doi.data, creator=creator, client=client)
+        valid.append(validate_command(form, command, submission, 'doi'))
+        commands.append(command)
+    return commands, valid

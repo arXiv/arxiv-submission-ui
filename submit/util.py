@@ -8,6 +8,7 @@ from arxiv.base.globals import get_application_global
 import arxiv.submission as events
 
 
+# TODO: look at whether this is going to work.
 def load_submission(submission_id: Optional[int]) \
         -> Tuple[events.domain.Submission, List[events.domain.Event]]:
     """
@@ -42,6 +43,30 @@ def load_submission(submission_id: Optional[int]) \
     if g is not None:
         return getattr(g, f'submission_{submission_id}')
     return submission, submission_events
+
+
+def tidy_filesize(size: int) -> str:
+    """
+    Convert upload size to human readable form.
+
+    Decision to use powers of 10 rather than powers of 2 to stay compatible
+    with Jinja filesizeformat filter with binary=false setting that we are
+    using in file_upload template.
+
+    Parameter: size in bytes
+    Returns: formatted string of size in units up through GB
+
+    """
+    units = ["B", "KB", "MB", "GB"]
+    if size == 0:
+        return "0B"
+    if size > 1000000000:
+        return '{} {}'.format(size, units[3])
+    units_index = 0
+    while size > 1000:
+        units_index += 1
+        size = round(size / 1000, 3)
+    return '{} {}'.format(size, units[units_index])
 
 
 # TODO: remove me!

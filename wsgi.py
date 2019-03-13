@@ -19,5 +19,4 @@ def application(environ, start_response):
             continue
         if key in _application.config:
             _application.config[key] = value
-    print(_application.config)
     return _application(environ, start_response)

@@ -7,7 +7,7 @@ Creates an event of type `core.events.event.ConfirmContactInformation`
 from typing import Tuple, Dict, Any, Optional
 
 from werkzeug import MultiDict
-from werkzeug.exceptions import InternalServerError, NotFound
+from werkzeug.exceptions import InternalServerError, NotFound, BadRequest
 from flask import url_for
 
 from wtforms import BooleanField
@@ -17,10 +17,9 @@ from arxiv import status
 from arxiv.base import logging
 from arxiv.forms import csrf
 from arxiv.users.domain import Session
-import arxiv.submission as events
-from ..domain import SubmissionStage
+from arxiv.submission import save, SaveError, ConfirmContactInformation
 from ..util import load_submission
-from . import util
+from .util import validate_command, user_and_client_from_session
 
 
 logger = logging.getLogger(__name__)    # pylint: disable=C0103
@@ -36,11 +35,10 @@ def verify(method: str, params: MultiDict, session: Session,
     Generates a `ConfirmContactInformation` event when valid data are POSTed.
     """
     logger.debug(f'method: {method}, submission: {submission_id}. {params}')
-    submitter, client = util.user_and_client_from_session(session)
+    submitter, client = user_and_client_from_session(session)
 
-    if submission_id:
-        # Will raise NotFound if there is no such submission.
-        submission, submission_events = load_submission(submission_id)
+    # Will raise NotFound if there is no such submission.
+    submission, _ = load_submission(submission_id)
 
     # Initialize the form with the current state of the submission.
     if method == 'GET':
@@ -56,46 +54,27 @@ def verify(method: str, params: MultiDict, session: Session,
         'user': session.user,   # We want the most up-to-date representation.
     }
 
-    # Process event if go to next page.
     if method == 'POST':
-        if not form.validate():
-            logger.debug(f'Form is invalid: {form.errors}')
-        if form.validate() and form.verify_user.data:
-            logger.debug(f'Form is valid: {form.verify_user.data}')
+        if not (form.validate() and form.verify_user.data):
+            # Either the form data were invalid, or the user did not check the
+            # "verify" box.
+            raise BadRequest(response_data)
 
-            # Now that we have a submission, we can verify the user's contact
-            # information.
-            logger.debug('Submission ID: %s', str(submission_id))
+        logger.debug(f'Form is valid: {form.verify_user.data}')
 
-            # There is no need to do this more than once.
-            if not submission.submitter_contact_verified:
-                try:    # Create ConfirmContactInformation event
-                    submission, _ = events.save(
-                        events.ConfirmContactInformation(creator=submitter),
-                        submission_id=submission_id
-                    )
-                except events.exceptions.InvalidStack as e:
-                    logger.error('Could not ConfirmContactInformation: %s',
-                                 str(e))
-                    form.errors     # Causes the form to initialize errors.
-                    form._errors['events'] = [ie.message for ie
-                                              in e.event_exceptions]
-                    return response_data, status.HTTP_400_BAD_REQUEST, {}
-                except events.exceptions.SaveError as e:
-                    logger.error('Could not save primary event')
-                    raise InternalServerError(
-                        'There was a problem saving this operation'
-                    ) from e
+        # Now that we have a submission, we can verify the user's contact
+        # information. There is no need to do this more than once.
+        if not submission.submitter_contact_verified:
+            cmd = ConfirmContactInformation(creator=submitter, client=client)
+            if not validate_command(form, cmd, submission, 'verify_user'):
+                raise BadRequest(response_data)
 
-        # Either the form data were invalid, or the user did not check the
-        # "verify" box.
-        else:
-            return response_data, status.HTTP_400_BAD_REQUEST, {}
-        response_data.update({
-            'submission_id': submission_id,
-            'submission': submission,
-            'submitter': submitter
-        })
+            try:
+                submission, _ = save(cmd, submission_id=submission_id)
+            except SaveError as e:
+                raise InternalServerError(response_data) from e
+            response_data['submission'] = submission
+
         return response_data, status.HTTP_303_SEE_OTHER, {}
     return response_data, status.HTTP_200_OK, {}
 

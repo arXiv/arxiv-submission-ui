@@ -9,8 +9,8 @@
 {% endblock addl_head %}
 
 {% block content %}
-{% if submission_id and stage %}
-  {{ submit_macros.progress_bar(submission_id, stage, this_stage) }}
+{% if submission_id and workflow %}
+  {{ submit_macros.progress_bar(submission_id, workflow, this_stage) }}
 {% endif %}
   <h1 class="title">
     {% block title_preamble %}{% if submission and submission.version > 1 %}Submit a Replacement{% else %}Submit an Article{% endif %}: {% endblock %}{% block title %}{% endblock title %}

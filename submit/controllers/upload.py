@@ -13,26 +13,27 @@ Things that still need to be done:
 from typing import Tuple, Dict, Any, Optional, List
 
 from werkzeug import MultiDict
-from werkzeug.exceptions import InternalServerError, BadRequest,\
+from werkzeug.exceptions import InternalServerError, BadRequest, \
     MethodNotAllowed
 from werkzeug.datastructures import FileStorage
 
-from wtforms import BooleanField, widgets, validators, HiddenField, FileField
+from wtforms import BooleanField, widgets, HiddenField, FileField
+from wtforms.validators import DataRequired
 from flask import url_for, Markup
 
 from arxiv import status
-from arxiv.submission import save
 from arxiv.base import logging, alerts
 from arxiv.forms import csrf
-from arxiv.submission.domain import Submission, User, Client
 from arxiv.submission.domain.submission import SubmissionContent
-from arxiv.submission.domain.event import SetUploadPackage, UpdateUploadPackage
+from arxiv.submission import SetUploadPackage, UpdateUploadPackage, save, \
+    Submission, User, Client
 from arxiv.submission.exceptions import InvalidStack, SaveError
 from arxiv.users.domain import Session
-from . import util
-from ..util import load_submission
+
+from .util import validate_command, user_and_client_from_session
+from ..util import load_submission, tidy_filesize
 from ..services import filemanager
-from ..domain import Upload, SubmissionStage
+from ..domain import Upload
 
 logger = logging.getLogger(__name__)
 
@@ -42,30 +43,6 @@ PLEASE_CONTACT_SUPPORT = Markup(
     'If you continue to experience problems, please contact'
     ' <a href="mailto:help@arxiv.org"> arXiv support</a>.'
 )
-
-
-def tidy_filesize(size) -> str:
-    """
-    Convert upload size to human readable form.
-
-    Decision to use powers of 10 rather than powers of 2 to stay compatible
-    with Jinja filesizeformat filter with binary=false setting that we are
-    using in file_upload template.
-
-    Parameter: size in bytes
-    Returns: formatted string of size in units up through GB
-
-    """
-    units = ["B", "KB", "MB", "GB"]
-    if size == 0:
-        return "0B"
-    if size > 1000000000:
-        return '{} {}'.format(size, units[3])
-    units_index = 0
-    while size > 1000:
-        units_index += 1
-        size = round(size / 1000, 3)
-    return '{} {}'.format(size, units[units_index])
 
 
 def upload_files(method: str, params: MultiDict, session: Session,
@@ -113,13 +90,13 @@ def upload_files(method: str, params: MultiDict, session: Session,
     """
     if files is None or token is None:
         raise BadRequest("Missing files or auth token")
-    logger.debug('%s upload request for submission %i', method, submission_id)
-    submission, submission_events = load_submission(submission_id)
-    logger.debug('Loaded submission with ID %i', submission.submission_id)
 
-    filemanager.set_auth_token(token)
+    submission, _ = load_submission(submission_id)
+
+    rdata = {'submission_id': submission_id, 'submission': submission}
+
     if method == 'GET':
-        return _get_upload(params, session, submission)
+        return _get_upload(params, session, submission, rdata)
 
     # User is attempting an upload of some kind.
     elif method == 'POST':
@@ -128,13 +105,13 @@ def upload_files(method: str, params: MultiDict, session: Session,
             # in the routes handle the response.
             return {}, status.HTTP_303_SEE_OTHER, {}
         # Otherwise, treat this as an upload attempt.
-        return _post_upload(params, files, session, submission)
+        return _post_upload(params, files, session, submission, rdata)
     raise MethodNotAllowed('Nope')
 
 
 def delete_all(method: str, params: MultiDict, session: Session,
-               submission_id: int, token: Optional[str] = None, **kwargs)\
-        -> Response:
+               submission_id: int, token: Optional[str] = None,
+               **kwargs) -> Response:
     """
     Handle a request to delete all files in the workspace.
 
@@ -167,59 +144,69 @@ def delete_all(method: str, params: MultiDict, session: Session,
     """
     if token is None:
         raise BadRequest('Missing auth token')
-    logger.debug('%s delete all files with params %s', method, params)
+
     submission, submission_events = load_submission(submission_id)
     upload_id = submission.source_content.identifier
-    submitter, client = util.user_and_client_from_session(session)
-    response_data = {
-        'submission': submission,
-        'submission_id': submission.submission_id,
-    }
-    filemanager.set_auth_token(token)
+    submitter, client = user_and_client_from_session(session)
+
+    rdata = {'submission': submission, 'submission_id': submission_id}
+
     if method == 'GET':
         form = DeleteAllFilesForm()
-        response_data.update({'form': form})
-        return response_data, status.HTTP_200_OK, {}
+        rdata.update({'form': form})
+        return rdata, status.HTTP_200_OK, {}
     elif method == 'POST':
         form = DeleteAllFilesForm(params)
-        if form.validate() and form.confirmed.data:
-            try:
-                _status = filemanager.delete_all(upload_id)
-                submission, stack = save(  # pylint: disable=W0612
-                    UpdateUploadPackage(creator=submitter,
-                                        checksum=_status.checksum,
-                                        uncompressed_size=_status.size,
-                                        source_format=_status.source_format),
-                    submission_id=submission.submission_id
-                )
-            except filemanager.RequestForbidden as e:
-                alerts.flash_failure(Markup(
-                    'There was a problem authorizing your request. Please try'
-                    f' again. {PLEASE_CONTACT_SUPPORT}'
-                ))
-                logger.error('Encountered RequestForbidden: %s', e)
-            except filemanager.BadRequest as e:
-                alerts.flash_warning(Markup(
-                    'Something odd happened when processing your request.'
-                    f'{PLEASE_CONTACT_SUPPORT}'
-                ))
-                logger.error('Encountered BadRequest: %s', e)
-            except filemanager.RequestFailed as e:
-                alerts.flash_failure(Markup(
-                    'There was a problem carrying out your request. Please try'
-                    f' again. {PLEASE_CONTACT_SUPPORT}'
-                ))
-                logger.error('Encountered RequestFailed: %s', e)
+        rdata.update({'form': form})
 
-            redirect = url_for('ui.file_upload', submission_id=submission_id)
-            return {}, status.HTTP_303_SEE_OTHER, {'Location': redirect}
-        response_data.update({'form': form})
-        return response_data, status.HTTP_400_BAD_REQUEST, {}
+        if not (form.validate() and form.confirmed.data):
+            raise BadRequest(rdata)
+
+        try:
+            stat = filemanager.delete_all(upload_id)
+        except filemanager.RequestForbidden as e:
+            alerts.flash_failure(Markup(
+                'There was a problem authorizing your request. Please try'
+                f' again. {PLEASE_CONTACT_SUPPORT}'
+            ))
+            logger.error('Encountered RequestForbidden: %s', e)
+        except filemanager.BadRequest as e:
+            alerts.flash_warning(Markup(
+                'Something odd happened when processing your request.'
+                f'{PLEASE_CONTACT_SUPPORT}'
+            ))
+            logger.error('Encountered BadRequest: %s', e)
+        except filemanager.RequestFailed as e:
+            alerts.flash_failure(Markup(
+                'There was a problem carrying out your request. Please try'
+                f' again. {PLEASE_CONTACT_SUPPORT}'
+            ))
+            logger.error('Encountered RequestFailed: %s', e)
+
+        command = UpdateUploadPackage(creator=submitter, client=client,
+                                      checksum=stat.checksum,
+                                      uncompressed_size=stat.size,
+                                      source_format=stat.source_format)
+
+        if not validate_command(form, command, submission):
+            raise BadRequest(rdata)
+
+        try:
+            submission, _ = save(command, submission_id=submission_id)
+        except SaveError:
+            alerts.flash_failure(Markup(
+                'There was a problem carrying out your request. Please try'
+                f' again. {PLEASE_CONTACT_SUPPORT}'
+            ))
+
+        redirect = url_for('ui.file_upload', submission_id=submission_id)
+        return {}, status.HTTP_303_SEE_OTHER, {'Location': redirect}
+    raise MethodNotAllowed('Method not supported')
 
 
 def delete(method: str, params: MultiDict, session: Session,
-           submission_id: int, token: Optional[str] = None, **kwargs) \
-        -> Response:
+           submission_id: int, token: Optional[str] = None,
+           **kwargs) -> Response:
     """
     Handle a request to delete a file.
 
@@ -261,95 +248,94 @@ def delete(method: str, params: MultiDict, session: Session,
     """
     if token is None:
         raise BadRequest('Missing auth token')
-    logger.debug('%s delete with params %s', method, params)
+
     submission, submission_events = load_submission(submission_id)
     upload_id = submission.source_content.identifier
-    submitter, client = util.user_and_client_from_session(session)
-    response_data = {
-        'submission': submission,
-        'submission_id': submission.submission_id,
-    }
-    filemanager.set_auth_token(token)
+    submitter, client = user_and_client_from_session(session)
+
+    rdata = {'submission': submission, 'submission_id': submission_id}
 
     if method == 'GET':
         # The only thing that we want to get from the request params on a GET
         # request is the file path. This way there is no way for a GET request
         # to trigger actual deletion. The user must explicitly indicate via
         # a valid POST that the file should in fact be deleted.
-        form = DeleteFileForm(MultiDict({'file_path': params['path']}))
-        response_data.update({'form': form})
-        return response_data, status.HTTP_200_OK, {}
-    elif method == 'POST':
-        form = DeleteFileForm(params)
-        if form.validate() and form.confirmed.data:
-            _status: Optional[Upload] = None
+        params = MultiDict({'file_path': params['path']})
+
+    form = DeleteFileForm(params)
+    rdata.update({'form': form})
+
+    if method == 'POST':
+        if not (form.validate() and form.confirmed.data):
+            raise BadRequest(rdata)
+
+        stat: Optional[Upload] = None
+        try:
+            stat = filemanager.delete_file(upload_id, form.file_path.data)
+            alerts.flash_success(
+                f'File <code>{form.file_path.data}</code> was deleted'
+                ' successfully', title='Deleted file successfully',
+                safe=True
+            )
+        except filemanager.RequestForbidden:
+            alerts.flash_failure(Markup(
+                'There was a problem authorizing your request. Please try'
+                f' again. {PLEASE_CONTACT_SUPPORT}'
+            ))
+        except filemanager.BadRequest:
+            alerts.flash_warning(Markup(
+                'Something odd happened when processing your request.'
+                f'{PLEASE_CONTACT_SUPPORT}'
+            ))
+        except filemanager.RequestFailed:
+            alerts.flash_failure(Markup(
+                'There was a problem carrying out your request. Please try'
+                f' again. {PLEASE_CONTACT_SUPPORT}'
+            ))
+
+        if stat is not None:
+            command = UpdateUploadPackage(creator=submitter,
+                                          checksum=stat.checksum,
+                                          uncompressed_size=stat.size,
+                                          source_format=stat.source_format)
+            if not validate_command(form, command, submission):
+                raise BadRequest(rdata)
+
             try:
-                _status = filemanager.delete_file(upload_id,
-                                                  form.file_path.data)
-                alerts.flash_success(
-                    f'File <code>{form.file_path.data}</code> was deleted'
-                    ' successfully', title='Deleted file successfully',
-                    safe=True
-                )
-            except filemanager.RequestForbidden as e:
-                alerts.flash_failure(Markup(
-                    'There was a problem authorizing your request. Please try'
-                    f' again. {PLEASE_CONTACT_SUPPORT}'
-                ))
-                logger.error('Encountered RequestForbidden: %s', e)
-            except filemanager.BadRequest as e:
-                alerts.flash_warning(Markup(
-                    'Something odd happened when processing your request.'
-                    f'{PLEASE_CONTACT_SUPPORT}'
-                ))
-                logger.error('Encountered BadRequest: %s', e)
-            except filemanager.RequestFailed as e:
+                submission, _ = save(command, submission_id=submission_id)
+            except SaveError:
                 alerts.flash_failure(Markup(
                     'There was a problem carrying out your request. Please try'
                     f' again. {PLEASE_CONTACT_SUPPORT}'
                 ))
-                logger.error('Encountered RequestFailed: %s', e)
-
-            if _status is not None:
-                submission, stack = save(  # pylint: disable=W0612
-                    UpdateUploadPackage(creator=submitter,
-                                        checksum=_status.checksum,
-                                        uncompressed_size=_status.size,
-                                        source_format=_status.source_format),
-                    submission_id=submission.submission_id
-                )
-            redirect = url_for('ui.file_upload', submission_id=submission_id)
-            return {}, status.HTTP_303_SEE_OTHER, {'Location': redirect}
-        response_data.update({'form': form})
-        return response_data, status.HTTP_400_BAD_REQUEST, {}
+        redirect = url_for('ui.file_upload', submission_id=submission_id)
+        return {}, status.HTTP_303_SEE_OTHER, {'Location': redirect}
+    return rdata, status.HTTP_200_OK, {}
 
 
 class UploadForm(csrf.CSRFForm):
     """Form for uploading files."""
 
-    file = FileField('Choose a file...',
-                     validators=[validators.DataRequired()])
+    file = FileField('Choose a file...', validators=[DataRequired()])
     ancillary = BooleanField('Ancillary')
 
 
 class DeleteFileForm(csrf.CSRFForm):
     """Form for deleting individual files."""
 
-    file_path = HiddenField('File', validators=[validators.DataRequired()])
-    confirmed = BooleanField('Confirmed',
-                             validators=[validators.DataRequired()])
+    file_path = HiddenField('File', validators=[DataRequired()])
+    confirmed = BooleanField('Confirmed', validators=[DataRequired()])
 
 
 class DeleteAllFilesForm(csrf.CSRFForm):
     """Form for deleting all files in the workspace."""
 
-    confirmed = BooleanField('Confirmed',
-                             validators=[validators.DataRequired()])
+    confirmed = BooleanField('Confirmed', validators=[DataRequired()])
 
 
-def _update_submission(submission: Submission, _status: Upload,
-                       submitter: User, client: Optional[Client] = None) \
-        -> Submission:
+def _update(form: UploadForm, submission: Submission, stat: Upload,
+            submitter: User, client: Optional[Client] = None,
+            rdata: Dict[str, Any] = {}) -> Submission:
     """
     Update the :class:`.Submission` after an upload-related action.
 
@@ -369,41 +355,34 @@ def _update_submission(submission: Submission, _status: Upload,
     """
     existing_upload = getattr(submission.source_content, 'identifier', None)
 
+    if existing_upload == stat.identifier:
+        command = UpdateUploadPackage(creator=submitter, client=client,
+                                      checksum=stat.checksum,
+                                      uncompressed_size=stat.size,
+                                      source_format=stat.source_format)
+    else:
+        command = SetUploadPackage(creator=submitter, client=client,
+                                   identifier=stat.identifier,
+                                   checksum=stat.checksum,
+                                   uncompressed_size=stat.size,
+                                   source_format=stat.source_format)
+
+    if not validate_command(form, command, submission):
+        raise BadRequest(rdata)
+
     try:
-        if existing_upload == _status.identifier:
-            submission, stack = save(  # pylint: disable=W0612
-                UpdateUploadPackage(creator=submitter,
-                                    checksum=_status.checksum,
-                                    uncompressed_size=_status.size,
-                                    source_format=_status.source_format),
-                submission_id=submission.submission_id
-            )
-        else:
-            submission, stack = save(  # pylint: disable=W0612
-                SetUploadPackage(creator=submitter,
-                                 identifier=_status.identifier,
-                                 checksum=_status.checksum,
-                                 uncompressed_size=_status.size,
-                                 source_format=_status.source_format),
-                submission_id=submission.submission_id
-            )
-    except InvalidStack as e:   # TODO: get more specific
-        raise BadRequest('Whoops') from e
-    except SaveError as e:      # TODO: get more specific
-        logger.error('Encountered SaveError while updating files for %i:'
-                     ' %s', submission.submission_id, e)
+        submission, _ = save(command, submission_id=submission.submission_id)
+    except SaveError:
         alerts.flash_failure(Markup(
             'There was a problem carrying out your request. Please try'
             f' again. {PLEASE_CONTACT_SUPPORT}'
         ))
-        redirect = url_for('ui.file_upload',
-                           submission_id=submission.submission_id)
-        return {}, status.HTTP_303_SEE_OTHER, {'Location': redirect}
+    rdata['submission'] = submission
     return submission
 
 
-def _get_upload(params: MultiDict, session: Session, submission: Submission) \
-        -> Response:
+def _get_upload(params: MultiDict, session: Session, submission: Submission,
+                rdata: Dict[str, Any]) -> Response:
     """
     Get the current state of the upload workspace, and prepare a response.
 
@@ -426,38 +405,31 @@ def _get_upload(params: MultiDict, session: Session, submission: Submission) \
         Extra headers to add/update on the response.
 
     """
-    response_data = {
-        'submission': submission,
-        'submission_id': submission.submission_id,
-        'status': None,
-        'form': UploadForm()
-    }
+    rdata.update({'status': None, 'form': UploadForm()})
+
     if submission.source_content is None:
         # Nothing to show; should generate a blank-slate upload screen.
-        return response_data, status.HTTP_200_OK, {}
+        return rdata, status.HTTP_200_OK, {}
+
     upload_id = submission.source_content.identifier
     status_data = alerts.get_hidden_alerts('_status')
-    logger.debug('Got status data from hidden alert: %s', status_data)
+
     if type(status_data) is dict and status_data['identifier'] == upload_id:
-        _status = Upload.from_dict(status_data)
+        stat = Upload.from_dict(status_data)
     else:
         try:
-            _status = filemanager.get_upload_status(upload_id)
+            stat = filemanager.get_upload_status(upload_id)
         except filemanager.RequestFailed as e:
             # TODO: handle specific failure cases.
-            logger.error('Encountered RequestFailed getting data for'
-                         ' for %i: %s', submission.submission_id, e)
-            raise InternalServerError('Whoops') from e
-    response_data.update({'status': _status})
-    if _status:
-        response_data.update({'immediate_notifications':
-                              _get_notifications(_status)})
-
-    return response_data, status.HTTP_200_OK, {}
+            raise InternalServerError(rdata) from e
+    rdata.update({'status': stat})
+    if stat:
+        rdata.update({'immediate_notifications': _get_notifications(stat)})
+    return rdata, status.HTTP_200_OK, {}
 
 
-def _post_new_upload(params: MultiDict, pointer: FileStorage, session: Session,
-                     submission: Submission) -> Response:
+def _new_upload(params: MultiDict, pointer: FileStorage, session: Session,
+                submission: Submission, rdata: Dict[str, Any]) -> Response:
     """
     Handle a POST request with a new upload package.
 
@@ -487,51 +459,53 @@ def _post_new_upload(params: MultiDict, pointer: FileStorage, session: Session,
         the `Location` header for use in the 303 redirect response.
 
     """
-    submitter, client = util.user_and_client_from_session(session)
+    submitter, client = user_and_client_from_session(session)
 
     # Using a form object provides some extra assurance that this is a legit
     # request; provides CSRF goodies.
     params['file'] = pointer
     form = UploadForm(params)
+    rdata.update({'form': form})
+
     if not form.validate():
-        raise BadRequest('Invalid upload request')
+        raise BadRequest(rdata)
 
     try:
-        _status = filemanager.upload_package(pointer)
-        submission = _update_submission(submission, _status, submitter,
-                                        client)
-        converted_size = tidy_filesize(_status.size)
-        if _status.status is Upload.Status.READY:
-            alerts.flash_success(
-                f'Unpacked {_status.file_count} files. Total submission'
-                f' package size is {converted_size}',
-                title='Upload successful'
-            )
-        elif _status.status is Upload.Status.READY_WITH_WARNINGS:
-            alerts.flash_warning(
-                f'Unpacked {_status.file_count} files. Total submission'
-                f' package size is {converted_size}. See below for warnings.',
-                title='Upload complete, with warnings'
-            )
-        elif _status.status is Upload.Status.ERRORS:
-            alerts.flash_warning(
-                f'Unpacked {_status.file_count} files. Total submission'
-                f' package size is {converted_size}. See below for errors.',
-                title='Upload complete, with errors'
-            )
-        alerts.flash_hidden(_status.to_dict(), '_status')
-    except filemanager.RequestFailed as e:
+        stat = filemanager.upload_package(pointer)
+    except filemanager.RequestFailed:
         alerts.flash_failure(Markup(
             'There was a problem carrying out your request. Please try'
             f' again. {PLEASE_CONTACT_SUPPORT}'
         ))
-    redirect = url_for('ui.file_upload',
-                       submission_id=submission.submission_id)
-    return {}, status.HTTP_303_SEE_OTHER, {'Location': redirect}
+
+    submission = _update(form, submission, stat, submitter, client, rdata)
+    converted_size = tidy_filesize(stat.size)
+    if stat.status is Upload.Status.READY:
+        alerts.flash_success(
+            f'Unpacked {stat.file_count} files. Total submission'
+            f' package size is {converted_size}',
+            title='Upload successful'
+        )
+    elif stat.status is Upload.Status.READY_WITH_WARNINGS:
+        alerts.flash_warning(
+            f'Unpacked {stat.file_count} files. Total submission'
+            f' package size is {converted_size}. See below for warnings.',
+            title='Upload complete, with warnings'
+        )
+    elif stat.status is Upload.Status.ERRORS:
+        alerts.flash_warning(
+            f'Unpacked {stat.file_count} files. Total submission'
+            f' package size is {converted_size}. See below for errors.',
+            title='Upload complete, with errors'
+        )
+    alerts.flash_hidden(stat.to_dict(), '_status')
+
+    loc = url_for('ui.file_upload', submission_id=submission.submission_id)
+    return {}, status.HTTP_303_SEE_OTHER, {'Location': loc}
 
 
-def _post_new_file(params: MultiDict, pointer: FileStorage, session: Session,
-                   submission: Submission) -> Response:
+def _new_file(params: MultiDict, pointer: FileStorage, session: Session,
+              submission: Submission, rdata: Dict[str, Any]) -> Response:
     """
     Handle a POST request with a new file to add to an existing upload package.
 
@@ -561,13 +535,15 @@ def _post_new_file(params: MultiDict, pointer: FileStorage, session: Session,
         the `Location` header for use in the 303 redirect response.
 
     """
-    submitter, client = util.user_and_client_from_session(session)
+    submitter, client = user_and_client_from_session(session)
     upload_id = submission.source_content.identifier
 
     # Using a form object provides some extra assurance that this is a legit
     # request; provides CSRF goodies.
     params['file'] = pointer
     form = UploadForm(params)
+    rdata['form'] = form
+
     if not form.validate():
         logger.error('Invalid upload form: %s', form.errors)
 
@@ -579,45 +555,42 @@ def _post_new_file(params: MultiDict, pointer: FileStorage, session: Session,
     ancillary: bool = form.ancillary.data
 
     try:
-        _status = filemanager.add_file(upload_id, pointer,
-                                             ancillary=ancillary)
-        submission = _update_submission(submission, _status, submitter,
-                                        client)
-        converted_size = tidy_filesize(_status.size)
-        if _status.status is Upload.Status.READY:
-            alerts.flash_success(
-                f'Uploaded {pointer.filename} successfully. Total submission'
-                f' package size is {converted_size}',
-                title='Upload successful'
-            )
-        elif _status.status is Upload.Status.READY_WITH_WARNINGS:
-            alerts.flash_warning(
-                f'Uploaded {pointer.filename} successfully. Total submission'
-                f' package size is {converted_size}. See below for warnings.',
-                title='Upload complete, with warnings'
-            )
-        elif _status.status is Upload.Status.ERRORS:
-            alerts.flash_warning(
-                f'Uploaded {pointer.filename} successfully. Total submission'
-                f' package size is {converted_size}. See below for errors.',
-                title='Upload complete, with errors'
-            )
-        status_data = _status.to_dict()
-        logger.debug('Stashing status data for next page: %s', status_data)
-        alerts.flash_hidden(status_data, '_status')
+        stat = filemanager.add_file(upload_id, pointer, ancillary=ancillary)
     except filemanager.RequestFailed as e:
         alerts.flash_failure(Markup(
             'There was a problem carrying out your request. Please try'
             f' again. {PLEASE_CONTACT_SUPPORT}'
         ))
+        raise InternalServerError(rdata) from e
 
-    redirect = url_for('ui.file_upload',
-                       submission_id=submission.submission_id)
-    return {}, status.HTTP_303_SEE_OTHER, {'Location': redirect}
+    submission = _update(form, submission, stat, submitter, client, rdata)
+    converted_size = tidy_filesize(stat.size)
+    if stat.status is Upload.Status.READY:
+        alerts.flash_success(
+            f'Uploaded {pointer.filename} successfully. Total submission'
+            f' package size is {converted_size}',
+            title='Upload successful'
+        )
+    elif stat.status is Upload.Status.READY_WITH_WARNINGS:
+        alerts.flash_warning(
+            f'Uploaded {pointer.filename} successfully. Total submission'
+            f' package size is {converted_size}. See below for warnings.',
+            title='Upload complete, with warnings'
+        )
+    elif stat.status is Upload.Status.ERRORS:
+        alerts.flash_warning(
+            f'Uploaded {pointer.filename} successfully. Total submission'
+            f' package size is {converted_size}. See below for errors.',
+            title='Upload complete, with errors'
+        )
+    status_data = stat.to_dict()
+    alerts.flash_hidden(status_data, '_status')
+    loc = url_for('ui.file_upload', submission_id=submission.submission_id)
+    return {}, status.HTTP_303_SEE_OTHER, {'Location': loc}
 
 
 def _post_upload(params: MultiDict, files: MultiDict, session: Session,
-                 submission: Submission) -> Response:
+                 submission: Submission, rdata: Dict[str, Any]) -> Response:
     """
     Compose POST request handling for the file upload endpoint.
 
@@ -647,35 +620,31 @@ def _post_upload(params: MultiDict, files: MultiDict, session: Session,
         the `Location` header for use in the 303 redirect response.
 
     """
-    logger.debug('POST upload with params %s and files %s', params, files)
-    logger.debug('POST upload with submission %s', submission)
     try:    # Make sure that we have a file to work with.
         pointer = files['file']
-    except KeyError as e:   # User is going back, saving/exiting, or next step.
+    except KeyError:   # User is going back, saving/exiting, or next step.
         headers = {}
 
         # Don't flash a message if the user is just trying to go back to the
         # previous page.
         if params.get('action') != 'previous':
             alerts.flash_failure(Markup('Please select a file to upload'))
-            redirect = url_for('ui.file_upload',
-                               submission_id=submission.submission_id)
-            headers['Location'] = redirect
+            submission_id = submission.submission_id
+            headers['Location'] = url_for('ui.file_upload',
+                                          submission_id=submission_id)
         return {}, status.HTTP_303_SEE_OTHER, headers
 
     if submission.source_content is None:   # New upload package.
-        logger.debug('No existing source_content')
-        return _post_new_upload(params, pointer, session, submission)
-    logger.debug('Submission has source content')
-    return _post_new_file(params, pointer, session, submission)
+        return _new_upload(params, pointer, session, submission, rdata)
+    return _new_file(params, pointer, session, submission, rdata)
 
 
-def _get_notifications(_status: Upload) -> List[Dict[str, str]]:
+def _get_notifications(stat: Upload) -> List[Dict[str, str]]:
     # TODO: these need wordsmithing.
     notifications = []
-    if not _status.files:   # Nothing in the upload workspace.
+    if not stat.files:   # Nothing in the upload workspace.
         return notifications
-    if _status.status is Upload.Status.ERRORS:
+    if stat.status is Upload.Status.ERRORS:
         notifications.append({
             'title': 'Unresolved errors',
             'severity': 'danger',
@@ -683,7 +652,7 @@ def _get_notifications(_status: Upload) -> List[Dict[str, str]]:
                     ' files. Please correct the errors below before'
                     ' proceeding.'
         })
-    elif _status.status is Upload.Status.READY_WITH_WARNINGS:
+    elif stat.status is Upload.Status.READY_WITH_WARNINGS:
         notifications.append({
             'title': 'Warnings',
             'severity': 'warning',
@@ -692,7 +661,7 @@ def _get_notifications(_status: Upload) -> List[Dict[str, str]]:
                     ' that these issues may cause delays in processing'
                     ' and/or announcement.'
         })
-    if _status.source_format is SubmissionContent.Format.UNKNOWN:
+    if stat.source_format is SubmissionContent.Format.UNKNOWN:
         notifications.append({
             'title': 'Unknown submission type',
             'severity': 'warning',
@@ -700,7 +669,7 @@ def _get_notifications(_status: Upload) -> List[Dict[str, str]]:
                     ' submission. Please check your files carefully. We may'
                     ' not be able to process your files.'
         })
-    elif _status.source_format is SubmissionContent.Format.INVALID:
+    elif stat.source_format is SubmissionContent.Format.INVALID:
         notifications.append({
             'title': 'Unsupported submission type',
             'severity': 'danger',
@@ -710,7 +679,7 @@ def _get_notifications(_status: Upload) -> List[Dict[str, str]]:
         })
     else:
         notifications.append({
-            'title': f'Detected {_status.source_format.value.upper()}',
+            'title': f'Detected {stat.source_format.value.upper()}',
             'severity': 'success',
             'body': 'Your submission content is supported.'
         })

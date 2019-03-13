@@ -6,6 +6,7 @@ from pytz import timezone
 from datetime import timedelta, datetime
 
 from werkzeug import MultiDict
+from werkzeug.exceptions import BadRequest, InternalServerError
 from wtforms import Form
 
 from arxiv import status
@@ -54,21 +55,17 @@ class TestUpload(TestCase):
     def test_get_no_upload(self, mock_load):
         """GET request for submission with no upload package."""
         submission_id = 2
-        mock_submission = mock.MagicMock(
-            submission_id=submission_id,
-            source_content=None
-        )
-        mock_load.return_value = (
-            mock_submission, []
-        )
+        subm = mock.MagicMock(submission_id=submission_id, source_content=None,
+                              finalized=False, published=False, arxiv_id=None,
+                              version=1)
+        mock_load.return_value = (subm, [])
         params = MultiDict({})
         files = MultiDict({})
-        response_data, code, headers = upload.upload_files(
-            'GET', params, files, self.session, submission_id, 'footoken'
-        )
+        data, code, _ = upload.upload_files('GET', params, files, self.session,
+                                            submission_id, 'footoken')
         self.assertEqual(code, status.HTTP_200_OK, 'Returns 200 OK')
-        self.assertIn('submission', response_data, 'Submission is in response')
-        self.assertIn('submission_id', response_data, 'ID is in response')
+        self.assertIn('submission', data, 'Submission is in response')
+        self.assertIn('submission_id', data, 'ID is in response')
 
     @mock.patch(f'{upload.__name__}.UploadForm.Meta.csrf', False)
     @mock.patch(f'{upload.__name__}.alerts', mock.MagicMock())
@@ -87,7 +84,8 @@ class TestUpload(TestCase):
                     uncompressed_size=593920,
                     compressed_size=1000,
                     source_format=SubmissionContent.Format.TEX
-                )
+                ),
+                finalized=False, published=False, arxiv_id=None, version=1
             ), []
         )
         mock_filemanager.get_upload_status.return_value = (
@@ -116,16 +114,15 @@ class TestUpload(TestCase):
         )
         params = MultiDict({})
         files = MultiDict({})
-        response_data, code, headers = upload.upload_files(
-            'GET', params, self.session, submission_id, files=files,
-            token='footoken'
-        )
+        data, code, _ = upload.upload_files('GET', params, self.session,
+                                            submission_id, files=files,
+                                            token='footoken')
         self.assertEqual(code, status.HTTP_200_OK, 'Returns 200 OK')
         self.assertEqual(mock_filemanager.get_upload_status.call_count, 1,
                          'Calls the file management service')
-        self.assertIn('status', response_data, 'Upload status is in response')
-        self.assertIn('submission', response_data, 'Submission is in response')
-        self.assertIn('submission_id', response_data, 'ID is in response')
+        self.assertIn('status', data, 'Upload status is in response')
+        self.assertIn('submission', data, 'Submission is in response')
+        self.assertIn('submission_id', data, 'ID is in response')
 
     @mock.patch(f'{upload.__name__}.UploadForm.Meta.csrf', False)
     @mock.patch(f'{upload.__name__}.alerts', mock.MagicMock())
@@ -145,7 +142,8 @@ class TestUpload(TestCase):
                 uncompressed_size=593920,
                 compressed_size=1000,
                 source_format=SubmissionContent.Format.TEX
-            )
+            ),
+            finalized=False, published=False, arxiv_id=None, version=1
         )
         mock_load.return_value = (mock_submission, [])
         mock_save.return_value = (mock_submission, [])
@@ -174,10 +172,9 @@ class TestUpload(TestCase):
         params = MultiDict({})
         mock_file = mock.MagicMock()
         files = MultiDict({'file': mock_file})
-        response_data, code, headers = upload.upload_files(
-            'POST', params, self.session, submission_id, files=files,
-            token='footoken'
-        )
+        _, code, _ = upload.upload_files('POST', params, self.session,
+                                         submission_id, files=files,
+                                         token='footoken')
         self.assertEqual(code, status.HTTP_303_SEE_OTHER, 'Returns 303')
         self.assertEqual(mock_filemanager.add_file.call_count, 1,
                          'Calls the file management service')
@@ -233,18 +230,17 @@ class TestDelete(TestCase):
                     uncompressed_size=593920,
                     compressed_size=1000,
                     source_format=SubmissionContent.Format.TEX
-                )
+                ),
+                finalized=False, published=False, arxiv_id=None, version=1
             ), []
         )
         file_path = 'anc/foo.jpeg'
         params = MultiDict({'path': file_path})
-        response_data, code, headers = upload.delete(
-            'GET', params, self.session, submission_id, 'footoken'
-        )
+        data, code, _ = upload.delete('GET', params, self.session,
+                                      submission_id, 'footoken')
         self.assertEqual(code, status.HTTP_200_OK, "Returns 200 OK")
-        self.assertIn('form', response_data, "Returns a form in response")
-        self.assertEqual(response_data['form'].file_path.data, file_path,
-                         'File path is set on the form')
+        self.assertIn('form', data, "Returns a form in response")
+        self.assertEqual(data['form'].file_path.data, file_path, 'Path is set')
 
     @mock.patch(f'{upload.__name__}.alerts', mock.MagicMock())
     @mock.patch(f'{upload.__name__}.DeleteFileForm.Meta.csrf', False)
@@ -263,19 +259,17 @@ class TestDelete(TestCase):
                     uncompressed_size=593920,
                     compressed_size=1000,
                     source_format=SubmissionContent.Format.TEX
-                )
+                ),
+                finalized=False, published=False, arxiv_id=None, version=1
             ), []
         )
         file_path = 'anc/foo.jpeg'
         params = MultiDict({'file_path': file_path})
-        response_data, code, headers = upload.delete(
-            'POST', params, self.session, submission_id, 'footoken'
-        )
-        self.assertEqual(code, status.HTTP_400_BAD_REQUEST,
-                         "Returns 400 Bad Request")
-        self.assertIn('form', response_data, "Returns a form in response")
-        self.assertEqual(response_data['form'].file_path.data, file_path,
-                         'File path is set on the form')
+        try:
+            upload.delete('POST', params, self.session, submission_id, 'tok')
+        except BadRequest as e:
+            data = e.description
+            self.assertIn('form', data, "Returns a form in response")
 
     @mock.patch(f'{upload.__name__}.alerts', mock.MagicMock())
     @mock.patch(f'{upload.__name__}.DeleteFileForm.Meta.csrf', False)
@@ -302,7 +296,8 @@ class TestDelete(TestCase):
                     uncompressed_size=593920,
                     compressed_size=1000,
                     source_format=SubmissionContent.Format.TEX
-                )
+                ),
+                finalized=False, published=False, arxiv_id=None, version=1
             ), []
         )
         mock_save.return_value = (
@@ -314,17 +309,16 @@ class TestDelete(TestCase):
                     uncompressed_size=593920,
                     compressed_size=1000,
                     source_format=SubmissionContent.Format.TEX
-                )
+                ),
+                finalized=False, published=False, arxiv_id=None, version=1
             ), []
         )
         file_path = 'anc/foo.jpeg'
         params = MultiDict({'file_path': file_path, 'confirmed': True})
-        response_data, code, headers = upload.delete(
-            'POST', params, self.session, submission_id, 'footoken'
-        )
+        _, code, _ = upload.delete('POST', params, self.session, submission_id,
+                                   'footoken')
         self.assertTrue(
             mock_filemanager.delete_file.called_with(upload_id, file_path),
             "Delete file method of file manager service is called"
         )
-        self.assertEqual(code, status.HTTP_303_SEE_OTHER,
-                         "Returns 303 See Other")
+        self.assertEqual(code, status.HTTP_303_SEE_OTHER, "Returns See Other")

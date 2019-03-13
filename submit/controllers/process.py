@@ -55,13 +55,13 @@ from arxiv.base import logging, alerts
 from arxiv.forms import csrf
 from arxiv.users.domain import Session
 from arxiv.integration.api import exceptions
-import arxiv.submission as events
+from arxiv.submission import save, SaveError, AddProcessStatus
 from arxiv.submission.tasks import is_async
 from arxiv.submission.services.compiler import Compiler
 from arxiv.submission.domain.compilation import Status
 from arxiv.submission.domain.submission import Compilation, SubmissionContent
 from ..util import load_submission
-from . import util
+from .util import validate_command, user_and_client_from_session
 
 logger = logging.getLogger(__name__)
 
@@ -114,8 +114,7 @@ def file_process(method: str, params: MultiDict, session: Session,
             # in the routes handle the response.
             return {}, status.HTTP_303_SEE_OTHER, {}
         return start_compilation(params, session, submission_id, token)
-    else:
-        return {}, status.HTTP_400_BAD_REQUEST, {}
+    raise MethodNotAllowed('Unsupported request')
 
 
 def compile_status(params: MultiDict, session: Session, submission_id: int,
@@ -148,7 +147,7 @@ def compile_status(params: MultiDict, session: Session, submission_id: int,
     # GET
     # submit.controllers.file_process.status
 
-    submitter, client = util.user_and_client_from_session(session)
+    submitter, client = user_and_client_from_session(session)
     submission, submission_events = load_submission(submission_id)
     form = CompilationForm()
     response_data = {
@@ -159,15 +158,14 @@ def compile_status(params: MultiDict, session: Session, submission_id: int,
     }
 
     compilation = submission.latest_compilation
-    is_current = compilation and \
-        compilation.checksum == submission.source_content.checksum
-    logger.debug('submission has processes %s', submission.processes)
-    logger.debug('Submission has compilations %s', submission.compilations)
-    logger.debug('Submission has latest compilation %s', compilation)
+    if not compilation:     # Nothing to do.
+        return response_data, status.HTTP_200_OK, {}
+
+    # Determine whether the current state of the uploaded source content has
+    # been compiled.
+    is_current = compilation.checksum == submission.source_content.checksum
     response_data['must_process'] = (submission.source_content.source_format
                                      is not SubmissionContent.Format.PDF)
-    if not compilation:    # if not Compilation, just show page
-        return response_data, status.HTTP_200_OK, {}
 
     # if Compilation failure, then show errors, opportunity to restart
     if compilation.status is Compilation.Status.FAILED and is_current:
@@ -175,12 +173,14 @@ def compile_status(params: MultiDict, session: Session, submission_id: int,
         response_data.update(_get_log(submission.source_content.identifier,
                                       submission.source_content.checksum,
                                       token))
+
     # if Compilation success, then show preview
     elif compilation.status is Compilation.Status.SUCCEEDED and is_current:
         response_data['status'] = "success"
         response_data.update(_get_log(submission.source_content.identifier,
                                       submission.source_content.checksum,
                                       token))
+
     elif compilation.status is Compilation.Status.IN_PROGRESS and is_current:
         response_data['status'] = "in_progress"
     else:  # if Compilation running, then show status, no restart
@@ -190,7 +190,7 @@ def compile_status(params: MultiDict, session: Session, submission_id: int,
 
 def start_compilation(params: MultiDict, session: Session, submission_id: int,
                       token: str, **kwargs) -> Response:
-    submitter, client = util.user_and_client_from_session(session)
+    submitter, client = user_and_client_from_session(session)
     submission, submission_events = load_submission(submission_id)
     form = CompilationForm(params)
     response_data = {
@@ -202,7 +202,7 @@ def start_compilation(params: MultiDict, session: Session, submission_id: int,
 
     if not form.validate():
         logger.debug("Invalid form data")
-        return response_data, status.HTTP_400_BAD_REQUEST, {}
+        raise BadRequest(response_data)
     try:
         logger.debug('Request compilation of source %s at checksum %s',
                      submission.source_content.identifier,
@@ -232,17 +232,20 @@ def start_compilation(params: MultiDict, session: Session, submission_id: int,
     in_progress = compilation_status.status is Status.IN_PROGRESS
     previous = [c.identifier for c in submission.compilations]
     new_compilation = compilation_status.identifier not in previous
+    process = AddProcessStatus.Process.COMPILATION
     if in_progress or (failed and new_compilation):
-        submission, stack = events.save(  # pylint: disable=W0612
-            events.AddProcessStatus(
-                creator=submitter,
-                process=events.AddProcessStatus.Process.COMPILATION,
-                service=Compiler.NAME,
-                version=Compiler.VERSION,
-                identifier=compilation_status.identifier
-            ),
-            submission_id=submission_id
-        )
+        command = AddProcessStatus(creator=submitter, client=client,
+                                   process=process, service=Compiler.NAME,
+                                   version=Compiler.VERSION,
+                                   identifier=compilation_status.identifier)
+        if not validate_command(form, command, submission):
+            raise BadRequest(response_data)
+
+        try:
+            submission, _ = save(command, submission_id=submission_id)
+        except SaveError as e:
+            raise InternalServerError(response_data) from e
+        response_data['submission'] = submission
         alerts.flash_success(
             "We are compiling your submission. This may take a minute or two."
             " This page will refresh automatically every 5 seconds. You can "
@@ -266,7 +269,7 @@ def _get_log(identifier: str, checksum: str, token: str) -> dict:
 
 def file_preview(params, session: Session, submission_id: int, token: str,
                  **kwargs) -> Response:
-    submitter, client = util.user_and_client_from_session(session)
+    submitter, client = user_and_client_from_session(session)
     submission, submission_events = load_submission(submission_id)
     prod = Compiler.get_product(submission.source_content.identifier,
                                 submission.source_content.checksum, token)
@@ -276,7 +279,7 @@ def file_preview(params, session: Session, submission_id: int, token: str,
 
 def compilation_log(params, session: Session, submission_id: int, token: str,
                     **kwargs) -> Response:
-    submitter, client = util.user_and_client_from_session(session)
+    submitter, client = user_and_client_from_session(session)
     submission, submission_events = load_submission(submission_id)
     checksum = params.get('checksum', submission.source_content.checksum)
     try:

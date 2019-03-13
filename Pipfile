@@ -21,6 +21,7 @@ mysqlclient = "==1.4.2"
 arxiv-submission-core = "==0.6.2rc21"
 mimesis = "==2.1.0"
 backports-datetime-fromisoformat = "*"
+flask-session = "*"
 
 [dev-packages]
 pydocstyle = "*"

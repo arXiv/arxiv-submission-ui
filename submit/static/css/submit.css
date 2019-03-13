@@ -1,3 +1,11 @@
+@charset "UTF-8";
+.section {
+  /* move this to base as $section-padding */
+  padding: 1em 0; }
+
+.button.is-short {
+  height: 1.75em; }
+
 .content h2.replacement {
   margin-top: -2rem;
   margin-bottom: 2rem;
@@ -19,6 +27,16 @@
     margin-bottom: 0.5em;
     border-bottom-width: 1px;
     border-bottom-style: dotted; }
+
+.beta-before::before {
+  content: "β";
+  color: rgba(204, 204, 204, 0.5);
+  font-size: 10em;
+  position: absolute;
+  top: -0.4em;
+  left: -0.25em;
+  line-height: 1;
+  font-family: serif; }
 
 /* overrides for this form only? may move to base */
 .field:not(:last-child) {

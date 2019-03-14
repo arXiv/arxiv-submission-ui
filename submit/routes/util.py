@@ -71,7 +71,8 @@ def flow_control(this_stage: Stage, exit: str = EXIT) -> Callable:
 
             # If the user has proceeded past an optional stage, consider it
             # to be completed.
-            if not workflow.is_required(workflow.previous_stage(this_stage)):
+            if not workflow.is_required(workflow.previous_stage(this_stage)) \
+                    and workflow.previous_stage(this_stage) is not None:
                 workflow.mark_complete(workflow.previous_stage(this_stage))
 
             # If the user selects "go back", we attempt to save their input

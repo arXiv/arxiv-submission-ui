@@ -241,7 +241,11 @@ class Workflow:
 
     def can_proceed_to(self, stage: Stage) -> bool:
         """Determine whether the user can proceed to a stage."""
-        return self.is_complete(self.previous_stage(stage))
+        return self.is_complete(self.previous_stage(stage)) \
+            or all(map(self.complete_or_optional, self.iter_prior(stage)))
+
+    def complete_or_optional(self, stage: Stage) -> bool:
+        return self.is_complete(stage) or not self.is_required(stage)
 
     def _get_states(self) -> dict:
         if str(self.submission.submission_id) in self.session:

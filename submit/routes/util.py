@@ -69,6 +69,11 @@ def flow_control(this_stage: Stage, exit: str = EXIT) -> Callable:
             except ValueError:
                 raise BadRequest('Request not allowed for this submission')
 
+            # If the user has proceeded past an optional stage, consider it
+            # to be completed.
+            if not workflow.is_required(workflow.previous_stage(this_stage)):
+                workflow.mark_complete(workflow.previous_stage(this_stage))
+
             # If the user selects "go back", we attempt to save their input
             # above. But if the input does not validate, we don't prevent them
             # from going to the previous step.

@@ -37,7 +37,7 @@ def create(method: str, params: MultiDict, session: Session, *args,
 
     # We're using a form here for CSRF protection.
     form = CreateSubmissionForm(params)
-    response_data = {'form': form}
+    response_data['form'] = form
 
     if method == 'POST':
         if not form.validate():

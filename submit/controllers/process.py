@@ -55,7 +55,7 @@ from arxiv.base import logging, alerts
 from arxiv.forms import csrf
 from arxiv.users.domain import Session
 from arxiv.integration.api import exceptions
-from arxiv.submission import save, SaveError, AddProcessStatus
+from arxiv.submission import save, SaveError, AddProcessStatus, Submission
 from arxiv.submission.tasks import is_async
 from arxiv.submission.services.compiler import Compiler
 from arxiv.submission.domain.compilation import Status
@@ -68,7 +68,7 @@ logger = logging.getLogger(__name__)
 Response = Tuple[Dict[str, Any], int, Dict[str, Any]]  # pylint: disable=C0103
 
 
-PLEASE_CONTACT_SUPPORT = Markup(
+SUPPORT = Markup(
     'If you continue to experience problems, please contact'
     ' <a href="mailto:help@arxiv.org"> arXiv support</a>.'
 )
@@ -154,7 +154,9 @@ def compile_status(params: MultiDict, session: Session, submission_id: int,
         'submission_id': submission_id,
         'submission': submission,
         'form': form,
-        'compilations': submission.compilations
+        'compilations': submission.compilations,
+        'status': None,
+        'must_process': _must_process(submission)
     }
 
     compilation = submission.latest_compilation
@@ -164,27 +166,16 @@ def compile_status(params: MultiDict, session: Session, submission_id: int,
     # Determine whether the current state of the uploaded source content has
     # been compiled.
     is_current = compilation.checksum == submission.source_content.checksum
-    response_data['must_process'] = (submission.source_content.source_format
-                                     is not SubmissionContent.Format.PDF)
+    if is_current:
+        response_data['status'] = compilation.status
 
-    # if Compilation failure, then show errors, opportunity to restart
-    if compilation.status is Compilation.Status.FAILED and is_current:
-        response_data['status'] = "failed"
+    # if Compilation failure, then show errors, opportunity to restart.
+    # if Compilation success, then show preview.
+    terminal_states = [Compilation.Status.FAILED, Compilation.Status.SUCCEEDED]
+    if is_current and compilation.status in terminal_states:
         response_data.update(_get_log(submission.source_content.identifier,
                                       submission.source_content.checksum,
                                       token))
-
-    # if Compilation success, then show preview
-    elif compilation.status is Compilation.Status.SUCCEEDED and is_current:
-        response_data['status'] = "success"
-        response_data.update(_get_log(submission.source_content.identifier,
-                                      submission.source_content.checksum,
-                                      token))
-
-    elif compilation.status is Compilation.Status.IN_PROGRESS and is_current:
-        response_data['status'] = "in_progress"
-    else:  # if Compilation running, then show status, no restart
-        response_data['status'] = None
     return response_data, status.HTTP_200_OK, {}
 
 
@@ -197,47 +188,36 @@ def start_compilation(params: MultiDict, session: Session, submission_id: int,
         'submission_id': submission_id,
         'submission': submission,
         'form': form,
-        'compilations': submission.compilations
+        'compilations': submission.compilations,
+        'status': None,
+        'must_process': _must_process(submission)
     }
 
     if not form.validate():
-        logger.debug("Invalid form data")
         raise BadRequest(response_data)
     try:
-        logger.debug('Request compilation of source %s at checksum %s',
-                     submission.source_content.identifier,
-                     submission.source_content.checksum)
-        compilation_status = Compiler.compile(
-            submission.source_content.identifier,
-            submission.source_content.checksum,
-            token
-        )
-        logger.debug("Requested compilation, %s", compilation_status)
-        if compilation_status.status is Status.FAILED:
-            alerts.flash_failure(f"Compilation failed")
-    except exceptions.BadRequest as e:
-        logger.debug('Bad request to compiler for %s: %s', submission_id, e)
-        alerts.flash_failure(
-            f"We could not compile your submission. {PLEASE_CONTACT_SUPPORT}",
-            title="Compilation failed"
-        )
-    except exceptions.NotFound as e:
-        logger.debug('No such resource error for %s: %s', submission_id, e)
-        alerts.flash_failure(
-            f"We could not compile your submission. {PLEASE_CONTACT_SUPPORT}",
-            title="Compilation failed"
-        )
+        stat = Compiler.compile(submission.source_content.identifier,
+                                submission.source_content.checksum, token)
+    except exceptions.RequestFailed as e:
+        alerts.flash_failure(f"We couldn't compile your submission. {SUPPORT}",
+                             title="Compilation failed")
+        raise InternalServerError(response_data) from e
 
-    failed = compilation_status.status is Status.FAILED
-    in_progress = compilation_status.status is Status.IN_PROGRESS
+    response_data['status'] = stat
+    if stat.status is Status.FAILED:
+        alerts.flash_failure(f"Compilation failed")
+
+    failed = stat.status is Status.FAILED
+    succeeded = stat.status is Status.SUCCEEDED
+    in_progress = stat.status is Status.IN_PROGRESS
     previous = [c.identifier for c in submission.compilations]
-    new_compilation = compilation_status.identifier not in previous
+    new_compilation = stat.identifier not in previous
     process = AddProcessStatus.Process.COMPILATION
-    if in_progress or (failed and new_compilation):
+    if in_progress or (new_compilation and (failed or succeeded)):
         command = AddProcessStatus(creator=submitter, client=client,
                                    process=process, service=Compiler.NAME,
                                    version=Compiler.VERSION,
-                                   identifier=compilation_status.identifier)
+                                   identifier=stat.identifier)
         if not validate_command(form, command, submission):
             raise BadRequest(response_data)
 
@@ -252,7 +232,7 @@ def start_compilation(params: MultiDict, session: Session, submission_id: int,
             " also refresh this page manually to check the current status. ",
             title="Compilation started"
         )
-    alerts.flash_hidden(compilation_status.to_dict(), 'compilation_status')
+    alerts.flash_hidden(stat.to_dict(), 'compilation_status')
     redirect = url_for('ui.file_process', submission_id=submission_id)
     return response_data, status.HTTP_303_SEE_OTHER, {'Location': redirect}
 
@@ -307,3 +287,8 @@ class CompilationForm(csrf.CSRFForm):
 
     compiler = SelectField('Compiler', choices=COMPILERS,
                            default=PDFLATEX)
+
+
+def _must_process(submission: Submission) -> bool:
+    return submission.source_content.source_format \
+        is not SubmissionContent.Format.PDF

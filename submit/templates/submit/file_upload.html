@@ -75,7 +75,7 @@
         You can upload all your files at once as a single .tar.gz or .zip file, or upload individual files as needed.
       </p>
 
-      {% if status.files %}
+      {% if status and status.files %}
       <h3>Files currently attached to this submission ({{ status.size|filesizeformat }})</h3>
 
       {{ display_tree(None, status.files|group_files) }}

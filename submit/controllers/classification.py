@@ -184,39 +184,40 @@ def cross_list(method: str, params: MultiDict, session: Session,
         # categories, we only want to handle the form data if the user is not
         # attempting to move to a different step.
         action = params.get('action')
-        if not form.validate():
-            raise BadRequest(response_data)
+        if not action:
+            if not form.validate():
+                raise BadRequest(response_data)
 
-        if form.operation.data == form.REMOVE:
-            command_type = RemoveSecondaryClassification
-        else:
-            command_type = AddSecondaryClassification
-        command = command_type(category=form.category.data, creator=submitter,
-                               client=client)
-        if not validate_command(form, command, submission, 'category'):
-            raise BadRequest(response_data)
+            if form.operation.data == form.REMOVE:
+                command_type = RemoveSecondaryClassification
+            else:
+                command_type = AddSecondaryClassification
+            command = command_type(category=form.category.data,
+                                   creator=submitter, client=client)
+            if not validate_command(form, command, submission, 'category'):
+                raise BadRequest(response_data)
 
-        try:
-            submission, _ = save(command, submission_id=submission_id)
-            response_data['submission'] = submission
-        except SaveError as e:
-            raise InternalServerError(response_data) from e
+            try:
+                submission, _ = save(command, submission_id=submission_id)
+                response_data['submission'] = submission
+            except SaveError as e:
+                raise InternalServerError(response_data) from e
 
-        # Re-build the formset to reflect changes that we just made, and
-        # generate a fresh form for adding another secondary. The POSTed
-        # data should now be reflected in the formset.
-        response_data['formset'] = ClassificationForm.formset(submission)
-        form = ClassificationForm()
-        form.operation._value = lambda: form.operation.data
-        form.filter_choices(submission, session)
-        response_data['form'] = form
+            # Re-build the formset to reflect changes that we just made, and
+            # generate a fresh form for adding another secondary. The POSTed
+            # data should now be reflected in the formset.
+            response_data['formset'] = ClassificationForm.formset(submission)
+            form = ClassificationForm()
+            form.operation._value = lambda: form.operation.data
+            form.filter_choices(submission, session)
+            response_data['form'] = form
 
-        # Warn the user if they have too many secondaries.
-        if len(submission.secondary_categories) > 3:
-            alerts.flash_warning(Markup(
-                'Adding more than three cross-list classifications will'
-                ' result in a delay in the acceptance of your submission.'
-            ))
+            # Warn the user if they have too many secondaries.
+            if len(submission.secondary_categories) > 3:
+                alerts.flash_warning(Markup(
+                    'Adding more than three cross-list classifications will'
+                    ' result in a delay in the acceptance of your submission.'
+                ))
 
         if action in ['previous', 'save_exit', 'next']:
             return response_data, status.HTTP_303_SEE_OTHER, {}

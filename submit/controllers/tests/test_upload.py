@@ -69,11 +69,10 @@ class TestUpload(TestCase):
 
     @mock.patch(f'{upload.__name__}.UploadForm.Meta.csrf', False)
     @mock.patch(f'{upload.__name__}.alerts', mock.MagicMock())
-    @mock.patch(f'{upload.__name__}.filemanager')
+    @mock.patch(f'{upload.__name__}.FileManager')
     @mock.patch('arxiv.submission.load')
     def test_get_upload(self, mock_load, mock_filemanager):
         """GET request for submission with an existing upload package."""
-        mock_filemanager.RequestFailed = filemanager.RequestFailed
         submission_id = 2
         mock_load.return_value = (
             mock.MagicMock(
@@ -127,12 +126,11 @@ class TestUpload(TestCase):
     @mock.patch(f'{upload.__name__}.UploadForm.Meta.csrf', False)
     @mock.patch(f'{upload.__name__}.alerts', mock.MagicMock())
     @mock.patch(f'{upload.__name__}.url_for', mock.MagicMock(return_value='/'))
-    @mock.patch(f'{upload.__name__}.filemanager')
+    @mock.patch(f'{upload.__name__}.FileManager')
     @mock.patch(f'{upload.__name__}.save')
     @mock.patch(f'arxiv.submission.load')
     def test_post_upload(self, mock_load, mock_save, mock_filemanager):
         """POST request for submission with an existing upload package."""
-        mock_filemanager.RequestFailed = filemanager.RequestFailed
         submission_id = 2
         mock_submission = mock.MagicMock(
             submission_id=submission_id,
@@ -215,11 +213,10 @@ class TestDelete(TestCase):
         )
 
     @mock.patch(f'{upload.__name__}.DeleteFileForm.Meta.csrf', False)
-    @mock.patch(f'{upload.__name__}.filemanager')
+    @mock.patch(f'{upload.__name__}.FileManager')
     @mock.patch('arxiv.submission.load')
     def test_get_delete(self, mock_load, mock_filemanager):
         """GET request to delete a file."""
-        mock_filemanager.RequestFailed = filemanager.RequestFailed
         submission_id = 2
         mock_load.return_value = (
             mock.MagicMock(
@@ -244,11 +241,10 @@ class TestDelete(TestCase):
 
     @mock.patch(f'{upload.__name__}.alerts', mock.MagicMock())
     @mock.patch(f'{upload.__name__}.DeleteFileForm.Meta.csrf', False)
-    @mock.patch(f'{upload.__name__}.filemanager')
+    @mock.patch(f'{upload.__name__}.FileManager')
     @mock.patch('arxiv.submission.load')
     def test_post_delete(self, mock_load, mock_filemanager):
         """POST request to delete a file without confirmation."""
-        mock_filemanager.RequestFailed = filemanager.RequestFailed
         submission_id = 2
         mock_load.return_value = (
             mock.MagicMock(
@@ -274,7 +270,7 @@ class TestDelete(TestCase):
     @mock.patch(f'{upload.__name__}.alerts', mock.MagicMock())
     @mock.patch(f'{upload.__name__}.DeleteFileForm.Meta.csrf', False)
     @mock.patch(f'{upload.__name__}.url_for')
-    @mock.patch(f'{upload.__name__}.filemanager')
+    @mock.patch(f'{upload.__name__}.FileManager')
     @mock.patch(f'{upload.__name__}.save')
     @mock.patch('arxiv.submission.load')
     def test_post_delete_confirmed(self, mock_load, mock_save,
@@ -282,9 +278,6 @@ class TestDelete(TestCase):
         """POST request to delete a file without confirmation."""
         redirect_uri = '/foo'
         mock_url_for.return_value = redirect_uri
-        mock_filemanager.RequestFailed = filemanager.RequestFailed
-        mock_filemanager.RequestForbidden = filemanager.RequestForbidden
-        mock_filemanager.BadRequest = filemanager.BadRequest
         upload_id = '5433'
         submission_id = 2
         mock_load.return_value = (

@@ -261,9 +261,10 @@ class Workflow:
         # Completion just means that "we have gotten this far." So if we
         # encounter a complete stage, the previous stages "just are" complete.
         for stage in self.ORDER[::-1]:
-            # If the status is not set in the client session, check the
-            # submission itself.
-            if stage.endpoint not in states:
+            # If the status is not set in the client session, or if the client
+            # session shows that the state is incomplete, check the submission
+            # itself for a fresh look.
+            if stage.endpoint not in states or not states[stage.endpoint]:
                 states[stage.endpoint] = stage.complete(self.submission)
 
             # Mark all previous stages as complete if this stage is complete.

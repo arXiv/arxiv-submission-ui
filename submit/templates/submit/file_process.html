@@ -3,7 +3,7 @@
 {% block title -%}Process Files{%- endblock title %}
 
 {% block extra_head %}
-  {% if status == "in_progress" %}
+  {% if status and status.value == "in_progress" %}
   <meta http-equiv="refresh" content="5;url={{ url_for('ui.file_process', submission_id=submission_id) }}" />
   {% endif %}
 {% endblock extra_head %}
@@ -29,65 +29,68 @@
     </div>
     {% endif %}
 
-    {% if status == "in_progress" %}
-    <div class="message is-warning">
-      <div class="message-header">
-        <p><span class="icon"><i class="fa fa-tasks"></i></span>Processing Underway</p></div>
-      <div class="message-body">
-        <p>
-          We are currently processing your submission. This may take up to a minute or two.
-          This page will refresh automatically every 5 seconds. You can also refresh this
-          page manually to check the current status.
-        </p>
+    {% if status %}
+      {% if status.value == "in_progress" %}
+      <div class="message is-warning">
+        <div class="message-header">
+          <p><span class="icon"><i class="fa fa-tasks"></i></span>Processing Underway</p></div>
+        <div class="message-body">
+          <p>
+            We are currently processing your submission. This may take up to a minute or two.
+            This page will refresh automatically every 5 seconds. You can also refresh this
+            page manually to check the current status.
+          </p>
+        </div>
       </div>
-    </div>
 
-    {% elif status == "failed" %}
-    <div class="message is-danger">
-      <div class="message-header">
-        <p><span class="icon"><i class="fa fa-exclamation-triangle"></i></span>Processing Failed</p></div>
-      <div class="message-body">
-        <p>What to do next:</p>
-        <ul>
-          <li>review the log warnings and errors</li>
-          <li>correct any missing file problems</li>
-          <li>edit your files if needed</li>
-          <li>re-upload any corrected files</li>
-        </ul>
-        <p class="has-text-centered"><a class="button is-link" href="{{ url_for('ui.file_upload', submission_id=submission_id) }}">Go back to Upload Files</a></p>
-        <p class="has-text-centered"><a class="button" href="#help">Help: Common TeX Errors</a></p>
+      {% elif status.value == "failed" %}
+      <div class="message is-danger">
+        <div class="message-header">
+          <p><span class="icon"><i class="fa fa-exclamation-triangle"></i></span>Processing Failed</p></div>
+        <div class="message-body">
+          <p>What to do next:</p>
+          <ul>
+            <li>review the log warnings and errors</li>
+            <li>correct any missing file problems</li>
+            <li>edit your files if needed</li>
+            <li>re-upload any corrected files</li>
+          </ul>
+          <p class="has-text-centered"><a class="button is-link" href="{{ url_for('ui.file_upload', submission_id=submission_id) }}">Go back to Upload Files</a></p>
+          <p class="has-text-centered"><a class="button" href="#help">Help: Common TeX Errors</a></p>
+        </div>
       </div>
-    </div>
 
-    {% elif status == "success" and warnings %}
-    <div class="message is-warning">
-      <div class="message-header">
-        <p><span class="icon"><i class="fa fa-exclamation-triangle"></i></span>Completed With Warnings</p>
+      {% elif status.value == "succeeded" and warnings %}
+      <div class="message is-warning">
+        <div class="message-header">
+          <p><span class="icon"><i class="fa fa-exclamation-triangle"></i></span>Completed With Warnings</p>
+        </div>
+        <div class="message-body">
+          <ul>
+            <li>Be sure to check the compiled preview carefully for any undesired artifacts or errors.</li>
+            <li>Check the compiler log for warnings and errors.</l>
+          </ul>
+        </div>
       </div>
-      <div class="message-body">
-        <ul>
-          <li>Be sure to check the compiled preview carefully for any undesired artifacts or errors.</li>
-          <li>Check the compiler log for warnings and errors.</l>
-        </ul>
-      </div>
-    </div>
 
-    {% elif status == "success" %}
-    <div class="message is-success">
-      <div class="message-header">
-        <p><span class="icon"><i class="fa fa-check-circle"></i></span>Processing Successful</p></div>
-      <div class="message-body">
-        <p>Be sure to check the compiled preview carefully for any undesired artifacts or errors.</p>
-        <p>If you need to make corrections, return to the previous step and adjust your files, then reprocess your submission.</p>
+      {% elif status.value == "succeeded" %}
+      <div class="message is-success">
+        <div class="message-header">
+          <p><span class="icon"><i class="fa fa-check-circle"></i></span>Processing Successful</p></div>
+        <div class="message-body">
+          <p>Be sure to check the compiled preview carefully for any undesired artifacts or errors.</p>
+          <p>If you need to make corrections, return to the previous step and adjust your files, then reprocess your submission.</p>
 
-        <p class="has-text-centered">
-          <a class="button is-link" href="{{ url_for('ui.file_preview', submission_id=submission_id) }}" target="_blank">
-            View PDF
-          </a>
-        </p>
+          <p class="has-text-centered">
+            <a class="button is-link" href="{{ url_for('ui.file_preview', submission_id=submission_id) }}" target="_blank">
+              View PDF
+            </a>
+          </p>
+        </div>
       </div>
-    </div>
+      {% endif %}
     {% endif %}
+
     {% for compilation in compilations[::-1] %}
       <li>
         {% if compilation.checksum == submission.source_content.checksum %}Current package{% else %}Previous package{% endif %} started {{ compilation.start_time|timesince }}

@@ -10,12 +10,15 @@ from arxiv import status, taxonomy
 from submit import controllers
 from arxiv.users import auth
 import arxiv.submission as events
+from arxiv.submission.services.classic.exceptions import Unavailable
+from arxiv.base import logging
 
 from .auth import is_owner
 from ..domain import workflow, Submission
 from .util import flow_control, get_workflow
 from .. import util
 
+logger = logging.getLogger(__name__)
 
 ui = Blueprint('ui', __name__, url_prefix='/')
 
@@ -41,7 +44,15 @@ def load_submission() -> None:
     if request.view_args is None or 'submission_id' not in request.view_args:
         return
     submission_id = request.view_args['submission_id']
-    request.submission, request.events = util.load_submission(submission_id)
+    try:
+        request.submission, request.events = \
+            util.load_submission(submission_id)
+    except Unavailable as e:
+        raise InternalServerError('Could not connect to database') from e
+    except Exception as e:
+        logger.error('Encountered %s while loading %s', e, submission_id)
+        request.submission = None
+        request.events = None
 
 
 @ui.context_processor
@@ -98,21 +109,23 @@ def handle(controller: Callable, template: str, title: str,
     else:
         request_data = MultiDict(request.form.items(multi=True))
 
+    context = {'pagetitle': title}
     try:
         data, code, headers = controller(request.method, request_data,
                                          request.session, submission_id,
                                          **kwargs)
     except (BadRequest, InternalServerError) as e:
-        data = e.description
-        return make_response(render_template(template, **data), e.code)
+        context.update(e.description)
+        return make_response(render_template(template, **context), e.code)
+    except Unavailable as e:
+        raise InternalServerError('Could not connect to database') from e
+    context.update(data)
 
-    if 'pagetitle' not in data:
-        data['pagetitle'] = title
     if code < 300:
-        return make_response(render_template(template, **data), code)
+        return make_response(render_template(template, **context), code)
     if 'Location' in headers:
         return redirect(headers['Location'], code=code)
-    return Response(response=data, status=code, headers=headers)
+    return Response(response=context, status=code, headers=headers)
 
 
 @ui.route('/', methods=["GET", "POST"])

@@ -22,6 +22,7 @@ from wtforms.validators import DataRequired
 from flask import url_for, Markup
 
 from arxiv import status
+from arxiv.integration.api import exceptions
 from arxiv.base import logging, alerts
 from arxiv.forms import csrf
 from arxiv.submission.domain.submission import SubmissionContent
@@ -32,7 +33,7 @@ from arxiv.users.domain import Session
 
 from .util import validate_command, user_and_client_from_session
 from ..util import load_submission, tidy_filesize
-from ..services import filemanager
+from ..services import FileManager
 from ..domain import Upload
 
 logger = logging.getLogger(__name__)
@@ -96,7 +97,7 @@ def upload_files(method: str, params: MultiDict, session: Session,
     rdata = {'submission_id': submission_id, 'submission': submission}
 
     if method == 'GET':
-        return _get_upload(params, session, submission, rdata)
+        return _get_upload(params, session, submission, rdata, token)
 
     # User is attempting an upload of some kind.
     elif method == 'POST':
@@ -105,7 +106,7 @@ def upload_files(method: str, params: MultiDict, session: Session,
             # in the routes handle the response.
             return {}, status.HTTP_303_SEE_OTHER, {}
         # Otherwise, treat this as an upload attempt.
-        return _post_upload(params, files, session, submission, rdata)
+        return _post_upload(params, files, session, submission, rdata, token)
     raise MethodNotAllowed('Nope')
 
 
@@ -163,20 +164,20 @@ def delete_all(method: str, params: MultiDict, session: Session,
             raise BadRequest(rdata)
 
         try:
-            stat = filemanager.delete_all(upload_id)
-        except filemanager.RequestForbidden as e:
+            stat = FileManager.delete_all(upload_id, token)
+        except exceptions.RequestForbidden as e:
             alerts.flash_failure(Markup(
                 'There was a problem authorizing your request. Please try'
                 f' again. {PLEASE_CONTACT_SUPPORT}'
             ))
             logger.error('Encountered RequestForbidden: %s', e)
-        except filemanager.BadRequest as e:
+        except exceptions.BadRequest as e:
             alerts.flash_warning(Markup(
                 'Something odd happened when processing your request.'
                 f'{PLEASE_CONTACT_SUPPORT}'
             ))
             logger.error('Encountered BadRequest: %s', e)
-        except filemanager.RequestFailed as e:
+        except exceptions.RequestFailed as e:
             alerts.flash_failure(Markup(
                 'There was a problem carrying out your request. Please try'
                 f' again. {PLEASE_CONTACT_SUPPORT}'
@@ -271,23 +272,24 @@ def delete(method: str, params: MultiDict, session: Session,
 
         stat: Optional[Upload] = None
         try:
-            stat = filemanager.delete_file(upload_id, form.file_path.data)
+            file_path = form.file_path.data
+            stat = FileManager.delete_file(upload_id, file_path, token)
             alerts.flash_success(
                 f'File <code>{form.file_path.data}</code> was deleted'
                 ' successfully', title='Deleted file successfully',
                 safe=True
             )
-        except filemanager.RequestForbidden:
+        except exceptions.RequestForbidden:
             alerts.flash_failure(Markup(
                 'There was a problem authorizing your request. Please try'
                 f' again. {PLEASE_CONTACT_SUPPORT}'
             ))
-        except filemanager.BadRequest:
+        except exceptions.BadRequest:
             alerts.flash_warning(Markup(
                 'Something odd happened when processing your request.'
                 f'{PLEASE_CONTACT_SUPPORT}'
             ))
-        except filemanager.RequestFailed:
+        except exceptions.RequestFailed:
             alerts.flash_failure(Markup(
                 'There was a problem carrying out your request. Please try'
                 f' again. {PLEASE_CONTACT_SUPPORT}'
@@ -382,7 +384,7 @@ def _update(form: UploadForm, submission: Submission, stat: Upload,
 
 
 def _get_upload(params: MultiDict, session: Session, submission: Submission,
-                rdata: Dict[str, Any]) -> Response:
+                rdata: Dict[str, Any], token) -> Response:
     """
     Get the current state of the upload workspace, and prepare a response.
 
@@ -418,8 +420,8 @@ def _get_upload(params: MultiDict, session: Session, submission: Submission,
         stat = Upload.from_dict(status_data)
     else:
         try:
-            stat = filemanager.get_upload_status(upload_id)
-        except filemanager.RequestFailed as e:
+            stat = FileManager.get_upload_status(upload_id, token)
+        except exceptions.RequestFailed as e:
             # TODO: handle specific failure cases.
             raise InternalServerError(rdata) from e
     rdata.update({'status': stat})
@@ -429,7 +431,8 @@ def _get_upload(params: MultiDict, session: Session, submission: Submission,
 
 
 def _new_upload(params: MultiDict, pointer: FileStorage, session: Session,
-                submission: Submission, rdata: Dict[str, Any]) -> Response:
+                submission: Submission, rdata: Dict[str, Any], token: str) \
+        -> Response:
     """
     Handle a POST request with a new upload package.
 
@@ -471,12 +474,13 @@ def _new_upload(params: MultiDict, pointer: FileStorage, session: Session,
         raise BadRequest(rdata)
 
     try:
-        stat = filemanager.upload_package(pointer)
-    except filemanager.RequestFailed:
+        stat = FileManager.upload_package(pointer, token)
+    except exceptions.RequestFailed as e:
         alerts.flash_failure(Markup(
             'There was a problem carrying out your request. Please try'
             f' again. {PLEASE_CONTACT_SUPPORT}'
         ))
+        raise InternalServerError(rdata) from e
 
     submission = _update(form, submission, stat, submitter, client, rdata)
     converted_size = tidy_filesize(stat.size)
@@ -505,7 +509,8 @@ def _new_upload(params: MultiDict, pointer: FileStorage, session: Session,
 
 
 def _new_file(params: MultiDict, pointer: FileStorage, session: Session,
-              submission: Submission, rdata: Dict[str, Any]) -> Response:
+              submission: Submission, rdata: Dict[str, Any], token: str) \
+        -> Response:
     """
     Handle a POST request with a new file to add to an existing upload package.
 
@@ -555,8 +560,9 @@ def _new_file(params: MultiDict, pointer: FileStorage, session: Session,
     ancillary: bool = form.ancillary.data
 
     try:
-        stat = filemanager.add_file(upload_id, pointer, ancillary=ancillary)
-    except filemanager.RequestFailed as e:
+        stat = FileManager.add_file(upload_id, pointer, token,
+                                    ancillary=ancillary)
+    except exceptions.RequestFailed as e:
         alerts.flash_failure(Markup(
             'There was a problem carrying out your request. Please try'
             f' again. {PLEASE_CONTACT_SUPPORT}'
@@ -590,7 +596,8 @@ def _new_file(params: MultiDict, pointer: FileStorage, session: Session,
 
 
 def _post_upload(params: MultiDict, files: MultiDict, session: Session,
-                 submission: Submission, rdata: Dict[str, Any]) -> Response:
+                 submission: Submission, rdata: Dict[str, Any], token: str) \
+        -> Response:
     """
     Compose POST request handling for the file upload endpoint.
 
@@ -635,8 +642,8 @@ def _post_upload(params: MultiDict, files: MultiDict, session: Session,
         return {}, status.HTTP_303_SEE_OTHER, headers
 
     if submission.source_content is None:   # New upload package.
-        return _new_upload(params, pointer, session, submission, rdata)
-    return _new_file(params, pointer, session, submission, rdata)
+        return _new_upload(params, pointer, session, submission, rdata, token)
+    return _new_file(params, pointer, session, submission, rdata, token)
 
 
 def _get_notifications(stat: Upload) -> List[Dict[str, str]]:

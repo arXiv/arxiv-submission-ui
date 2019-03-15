@@ -3,8 +3,7 @@
 from typing import Tuple, Dict, Any, List
 
 from werkzeug import MultiDict
-from werkzeug.exceptions import InternalServerError
-from flask import url_for
+from werkzeug.exceptions import InternalServerError, BadRequest
 from wtforms.fields import TextField, TextAreaField, Field
 from wtforms import validators
 
@@ -12,18 +11,19 @@ from arxiv import status
 from arxiv.forms import csrf
 from arxiv.base import logging
 from arxiv.users.domain import Session
-import arxiv.submission as events
+from arxiv.submission import save, SetTitle, SetAuthors, SetAbstract, \
+    SetACMClassification, SetMSCClassification, SetComments, SetReportNumber, \
+    SetJournalReference, SetDOI, SaveError, Submission, User, Client, Event
 
-from ..domain import SubmissionStage
 from ..util import load_submission
-from . import util
+from .util import validate_command, FieldMixin, user_and_client_from_session
 
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 
 Response = Tuple[Dict[str, Any], int, Dict[str, Any]]  # pylint: disable=C0103
 
 
-class CoreMetadataForm(csrf.CSRFForm, util.FieldMixin, util.SubmissionMixin):
+class CoreMetadataForm(csrf.CSRFForm, FieldMixin):
     """Handles core metadata fields on a submission."""
 
     title = TextField('*Title', validators=[validators.DataRequired()])
@@ -47,38 +47,8 @@ class CoreMetadataForm(csrf.CSRFForm, util.FieldMixin, util.SubmissionMixin):
                             "or figures, conference information."
                          ))
 
-    def validate_title(form: csrf.CSRFForm, field: Field) -> None:
-        """Validate title input using core events."""
-        if field.data == form.submission.metadata.title:     # Nothing to do.
-            return
-        if field.data:
-            form._validate_event(events.SetTitle, title=field.data)
 
-    def validate_abstract(form: csrf.CSRFForm, field: Field) -> None:
-        """Validate abstract input using core events."""
-        if field.data == form.submission.metadata.abstract:    # Nothing to do.
-            return
-        if field.data:
-            form._validate_event(events.SetAbstract, abstract=field.data)
-
-    def validate_comments(form: csrf.CSRFForm, field: Field) -> None:
-        """Validate comments input using core events."""
-        if field.data == form.submission.metadata.comments:    # Nothing to do.
-            return
-        if field.data is not None:
-            form._validate_event(events.SetComments, comments=field.data)
-
-    def validate_authors_display(form: csrf.CSRFForm, field: Field) -> None:
-        """Validate authors input using core events."""
-        if field.data == form.submission.metadata.authors_display:
-            return
-        if field.data:
-            form._validate_event(events.SetAuthors,
-                                 authors_display=field.data)
-
-
-class OptionalMetadataForm(csrf.CSRFForm, util.FieldMixin,
-                           util.SubmissionMixin):
+class OptionalMetadataForm(csrf.CSRFForm, FieldMixin):
     """Handles optional metadata fields on a submission."""
 
     doi = TextField('DOI',
@@ -105,47 +75,8 @@ class OptionalMetadataForm(csrf.CSRFForm, util.FieldMixin,
                           description=("example: 14J60 (Primary), 14F05, "
                                        "14J26 (Secondary)"))
 
-    def validate_doi(form: csrf.CSRFForm, field: Field) -> None:
-        """Validate DOI input using core events."""
-        if field.data == form.submission.metadata.doi:     # Nothing to do.
-            return
-        if field.data:
-            form._validate_event(events.SetDOI, doi=field.data)
 
-    def validate_journal_ref(form: csrf.CSRFForm, field: Field) -> None:
-        """Validate journal reference input using core events."""
-        if field.data == form.submission.metadata.journal_ref:
-            return
-        if field.data:
-            form._validate_event(events.SetJournalReference,
-                                 journal_ref=field.data)
-
-    def validate_report_num(form: csrf.CSRFForm, field: Field) -> None:
-        """Validate report number input using core events."""
-        if field.data == form.submission.metadata.report_num:
-            return
-        if field.data:
-            form._validate_event(events.SetReportNumber,
-                                 report_num=field.data)
-
-    def validate_acm_class(form: csrf.CSRFForm, field: Field) -> None:
-        """Validate ACM classification input using core events."""
-        if field.data == form.submission.metadata.acm_class:
-            return
-        if field.data:
-            form._validate_event(events.SetACMClassification,
-                                 acm_class=field.data)
-
-    def validate_msc_class(form: csrf.CSRFForm, field: Field) -> None:
-        """Validate MSC classification input using core events."""
-        if field.data == form.submission.metadata.msc_class:
-            return
-        if field.data:
-            form._validate_event(events.SetMSCClassification,
-                                 msc_class=field.data)
-
-
-def _data_from_submission(params: MultiDict, submission: events.Submission,
+def _data_from_submission(params: MultiDict, submission: Submission,
                           form_class: type) -> MultiDict:
     if not submission.metadata:
         return params
@@ -155,9 +86,9 @@ def _data_from_submission(params: MultiDict, submission: events.Submission,
 
 
 def metadata(method: str, params: MultiDict, session: Session,
-             submission_id: int) -> Response:
+             submission_id: int, **kwargs) -> Response:
     """Update metadata on the submission."""
-    submitter, client = util.user_and_client_from_session(session)
+    submitter, client = user_and_client_from_session(session)
     logger.debug(f'method: {method}, submission: {submission_id}. {params}')
 
     # Will raise NotFound if there is no such submission.
@@ -168,8 +99,6 @@ def metadata(method: str, params: MultiDict, session: Session,
         params = _data_from_submission(params, submission, CoreMetadataForm)
 
     form = CoreMetadataForm(params)
-    form.submission = submission
-    form.creator = submitter
     response_data = {
         'submission_id': submission_id,
         'form': form,
@@ -178,43 +107,33 @@ def metadata(method: str, params: MultiDict, session: Session,
 
     if method == 'POST':
         if not form.validate():
-            logger.debug('Invalid form data; return bad request')
-            return response_data, status.HTTP_400_BAD_REQUEST, {}
+            raise BadRequest(response_data)
 
         logger.debug('Form is valid, with data: %s', str(form.data))
 
+        commands, valid = _commands(form, submission, submitter, client)
         # We only want to apply an UpdateMetadata if the metadata has
         # actually changed.
-        if form.events:   # Metadata has changed.
+        if commands:   # Metadata has changed.
+            if not all(valid):
+                raise BadRequest(response_data)
+
             try:
                 # Save the events created during form validation.
-                submission, stack = events.save(
-                    *form.events,
-                    submission_id=submission_id
-                )
-            except events.exceptions.InvalidStack as e:
-                logger.error('Could not update metadata: %s', str(e))
-                form.errors     # Causes the form to initialize errors.
-                form._errors['events'] = [ie.message for ie
-                                          in e.event_exceptions]
-                logger.debug('InvalidStack; return bad request')
-                return response_data, status.HTTP_400_BAD_REQUEST, {}
-            except events.exceptions.SaveError as e:
-                logger.error('Could not save metadata event')
-                raise InternalServerError(
-                    'There was a problem saving this operation'
-                ) from e
+                submission, _ = save(*commands, submission_id=submission_id)
+            except SaveError as e:
+                raise InternalServerError(response_data) from e
+            response_data['submission'] = submission
+
     if params.get('action') in ['previous', 'save_exit', 'next']:
-        logger.debug('Redirect to %s', params.get('action'))
         return response_data, status.HTTP_303_SEE_OTHER, {}
-    logger.debug('Nothing to do, return 200')
     return response_data, status.HTTP_200_OK, {}
 
 
 def optional(method: str, params: MultiDict, session: Session,
-             submission_id: int) -> Response:
+             submission_id: int, **kwargs) -> Response:
     """Update optional metadata on the submission."""
-    submitter, client = util.user_and_client_from_session(session)
+    submitter, client = user_and_client_from_session(session)
 
     logger.debug(f'method: {method}, submission: {submission_id}. {params}')
 
@@ -227,8 +146,6 @@ def optional(method: str, params: MultiDict, session: Session,
                                        OptionalMetadataForm)
 
     form = OptionalMetadataForm(params)
-    form.submission = submission
-    form.creator = submitter
     response_data = {
         'submission_id': submission_id,
         'form': form,
@@ -237,34 +154,103 @@ def optional(method: str, params: MultiDict, session: Session,
 
     if method == 'POST':
         if not form.validate():
-            logger.debug('Invalid form data; return bad request')
-            return response_data, status.HTTP_400_BAD_REQUEST, {}
+            raise BadRequest(response_data)
 
         logger.debug('Form is valid, with data: %s', str(form.data))
 
-        # We only want to apply an UpdateMetadata if the metadata has
-        # actually changed.
-        if form.events:   # Metadata has changed.
+        commands, valid = _opt_commands(form, submission, submitter, client)
+        # We only want to apply updates if the metadata has actually changed.
+        if commands:   # Metadata has changed.
+            if not all(valid):
+                raise BadRequest(response_data)
+
             try:
-                # Create UpdateMetadata event
-                submission, stack = events.save(
-                    *form.events,
-                    submission_id=submission_id
-                )
-            except events.exceptions.InvalidStack as e:
-                logger.error('Could not update metadata: %s', str(e))
-                form.errors     # Causes the form to initialize errors.
-                form._errors['events'] = [ie.message for ie
-                                          in e.event_exceptions]
-                logger.debug('InvalidStack; return bad request')
-                return response_data, status.HTTP_400_BAD_REQUEST, {}
-            except events.exceptions.SaveError as e:
-                logger.error('Could not save metadata event')
-                raise InternalServerError(
-                    'There was a problem saving this operation'
-                ) from e
+                submission, _ = save(*commands, submission_id=submission_id)
+            except SaveError as e:
+                raise InternalServerError(response_data) from e
+            response_data['submission'] = submission
+
     if params.get('action') in ['previous', 'save_exit', 'next']:
-        logger.debug('Redirect to %s', params.get('action'))
         return response_data, status.HTTP_303_SEE_OTHER, {}
-    logger.debug('Nothing to do, return 200')
     return response_data, status.HTTP_200_OK, {}
+
+
+def _commands(form: CoreMetadataForm, submission: Submission,
+              creator: User, client: Client) -> Tuple[List[Event], List[bool]]:
+    commands: List[Event] = []
+    valid: List[bool] = []
+
+    if form.title.data and submission.metadata \
+            and form.title.data != submission.metadata.title:
+        command = SetTitle(title=form.title.data, creator=creator,
+                           client=client)
+        valid.append(validate_command(form, command, submission, 'title'))
+        commands.append(command)
+
+    if form.abstract.data and submission.metadata \
+            and form.abstract.data != submission.metadata.abstract:
+        command = SetAbstract(abstract=form.abstract.data, creator=creator,
+                              client=client)
+        valid.append(validate_command(form, command, submission, 'abstract'))
+        commands.append(command)
+
+    if form.comments.data and submission.metadata \
+            and form.comments.data != submission.metadata.comments:
+        command = SetComments(comments=form.comments.data, creator=creator,
+                              client=client)
+        valid.append(validate_command(form, command, submission, 'comments'))
+        commands.append(command)
+
+    value = form.authors_display.data
+    if value and submission.metadata \
+            and value != submission.metadata.authors_display:
+        command = SetAuthors(authors_display=form.authors_display.data,
+                             creator=creator, client=client)
+        valid.append(validate_command(form, command, submission,
+                                      'authors_display'))
+        commands.append(command)
+    return commands, valid
+
+
+def _opt_commands(form: OptionalMetadataForm, submission: Submission,
+                  creator: User, client: Client) \
+        -> Tuple[List[Event], List[bool]]:
+
+    commands: List[Event] = []
+    valid: List[bool] = []
+
+    if form.msc_class.data and submission.metadata \
+            and form.msc_class.data != submission.metadata.msc_class:
+        command = SetMSCClassification(msc_class=form.msc_class.data,
+                                       creator=creator, client=client)
+        valid.append(validate_command(form, command, submission, 'msc_class'))
+        commands.append(command)
+
+    if form.acm_class.data and submission.metadata \
+            and form.acm_class.data != submission.metadata.acm_class:
+        command = SetACMClassification(acm_class=form.acm_class.data,
+                                       creator=creator, client=client)
+        valid.append(validate_command(form, command, submission, 'acm_class'))
+        commands.append(command)
+
+    if form.report_num.data and submission.metadata \
+            and form.report_num.data != submission.metadata.report_num:
+        command = SetReportNumber(report_num=form.report_num.data,
+                                  creator=creator, client=client)
+        valid.append(validate_command(form, command, submission, 'report_num'))
+        commands.append(command)
+
+    if form.journal_ref.data and submission.metadata \
+            and form.journal_ref.data != submission.metadata.journal_ref:
+        command = SetJournalReference(journal_ref=form.journal_ref.data,
+                                      creator=creator, client=client)
+        valid.append(validate_command(form, command, submission,
+                                      'journal_ref'))
+        commands.append(command)
+
+    if form.doi.data and submission.metadata \
+            and form.doi.data != submission.metadata.doi:
+        command = SetDOI(doi=form.doi.data, creator=creator, client=client)
+        valid.append(validate_command(form, command, submission, 'doi'))
+        commands.append(command)
+    return commands, valid

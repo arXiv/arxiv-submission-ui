@@ -59,14 +59,13 @@ class TestJREFSubmission(TestCase):
     def test_GET_with_unpublished(self, mock_load, mock_url_for, mock_alerts):
         """GET request for an unpublished submission."""
         submission_id = 2
-        mock_load.return_value = (
-            mock.MagicMock(submission_id=submission_id, published=False), []
-        )
+        before = mock.MagicMock(submission_id=submission_id, published=False,
+                                arxiv_id=None, version=1)
+        mock_load.return_value = (before, [])
         mock_url_for.return_value = "/url/for/submission/status"
         data, code, headers = jref.jref('GET', MultiDict(), self.session,
                                         submission_id)
-        self.assertEqual(code, status.HTTP_303_SEE_OTHER,
-                         "Returns 303 See Other")
+        self.assertEqual(code, status.HTTP_303_SEE_OTHER, "Returns See Other")
         self.assertIn('Location', headers, "Returns Location header")
         self.assertTrue(
             mock_url_for.called_with('ui.submission_status', submission_id=2),
@@ -84,15 +83,14 @@ class TestJREFSubmission(TestCase):
     def test_POST_with_unpublished(self, mock_load, mock_url_for, mock_alerts):
         """POST request for an unpublished submission."""
         submission_id = 2
-        mock_load.return_value = (
-            mock.MagicMock(submission_id=submission_id, published=False), []
-        )
+        before = mock.MagicMock(submission_id=submission_id, published=False,
+                                arxiv_id=None, version=1)
+        mock_load.return_value = (before, [])
         mock_url_for.return_value = "/url/for/submission/status"
-        request_data = MultiDict({'doi': '10.1000/182'})    # Valid.
-        data, code, headers = jref.jref('POST', request_data, self.session,
+        params = MultiDict({'doi': '10.1000/182'})    # Valid.
+        data, code, headers = jref.jref('POST', params, self.session,
                                         submission_id)
-        self.assertEqual(code, status.HTTP_303_SEE_OTHER,
-                         "Returns 303 See Other")
+        self.assertEqual(code, status.HTTP_303_SEE_OTHER, "Returns See Other")
         self.assertIn('Location', headers, "Returns Location header")
         self.assertTrue(
             mock_url_for.called_with('ui.submission_status', submission_id=2),
@@ -108,11 +106,11 @@ class TestJREFSubmission(TestCase):
     def test_GET_with_published(self, mock_load):
         """GET request for a published submission."""
         submission_id = 2
-        mock_load.return_value = (
-            mock.MagicMock(submission_id=submission_id, published=True), []
-        )
-        data, code, headers = jref.jref('GET', MultiDict(), self.session,
-                                        submission_id)
+        before = mock.MagicMock(submission_id=submission_id, published=True,
+                                arxiv_id='2002.01234', version=1)
+        mock_load.return_value = (before, [])
+        params = MultiDict()
+        data, code, _ = jref.jref('GET', params, self.session, submission_id)
         self.assertEqual(code, status.HTTP_200_OK, "Returns 200 OK")
         self.assertIn('form', data, "Returns form in response data")
 
@@ -120,24 +118,22 @@ class TestJREFSubmission(TestCase):
     @mock.patch(f'{jref.__name__}.url_for')
     @mock.patch(f'{jref.__name__}.JREFForm.Meta.csrf', False)
     @mock.patch('arxiv.submission.load')
-    @mock.patch('arxiv.submission.save', mock_save)
+    @mock.patch(f'{jref.__name__}.save', mock_save)
     def test_POST_with_published(self, mock_load, mock_url_for, mock_alerts):
         """POST request for a published submission."""
         submission_id = 2
-        mock_load.return_value = (
-            mock.MagicMock(submission_id=submission_id, published=True), []
-        )
+        before = mock.MagicMock(submission_id=submission_id, published=True,
+                                arxiv_id='2002.01234', version=1)
+        mock_load.return_value = (before, [])
         mock_url_for.return_value = "/url/for/submission/status"
-        request_data = MultiDict({'doi': '10.1000/182'})
-        data, code, headers = jref.jref('POST', request_data, self.session,
-                                        submission_id)
+        params = MultiDict({'doi': '10.1000/182'})
+        _, code, _ = jref.jref('POST', params, self.session, submission_id)
         self.assertEqual(code, status.HTTP_200_OK, "Returns 200 OK")
 
-        request_data['confirmed'] = True
-        data, code, headers = jref.jref('POST', request_data, self.session,
+        params['confirmed'] = True
+        data, code, headers = jref.jref('POST', params, self.session,
                                         submission_id)
-        self.assertEqual(code, status.HTTP_303_SEE_OTHER,
-                         "Returns 303 See Other")
+        self.assertEqual(code, status.HTTP_303_SEE_OTHER, "Returns See Other")
         self.assertIn('Location', headers, "Returns Location header")
         self.assertTrue(
             mock_url_for.called_with('ui.submission_status', submission_id=2),

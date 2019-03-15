@@ -2,7 +2,7 @@
 
 from unittest import TestCase, mock
 from werkzeug import MultiDict
-from werkzeug.exceptions import InternalServerError
+from werkzeug.exceptions import InternalServerError, BadRequest
 from wtforms import Form
 from arxiv import status
 import arxiv.submission as events
@@ -51,99 +51,75 @@ class TestVerifyUser(TestCase):
     def test_get_request_with_submission(self, mock_load):
         """GET request with a submission ID."""
         submission_id = 2
-        mock_load.return_value = (
-            mock.MagicMock(submission_id=submission_id,
-                           submitter_contact_verified=False),
-            []
-        )
-        data, code, headers = verify_user.verify_user('GET', MultiDict(),
-                                                      self.session,
-                                                      submission_id)
+        before = mock.MagicMock(submission_id=submission_id, finalized=False,
+                                submitter_contact_verified=False)
+        mock_load.return_value = (before, [])
+        data, code, _ = verify_user.verify('GET', MultiDict(), self.session,
+                                           submission_id)
         self.assertEqual(code, status.HTTP_200_OK, "Returns 200 OK")
-        self.assertIsInstance(data['form'], Form,
-                              "Response data includes a form")
+        self.assertIsInstance(data['form'], Form, "Data includes a form")
 
     @mock.patch(f'{verify_user.__name__}.VerifyUserForm.Meta.csrf', False)
     @mock.patch('arxiv.submission.load')
     def test_post_request(self, mock_load):
         """POST request with no data."""
         submission_id = 2
-        mock_load.return_value = (
-            mock.MagicMock(submission_id=submission_id,
-                           submitter_contact_verified=False),
-            []
-        )
-        data, code, headers = verify_user.verify_user('POST', MultiDict(),
-                                                      self.session,
-                                                      submission_id)
-        self.assertEqual(code, status.HTTP_400_BAD_REQUEST,
-                         "Returns 400 bad request")
-        self.assertIsInstance(data['form'], Form,
-                              "Response data includes a form")
+        before = mock.MagicMock(submission_id=submission_id, finalized=False,
+                                submitter_contact_verified=False)
+        mock_load.return_value = (before, [])
+        params = MultiDict()
+        try:
+            verify_user.verify('POST', params, self.session, submission_id)
+            self.fail('BadRequest not raised')
+        except BadRequest as e:
+            data = e.description
+            self.assertIsInstance(data['form'], Form, "Data includes a form")
 
     @mock.patch(f'{verify_user.__name__}.VerifyUserForm.Meta.csrf', False)
     @mock.patch('submit.controllers.util.url_for')
-    @mock.patch('arxiv.submission.save')
+    @mock.patch(f'{verify_user.__name__}.save')
     @mock.patch('arxiv.submission.load')
     def test_post_request_with_data(self, mock_load, mock_save, mock_url_for):
         """POST request with `verify_user` set."""
         # Event store does not complain; returns object with `submission_id`.
         submission_id = 2
-        mock_load.return_value = (
-            mock.MagicMock(submission_id=submission_id,
-                           submitter_contact_verified=False),
-            []
-        )
-        mock_save.return_value = (
-            mock.MagicMock(submission_id=submission_id,
-                           submitter_contact_verified=False,),
-            []
-        )
-        # `url_for` returns a URL (unsurprisingly).
-        redirect_url = 'https://foo.bar.com/yes'
-        mock_url_for.return_value = redirect_url
+        before = mock.MagicMock(submission_id=submission_id, finalized=False,
+                                submitter_contact_verified=False)
+        after = mock.MagicMock(submission_id=submission_id, finalized=False,
+                               submitter_contact_verified=True)
+        mock_load.return_value = (before, [])
+        mock_save.return_value = (after, [])
+        mock_url_for.return_value = 'https://foo.bar.com/yes'
 
         form_data = MultiDict({'verify_user': 'y', 'action': 'next'})
-        data, code, headers = verify_user.verify_user('POST', form_data,
-                                                      self.session,
-                                                      submission_id)
-        self.assertEqual(code, status.HTTP_303_SEE_OTHER,
-                         "Returns 303 redirect")
+        _, code, _ = verify_user.verify('POST', form_data, self.session,
+                                        submission_id)
+        self.assertEqual(code, status.HTTP_303_SEE_OTHER, "Returns redirect")
 
     @mock.patch(f'{verify_user.__name__}.VerifyUserForm.Meta.csrf', False)
     @mock.patch('submit.controllers.util.url_for')
-    @mock.patch('arxiv.submission.save')
+    @mock.patch(f'{verify_user.__name__}.save')
     @mock.patch('arxiv.submission.load')
-    def test_verify_fails(self, mock_load, mock_save, mock_url_for):
-        """Event store flakes out on authorship verification."""
+    def test_save_fails(self, mock_load, mock_save, mock_url_for):
+        """Event store flakes out saving authorship verification."""
         submission_id = 2
-        mock_load.return_value = (
-            mock.MagicMock(submission_id=submission_id,
-                           submitter_contact_verified=False),
-            []
-        )
+        before = mock.MagicMock(submission_id=submission_id, finalized=False,
+                                submitter_contact_verified=False)
+        mock_load.return_value = (before, [])
 
         # Event store does not complain; returns object with `submission_id`
         def raise_on_verify(*ev, **kwargs):
             if type(ev[0]) is events.ConfirmContactInformation:
-                raise events.InvalidStack([
-                    events.InvalidEvent(ev[0], 'foo')
-                ])
-            return (
-                mock.MagicMock(
-                    submission_id=kwargs.get('submission_id', 2),
-                    submitter_contact_verified=False,
-                ),
-                []
-            )
+                raise events.SaveError('not today')
+            ident = kwargs.get('submission_id', 2)
+            return (mock.MagicMock(submission_id=ident,
+                                   submitter_contact_verified=False), [])
 
         mock_save.side_effect = raise_on_verify
-        form_data = MultiDict({'verify_user': 'y', 'action': 'next'})
-        data, code, headers = verify_user.verify_user('POST', form_data,
-                                                      self.session, 2)
-        self.assertEqual(code, status.HTTP_400_BAD_REQUEST,
-                         "Returns 400 bad request")
-        self.assertIsInstance(data['form'], Form,
-                              "Response data includes a form")
-        self.assertIn("events", data["form"].errors,
-                      "Exception messages are added to form errors.")
+        params = MultiDict({'verify_user': 'y', 'action': 'next'})
+        try:
+            verify_user.verify('POST', params, self.session, 2)
+            self.fail('InternalServerError not raised')
+        except InternalServerError as e:
+            data = e.description
+            self.assertIsInstance(data['form'], Form, "Data includes a form")

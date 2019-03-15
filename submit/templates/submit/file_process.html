@@ -1,11 +1,18 @@
 {% extends "submit/base.html" %}
 
-{% block title -%}Process submission files{%- endblock title %}
+{% block title -%}Process Files{%- endblock title %}
+
+{% block extra_head %}
+  {% if status and status.value == "in_progress" %}
+  <meta http-equiv="refresh" content="5;url={{ url_for('ui.file_process', submission_id=submission_id) }}" />
+  {% endif %}
+{% endblock extra_head %}
 
 {% block within_content %}
-<h2 class="is-size-4">Process Files</h2>
 <form method="POST" action="{{ url_for('ui.file_process', submission_id=submission_id) }}">
   {{ form.csrf_token }}
+
+{% if must_process %}
 <div class="columns">
   <div class="column is-one-third-desktop is-one-half-tablet">
     {% if not status %}
@@ -22,73 +29,81 @@
     </div>
     {% endif %}
 
-    {% if not status %}
-    <div class="message is-info">
-      <div class="message-body">
-        <p>arXiv's processing system runs TeX Live 2016 and natbib 8.31. Authors are strongly encouraged to upgrade if older versions of these packages are being used to generate files.</p>
+    {% if status %}
+      {% if status.value == "in_progress" %}
+      <div class="message is-warning">
+        <div class="message-header">
+          <p><span class="icon"><i class="fa fa-tasks"></i></span>Processing Underway</p></div>
+        <div class="message-body">
+          <p>
+            We are currently processing your submission. This may take up to a minute or two.
+            This page will refresh automatically every 5 seconds. You can also refresh this
+            page manually to check the current status.
+          </p>
+        </div>
       </div>
-    </div>
 
-    {% elif status == "in_progress" %}
-    <div class="message is-warning">
-      <div class="message-header">
-        <p><span class="icon"><i class="fa fa-tasks"></i></span>Processing Underway</p></div>
-      <div class="message-body">
-        <p>We are currently processing your submission. This may take up to a minute or two. Please check back.</p>
+      {% elif status.value == "failed" %}
+      <div class="message is-danger">
+        <div class="message-header">
+          <p><span class="icon"><i class="fa fa-exclamation-triangle"></i></span>Processing Failed</p></div>
+        <div class="message-body">
+          <p>What to do next:</p>
+          <ul>
+            <li>review the log warnings and errors</li>
+            <li>correct any missing file problems</li>
+            <li>edit your files if needed</li>
+            <li>re-upload any corrected files</li>
+          </ul>
+          <p class="has-text-centered"><a class="button is-link" href="{{ url_for('ui.file_upload', submission_id=submission_id) }}">Go back to Upload Files</a></p>
+          <p class="has-text-centered"><a class="button" href="#help">Help: Common TeX Errors</a></p>
+        </div>
       </div>
-    </div>
 
-    {% elif status == "failed" %}
-    <div class="message is-danger">
-      <div class="message-header">
-        <p><span class="icon"><i class="fa fa-exclamation-triangle"></i></span>Processing Failed</p></div>
-      <div class="message-body">
-        <p>What to do next:</p>
-        <ul>
-          <li>review the log warnings and errors</li>
-          <li>correct any missing file problems</li>
-          <li>edit your files if needed</li>
-          <li>re-upload any corrected files</li>
-        </ul>
-        <p class="has-text-centered"><a class="button is-link" href="{{ url_for('ui.file_upload', submission_id=submission_id) }}">Go back to Upload Files</a></p>
-        <p class="has-text-centered"><a class="button" href="#help">Help: Common TeX Errors</a></p>
+      {% elif status.value == "succeeded" and warnings %}
+      <div class="message is-warning">
+        <div class="message-header">
+          <p><span class="icon"><i class="fa fa-exclamation-triangle"></i></span>Completed With Warnings</p>
+        </div>
+        <div class="message-body">
+          <ul>
+            <li>Be sure to check the compiled preview carefully for any undesired artifacts or errors.</li>
+            <li>Check the compiler log for warnings and errors.</l>
+          </ul>
+        </div>
       </div>
-    </div>
 
-    {% elif status == "success" and warnings %}
-    <div class="message is-warning">
-      <div class="message-header">
-        <p><span class="icon"><i class="fa fa-exclamation-triangle"></i></span>Completed With Warnings</p>
-      </div>
-      <div class="message-body">
-        <ul>
-          <li>Be sure to check the compiled preview carefully for any undesired artifacts or errors.</li>
-          <li>Check the compiler log for warnings and errors.</l>
-        </ul>
-      </div>
-    </div>
+      {% elif status.value == "succeeded" %}
+      <div class="message is-success">
+        <div class="message-header">
+          <p><span class="icon"><i class="fa fa-check-circle"></i></span>Processing Successful</p></div>
+        <div class="message-body">
+          <p>Be sure to check the compiled preview carefully for any undesired artifacts or errors.</p>
+          <p>If you need to make corrections, return to the previous step and adjust your files, then reprocess your submission.</p>
 
-    {% elif status == "success" %}
-    <div class="message is-success">
-      <div class="message-header">
-        <p><span class="icon"><i class="fa fa-check-circle"></i></span>Processing Successful</p></div>
-      <div class="message-body">
-        <p>Be sure to check the compiled preview carefully for any undesired artifacts or errors.</p>
-        <p>If you need to make corrections, return to the previous step and adjust your files, then reprocess your submission.</p>
-
-        <p class="has-text-centered">
-          <a class="button is-link" href="{{ url_for('ui.file_preview', submission_id=submission_id) }}" target="_blank">
-            View PDF
-          </a>
-        </p>
+          <p class="has-text-centered">
+            <a class="button is-link" href="{{ url_for('ui.file_preview', submission_id=submission_id) }}" target="_blank">
+              View PDF
+            </a>
+          </p>
+        </div>
       </div>
-    </div>
+      {% endif %}
     {% endif %}
+
     {% for compilation in compilations[::-1] %}
       <li>
         {% if compilation.checksum == submission.source_content.checksum %}Current package{% else %}Previous package{% endif %} started {{ compilation.start_time|timesince }}
         {%- if compilation.status == compilation.Status.SUCCEEDED or compilation.status == compilation.Status.FAILED -%}
           , {{ compilation.status|compilation_status_display }} after {{ (compilation.end_time - compilation.start_time)|duration }}.
+          {%- if compilation.status == compilation.Status.SUCCEEDED -%}
+          <a href="{{ url_for('ui.file_preview', submission_id=submission_id) }}?checksum={{ compilation.checksum }}" target="_blank">
+            View PDF.
+          </a>
+          {%- endif -%}
+          <a href="{{ url_for('ui.compilation_log', submission_id=submission_id) }}?checksum={{ compilation.checksum }}" target="_blank">
+            View log.
+          </a>
         {%- else -%}
           .
         {%- endif %}
@@ -102,9 +117,9 @@
       <div class="message-body">
         <p><span class="icon has-text-link"><i class="fa fa-info-circle"></i></span>
         This step runs all files through a series of automatic checks.<br />
-         Additionally, TeX and LaTeX source packages will be compiled into a PDF.</p>
-
-         {{ submission.source_content }}
+         Additionally, TeX and LaTeX source packages will be compiled into a PDF.<br />
+         <a href="{{ url_for('help_texlive') }}">View information about our compiler and included packages</a>.
+        </p>
       </div>
     </div>
     <!-- Selection of preferred compiler is not supported in v0.1
@@ -119,7 +134,7 @@
       </div>
     </div> -->
     {% endif %}
-    {% if status %}
+    {% if status and log_output %}
     <div class="box texlive-summary">
       <div class="level">
         <div class="level-left">
@@ -165,6 +180,13 @@
     {% endif %}
   </div>
 </div>
+{% else %}
+<div class="box">
+  <!-- Liz: this is the language on the legacy interface for PDF-only
+       submissions. Not super informative, but... -->
+  Source has already been processed.
+</div>
+{% endif %}
 
 {{ submit_macros.submit_nav(submission_id) }}
 </form>

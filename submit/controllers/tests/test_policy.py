@@ -2,7 +2,7 @@
 
 from unittest import TestCase, mock
 from werkzeug import MultiDict
-from werkzeug.exceptions import InternalServerError, NotFound
+from werkzeug.exceptions import InternalServerError, NotFound, BadRequest
 from wtforms import Form
 from arxiv import status
 import arxiv.submission as events
@@ -51,16 +51,14 @@ class TestConfirmPolicy(TestCase):
     def test_get_request_with_submission(self, mock_load):
         """GET request with a submission ID."""
         submission_id = 2
-        mock_load.return_value = (
-            mock.MagicMock(submission_id=submission_id,
-                           submitter_accepts_policy=False),
-            []
-        )
-        data, code, headers = policy.policy('GET', MultiDict(), self.session,
-                                            submission_id)
+        before = mock.MagicMock(submission_id=submission_id, finalized=False,
+                                submitter_accepts_policy=False)
+        mock_load.return_value = (before, [])
+        data = MultiDict()
+
+        data, code, _ = policy.policy('GET', data, self.session, submission_id)
         self.assertEqual(code, status.HTTP_200_OK, "Returns 200 OK")
-        self.assertIsInstance(data['form'], Form,
-                              "Response data includes a form")
+        self.assertIsInstance(data['form'], Form, "Data includes a form")
 
     @mock.patch(f'{policy.__name__}.PolicyForm.Meta.csrf', False)
     @mock.patch('arxiv.submission.load')
@@ -80,92 +78,76 @@ class TestConfirmPolicy(TestCase):
     def test_post_request(self, mock_load):
         """POST request with no data."""
         submission_id = 2
-        mock_load.return_value = (
-            mock.MagicMock(submission_id=submission_id,
-                           submitter_accepts_policy=False),
-            []
-        )
-        data, code, headers = policy.policy('POST', MultiDict(), self.session,
-                                            submission_id)
-        self.assertEqual(code, status.HTTP_400_BAD_REQUEST,
-                         "Returns 400 bad request")
-        self.assertIsInstance(data['form'], Form,
-                              "Response data includes a form")
+        before = mock.MagicMock(submission_id=submission_id, finalized=False,
+                                submitter_accepts_policy=False)
+        mock_load.return_value = (before, [])
+
+        params = MultiDict()
+        try:
+            policy.policy('POST', params, self.session, submission_id)
+            self.fail('BadRequest was not raised')
+        except BadRequest as e:
+            data = e.description
+            self.assertIsInstance(data['form'], Form, "Data includes a form")
 
     @mock.patch(f'{policy.__name__}.PolicyForm.Meta.csrf', False)
     @mock.patch('arxiv.submission.load')
     def test_not_author_no_proxy(self, mock_load):
         """User indicates they are not author, but also not proxy."""
         submission_id = 2
-        mock_load.return_value = (
-            mock.MagicMock(submission_id=submission_id,
-                           submitter_accepts_policy=False),
-            []
-        )
-        form_data = MultiDict({})
-        data, code, headers = policy.policy('POST', form_data, self.session,
-                                            submission_id)
-        self.assertEqual(code, status.HTTP_400_BAD_REQUEST,
-                         "Returns 400 bad request")
-        self.assertIsInstance(data['form'], Form,
-                              "Response data includes a form")
+        before = mock.MagicMock(submission_id=submission_id, finalized=False,
+                                submitter_accepts_policy=False)
+        mock_load.return_value = (before, [])
+        params = MultiDict({})
+        try:
+            policy.policy('POST', params, self.session, submission_id)
+            self.fail('BadRequest was not raised')
+        except BadRequest as e:
+            data = e.description
+            self.assertIsInstance(data['form'], Form, "Data includes a form")
 
     @mock.patch(f'{policy.__name__}.PolicyForm.Meta.csrf', False)
     @mock.patch('submit.controllers.util.url_for')
-    @mock.patch('arxiv.submission.save')
+    @mock.patch(f'{policy.__name__}.save')
     @mock.patch('arxiv.submission.load')
     def test_post_request_with_data(self, mock_load, mock_save, mock_url_for):
         """POST request with `policy` set."""
         # Event store does not complain; returns object with `submission_id`.
         submission_id = 2
-        mock_load.return_value = (
-            mock.MagicMock(submission_id=submission_id,
-                           submitter_accepts_policy=False),
-            []
-        )
-        mock_save.return_value = (
-            mock.MagicMock(submission_id=submission_id), []
-        )
-        # `url_for` returns a URL (unsurprisingly).
-        redirect_url = 'https://foo.bar.com/yes'
-        mock_url_for.return_value = redirect_url
+        before = mock.MagicMock(submission_id=submission_id, finalized=False,
+                                submitter_accepts_policy=False)
+        after = mock.MagicMock(submission_id=submission_id, finalized=False)
+        mock_load.return_value = (before, [])
+        mock_save.return_value = (after, [])
+        mock_url_for.return_value = 'https://foo.bar.com/yes'
 
-        form_data = MultiDict({'policy': 'y', 'action': 'next'})
-        data, code, headers = policy.policy('POST', form_data, self.session,
-                                            submission_id)
-        self.assertEqual(code, status.HTTP_303_SEE_OTHER,
-                         "Returns 303 redirect")
-                         
+        params = MultiDict({'policy': 'y', 'action': 'next'})
+        _, code, _ = policy.policy('POST', params, self.session, submission_id)
+        self.assertEqual(code, status.HTTP_303_SEE_OTHER, "Returns redirect")
+
     @mock.patch(f'{policy.__name__}.PolicyForm.Meta.csrf', False)
     @mock.patch('submit.controllers.util.url_for')
-    @mock.patch('arxiv.submission.save')
+    @mock.patch(f'{policy.__name__}.save')
     @mock.patch('arxiv.submission.load')
-    def test_policy_fails(self, mock_load, mock_save, mock_url_for):
-        """Event store flakes out on policy acceptance."""
+    def test_save_fails(self, mock_load, mock_save, mock_url_for):
+        """Event store flakes out on saving policy acceptance."""
         submission_id = 2
-        mock_load.return_value = (
-            mock.MagicMock(submission_id=submission_id,
-                           submitter_accepts_policy=False),
-            []
-        )
+        before = mock.MagicMock(submission_id=submission_id, finalized=False,
+                                submitter_accepts_policy=False)
+        mock_load.return_value = (before, [])
 
         # Event store does not complain; returns object with `submission_id`
         def raise_on_policy(*ev, **kwargs):
             if type(ev[0]) is events.ConfirmPolicy:
-                raise events.InvalidStack([
-                    events.InvalidEvent(ev[0], 'foo')
-                ])
-            return (
-                mock.MagicMock(submission_id=kwargs.get('submission_id', 2)),
-                []
-            )
+                raise events.SaveError('the end of the world as we know it')
+            ident = kwargs.get('submission_id', 2)
+            return (mock.MagicMock(submission_id=ident), [])
 
         mock_save.side_effect = raise_on_policy
-        form_data = MultiDict({'policy': 'y', 'action': 'next'})
-        data, code, headers = policy.policy('POST', form_data, self.session, 2)
-        self.assertEqual(code, status.HTTP_400_BAD_REQUEST,
-                         "Returns 400 bad request")
-        self.assertIsInstance(data['form'], Form,
-                              "Response data includes a form")
-        self.assertIn("events", data["form"].errors,
-                      "Exception messages are added to form errors.")
+        params = MultiDict({'policy': 'y', 'action': 'next'})
+        try:
+            policy.policy('POST', params, self.session, 2)
+            self.fail('InternalServerError not raised')
+        except InternalServerError as e:
+            data = e.description
+            self.assertIsInstance(data['form'], Form, "Data includes a form")

@@ -21,7 +21,7 @@ with app.app_context():
     session = classic.current_session()
     engine = classic.util.current_engine()
     logger.info('Waiting for database server to be available')
-    logger.info(app.config['CLASSIC_DATABASE_URI'])
+    logger.info(app.config['SQLALCHEMY_DATABASE_URI'])
     wait = 2
     while True:
         try:
@@ -68,6 +68,8 @@ with app.app_context():
             scopes.WRITE_UPLOAD,
             scopes.DELETE_UPLOAD_FILE,
             scopes.READ_UPLOAD_LOGS,
+            scopes.READ_COMPILE,
+            scopes.CREATE_COMPILE
         ]
         for user in created_users:
             token = generate_token(user.user_id, user.email, user.email,

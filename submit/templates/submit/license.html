@@ -1,12 +1,18 @@
 {% extends "submit/base.html" %}
 
-{% block title -%}Select a license{%- endblock title %}
+{% block title -%}Select a License{%- endblock title %}
 
 {% block within_content %}
 <form method="POST" action="{{ url_for('ui.license',submission_id=submission_id) }}">
   {{ form.csrf_token }}
   <div class="columns">
     <div class="column is-two-thirds">
+      <div class="message is-warning">
+        <div class="message-body">
+          <p>This license is <a href="{{ url_for('help_license') }}#licenses-granted-are-irrevocable">irrevocable and permanent</a>. If you plan to publish this article in a journal, check the journal's policies before uploading to arXiv.</p>
+        </div>
+      </div>
+
       {% if form.license.errors %}<div class="notification is-danger">{% endif %}
       <div class="field">
       {% for subfield in form.license %}
@@ -15,7 +21,7 @@
             {{subfield}}
             {{ subfield.label.text }}
           {% if subfield.data %}
-              <a href="{{subfield.data}}" title="license info" class="help-bubble"><i class="fa fa-question-circle is-info"></i><div class="bubble-text">License information opens in this tab</div></a>
+              <a href="{{subfield.data}}" title="license info" class="help-bubble" target="_blank" rel="external"><i class="fa fa-question-circle is-info"></i><div class="bubble-text">License information opens in a new tab</div></a>
           {% endif %}
           </label>
         </div>
@@ -40,14 +46,7 @@
           <p>If none of these licenses apply, you may be able to indicate your license of choice in the article text.</p>
         </div>
       </div>
-      <div class="message is-warning">
-        <div class="message-header">
-          <p><span class="icon"><i class="fa fa-exclamation-circle"></i></span>This license is irrevocable and permanent.</p>
-        </div>
-        <div class="message-body">
-          <p>If you plan to publish this article in a journal, check the journal's policies before uploading to arXiv.</p>
-        </div>
-      </div>
+
     </div>
   </div>
 

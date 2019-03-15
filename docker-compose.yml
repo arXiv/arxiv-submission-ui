@@ -37,12 +37,16 @@ services:
     container_name: submission-ui-redis
     networks:
       - arxiv-submission-ui
+    ports:
+      - "6380:6379"
 
   submission-ui-maria:
     image: mariadb:10.3
     container_name: submission-ui-maria
     networks:
       - arxiv-submission-ui
+    ports:
+      - "3307:3306"
     environment:
       MYSQL_USER: foouser
       MYSQL_PASSWORD: foopass
@@ -64,7 +68,7 @@ services:
 
   filemanager:
     << : *base-service
-    image: arxiv/filemanager:0.1rc2
+    image: arxiv/filemanager:0.0
     # You can uncomment these lines to build this from a local
     # repo. You may need to update `context`.
     # build:

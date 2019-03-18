@@ -44,34 +44,56 @@
       </div>
   </div>
   <div class="box">
-    <p>No submissions currently in progress</p>
-    <table class="table is-fullwidth is-hoverable">
-      <tr>
-        <th scope="col">Status</th>
-        <th scope="col">Identifier</th>
-        <th scope="col">Title</th>
-        <th scope="col">Actions</th>
-      </tr>
-      <tr>
-        <td><span class="tag">new</span> <span class="tag">submitted</span></td>
-        <td>submit/0391045</td>
-        <td>This is a Submission with a Title</td>
-        <td><a class="button is-link is-outlined is-small is-short"><span class="icon"><i class="fa fa-undo"></i> </span><span>Unsubmit</span></a></td>
-      </tr>
-      <tr>
-        <td><span class="tag">new</span> <span class="tag">incomplete</span></td>
-        <td>submit/0391098</td>
-        <td>Submission ID: 0391098</td>
-        <td><a class="button is-link is-outlined is-small is-short"><span class="icon"><i class="fa fa-pencil"></i></span><span>Edit</span></a></td>
-      </tr>
-    </table>
+    {% if user_submissions|selectattr('active')|list|length > 0 %}
+        <table class="table is-fullwidth is-hoverable">
+          <tr>
+            <th scope="col">Status</th>
+            <th scope="col">Identifier</th>
+            <th scope="col">Created</th>
+            <th scope="col">Title</th>
+            <th scope="col">Actions</th>
+          </tr>
+        {% for submission in user_submissions %}
+          {% if not submission.published %}
+            <tr>
+              <td>{{ submission.status }}</td>
+              <td>submit/{{ submission.submission_id }}</td>
+              <td>{% if submission.metadata.title %}
+                  {{ submission.metadata.title }}
+                  {% else %}
+                  Submission {{ submission.submission_id }}
+                  {% endif %}</td>
+              <td>{{ submission.created|timesince }}</td>
+              <td>
+                {% if submission.status=='submitted' and not submission.has_active_requests %}
+                  <a class="button is-link is-outlined is-small is-short">
+                  <span class="icon"><i class="fa fa-undo"></i> </span>
+                  <span>Unsubmit</span></a>
+                {% else %}
+                  <a class="button is-link is-outlined is-small is-short" href="{{ get_next_stage_for_submission(submission) }}">
+                  <span class="icon"><i class="fa fa-pencil"></i> </span>
+                  <span>Edit</span></a>
+                {% endif %}
+                <a href="{{ url_for('ui.delete_submission', submission_id=submission.submission_id) }}">
+                  <span class="icon">
+                    <i class="fa fa-trash" aria-label="Delete"><span class="sr-only">Delete this submission</span></i>
+                  </span>
+                </a>
+              </td>
+            </tr>
+          {% endif %}
+        {% endfor %}
+        </table>
+      {% else %}
+        <p>No submissions currently in progress</p>
+      {% endif %}    
   </div>
 </section>
 
 <section class="section">
   <h2>Announced Articles</h2>
   <div class="box">
-    <p>No announced articles</p>
+    {% if user_submissions|selectattr('published')|list|length > 0 %}
     <table class="table is-fullwidth is-hoverable">
       <tr>
         <th scope="col">Identifier</th>
@@ -79,100 +101,40 @@
         <th scope="col">Title</th>
         <th scope="col">Actions</th>
       </tr>
-      <tr>
-        <td>1801.07700</td>
-        <td><span class="tag is-link">physics.soc-ph</span></td>
-        <td>Uncertainty behavior during illegal road crossing</td>
-        <td>
-          <div class="select is-link is-small">
-            <select>
-              <option>Choose an Action</option>
-              <option>Replace</option>
-              <option>Add Journal Reference</option>
-              <option>Add Cross-list</option>
-              <option>Withdraw</option>
-            </select>
-          </div>
-        </td>
-      </tr>
-      <tr>
-        <td>1811.07349</td>
-        <td><span class="tag is-link">physics.soc-ph</span></td>
-        <td>Ising-PageRank model of opinion formation on social networks</td>
-        <td>
-          <div class="select is-link is-small">
-            <select>
-              <option>Choose an Action</option>
-              <option>Replace</option>
-              <option>Add Journal Reference</option>
-              <option>Add Cross-list</option>
-              <option>Withdraw</option>
-            </select>
-          </div>
-        </td>
-      </tr>
-    </table>
-  </div>
-</section>
-
-<hr />
-<div class="columns">
-  <div class="column is-two-thirds">
-    {% for submission in user_submissions %}
-    <div class="box">
-      <div class="level">
-        <div class="level-left">
-          Submission {{ submission.submission_id }}; created {{ submission.created|timesince }}
-        </div>
-        {{ submission.status}}
+      {% for submission in user_submissions %}
         {% if submission.published %}
-        <div class="level-right">
+      <tr>
+        <td>{{ submission.arxiv_id }}</td>
+        <td><span class="tag is-link">{{ submission.primary_classification.category }}</span></td>
+        <td>{{ submission.metadata.title }}</td>
+        <td>
           {% if submission.has_active_requests %}
             {% for request in submission.active_user_requests %}
             <div class="tags has-addons">
-              <span class="tag is-dark">{{ request.NAME }}</span>
+              <span class="tag">{{ request.NAME }}</span>
               <span class="tag is-info">{{ request.status }}</span>
             </div>
             {% endfor %}
           {% else %}
           <form class="form" method="POST" action="{{ url_for('ui.create_replacement', submission_id=submission.submission_id) }}">
             {{ form.csrf_token }}
-            <button name="new" class="button is-link is-small" value="new" aria-label="New version (replacement)">Replace</button>
-            <a href="{{ url_for('ui.jref', submission_id=submission.submission_id) }}" class="button is-link is-small" aria-label="Update journal reference">Add Journal Reference</a>
-            <a href="{{ url_for('ui.withdraw', submission_id=submission.submission_id) }}" class="button is-link is-small" aria-label="Request withdrawal">Withdraw</a>
-            <a href="{{ url_for('ui.request_cross', submission_id=submission.submission_id) }}" class="button is-link is-small" aria-label="Request cross-list">Add cross-list</a>
+            <div class="buttons is-multiline">
+              <button name="new" class="button is-link is-outlined is-small" value="new" aria-label="New version (replacement)">Replace</button>
+              <a href="{{ url_for('ui.jref', submission_id=submission.submission_id) }}" class="button is-link is-outlined is-small" aria-label="Update journal reference">Add Journal Reference</a>
+              <a href="{{ url_for('ui.withdraw', submission_id=submission.submission_id) }}" class="button is-link is-outlined is-small" aria-label="Request withdrawal">Withdraw</a>
+              <a href="{{ url_for('ui.request_cross', submission_id=submission.submission_id) }}" class="button is-link is-outlined is-small" aria-label="Request cross-list">Add cross-list</a>
+            </div>
           </form>
           {% endif %}
-
-        </div>
-        {% endif %}
-      </div>
-      {% if not submission.published and not submission.has_active_requests %}
-      <li>
-        <a href="{{ get_next_stage_for_submission(submission) }}">Version {{ submission.version }}; updated {{ submission.updated|timesince }}</a>. <span class="tag">{{ submission.status }}</span>
-        <a href="{{ url_for('ui.delete_submission', submission_id=submission.submission_id) }}">
-          <span class="icon">
-            <i class="fa fa-trash" aria-label="Delete"><span class="sr-only">Delete this submission</span></i>
-          </span>
-        </a>
-      </li>
+        </td>
+      </tr>
       {% endif %}
-      {% for version in submission.versions %}
-        <li>
-          arXiv:{{ version.arxiv_id }}v{{ version.version }}; published {{ version.updated|timesince }}. <span class="tag">{{ version.status }}</span>
-          {% if version.user_requests %}
-            <ul style="margin-top: 0px;">
-              {% for request_id, request in version.user_requests.items() %}
-                <li>{{ request.NAME }} requested {{ request.created|timesince }}, {{ request.status }} {{ request.updated|timesince }}</li>
-              {% endfor %}
-            </ul>
-          {% endif %}
-        </li>
-
       {% endfor %}
-    </div>
-    {% endfor %}
+    </table>
+    {% else %}
+      <p>No announced articles</p>
+    {% endif %}
   </div>
-</div>
+</section>
 
 {% endblock %}

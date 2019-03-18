@@ -9,11 +9,11 @@
       <div class="column">
         {{ item.name }}
       </div>
-      <div class="column">
+      <div class="column is-one-third-tablet">
           <div class="columns is-mobile">
             <div class="column">{{ item.size|filesizeformat }}</div>
             <div class="column">{{ item.modified|timesince }}</div>
-            <div class="column has-text-centered is-1">
+            <div class="column has-text-centered is-narrow">
              <a href="{{ url_for('ui.file_delete', submission_id=submission_id) }}?path={{ item.path }}">
                <span class="icon">
                  <i class="fa fa-trash"><span class="sr-only">Delete this file</span></i>

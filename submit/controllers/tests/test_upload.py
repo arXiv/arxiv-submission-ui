@@ -9,7 +9,7 @@ from werkzeug import MultiDict
 from werkzeug.exceptions import BadRequest, InternalServerError
 from wtforms import Form
 
-from arxiv import status
+from http import HTTPStatus as status
 from arxiv.users import auth, domain
 from arxiv.submission.domain.submission import SubmissionContent
 from submit.domain import Upload, FileStatus, FileError
@@ -63,7 +63,7 @@ class TestUpload(TestCase):
         files = MultiDict({})
         data, code, _ = upload.upload_files('GET', params, files, self.session,
                                             submission_id, 'footoken')
-        self.assertEqual(code, status.HTTP_200_OK, 'Returns 200 OK')
+        self.assertEqual(code, status.OK, 'Returns 200 OK')
         self.assertIn('submission', data, 'Submission is in response')
         self.assertIn('submission_id', data, 'ID is in response')
 
@@ -116,7 +116,7 @@ class TestUpload(TestCase):
         data, code, _ = upload.upload_files('GET', params, self.session,
                                             submission_id, files=files,
                                             token='footoken')
-        self.assertEqual(code, status.HTTP_200_OK, 'Returns 200 OK')
+        self.assertEqual(code, status.OK, 'Returns 200 OK')
         self.assertEqual(mock_filemanager.get_upload_status.call_count, 1,
                          'Calls the file management service')
         self.assertIn('status', data, 'Upload status is in response')
@@ -173,7 +173,7 @@ class TestUpload(TestCase):
         _, code, _ = upload.upload_files('POST', params, self.session,
                                          submission_id, files=files,
                                          token='footoken')
-        self.assertEqual(code, status.HTTP_303_SEE_OTHER, 'Returns 303')
+        self.assertEqual(code, status.SEE_OTHER, 'Returns 303')
         self.assertEqual(mock_filemanager.add_file.call_count, 1,
                          'Calls the file management service')
         self.assertTrue(mock_filemanager.add_file.called_with(mock_file))
@@ -235,7 +235,7 @@ class TestDelete(TestCase):
         params = MultiDict({'path': file_path})
         data, code, _ = upload.delete('GET', params, self.session,
                                       submission_id, 'footoken')
-        self.assertEqual(code, status.HTTP_200_OK, "Returns 200 OK")
+        self.assertEqual(code, status.OK, "Returns 200 OK")
         self.assertIn('form', data, "Returns a form in response")
         self.assertEqual(data['form'].file_path.data, file_path, 'Path is set')
 
@@ -314,4 +314,4 @@ class TestDelete(TestCase):
             mock_filemanager.delete_file.called_with(upload_id, file_path),
             "Delete file method of file manager service is called"
         )
-        self.assertEqual(code, status.HTTP_303_SEE_OTHER, "Returns See Other")
+        self.assertEqual(code, status.SEE_OTHER, "Returns See Other")

@@ -4,7 +4,7 @@ from unittest import TestCase, mock
 from werkzeug import MultiDict
 from werkzeug.exceptions import InternalServerError, NotFound, BadRequest
 from wtforms import Form
-from arxiv import status
+from http import HTTPStatus as status
 import arxiv.submission as events
 from submit.controllers import license
 
@@ -57,7 +57,7 @@ class TestSetLicense(TestCase):
         )
         rdata, code, _ = license.license('GET', MultiDict(), self.session,
                                          submission_id)
-        self.assertEqual(code, status.HTTP_200_OK, "Returns 200 OK")
+        self.assertEqual(code, status.OK, "Returns 200 OK")
         self.assertIsInstance(rdata['form'], Form, "Data includes a form")
 
     @mock.patch(f'{license.__name__}.LicenseForm.Meta.csrf', False)
@@ -109,7 +109,7 @@ class TestSetLicense(TestCase):
         })
         data, code, headers = license.license('POST', form_data, self.session,
                                               submission_id)
-        self.assertEqual(code, status.HTTP_303_SEE_OTHER, "Returns redirect")
+        self.assertEqual(code, status.SEE_OTHER, "Returns redirect")
 
     @mock.patch(f'{license.__name__}.LicenseForm.Meta.csrf', False)
     @mock.patch('submit.controllers.util.url_for')

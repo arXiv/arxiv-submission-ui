@@ -4,7 +4,7 @@ from unittest import TestCase, mock
 from werkzeug import MultiDict
 from werkzeug.exceptions import InternalServerError, NotFound
 from wtforms import Form
-from arxiv import status
+from http import HTTPStatus as status
 import arxiv.submission as events
 from submit.controllers import jref
 
@@ -65,7 +65,7 @@ class TestJREFSubmission(TestCase):
         mock_url_for.return_value = "/url/for/submission/status"
         data, code, headers = jref.jref('GET', MultiDict(), self.session,
                                         submission_id)
-        self.assertEqual(code, status.HTTP_303_SEE_OTHER, "Returns See Other")
+        self.assertEqual(code, status.SEE_OTHER, "Returns See Other")
         self.assertIn('Location', headers, "Returns Location header")
         self.assertTrue(
             mock_url_for.called_with('ui.submission_status', submission_id=2),
@@ -90,7 +90,7 @@ class TestJREFSubmission(TestCase):
         params = MultiDict({'doi': '10.1000/182'})    # Valid.
         data, code, headers = jref.jref('POST', params, self.session,
                                         submission_id)
-        self.assertEqual(code, status.HTTP_303_SEE_OTHER, "Returns See Other")
+        self.assertEqual(code, status.SEE_OTHER, "Returns See Other")
         self.assertIn('Location', headers, "Returns Location header")
         self.assertTrue(
             mock_url_for.called_with('ui.submission_status', submission_id=2),
@@ -111,7 +111,7 @@ class TestJREFSubmission(TestCase):
         mock_load.return_value = (before, [])
         params = MultiDict()
         data, code, _ = jref.jref('GET', params, self.session, submission_id)
-        self.assertEqual(code, status.HTTP_200_OK, "Returns 200 OK")
+        self.assertEqual(code, status.OK, "Returns 200 OK")
         self.assertIn('form', data, "Returns form in response data")
 
     @mock.patch(f'{jref.__name__}.alerts')
@@ -128,12 +128,12 @@ class TestJREFSubmission(TestCase):
         mock_url_for.return_value = "/url/for/submission/status"
         params = MultiDict({'doi': '10.1000/182'})
         _, code, _ = jref.jref('POST', params, self.session, submission_id)
-        self.assertEqual(code, status.HTTP_200_OK, "Returns 200 OK")
+        self.assertEqual(code, status.OK, "Returns 200 OK")
 
         params['confirmed'] = True
         data, code, headers = jref.jref('POST', params, self.session,
                                         submission_id)
-        self.assertEqual(code, status.HTTP_303_SEE_OTHER, "Returns See Other")
+        self.assertEqual(code, status.SEE_OTHER, "Returns See Other")
         self.assertIn('Location', headers, "Returns Location header")
         self.assertTrue(
             mock_url_for.called_with('ui.submission_status', submission_id=2),

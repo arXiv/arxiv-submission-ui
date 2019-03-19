@@ -4,7 +4,7 @@ from unittest import TestCase, mock
 from werkzeug import MultiDict
 from werkzeug.exceptions import InternalServerError, NotFound, BadRequest
 from wtforms import Form
-from arxiv import status
+from http import HTTPStatus as status
 import arxiv.submission as events
 from submit.controllers import policy
 
@@ -57,7 +57,7 @@ class TestConfirmPolicy(TestCase):
         data = MultiDict()
 
         data, code, _ = policy.policy('GET', data, self.session, submission_id)
-        self.assertEqual(code, status.HTTP_200_OK, "Returns 200 OK")
+        self.assertEqual(code, status.OK, "Returns 200 OK")
         self.assertIsInstance(data['form'], Form, "Data includes a form")
 
     @mock.patch(f'{policy.__name__}.PolicyForm.Meta.csrf', False)
@@ -123,7 +123,7 @@ class TestConfirmPolicy(TestCase):
 
         params = MultiDict({'policy': 'y', 'action': 'next'})
         _, code, _ = policy.policy('POST', params, self.session, submission_id)
-        self.assertEqual(code, status.HTTP_303_SEE_OTHER, "Returns redirect")
+        self.assertEqual(code, status.SEE_OTHER, "Returns redirect")
 
     @mock.patch(f'{policy.__name__}.PolicyForm.Meta.csrf', False)
     @mock.patch('submit.controllers.util.url_for')

@@ -7,7 +7,7 @@ from werkzeug.exceptions import InternalServerError, BadRequest
 from wtforms.fields import TextField, TextAreaField, Field
 from wtforms import validators
 
-from arxiv import status
+from http import HTTPStatus as status
 from arxiv.forms import csrf
 from arxiv.base import logging
 from arxiv.users.domain import Session
@@ -126,8 +126,8 @@ def metadata(method: str, params: MultiDict, session: Session,
             response_data['submission'] = submission
 
     if params.get('action') in ['previous', 'save_exit', 'next']:
-        return response_data, status.HTTP_303_SEE_OTHER, {}
-    return response_data, status.HTTP_200_OK, {}
+        return response_data, status.SEE_OTHER, {}
+    return response_data, status.OK, {}
 
 
 def optional(method: str, params: MultiDict, session: Session,
@@ -171,8 +171,8 @@ def optional(method: str, params: MultiDict, session: Session,
             response_data['submission'] = submission
 
     if params.get('action') in ['previous', 'save_exit', 'next']:
-        return response_data, status.HTTP_303_SEE_OTHER, {}
-    return response_data, status.HTTP_200_OK, {}
+        return response_data, status.SEE_OTHER, {}
+    return response_data, status.OK, {}
 
 
 def _commands(form: CoreMetadataForm, submission: Submission,

@@ -6,7 +6,7 @@ from functools import wraps
 from flask import Response, request, redirect, url_for, session
 from werkzeug.exceptions import BadRequest
 
-from arxiv import status
+from http import HTTPStatus as status
 from arxiv.base import alerts, logging
 from arxiv.base.globals import get_application_global
 from ..domain.workflow import Stage, Workflow, SubmissionWorkflow, \
@@ -29,14 +29,14 @@ def to_previous(workflow: Workflow, stage: Stage, ident: str) -> Response:
     previous_stage = workflow.previous_stage(stage)
     logger.debug('Redirecting to previous stage: %s', previous_stage)
     loc = url_for(f'ui.{previous_stage.endpoint}', submission_id=ident)
-    return redirect(loc, code=status.HTTP_303_SEE_OTHER)
+    return redirect(loc, code=status.SEE_OTHER)
 
 
 def to_next(workflow: Workflow, stage: Stage, ident: str) -> Response:
     next_stage = workflow.next_stage(stage)
     logger.debug('Redirecting to next stage: %s', next_stage)
     loc = url_for(f'ui.{next_stage.endpoint}', submission_id=ident)
-    return redirect(loc, code=status.HTTP_303_SEE_OTHER)
+    return redirect(loc, code=status.SEE_OTHER)
 
 
 def to_current(workflow: Workflow, stage: Stage, ident: str) -> Response:
@@ -44,7 +44,7 @@ def to_current(workflow: Workflow, stage: Stage, ident: str) -> Response:
     alerts.flash_warning(f'Please {next_stage.label} before proceeding.')
     logger.debug('Redirecting to current stage: %s', next_stage)
     loc = url_for(f'ui.{next_stage.endpoint}', submission_id=ident)
-    return redirect(loc, code=status.HTTP_303_SEE_OTHER)
+    return redirect(loc, code=status.SEE_OTHER)
 
 
 def flow_control(this_stage: Stage, exit: str = EXIT) -> Callable:
@@ -86,7 +86,7 @@ def flow_control(this_stage: Stage, exit: str = EXIT) -> Callable:
                 raise
 
             # Intercept redirection and route based on workflow.
-            if response.status_code == status.HTTP_303_SEE_OTHER:
+            if response.status_code == status.SEE_OTHER:
                 workflow.mark_complete(this_stage)
                 if action == NEXT:
                     return to_next(workflow, this_stage, submission_id)
@@ -94,7 +94,7 @@ def flow_control(this_stage: Stage, exit: str = EXIT) -> Callable:
                     return to_previous(workflow, this_stage, submission_id)
                 elif action == SAVE_EXIT:
                     return redirect(url_for(exit),
-                                    code=status.HTTP_303_SEE_OTHER)
+                                    code=status.SEE_OTHER)
             return response    # No redirect; nothing to do.
         return wrapper
     return deco

@@ -4,7 +4,7 @@ from unittest import TestCase, mock
 from werkzeug import MultiDict
 from werkzeug.exceptions import InternalServerError, BadRequest
 from wtforms import Form
-from arxiv import status
+from http import HTTPStatus as status
 import arxiv.submission as events
 from submit.controllers import verify_user
 
@@ -56,7 +56,7 @@ class TestVerifyUser(TestCase):
         mock_load.return_value = (before, [])
         data, code, _ = verify_user.verify('GET', MultiDict(), self.session,
                                            submission_id)
-        self.assertEqual(code, status.HTTP_200_OK, "Returns 200 OK")
+        self.assertEqual(code, status.OK, "Returns 200 OK")
         self.assertIsInstance(data['form'], Form, "Data includes a form")
 
     @mock.patch(f'{verify_user.__name__}.VerifyUserForm.Meta.csrf', False)
@@ -94,7 +94,7 @@ class TestVerifyUser(TestCase):
         form_data = MultiDict({'verify_user': 'y', 'action': 'next'})
         _, code, _ = verify_user.verify('POST', form_data, self.session,
                                         submission_id)
-        self.assertEqual(code, status.HTTP_303_SEE_OTHER, "Returns redirect")
+        self.assertEqual(code, status.SEE_OTHER, "Returns redirect")
 
     @mock.patch(f'{verify_user.__name__}.VerifyUserForm.Meta.csrf', False)
     @mock.patch('submit.controllers.util.url_for')

@@ -13,7 +13,8 @@ from wtforms import StringField, PasswordField, SelectField, \
 from wtforms.fields.core import UnboundField
 
 from arxiv.forms import csrf
-from arxiv import status, taxonomy
+from http import HTTPStatus as status
+from arxiv import taxonomy
 from arxiv.users.domain import Session
 from arxiv.submission import InvalidEvent, User, Client, Event, Submission
 

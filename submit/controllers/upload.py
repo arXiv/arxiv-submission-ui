@@ -21,7 +21,7 @@ from wtforms import BooleanField, widgets, HiddenField, FileField
 from wtforms.validators import DataRequired
 from flask import url_for, Markup
 
-from arxiv import status
+from http import HTTPStatus as status
 from arxiv.integration.api import exceptions
 from arxiv.base import logging, alerts
 from arxiv.forms import csrf
@@ -104,7 +104,7 @@ def upload_files(method: str, params: MultiDict, session: Session,
         if params.get('action') in ['previous', 'next', 'save_exit']:
             # User is not actually trying to upload anything; let flow control
             # in the routes handle the response.
-            return {}, status.HTTP_303_SEE_OTHER, {}
+            return {}, status.SEE_OTHER, {}
         # Otherwise, treat this as an upload attempt.
         return _post_upload(params, files, session, submission, rdata, token)
     raise MethodNotAllowed('Nope')
@@ -155,7 +155,7 @@ def delete_all(method: str, params: MultiDict, session: Session,
     if method == 'GET':
         form = DeleteAllFilesForm()
         rdata.update({'form': form})
-        return rdata, status.HTTP_200_OK, {}
+        return rdata, status.OK, {}
     elif method == 'POST':
         form = DeleteAllFilesForm(params)
         rdata.update({'form': form})
@@ -201,7 +201,7 @@ def delete_all(method: str, params: MultiDict, session: Session,
             ))
 
         redirect = url_for('ui.file_upload', submission_id=submission_id)
-        return {}, status.HTTP_303_SEE_OTHER, {'Location': redirect}
+        return {}, status.SEE_OTHER, {'Location': redirect}
     raise MethodNotAllowed('Method not supported')
 
 
@@ -311,8 +311,8 @@ def delete(method: str, params: MultiDict, session: Session,
                     f' again. {PLEASE_CONTACT_SUPPORT}'
                 ))
         redirect = url_for('ui.file_upload', submission_id=submission_id)
-        return {}, status.HTTP_303_SEE_OTHER, {'Location': redirect}
-    return rdata, status.HTTP_200_OK, {}
+        return {}, status.SEE_OTHER, {'Location': redirect}
+    return rdata, status.OK, {}
 
 
 class UploadForm(csrf.CSRFForm):
@@ -411,7 +411,7 @@ def _get_upload(params: MultiDict, session: Session, submission: Submission,
 
     if submission.source_content is None:
         # Nothing to show; should generate a blank-slate upload screen.
-        return rdata, status.HTTP_200_OK, {}
+        return rdata, status.OK, {}
 
     upload_id = submission.source_content.identifier
     status_data = alerts.get_hidden_alerts('_status')
@@ -427,7 +427,7 @@ def _get_upload(params: MultiDict, session: Session, submission: Submission,
     rdata.update({'status': stat})
     if stat:
         rdata.update({'immediate_notifications': _get_notifications(stat)})
-    return rdata, status.HTTP_200_OK, {}
+    return rdata, status.OK, {}
 
 
 def _new_upload(params: MultiDict, pointer: FileStorage, session: Session,
@@ -505,7 +505,7 @@ def _new_upload(params: MultiDict, pointer: FileStorage, session: Session,
     alerts.flash_hidden(stat.to_dict(), '_status')
 
     loc = url_for('ui.file_upload', submission_id=submission.submission_id)
-    return {}, status.HTTP_303_SEE_OTHER, {'Location': loc}
+    return {}, status.SEE_OTHER, {'Location': loc}
 
 
 def _new_file(params: MultiDict, pointer: FileStorage, session: Session,
@@ -556,7 +556,7 @@ def _new_file(params: MultiDict, pointer: FileStorage, session: Session,
                              title="Whoops")
         redirect = url_for('ui.file_upload',
                            submission_id=submission.submission_id)
-        return {}, status.HTTP_303_SEE_OTHER, {'Location': redirect}
+        return {}, status.SEE_OTHER, {'Location': redirect}
     ancillary: bool = form.ancillary.data
 
     try:
@@ -592,7 +592,7 @@ def _new_file(params: MultiDict, pointer: FileStorage, session: Session,
     status_data = stat.to_dict()
     alerts.flash_hidden(status_data, '_status')
     loc = url_for('ui.file_upload', submission_id=submission.submission_id)
-    return {}, status.HTTP_303_SEE_OTHER, {'Location': loc}
+    return {}, status.SEE_OTHER, {'Location': loc}
 
 
 def _post_upload(params: MultiDict, files: MultiDict, session: Session,
@@ -639,7 +639,7 @@ def _post_upload(params: MultiDict, files: MultiDict, session: Session,
             submission_id = submission.submission_id
             headers['Location'] = url_for('ui.file_upload',
                                           submission_id=submission_id)
-        return {}, status.HTTP_303_SEE_OTHER, headers
+        return {}, status.SEE_OTHER, headers
 
     if submission.source_content is None:   # New upload package.
         return _new_upload(params, pointer, session, submission, rdata, token)

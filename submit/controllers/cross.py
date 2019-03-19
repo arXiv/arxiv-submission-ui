@@ -11,7 +11,7 @@ from wtforms.fields import Field, BooleanField, HiddenField
 from wtforms.validators import InputRequired, ValidationError, optional, \
     DataRequired
 
-from arxiv import status
+from http import HTTPStatus as status
 from arxiv.taxonomy import CATEGORIES_ACTIVE as CATEGORIES
 from arxiv.taxonomy import ARCHIVES_ACTIVE as ARCHIVES
 from arxiv.base import logging, alerts
@@ -136,7 +136,7 @@ def request_cross(method: str, params: MultiDict, session: Session,
                    " href='https://arxiv.org/help/cross'>the arXiv help"
                    " pages</a> for details."))
         status_url = url_for('ui.create_submission')
-        return {}, status.HTTP_303_SEE_OTHER, {'Location': status_url}
+        return {}, status.SEE_OTHER, {'Location': status_url}
 
     if method == 'GET':
         params = MultiDict({})
@@ -190,7 +190,7 @@ def request_cross(method: str, params: MultiDict, session: Session,
             # Success! Send user back to the submission page.
             alerts.flash_success("Cross-list request submitted.")
             status_url = url_for('ui.create_submission')
-            return {}, status.HTTP_303_SEE_OTHER, {'Location': status_url}
+            return {}, status.SEE_OTHER, {'Location': status_url}
         else:   # User is adding or removing a category.
             if form.operation.data:
                 if form.operation.data == CrossListForm.REMOVE:
@@ -207,5 +207,5 @@ def request_cross(method: str, params: MultiDict, session: Session,
                                                  exclude=selected)
             response_data['form'].operation.data = CrossListForm.ADD
             response_data['require_confirmation'] = True
-            return response_data, status.HTTP_200_OK, {}
-    return response_data, status.HTTP_200_OK, {}
+            return response_data, status.OK, {}
+    return response_data, status.OK, {}

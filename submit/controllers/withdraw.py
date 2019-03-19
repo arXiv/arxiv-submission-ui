@@ -10,7 +10,7 @@ from wtforms.fields import TextField, TextAreaField, Field, BooleanField
 from wtforms.validators import InputRequired, ValidationError, optional, \
     DataRequired
 
-from arxiv import status
+from http import HTTPStatus as status
 from arxiv.base import logging, alerts
 from arxiv.forms import csrf
 from arxiv.users.domain import Session
@@ -53,7 +53,7 @@ def request_withdrawal(method: str, params: MultiDict, session: Session,
             "</a> for details."
         ))
         loc = url_for('ui.create_submission')
-        return {}, status.HTTP_303_SEE_OTHER, {'Location': loc}
+        return {}, status.SEE_OTHER, {'Location': loc}
 
     # The form should be prepopulated based on the current state of the
     # submission.
@@ -80,7 +80,7 @@ def request_withdrawal(method: str, params: MultiDict, session: Session,
 
         if not form.confirmed.data:
             response_data['require_confirmation'] = True
-            return response_data, status.HTTP_200_OK, {}
+            return response_data, status.OK, {}
 
         response_data['require_confirmation'] = True
         try:
@@ -92,6 +92,6 @@ def request_withdrawal(method: str, params: MultiDict, session: Session,
         # Success! Send user back to the submission page.
         alerts.flash_success("Withdrawal request submitted.")
         status_url = url_for('ui.create_submission')
-        return {}, status.HTTP_303_SEE_OTHER, {'Location': status_url}
+        return {}, status.SEE_OTHER, {'Location': status_url}
     logger.debug('Nothing to do, return 200')
-    return response_data, status.HTTP_200_OK, {}
+    return response_data, status.OK, {}

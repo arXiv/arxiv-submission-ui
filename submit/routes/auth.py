@@ -1,7 +1,9 @@
 """Authorization helpers for :mod:`submit` application."""
 
 from arxiv.users.domain import Session
+
 from flask import request
+from werkzeug.exceptions import NotFound
 
 from arxiv.base import logging
 
@@ -13,6 +15,8 @@ logger.propagate = False
 # will need to be updated.
 def is_owner(session: Session, submission_id: str, **kw) -> bool:
     """Check whether the user has privileges to edit a submission."""
+    if not request.submission:
+        raise NotFound('No such submission')
     logger.debug('Submission owned by %s; request is from %s',
                  str(request.submission.owner.native_id),
                  str(session.user.user_id))

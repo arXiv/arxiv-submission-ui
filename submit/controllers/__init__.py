@@ -4,7 +4,7 @@ from typing import Tuple, Dict, Any
 
 from werkzeug import MultiDict
 
-from arxiv import status
+from http import HTTPStatus as status
 from arxiv.users.domain import Session
 
 from .process import file_process, file_preview, compilation_log
@@ -33,4 +33,4 @@ def submission_status(method: str, params: MultiDict, session: Session,
         'submission_id': submission_id,
         'events': submission_events
     }
-    return response_data, status.HTTP_200_OK, {}
+    return response_data, status.OK, {}

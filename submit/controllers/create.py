@@ -6,7 +6,7 @@ from werkzeug.exceptions import InternalServerError, BadRequest, \
     MethodNotAllowed
 from flask import url_for
 
-from arxiv import status
+from http import HTTPStatus as status
 from arxiv.forms import csrf
 from arxiv.base import logging
 from arxiv.users.domain import Session, User
@@ -54,8 +54,8 @@ def create(method: str, params: MultiDict, session: Session, *args,
             raise InternalServerError(response_data) from e
 
         loc = url_for('ui.verify_user', submission_id=submission.submission_id)
-        return {}, status.HTTP_303_SEE_OTHER, {'Location': loc}
-    return response_data, status.HTTP_200_OK, {}
+        return {}, status.SEE_OTHER, {'Location': loc}
+    return response_data, status.OK, {}
 
 
 def replace(method: str, params: MultiDict, session: Session,
@@ -82,4 +82,4 @@ def replace(method: str, params: MultiDict, session: Session,
         raise InternalServerError({}) from e
 
     loc = url_for('ui.verify_user', submission_id=submission.submission_id)
-    return {}, status.HTTP_303_SEE_OTHER, {'Location': loc}
+    return {}, status.SEE_OTHER, {'Location': loc}

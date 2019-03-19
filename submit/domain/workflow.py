@@ -13,6 +13,9 @@ class Stage(type):     # type: ignore
 class BaseStage(metaclass=Stage):
     """Base class for workflow stages."""
 
+    always_check = False
+    """If False, the result will be cached when complete."""
+
 
 def stage_from_endpoint(endpoint: str) -> Stage:
     """Get the :class:`.Stage` for an endpoint."""
@@ -126,16 +129,22 @@ class Process(BaseStage):
     label = 'process your submission files'
     title = "File process"
     display = "Process Files"
+    always_check = True
+    """We need to re-process every time the source is updated."""
 
-    # TODO: this needs a bit more work, since the compilation may have failed
-    # or may not be complete for the current state of the upload workspace.
     @staticmethod
     def complete(submission: Submission) -> bool:
         """Determine whether the submitter has compiled their upload."""
-        return len(submission.compilations) > 0 \
-            or submission.source_content \
-            and submission.source_content.source_format \
-            is SubmissionContent.Format.PDF
+        # TODO: this might be nice as a property on the submission itself.
+        successful = [
+            compilation for compilation in submission.compilations
+            if compilation.status == compilation.Status.SUCCEEDED
+            and compilation.checksum == submission.source_content.checksum
+        ]
+        return len(successful) > 0 \
+            or (submission.source_content
+                and submission.source_content.source_format
+                is SubmissionContent.Format.PDF)
 
 
 class Metadata(BaseStage):
@@ -268,7 +277,9 @@ class Workflow:
             # If the status is not set in the client session, or if the client
             # session shows that the state is incomplete, check the submission
             # itself for a fresh look.
-            if stage.endpoint not in states or not states[stage.endpoint]:
+            if stage.endpoint not in states \
+                    or not states[stage.endpoint] \
+                    or stage.always_check:
                 states[stage.endpoint] = stage.complete(self.submission)
 
             # Mark all previous stages as complete if this stage is complete.

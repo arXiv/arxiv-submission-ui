@@ -70,7 +70,7 @@
                   <span class="icon"><i class="fa fa-undo"></i> </span>
                   <span>Unsubmit</span></a>
                 {% else %}
-                  <a class="button is-link is-outlined is-small is-short" href="{{ get_next_stage_for_submission(submission) }}">
+                  <a class="button is-link is-outlined is-small is-short" href="{{ url_for('ui.' + get_current_stage_for_submission(submission), submission_id=submission.submission_id) }}">
                   <span class="icon"><i class="fa fa-pencil"></i> </span>
                   <span>Edit</span></a>
                 {% endif %}

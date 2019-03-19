@@ -16,7 +16,7 @@ from arxiv.base import logging
 
 from .auth import is_owner
 from ..domain import workflow, Submission
-from .util import flow_control, get_workflow
+from ..flow_control import flow_control, get_workflow
 from .. import util
 
 logger = logging.getLogger(__name__)
@@ -66,7 +66,15 @@ def inject_stage() -> Dict[str, Optional[workflow.Stage]]:
         stage = workflow.stage_from_endpoint(endpoint)
     except ValueError:
         stage = None
-    return {'this_stage': stage}
+
+    def get_current_stage_for_submission(submission: Submission) -> str:
+        """Get the endpoint of the current step for a submission."""
+        return get_workflow(submission).current_stage.endpoint
+
+    return {
+        'this_stage': stage,
+        'get_current_stage_for_submission': get_current_stage_for_submission
+    }
 
 
 @ui.context_processor

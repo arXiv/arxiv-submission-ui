@@ -150,7 +150,7 @@ services:
 
   submission-worker:
     << : *base-service
-    image: arxiv/submission-worker:0.0.2
+    image: arxiv/submission-worker:0.0.3
     container_name: arxiv-submission-worker
     networks:
       - arxiv-submission-ui

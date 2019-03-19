@@ -267,15 +267,18 @@ class Workflow:
     def complete_or_optional(self, stage: Stage) -> bool:
         return self.is_complete(stage) or not self.is_required(stage)
 
+    def _key(self) -> str:
+        return f'{self.submission.submission_id}::{self.__class__.__name__}'
+
     def _get_states(self) -> dict:
-        if str(self.submission.submission_id) in self.session:
-            states = self.session[str(self.submission.submission_id)]
+        if self._key() in self.session:
+            states = self.session[self._key()]
         else:
             states = {}
         return states
 
     def _set_states(self, states: dict) -> None:
-        self.session[str(self.submission.submission_id)] = states
+        self.session[self._key()] = states
 
     @property
     def current_states(self) -> Dict[str, bool]:

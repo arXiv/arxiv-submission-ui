@@ -84,19 +84,6 @@ def publish_submission(submission_id: int) -> None:
     session = events.services.classic.current_session()
     if not head.is_published():
         head.status = events.services.classic.models.Submission.PUBLISHED
-    head.title = "This is a fake title generated just now"
-    head.abstract = ("Spicy jalapeno bacon ipsum dolor amet strip steak"
-                     " andouille fatback exercitation chicken pork belly"
-                     " dolore pork ham hock. Pastrami meatball nisi ad, salami"
-                     " turducken aute sed dolore kevin in. Nostrud fatback"
-                     " eiusmod nulla buffalo pastrami, ut consequat venison."
-                     " Short loin eiusmod laborum shoulder veniam fugiat bacon"
-                     " et sint. Landjaeger kevin nostrud, occaecat tenderloin"
-                     " mollit laboris chicken swine burgdoggen id duis ut"
-                     " boudin.")
-    head.comments = "We added these comments when faking the publish."
-    head.doi = "10.1109/5.771073"
-    head.authors = "J. Bloggs, F. Doe, N. Body (FSU)"
     if head.document is None:
         paper_id = datetime.now().strftime('%s')[-4:] \
             + "." \

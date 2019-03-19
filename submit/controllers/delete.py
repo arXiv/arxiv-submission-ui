@@ -3,14 +3,14 @@
 from flask import url_for
 from wtforms import BooleanField, validators
 from werkzeug import MultiDict
+from werkzeug.exceptions import BadRequest, InternalServerError
 
-from arxiv import status
+from http import HTTPStatus as status
 from arxiv.base import logging, alerts
 from arxiv.submission import Rollback, save
 from arxiv.forms import csrf
 from arxiv.users.domain import Session
-from .util import Response
-from . import util
+from .util import Response, user_and_client_from_session, validate_command
 from ..util import load_submission
 
 
@@ -22,7 +22,7 @@ class DeleteForm(csrf.CSRFForm):
 
 
 def delete(method: str, params: MultiDict, session: Session,
-           submission_id: int) -> Response:
+           submission_id: int, **kwargs) -> Response:
     """
     Delete a submission, replacement, or other request.
 
@@ -42,17 +42,22 @@ def delete(method: str, params: MultiDict, session: Session,
     if method == 'GET':
         form = DeleteForm()
         response_data.update({'form': form})
-        return response_data, status.HTTP_200_OK, {}
+        return response_data, status.OK, {}
     elif method == 'POST':
         form = DeleteForm(params)
+        response_data.update({'form': form})
         if form.validate() and form.confirmed.data:
-            user, client = util.user_and_client_from_session(session)
+            user, client = user_and_client_from_session(session)
+            command = Rollback(creator=user, client=client)
+            if not validate_command(form, command, submission, 'confirmed'):
+                raise BadRequest(response_data)
+
             try:
-                save(Rollback(creator=user, client=client),
-                     submission_id=submission_id)
+                save(command, submission_id=submission_id)
             except Exception as e:
                 alerts.flash_failure("Whoops!")
+                raise InternalServerError(response_data) from e
             redirect = url_for('ui.create_submission')
-            return {}, status.HTTP_303_SEE_OTHER, {'Location': redirect}
+            return {}, status.SEE_OTHER, {'Location': redirect}
         response_data.update({'form': form})
-        return response_data, status.HTTP_400_BAD_REQUEST, {}
+        raise BadRequest(response_data)

@@ -2,9 +2,9 @@
 
 from unittest import TestCase, mock
 from werkzeug import MultiDict
-from werkzeug.exceptions import InternalServerError, NotFound
+from werkzeug.exceptions import InternalServerError, NotFound, BadRequest
 from wtforms import Form
-from arxiv import status
+from http import HTTPStatus as status
 import arxiv.submission as events
 from submit.controllers import license
 
@@ -55,11 +55,10 @@ class TestSetLicense(TestCase):
         mock_load.return_value = (
             mock.MagicMock(submission_id=submission_id), []
         )
-        data, code, headers = license.license('GET', MultiDict(), self.session,
-                                              submission_id)
-        self.assertEqual(code, status.HTTP_200_OK, "Returns 200 OK")
-        self.assertIsInstance(data['form'], Form,
-                              "Response data includes a form")
+        rdata, code, _ = license.license('GET', MultiDict(), self.session,
+                                         submission_id)
+        self.assertEqual(code, status.OK, "Returns 200 OK")
+        self.assertIsInstance(rdata['form'], Form, "Data includes a form")
 
     @mock.patch(f'{license.__name__}.LicenseForm.Meta.csrf', False)
     @mock.patch('arxiv.submission.load')
@@ -82,27 +81,24 @@ class TestSetLicense(TestCase):
         mock_load.return_value = (
             mock.MagicMock(submission_id=submission_id), []
         )
-        data, code, headers = license.license('POST', MultiDict(),
-                                              self.session, submission_id)
-        self.assertEqual(code, status.HTTP_400_BAD_REQUEST,
-                         "Returns 400 bad request")
-        self.assertIsInstance(data['form'], Form,
-                              "Response data includes a form")
+        try:
+            license.license('POST', MultiDict(), self.session, submission_id)
+            self.fail('BadRequest not raised')
+        except BadRequest as e:
+            data = e.description
+            self.assertIsInstance(data['form'], Form, "Data includes a form")
 
     @mock.patch(f'{license.__name__}.LicenseForm.Meta.csrf', False)
     @mock.patch('submit.controllers.util.url_for')
-    @mock.patch('arxiv.submission.save')
+    @mock.patch(f'{license.__name__}.save')
     @mock.patch('arxiv.submission.load')
     def test_post_request_with_data(self, mock_load, mock_save, mock_url_for):
         """POST request with `license` set."""
         # Event store does not complain; returns object with `submission_id`.
         submission_id = 2
-        mock_load.return_value = (
-            mock.MagicMock(submission_id=submission_id), []
-        )
-        mock_save.return_value = (
-            mock.MagicMock(submission_id=submission_id), []
-        )
+        sub = mock.MagicMock(submission_id=submission_id, finalized=False)
+        mock_load.return_value = (sub, [])
+        mock_save.return_value = (sub, [])
         # `url_for` returns a URL (unsurprisingly).
         redirect_url = 'https://foo.bar.com/yes'
         mock_url_for.return_value = redirect_url
@@ -113,41 +109,33 @@ class TestSetLicense(TestCase):
         })
         data, code, headers = license.license('POST', form_data, self.session,
                                               submission_id)
-        self.assertEqual(code, status.HTTP_303_SEE_OTHER,
-                         "Returns 303 redirect")
+        self.assertEqual(code, status.SEE_OTHER, "Returns redirect")
 
     @mock.patch(f'{license.__name__}.LicenseForm.Meta.csrf', False)
     @mock.patch('submit.controllers.util.url_for')
-    @mock.patch('arxiv.submission.save')
+    @mock.patch(f'{license.__name__}.save')
     @mock.patch('arxiv.submission.load')
-    def test_select_fails(self, mock_load, mock_save, mock_url_for):
-        """Event store flakes out on license selection."""
+    def test_save_fails(self, mock_load, mock_save, mock_url_for):
+        """Event store flakes out on saving license selection."""
         submission_id = 2
-        mock_load.return_value = (
-            mock.MagicMock(submission_id=submission_id), []
-        )
+        sub = mock.MagicMock(submission_id=submission_id, finalized=False)
+        mock_load.return_value = (sub, [])
 
         # Event store does not complain; returns object with `submission_id`
         def raise_on_verify(*ev, **kwargs):
             if type(ev[0]) is events.SetLicense:
-                raise events.InvalidStack([
-                    events.InvalidEvent(ev[0], 'foo')
-                ])
-            return (
-                mock.MagicMock(submission_id=kwargs.get('submission_id', 2)),
-                []
-            )
+                raise events.SaveError('the sky is falling')
+            ident = kwargs.get('submission_id', 2)
+            return (mock.MagicMock(submission_id=ident), [])
 
         mock_save.side_effect = raise_on_verify
-        form_data = MultiDict({
+        params = MultiDict({
             'license': 'http://arxiv.org/licenses/nonexclusive-distrib/1.0/',
             'action': 'next'
         })
-        data, code, headers = license.license('POST', form_data, self.session,
-                                              2)
-        self.assertEqual(code, status.HTTP_400_BAD_REQUEST,
-                         "Returns 400 bad request")
-        self.assertIsInstance(data['form'], Form,
-                              "Response data includes a form")
-        self.assertIn("events", data["form"].errors,
-                      "Exception messages are added to form errors.")
+        try:
+            license.license('POST', params, self.session, 2)
+            self.fail('InternalServerError not raised')
+        except InternalServerError as e:
+            data = e.description
+            self.assertIsInstance(data['form'], Form, "Data includes a form")

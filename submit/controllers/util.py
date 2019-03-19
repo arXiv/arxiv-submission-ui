@@ -9,14 +9,15 @@ from flask import url_for
 from wtforms.widgets import ListWidget, CheckboxInput, Select, HTMLString, \
     html_params
 from wtforms import StringField, PasswordField, SelectField, \
-    SelectMultipleField, Form, validators
+    SelectMultipleField, Form, validators, Field
 from wtforms.fields.core import UnboundField
 
-from arxiv import status, taxonomy
+from arxiv.forms import csrf
+from http import HTTPStatus as status
+from arxiv import taxonomy
 from arxiv.users.domain import Session
-import arxiv.submission as events
-from ..domain import SubmissionStage
-from ..util import load_submission
+from arxiv.submission import InvalidEvent, User, Client, Event, Submission
+
 
 Response = Tuple[Dict[str, Any], int, Dict[str, Any]]   # pylint: disable=C0103
 
@@ -77,78 +78,44 @@ class OptGroupSelectMultipleField(SelectMultipleField):
         return data
 
 
-class SubmissionMixin:
+def validate_command(form: Form, event: Event,
+                     submission: Optional[Submission] = None,
+                     field: str = 'events',
+                     message: Optional[str] = None) -> bool:
     """
-    Provides submission-related integration for :class:`.Form`s.
+    Validate an uncommitted command and apply the result to form validation.
 
-    Since the command events in :mod:`events` provide input validation, it
-    is convenient to instantiate those :class:`events.Event`s during form
-    validation. To do this, however, we need to know about the
-    :class:`events.Submission` and the event creator (an
-    :class:`events.User`). This mixin provides :prop:`.submission` and
-    :prop:`.creator` for that purpose.
+    Parameters
+    ----------
+    form : :class:`.Form`
+    command : :class:`.Event`
+        Command/event to validate.
+    submission : :class:`.Submission`
+        The submission to which the command applies.
+    field : str
+        Name of the field on the form to update with error messages if
+        validation fails. Default is `events`, accessible at
+        ``form.errors['events']``.
+    message : str or None
+        If provided, the error message to add to the form. If ``None``
+        (default) the :class:`.InvalidEvent` message will be used.
 
-    Since we're instantiating the :class:`event.Event`s during form validation,
-    we also want to keep those around so that we don't have to create them
-    twice. So this mixin also provides :prop:`.events` and :meth:`._add_event`.
-
-    Examples
-    --------
-    .. code-block:: python
-
-       >>> from wtforms import Form, TextField, validators
-       >>> from submit.controllers.util import SubmissionMixin
-       >>> import arxiv.submission as events
-       >>>
-       >>> class FooForm(Form, SubmissionMixin):
-       ...     title = TextField('Title')
-       ...
-       ...     def validate_title(self, field):
-       ...         if self.submission.metadata.title == field.data:
-       ...             return
-       ...         self._validate_event(SetTitle, title=field.data)
-       ...
-       >>> form = FooForm(data)
-       >>> form.submission = submission
-       >>> form.creator = submitter
-       >>> form.validate()
+    Returns
+    -------
+    bool
 
     """
-
-    def _set_submission(self, submission: events.Submission) -> None:
-        self._submission = submission
-
-    def _get_submission(self) -> events.Submission:
-        return self._submission
-
-    def _set_creator(self, creator: events.User) -> None:
-        self._creator = creator
-
-    def _get_creator(self) -> events.User:
-        return self._creator
-
-    submission = property(_get_submission, _set_submission)
-    creator = property(_get_creator, _set_creator)
-
-    def _add_event(self, event: events.Event) -> None:
-        if not hasattr(self, '_events'):
-            self._events = []
-        self._events.append(event)
-
-    def _validate_event(self, event_type: type, **data: Any) -> None:
-        event = event_type(creator=self.creator, **data)
-        self._add_event(event)
-        try:
-            event.validate(self.submission)
-        except events.InvalidEvent as e:
-            raise validators.ValidationError(e.message)
-
-    @property
-    def events(self) -> List[events.Event]:
-        """Command event instances created during form validation."""
-        if not hasattr(self, '_events'):
-            self._events = []
-        return self._events
+    try:
+        event.validate(submission)
+    except InvalidEvent as e:
+        form.errors
+        if field not in form._errors:
+            form._errors[field] = []
+        if message is None:
+            message = e.message
+        form._errors[field].append(message)
+        return False
+    return True
 
 
 class FieldMixin:
@@ -164,7 +131,7 @@ class FieldMixin:
 # TODO: currently this does nothing with the client. We will need to add that
 # bit once we have a plan for handling client information in this interface.
 def user_and_client_from_session(session: Session) \
-        -> Tuple[events.User, Optional[events.Client]]:
+        -> Tuple[User, Optional[Client]]:
     """
     Get submission user/client representations from a :class:`.Session`.
 
@@ -173,7 +140,7 @@ def user_and_client_from_session(session: Session) \
     those events. This function generates those event-domain representations
     from a :class:`arxiv.users.domain.Submission` object.
     """
-    user = events.domain.User(
+    user = User(
         session.user.user_id,
         email=session.user.email,
         forename=getattr(session.user.name, 'forename', None),

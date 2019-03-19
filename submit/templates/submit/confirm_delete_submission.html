@@ -3,7 +3,7 @@
 {% import "submit/submit_macros.html" as submit_macros %}
 
 {% block title_preamble %}{% endblock %}
-{% block title -%}{% if submission.version == 1 %}Delete submission{% else %}Delete replacement for submission{% endif %} {{ submission.submission_id }}{%- endblock title %}
+{% block title -%}{% if submission.version == 1 %}Delete Submission{% else %}Delete Replacement for Submission{% endif %} {{ submission.submission_id }}{%- endblock title %}
 
 {% block within_content %}
 <form method="POST" action="{{ url_for('ui.delete_submission', submission_id=submission_id) }}">

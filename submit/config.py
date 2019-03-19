@@ -47,7 +47,7 @@ logging in debug mode, 'production' will only log in production and 'never'
 disables it entirely.
 """
 
-SERVER_NAME = os.environ.get('SEARCH_SERVER_NAME', None)
+SERVER_NAME = None# "foohost:8000"   #os.environ.get('SERVER_NAME', None)
 """
 the name and port number of the server. Required for subdomain support
 (e.g.: 'myapp.dev:5000') Note that localhost does not support subdomains so
@@ -56,7 +56,7 @@ default enables URL generation without a request context but with an
 application context.
 """
 
-CLASSIC_DATABASE_URI = os.environ.get('CLASSIC_DATABASE_URI', 'sqlite:///')
+SQLALCHEMY_DATABASE_URI = os.environ.get('CLASSIC_DATABASE_URI', 'sqlite:///')
 
 JWT_SECRET = os.environ.get('JWT_SECRET', 'foosecret')
 SECRET_KEY = os.environ.get('FLASK_SECRET', 'fooflasksecret')
@@ -93,6 +93,7 @@ URLS = [
     ("help_cross", "/help/cross", BASE_SERVER),
     ("help_submit", "/help/submit", BASE_SERVER),
     ("help_ancillary_files", "/help/ancillary_files", BASE_SERVER),
+    ("help_texlive", "/help/faq/texlive", BASE_SERVER),
     ("help_whytex", "/help/faq/whytex", BASE_SERVER),
     ("help_default_packages", "/help/submit_tex#wegotem", BASE_SERVER),
     ("help_submit_tex", "/help/submit_tex", BASE_SERVER),
@@ -122,3 +123,6 @@ Otherwise they will be executed in the thread in which they are called.
 
 ENABLE_CALLBACKS = os.environ.get('ENABLE_CALLBACKS', '0')
 """If ``0``, callbacks bound to events will not be executed."""
+
+
+# AUTH_UPDATED_SESSION_REF = True

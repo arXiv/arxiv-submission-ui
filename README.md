@@ -8,22 +8,71 @@ The Submission UI requires the File Management service.
 
 ## Quick start
 
-Start the File Management service.
+Submission involves several back-end services, an async worker process, and
+the UI application itself. The easiest way to spin up all of this stuff
+with correct wiring is to use the provided docker-compose configuration.
 
 ```bash
-$ cd arxiv-filemanager
-$ git pull
-$ pipenv install --dev
-$ LOGLEVEL=10 JWT_SECRET=foosecret LOGLEVEL=10 FLASK_APP=app.py FLASK_DEBUG=1 pipenv run flask run --port=8002
+cd /path/to/arxiv-submission-ui
+mkdir /tmp/foo     # Compiler service will use this.
+docker-compose pull     # Pulls in images that you might not have already.
+HOST_SOURCE_ROOT=/tmp/foo COMPILER_DOCKER_IMAGE=[ will share via slack ]:0.8 docker-compose build
+HOST_SOURCE_ROOT=/tmp/foo COMPILER_DOCKER_IMAGE=[ will share via slack ]:0.8 docker-compose up
 ```
+
+To get a fresh deployment (e.g. after significant changes to backend stuff),
+you may need to blow away the whole service group. Be sure to use the ``-v``
+flag to drop old volumes.
+
+```bash
+docker-compose rm -v
+```
+
+
+Note! This will start a whole bunch of stuff. Fairly late in the process, a
+bootstrap process will run and generate a bunch of users who are authorized to
+submit things. It will look something like this:
+
+```
+submission-bootstrap     | 1 picoline2058@gmail.com eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzZXNzaW9uX2lkIjoiYWQyY2UxNmUtMjQwNi00NjgwLWI2NWItMDE3NGYyNDA0MzhlIiwic3RhcnRfdGltZSI6IjIwMTktMDItMTNUMTI6MjM6MzQuMjE2NzcxLTA1OjAwIiwidXNlciI6eyJ1c2VybmFtZSI6InBpY29saW5lMjA1OEBnbWFpbC5jb20iLCJlbWFpbCI6InBpY29saW5lMjA1OEBnbWFpbC5jb20iLCJ1c2VyX2lkIjoxLCJuYW1lIjp7ImZvcmVuYW1lIjoiTWF1cmEiLCJzdXJuYW1lIjoiWmFyZW1iYSIsInN1ZmZpeCI6IlBhbiJ9LCJwcm9maWxlIjp7ImFmZmlsaWF0aW9uIjoiQ29ybmVsbCBVbml2ZXJzaXR5IiwiY291bnRyeSI6InVzIiwicmFuayI6Mywic3VibWlzc2lvbl9ncm91cHMiOlsiZ3JwX3BoeXNpY3MiXSwiZGVmYXVsdF9jYXRlZ29yeSI6ImFzdHJvLXBoLkdBIiwiaG9tZXBhZ2VfdXJsIjoiIiwicmVtZW1iZXJfbWUiOnRydWV9LCJ2ZXJpZmllZCI6ZmFsc2V9LCJjbGllbnQiOm51bGwsImVuZF90aW1lIjoiMjAxOS0wMi0xM1QyMjoyMzozNC4yMTY3NzEtMDU6MDAiLCJhdXRob3JpemF0aW9ucyI6eyJjbGFzc2ljIjowLCJlbmRvcnNlbWVudHMiOlsiKi4qIl0sInNjb3BlcyI6WyJwdWJsaWM6cmVhZCIsInN1Ym1pc3Npb246Y3JlYXRlIiwic3VibWlzc2lvbjp1cGRhdGUiLCJzdWJtaXNzaW9uOnJlYWQiLCJ1cGxvYWQ6cmVhZCIsInVwbG9hZDp1cGRhdGUiLCJ1cGxvYWQ6ZGVsZXRlIiwidXBsb2FkOnJlYWRfbG9ncyJdfSwiaXBfYWRkcmVzcyI6bnVsbCwicmVtb3RlX2hvc3QiOm51bGwsIm5vbmNlIjpudWxsfQ.iNOiCGVIZi5iipElLRyUlnx9uucdK7aytjkvr87FTvI
+submission-bootstrap     | 2 aggregat2070@gmail.com eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzZXNzaW9uX2lkIjoiODhmYzMwYTUtNWMyMi00N2ZlLWIzMzEtMDJkNWFhNjUxZjRkIiwic3RhcnRfdGltZSI6IjIwMTktMDItMTNUMTI6MjM6MzQuMjIxNDQ3LTA1OjAwIiwidXNlciI6eyJ1c2VybmFtZSI6ImFnZ3JlZ2F0MjA3MEBnbWFpbC5jb20iLCJlbWFpbCI6ImFnZ3JlZ2F0MjA3MEBnbWFpbC5jb20iLCJ1c2VyX2lkIjoyLCJuYW1lIjp7ImZvcmVuYW1lIjoiQmlsZ2UiLCJzdXJuYW1lIjoiT2t1bXVcdTAxNWYiLCJzdWZmaXgiOiJQcm9mLiJ9LCJwcm9maWxlIjp7ImFmZmlsaWF0aW9uIjoiQ29ybmVsbCBVbml2ZXJzaXR5IiwiY291bnRyeSI6InVzIiwicmFuayI6Mywic3VibWlzc2lvbl9ncm91cHMiOlsiZ3JwX3BoeXNpY3MiXSwiZGVmYXVsdF9jYXRlZ29yeSI6ImFzdHJvLXBoLkdBIiwiaG9tZXBhZ2VfdXJsIjoiIiwicmVtZW1iZXJfbWUiOnRydWV9LCJ2ZXJpZmllZCI6ZmFsc2V9LCJjbGllbnQiOm51bGwsImVuZF90aW1lIjoiMjAxOS0wMi0xM1QyMjoyMzozNC4yMjE0NDctMDU6MDAiLCJhdXRob3JpemF0aW9ucyI6eyJjbGFzc2ljIjowLCJlbmRvcnNlbWVudHMiOlsiKi4qIl0sInNjb3BlcyI6WyJwdWJsaWM6cmVhZCIsInN1Ym1pc3Npb246Y3JlYXRlIiwic3VibWlzc2lvbjp1cGRhdGUiLCJzdWJtaXNzaW9uOnJlYWQiLCJ1cGxvYWQ6cmVhZCIsInVwbG9hZDp1cGRhdGUiLCJ1cGxvYWQ6ZGVsZXRlIiwidXBsb2FkOnJlYWRfbG9ncyJdfSwiaXBfYWRkcmVzcyI6bnVsbCwicmVtb3RlX2hvc3QiOm51bGwsIm5vbmNlIjpudWxsfQ.dZdha4zYX9KYsCCucCxcTNVFQQdV4p-ml00XvKKI2zY
+```
+
+Those are some JWTs you can use to access the submission UI. You will need to
+pass the JWT in the ``Authorization`` header.
+
+You should be able to access the UI at http://localhost:8000.
+
+In addition, the compose config maps ports for backend services and data
+stores to your local machine. So you can also start the UI via the Flask
+development server for quicker cycles.
+
+| Service      | Env var                   | Endpoint                                                               |
+|--------------|---------------------------|------------------------------------------------------------------------|
+| File manager | ``FILE_MANAGER_ENDPOINT`` | http://localhost:8001/filemanager/api                                  |
+| Compiler     | ``COMPILER_ENDPOINT``     | http://localhost:8100/                                                 |
+| Redis        | ``SUBMISSION_BROKER_URL`` | redis://localhost:6380                                                 |
+| Legacy DB    | ``CLASSIC_DATABASE_URI``  | mysql+mysqldb://foouser:foopass@127.0.0.1:3307/submission?charset=utf8 |
+
+
+So you can start the submission UI in dev mode with something like:
 
 ```bash
 $ cd arxiv-submission-ui
 $ # Check out branch you are evaluating and be sure to pull recent changes
 $ git pull
 $ pipenv install --dev
-$ JWT_SECRET=foosecret CLASSIC_DATABASE_URI='sqlite:///db.sqlite' LOGLEVEL=10 FLASK_APP=app.py FLASK_DEBUG=1 pipenv run flask run
+$ ENABLE_ASYNC=1 ENABLE_CALLBACKS=1 \
+>   JWT_SECRET=foosecret \
+>   COMPILER_ENDPOINT=http://localhost:8100/ \
+>   FILE_MANAGER_ENDPOINT=http://localhost:8001/filemanager/api \
+>   SUBMISSION_BROKER_URL=redis://localhost:6380 \
+>   CLASSIC_DATABASE_URI="mysql+mysqldb://foouser:foopass@127.0.0.1:3307/submission?charset=utf8" \
+>   LOGLEVEL=10 FLASK_APP=app.py FLASK_DEBUG=1 \
+>   pipenv run flask run
 ```
+
+And access it at http://localhost:5000.
 
 ## Generating an auth token
 
@@ -94,7 +143,7 @@ session = domain.Session(
                       domain.Category('astro-ph.GA')]
     )
 )
-secret = 'foosecret'    # Note this secret. 
+secret = 'foosecret'    # Note this secret.
 
 token = auth.tokens.encode(session, secret)
 ```

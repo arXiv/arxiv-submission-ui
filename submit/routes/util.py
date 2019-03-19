@@ -3,56 +3,77 @@
 from typing import Optional, Callable
 from functools import wraps
 
-from flask import Response, request, redirect, url_for
+from flask import Response, request, redirect, url_for, session
 from werkzeug.exceptions import BadRequest
 
-from arxiv import status
+from http import HTTPStatus as status
 from arxiv.base import alerts, logging
 from arxiv.base.globals import get_application_global
-from ..domain import SubmissionStage, ReplacementStage, Stages
+from ..domain.workflow import Stage, Workflow, SubmissionWorkflow, \
+    ReplacementWorkflow
+from ..domain import Submission
 from ..util import load_submission
 
 logger = logging.getLogger(__name__)
 
+EXIT = 'ui.create_submission'
 
-def flow_control(this_stage: Stages, exit_page: str = 'ui.create_submission') \
-        -> Callable:
+
+def get_workflow(submission: Submission) -> Workflow:
+    if submission.version > 1:
+        return ReplacementWorkflow(submission, session)
+    return SubmissionWorkflow(submission, session)
+
+
+def to_previous(workflow: Workflow, stage: Stage, ident: str) -> Response:
+    previous_stage = workflow.previous_stage(stage)
+    logger.debug('Redirecting to previous stage: %s', previous_stage)
+    loc = url_for(f'ui.{previous_stage.endpoint}', submission_id=ident)
+    return redirect(loc, code=status.SEE_OTHER)
+
+
+def to_next(workflow: Workflow, stage: Stage, ident: str) -> Response:
+    next_stage = workflow.next_stage(stage)
+    logger.debug('Redirecting to next stage: %s', next_stage)
+    loc = url_for(f'ui.{next_stage.endpoint}', submission_id=ident)
+    return redirect(loc, code=status.SEE_OTHER)
+
+
+def to_current(workflow: Workflow, stage: Stage, ident: str) -> Response:
+    next_stage = workflow.current_stage
+    alerts.flash_warning(f'Please {next_stage.label} before proceeding.')
+    logger.debug('Redirecting to current stage: %s', next_stage)
+    loc = url_for(f'ui.{next_stage.endpoint}', submission_id=ident)
+    return redirect(loc, code=status.SEE_OTHER)
+
+
+def flow_control(this_stage: Stage, exit: str = EXIT) -> Callable:
     """Get a decorator that handles redirection to next/previous steps."""
     PREVIOUS = 'previous'
     NEXT = 'next'
     SAVE_EXIT = 'save_exit'
 
     def deco(func: Callable) -> Callable:
-        """Decorator that applies next/previous redirection."""
+        """Decorate func with workflow redirection."""
         @wraps(func)
         def wrapper(submission_id: str) -> Response:
             """Update the redirect to the next, previous, or exit page."""
             action = request.form.get('action')
             submission, _ = load_submission(submission_id)
-            if submission.version == 1:
-                stage = SubmissionStage(submission=submission)
-            else:
-                stage = ReplacementStage(submission=submission)
-
-            # Set the stage handled by this endpoint.
-            g = get_application_global()
-            if g:
-                g.this_stage = this_stage
-                g.stage = stage
+            workflow = get_workflow(submission)
 
             try:
-                if not stage.can_proceed_to(this_stage):
-                    next_stage = stage.next_required_stage.value
-                    label = stage.LABELS[next_stage]
-                    alerts.flash_warning(
-                        f'Please {label} before proceeding.'
-                    )
-                    return redirect(url_for(
-                        f'ui.{next_stage}',
-                        submission_id=submission_id
-                    ), code=status.HTTP_303_SEE_OTHER)
+                if not workflow.can_proceed_to(this_stage):
+                    return to_current(workflow, this_stage, submission_id)
+
             except ValueError:
                 raise BadRequest('Request not allowed for this submission')
+
+            # If the user has proceeded past an optional stage, consider it
+            # to be completed.
+            if not workflow.is_required(workflow.previous_stage(this_stage)) \
+                    and workflow.previous_stage(this_stage) is not None:
+                workflow.mark_complete(workflow.previous_stage(this_stage))
 
             # If the user selects "go back", we attempt to save their input
             # above. But if the input does not validate, we don't prevent them
@@ -60,55 +81,20 @@ def flow_control(this_stage: Stages, exit_page: str = 'ui.create_submission') \
             try:
                 response = func(submission_id)
             except BadRequest:
-                logger.debug('Caught a BadRequest')
                 if action == PREVIOUS:
-                    target = stage.get_previous_stage(this_stage).value
-                    logger.debug('Redirecting to previous stage: %s', target)
-                    return redirect(url_for(f'ui.{target}',
-                                            submission_id=submission_id),
-                                    code=status.HTTP_303_SEE_OTHER)
+                    return to_previous(workflow, this_stage, submission_id)
                 raise
-            if response.status_code == status.HTTP_400_BAD_REQUEST \
-                    and action == PREVIOUS:
-                target = stage.get_previous_stage(this_stage).value
-                logger.debug('Redirecting to previous stage: %s', target)
-                return redirect(url_for(f'ui.{target}',
-                                        submission_id=submission_id),
-                                code=status.HTTP_303_SEE_OTHER)
 
-            # No redirect; nothing to do.
-            if response.status_code != status.HTTP_303_SEE_OTHER:
-                return response
-
-            if action == NEXT:
-                target = stage.get_next_stage(this_stage).value
-                response = redirect(url_for(
-                    f'ui.{target}',
-                    submission_id=submission_id
-                ), code=status.HTTP_303_SEE_OTHER)
-            elif action == PREVIOUS:
-                target = stage.get_previous_stage(this_stage).value
-                logger.debug('Redirecting to previous stage: %s', target)
-                response = redirect(url_for(f'ui.{target}',
-                                            submission_id=submission_id),
-                                    code=status.HTTP_303_SEE_OTHER)
-            elif action == SAVE_EXIT:
-                response = redirect(url_for(exit_page),
-                                    code=status.HTTP_303_SEE_OTHER)
-            return response
+            # Intercept redirection and route based on workflow.
+            if response.status_code == status.SEE_OTHER:
+                workflow.mark_complete(this_stage)
+                if action == NEXT:
+                    return to_next(workflow, this_stage, submission_id)
+                elif action == PREVIOUS:
+                    return to_previous(workflow, this_stage, submission_id)
+                elif action == SAVE_EXIT:
+                    return redirect(url_for(exit),
+                                    code=status.SEE_OTHER)
+            return response    # No redirect; nothing to do.
         return wrapper
     return deco
-
-
-def inject_stage() -> dict:
-    """
-    Injects the submissions stage and endpoint stage into the template.
-    """
-    ctx = {}
-    g = get_application_global()
-    if g:
-        if 'stage' in g:
-            ctx['stage'] = g.stage
-        if 'this_stage' in g:
-            ctx['this_stage'] = g.this_stage
-    return ctx

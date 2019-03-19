@@ -6,20 +6,24 @@ Creates an event of type `core.events.event.AddSecondaryClassification`
 """
 from typing import Tuple, Dict, Any, List, Optional
 from werkzeug import MultiDict
-from werkzeug.exceptions import InternalServerError
-from flask import url_for
+from werkzeug.exceptions import InternalServerError, BadRequest
+from flask import url_for, Markup
 from wtforms import SelectField, widgets, HiddenField, validators
 
-from arxiv import status, taxonomy
+from http import HTTPStatus as status
+from arxiv import taxonomy
 from arxiv.forms import csrf
-from arxiv.base import logging
+from arxiv.base import logging, alerts
+from arxiv.submission.domain import Submission
+from arxiv.submission import save
+from arxiv.submission.exceptions import InvalidEvent, SaveError
 from arxiv.users.domain import Session
-import arxiv.submission as events
-from ..domain import SubmissionStage
-from ..util import load_submission
-from . import util
+from arxiv.submission import RemoveSecondaryClassification, \
+    AddSecondaryClassification, SetPrimaryClassification
 
-# from arxiv-submission-core.events.event import ConfirmContactInformation
+from .util import validate_command, OptGroupSelectField, \
+    user_and_client_from_session
+from ..util import load_submission
 
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 
@@ -46,11 +50,9 @@ class ClassificationForm(csrf.CSRFForm):
         (REMOVE, 'Remove')
     ]
     operation = HiddenField(default=ADD, validators=[validators.optional()])
-    category = util.OptGroupSelectField('Category', choices=CATEGORIES,
-                                        default='')
+    category = OptGroupSelectField('Category', choices=CATEGORIES, default='')
 
-    def filter_choices(self, submission: events.domain.Submission,
-                       session: Session) -> None:
+    def filter_choices(self, submission: Submission, session: Session) -> None:
         """Remove redundant choices, and limit to endorsed categories."""
         selected = self.category.data
         primary = submission.primary_classification
@@ -71,7 +73,7 @@ class ClassificationForm(csrf.CSRFForm):
         ]
 
     @classmethod
-    def formset(cls, submission: events.domain.Submission) \
+    def formset(cls, submission: Submission) \
             -> Dict[str, 'ClassificationForm']:
         """Generate a set of forms used to remove cross-list categories."""
         formset = {}
@@ -85,163 +87,139 @@ class ClassificationForm(csrf.CSRFForm):
         return formset
 
 
-def _data_from_submission(params: MultiDict,
-                          submission: events.domain.Submission) -> MultiDict:
-    if submission.primary_classification \
-            and submission.primary_classification.category:
-        params['category'] = submission.primary_classification.category
-    return params
+class PrimaryClassificationForm(ClassificationForm):
+    """Form for setting the primary classification."""
+
+    def validate_operation(self, field) -> None:
+        """Make sure the client isn't monkeying with the operation."""
+        if field.data != self.ADD:
+            raise validators.ValidationError('Invalid operation')
 
 
 def classification(method: str, params: MultiDict, session: Session,
-                   submission_id: int) -> Response:
-    """Generate a `SetPrimaryClassification` event."""
-    submitter, client = util.user_and_client_from_session(session)
-
-    # Will raise NotFound if there is no such submission.
+                   submission_id: int, **kwargs) -> Response:
+    """Handle primary classification requests."""
+    submitter, client = user_and_client_from_session(session)
     submission, submission_events = load_submission(submission_id)
 
-    # The form should be prepopulated based on the current state of the
-    # submission.
     if method == 'GET':
-        params = _data_from_submission(params, submission)
-        if 'category' not in params:
-            params['category'] = session.user.profile.default_category
+        # Prepopulate the form based on the state of the submission.
+        if submission.primary_classification \
+                and submission.primary_classification.category:
+            params['category'] = submission.primary_classification.category
 
-    params['operation'] = ClassificationForm.ADD     # Always add a primary.
+        # Use the user's default category as the default for the form.
+        params.setdefault('category', session.user.profile.default_category)
 
-    form = ClassificationForm(params)
-    # We want categories in dot-delimited "compound" format.
+    params['operation'] = PrimaryClassificationForm.ADD
 
+    form = PrimaryClassificationForm(params)
     form.filter_choices(submission, session)
+
     response_data = {
         'submission_id': submission_id,
-        'form': form,
         'submission': submission,
-        'submitter': submitter
+        'submitter': submitter,
+        'client': client,
+        'form': form
     }
 
     if method == 'POST':
-        if form.validate():
-            logger.debug('Form is valid, with data: %s', str(form.data))
-            category = form.category.data
+        if not form.validate():
+            raise BadRequest(response_data)
 
-            # If already selected, nothing more to do.
-            if not submission.primary_classification \
-                    or submission.primary_classification.category != category:
-                try:
-                    logger.debug('Setting new primary: %s', category)
-                    # Create SetLicense event
-                    submission, stack = events.save(  # pylint: disable=W0612
-                        events.SetPrimaryClassification(creator=submitter,
-                                                        category=category),
-                        submission_id=submission_id
-                    )
-                except events.exceptions.InvalidStack as e:
-                    logger.error('Could not set primary: %s', str(e))
-                    form.errors     # Causes the form to initialize errors.
-                    form._errors['events'] = [ie.message for ie
-                                              in e.event_exceptions]
-                    logger.debug('InvalidStack; return bad request')
-                    return response_data, status.HTTP_400_BAD_REQUEST, {}
-                except events.exceptions.SaveError as e:
-                    logger.error('Could not save primary event')
-                    raise InternalServerError(
-                        'There was a problem saving this operation'
-                    ) from e
-        else:   # Form data were invalid.
-            logger.debug('Invalid form data; return bad request')
-            return response_data, status.HTTP_400_BAD_REQUEST, {}
+        command = SetPrimaryClassification(category=form.category.data,
+                                           creator=submitter, client=client)
+        if not validate_command(form, command, submission, 'category'):
+            raise BadRequest(response_data)
+
+        try:
+            submission, _ = save(command, submission_id=submission_id)
+            response_data['submission'] = submission
+        except SaveError as e:
+            logger.error('Could not save command: %s', e)
+            raise InternalServerError(response_data) from e
+
         if params.get('action') in ['previous', 'save_exit', 'next']:
-            logger.debug('Redirect to %s', params.get('action'))
-            return response_data, status.HTTP_303_SEE_OTHER, {}
-    logger.debug('Nothing to do, return 200')
-    return response_data, status.HTTP_200_OK, {}
+            return response_data, status.SEE_OTHER, {}
+    return response_data, status.OK, {}
 
 
 def cross_list(method: str, params: MultiDict, session: Session,
-               submission_id: int) -> Response:
-    """Generate an `AddSecondaryClassification` event."""
-    submitter, client = util.user_and_client_from_session(session)
+               submission_id: int, **kwargs) -> Response:
 
-    # Will raise NotFound if there is no such submission.
+    submitter, client = user_and_client_from_session(session)
     submission, submission_events = load_submission(submission_id)
 
-    # We need forms for existing secondaries, to generate removal requests.
-    formset = ClassificationForm.formset(submission)
-
-    # This form handles additions and removals.
     form = ClassificationForm(params)
     form.operation._value = lambda: form.operation.data
     form.filter_choices(submission, session)
-    _primary = taxonomy.CATEGORIES[submission.primary_classification.category]
+
+    # Create a formset to render removal option.
+    #
+    # We need forms for existing secondaries, to generate removal requests.
+    # When the forms in the formset are submitted, they are handled as the
+    # primary form in the POST request to this controller.
+    formset = ClassificationForm.formset(submission)
+    _primary_category = submission.primary_classification.category
+    _primary = taxonomy.CATEGORIES[_primary_category]
+
     response_data = {
         'submission_id': submission_id,
+        'submission': submission,
+        'submitter': submitter,
+        'client': client,
         'form': form,
         'formset': formset,
         'primary': {
             'id': submission.primary_classification.category,
             'name': _primary['name']
         },
-
     }
-    action = params.get('action')
 
     if method == 'POST':
+        # Make sure that the user is not attempting to move to a different
+        # step.
+        #
         # Since the interface provides an "add" button to add cross-list
         # categories, we only want to handle the form data if the user is not
         # attempting to move to a different step.
+        action = params.get('action')
         if not action:
-            if form.validate():
-                logger.debug('Form is valid, with data: %s', str(form.data))
-                category = form.category.data
-                operation = form.operation.data
-                try:
-                    if operation == ClassificationForm.REMOVE:
-                        submission, _ = events.save(  # pylint: disable=W0612
-                            events.RemoveSecondaryClassification(
-                                creator=submitter,
-                                category=category
-                            ),
-                            submission_id=submission_id
-                        )
-                    elif operation == ClassificationForm.ADD:
-                        submission, _ = events.save(  # pylint: disable=W0612
-                            events.AddSecondaryClassification(
-                                creator=submitter,
-                                category=category
-                            ),
-                            submission_id=submission_id
-                        )
-                except events.exceptions.InvalidStack as e:
-                    logger.error('Could not add secondary: %s', str(e))
-                    form.errors     # Causes the form to initialize errors.
-                    form._errors['events'] = [ie.message for ie
-                                              in e.event_exceptions]
-                    logger.debug('InvalidStack; return bad request')
-                    return response_data, status.HTTP_400_BAD_REQUEST, {}
-                except events.exceptions.SaveError as e:
-                    logger.error('Could not save primary event')
-                    raise InternalServerError(
-                        'There was a problem saving this operation'
-                    ) from e
+            if not form.validate():
+                raise BadRequest(response_data)
 
-                # Re-build the formset, to reflect changes that we just made.
-                response_data['formset'] = \
-                    ClassificationForm.formset(submission)
-                # We want a fresh form here, since the POSTed data should now
-                # be reflected in the formset.
-                form = ClassificationForm()
-                form.operation._value = lambda: form.operation.data
-                form.filter_choices(submission, session)
-                response_data['form'] = form
+            if form.operation.data == form.REMOVE:
+                command_type = RemoveSecondaryClassification
+            else:
+                command_type = AddSecondaryClassification
+            command = command_type(category=form.category.data,
+                                   creator=submitter, client=client)
+            if not validate_command(form, command, submission, 'category'):
+                raise BadRequest(response_data)
 
-            else:   # Form data were invalid.
-                logger.debug('Invalid form data; return bad request')
-                return response_data, status.HTTP_400_BAD_REQUEST, {}
+            try:
+                submission, _ = save(command, submission_id=submission_id)
+                response_data['submission'] = submission
+            except SaveError as e:
+                raise InternalServerError(response_data) from e
 
-    if action in ['previous', 'save_exit', 'next']:
-        logger.debug('Redirect to %s', params.get('action'))
-        return response_data, status.HTTP_303_SEE_OTHER, {}
-    logger.debug('Nothing to do, return 200')
-    return response_data, status.HTTP_200_OK, {}
+            # Re-build the formset to reflect changes that we just made, and
+            # generate a fresh form for adding another secondary. The POSTed
+            # data should now be reflected in the formset.
+            response_data['formset'] = ClassificationForm.formset(submission)
+            form = ClassificationForm()
+            form.operation._value = lambda: form.operation.data
+            form.filter_choices(submission, session)
+            response_data['form'] = form
+
+            # Warn the user if they have too many secondaries.
+            if len(submission.secondary_categories) > 3:
+                alerts.flash_warning(Markup(
+                    'Adding more than three cross-list classifications will'
+                    ' result in a delay in the acceptance of your submission.'
+                ))
+
+        if action in ['previous', 'save_exit', 'next']:
+            return response_data, status.SEE_OTHER, {}
+    return response_data, status.OK, {}

@@ -7,21 +7,22 @@ Creates an event of type `core.events.event.ConfirmAuthorship`
 from typing import Tuple, Dict, Any, Optional
 
 from werkzeug import MultiDict
-from werkzeug.exceptions import InternalServerError, NotFound
+from werkzeug.exceptions import InternalServerError, NotFound, BadRequest
 
 from flask import url_for
 from wtforms import BooleanField, RadioField
 from wtforms.validators import InputRequired, ValidationError, optional
 
-from arxiv import status
-from arxiv.base import logging 
+from http import HTTPStatus as status
+from arxiv.base import logging
 from arxiv.forms import csrf
 from arxiv.users.domain import Session
-import arxiv.submission as events
+from arxiv.submission.domain import Submission
+from arxiv.submission import save, ConfirmAuthorship
+from arxiv.submission.exceptions import InvalidEvent, SaveError
 
-from ..domain import SubmissionStage
 from ..util import load_submission
-from . import util
+from .util import user_and_client_from_session, validate_command
 
 # from arxiv-submission-core.events.event import ConfirmContactInformation
 
@@ -30,26 +31,10 @@ logger = logging.getLogger(__name__)  # pylint: disable=C0103
 Response = Tuple[Dict[str, Any], int, Dict[str, Any]]  # pylint: disable=C0103
 
 
-def _data_from_submission(params: MultiDict,
-                          submission: events.domain.Submission) -> MultiDict:
-    """Update form data based on the current state of the submission."""
-    if submission.submitter_is_author is not None:
-        params['authorship'] = (
-            AuthorshipForm.YES if submission.submitter_is_author
-            else AuthorshipForm.NO
-        )
-        # TODO: we should look at how we represent this on
-        # events.domain.Submission.
-        if submission.submitter_is_author is False:
-            params['proxy'] = True
-    return params
-
-
 def authorship(method: str, params: MultiDict, session: Session,
-               submission_id: int) -> Response:
-    """Convert authorship form data into an `ConfirmAuthorship` event."""
-    logger.debug(f'method: {method}, submission: {submission_id}. {params}')
-    user, client = util.user_and_client_from_session(session)
+               submission_id: int, **kwargs) -> Response:
+    """Handle the authorship assertion view."""
+    submitter, client = user_and_client_from_session(session)
 
     # Will raise NotFound if there is no such submission.
     submission, submission_events = load_submission(submission_id)
@@ -57,50 +42,48 @@ def authorship(method: str, params: MultiDict, session: Session,
     # The form should be prepopulated based on the current state of the
     # submission.
     if method == 'GET':
-        params = _data_from_submission(params, submission)
+        # Update form data based on the current state of the submission.
+        if submission.submitter_is_author is not None:
+            if submission.submitter_is_author:
+                params['authorship'] = AuthorshipForm.YES
+            else:
+                params['authorship'] = AuthorshipForm.NO
+            if submission.submitter_is_author is False:
+                params['proxy'] = True
 
     form = AuthorshipForm(params)
     response_data = {
         'submission_id': submission_id,
         'form': form,
-        'submission': submission
+        'submission': submission,
+        'submitter': submitter,
+        'client': client,
     }
 
     if method == 'POST':
-        if form.validate():
-            logger.debug('Form is valid, with data: %s', str(form.data))
-            value = (form.authorship.data == form.YES)
+        if not form.validate():
+            raise BadRequest(response_data)
+        value = (form.authorship.data == form.YES)
 
-            # No need to do this more than once.
-            if submission.submitter_is_author != value:
-                try:
-                    # Create ConfirmAuthorship event
-                    submission, stack = events.save(  # pylint: disable=W0612
-                        events.ConfirmAuthorship(
-                            creator=user,
-                            client=client,
-                            submitter_is_author=value
-                        ),
-                        submission_id=submission_id
-                    )
-                except events.exceptions.InvalidStack as e:
-                    logger.error('Could not ConfirmAuthorship: %s', str(e))
-                    form.errors     # Causes the form to initialize errors.
-                    form._errors['events'] = [ie.message for ie
-                                              in e.event_exceptions]
-                    return response_data, status.HTTP_400_BAD_REQUEST, {}
-                except events.exceptions.SaveError as e:
-                    logger.error('Could not save primary event')
-                    raise InternalServerError(
-                        'There was a problem saving this operation'
-                    ) from e
+        # No need to do this more than once.
+        if submission.submitter_is_author != value:
+            command = ConfirmAuthorship(creator=submitter, client=client,
+                                        submitter_is_author=value)
 
-            if params.get('action') in ['previous', 'save_exit', 'next']:
-                return response_data, status.HTTP_303_SEE_OTHER, {}
-        else:   # Form data were invalid.
-            return response_data, status.HTTP_400_BAD_REQUEST, {}
+            if not validate_command(form, command, submission, 'authorship'):
+                raise BadRequest(response_data)
 
-    return response_data, status.HTTP_200_OK, {}
+            try:
+                # Create ConfirmAuthorship event
+                submission, _ = save(command, submission_id=submission_id)
+                response_data['submission'] = submission
+            except SaveError as e:
+                logger.error('Could not save command: %s', e)
+                raise InternalServerError(response_data) from e
+
+        if params.get('action') in ['previous', 'save_exit', 'next']:
+            return response_data, status.SEE_OTHER, {}
+    return response_data, status.OK, {}
 
 
 class AuthorshipForm(csrf.CSRFForm):

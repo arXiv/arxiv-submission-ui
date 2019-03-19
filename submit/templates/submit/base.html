@@ -5,11 +5,12 @@
 {% block addl_head %}
  <link rel="stylesheet" href="{{ url_for('static', filename='css/submit.css')}}" />
  <script src="{{ url_for('static', filename='js/filewidget.js') }}"></script>
+ {% block extra_head %}{% endblock %}
 {% endblock addl_head %}
 
 {% block content %}
-{% if submission_id and stage %}
-  {{ submit_macros.progress_bar(submission_id, stage, this_stage) }}
+{% if submission_id and workflow %}
+  {{ submit_macros.progress_bar(submission_id, workflow, this_stage) }}
 {% endif %}
   <h1 class="title">
     {% block title_preamble %}{% if submission and submission.version > 1 %}Submit a Replacement{% else %}Submit an Article{% endif %}: {% endblock %}{% block title %}{% endblock title %}
@@ -17,17 +18,6 @@
   {% if submission and submission.version > 1 %}
     <h2 class="replacement is-size-5 has-text-dark">Replacement for: arXiv:{{ submission.arxiv_id }}v{{ submission.version }} {{ submission.metadata.title }}</h2>
   {% endif %}
-
-    {% if immediate_notifications %}
-      {% for notification in immediate_notifications %}
-      <div class="notification is-{{ notification.severity }}" role="alert">
-        {% if notification.title %}<h2 class="is-size-5 is-marginless">{{ notification.title }}</h2>{% endif %}
-        <p>
-          {{ notification.body}}
-        </p>
-      </div>
-      {% endfor %}
-    {% endif %}
     {% if form and form.errors %}
       {% if form.errors.events %}
       <div class="notification is-danger">
@@ -40,5 +30,4 @@
     {% block within_content %}
       Specific content here
     {% endblock within_content %}
-
 {% endblock content %}

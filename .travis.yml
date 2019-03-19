@@ -12,7 +12,7 @@ script:
   - pip install pipenv
   - pipenv install --dev
   - pipenv run nose2 --with-coverage
-  - ./tests/lint.sh
+#  - ./tests/lint.sh
   - ./tests/docstyle.sh
 after_success:
   - coveralls

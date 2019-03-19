@@ -11,7 +11,7 @@ from arxiv.users.helpers import generate_token
 from arxiv.submission.services import classic
 from arxiv.users.auth import scopes
 from arxiv.users.domain import Category
-from arxiv import status
+from http import HTTPStatus as status
 from arxiv.submission.domain.event import *
 from arxiv.submission.domain.agent import User
 from arxiv.submission.domain.submission import Author, SubmissionContent
@@ -67,7 +67,7 @@ class TestSubmissionWorkflow(TestCase):
         """User creates a new submission, and proceeds up to upload stage."""
         # Get the submission creation page.
         response = self.client.get('/', headers=self.headers)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.OK)
         self.assertEqual(response.content_type, 'text/html; charset=utf-8')
         self.assertIn(b'Submit an Article', response.data)
         token = self._parse_csrf_token(response)
@@ -77,7 +77,7 @@ class TestSubmissionWorkflow(TestCase):
                                     data={'new': 'new',
                                           'csrf_token': token},
                                     headers=self.headers)
-        self.assertEqual(response.status_code, status.HTTP_303_SEE_OTHER)
+        self.assertEqual(response.status_code, status.SEE_OTHER)
 
         # Get the next page in the process. This should be the verify_user
         # stage.
@@ -97,7 +97,7 @@ class TestSubmissionWorkflow(TestCase):
                                           'action': 'next',
                                           'csrf_token': token},
                                     headers=self.headers)
-        self.assertEqual(response.status_code, status.HTTP_303_SEE_OTHER)
+        self.assertEqual(response.status_code, status.SEE_OTHER)
 
         # Get the next page in the process. This is the authorship stage.
         next_page = urlparse(response.headers['Location'])
@@ -112,13 +112,13 @@ class TestSubmissionWorkflow(TestCase):
                                           'action': 'next',
                                           'csrf_token': token},
                                     headers=self.headers)
-        self.assertEqual(response.status_code, status.HTTP_303_SEE_OTHER)
+        self.assertEqual(response.status_code, status.SEE_OTHER)
 
         # Get the next page in the process. This is the license stage.
         next_page = urlparse(response.headers['Location'])
         self.assertIn('license', next_page.path)
         response = self.client.get(next_page.path, headers=self.headers)
-        self.assertIn(b'Select a license', response.data)
+        self.assertIn(b'Select a License', response.data)
         token = self._parse_csrf_token(response)
 
         # Submit the license page.
@@ -128,7 +128,7 @@ class TestSubmissionWorkflow(TestCase):
                                           'action': 'next',
                                           'csrf_token': token},
                                     headers=self.headers)
-        self.assertEqual(response.status_code, status.HTTP_303_SEE_OTHER)
+        self.assertEqual(response.status_code, status.SEE_OTHER)
 
         # Get the next page in the process. This is the policy stage.
         next_page = urlparse(response.headers['Location'])
@@ -147,13 +147,13 @@ class TestSubmissionWorkflow(TestCase):
                                           'action': 'next',
                                           'csrf_token': token},
                                     headers=self.headers)
-        self.assertEqual(response.status_code, status.HTTP_303_SEE_OTHER)
+        self.assertEqual(response.status_code, status.SEE_OTHER)
 
         # Get the next page in the process. This is the primary category stage.
         next_page = urlparse(response.headers['Location'])
         self.assertIn('classification', next_page.path)
         response = self.client.get(next_page.path, headers=self.headers)
-        self.assertIn(b'Choose a primary classification', response.data)
+        self.assertIn(b'Choose a Primary Classification', response.data)
         token = self._parse_csrf_token(response)
 
         # Submit the primary category page.
@@ -162,13 +162,13 @@ class TestSubmissionWorkflow(TestCase):
                                           'action': 'next',
                                           'csrf_token': token},
                                     headers=self.headers)
-        self.assertEqual(response.status_code, status.HTTP_303_SEE_OTHER)
+        self.assertEqual(response.status_code, status.SEE_OTHER)
 
         # Get the next page in the process. This is the cross list stage.
         next_page = urlparse(response.headers['Location'])
-        self.assertIn('cross_list', next_page.path)
+        self.assertIn('cross', next_page.path)
         response = self.client.get(next_page.path, headers=self.headers)
-        self.assertIn(b'Choose cross-list classifications', response.data)
+        self.assertIn(b'Choose Cross-List Classifications', response.data)
         token = self._parse_csrf_token(response)
 
         # Submit the cross-list category page.
@@ -177,13 +177,13 @@ class TestSubmissionWorkflow(TestCase):
                                           'action': 'next',
                                           'csrf_token': token},
                                     headers=self.headers)
-        self.assertEqual(response.status_code, status.HTTP_303_SEE_OTHER)
+        self.assertEqual(response.status_code, status.SEE_OTHER)
 
         # Get the next page in the process. This is the file upload stage.
         next_page = urlparse(response.headers['Location'])
-        self.assertIn('file_upload', next_page.path)
+        self.assertIn('upload', next_page.path)
         response = self.client.get(next_page.path, headers=self.headers)
-        self.assertIn(b'Upload files', response.data)
+        self.assertIn(b'Upload Files', response.data)
         token = self._parse_csrf_token(response)
 
 
@@ -226,7 +226,7 @@ class TestEndorsementMessaging(TestCase):
 
         # Get the submission creation page.
         response = self.client.get('/', headers=self.headers)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.OK)
         self.assertEqual(response.content_type, 'text/html; charset=utf-8')
         self.assertIn(b'Submit an Article', response.data)
         token = self._parse_csrf_token(response)
@@ -236,7 +236,7 @@ class TestEndorsementMessaging(TestCase):
                                     data={'new': 'new',
                                           'csrf_token': token},
                                     headers=self.headers)
-        self.assertEqual(response.status_code, status.HTTP_303_SEE_OTHER)
+        self.assertEqual(response.status_code, status.SEE_OTHER)
 
         # Get the next page in the process. This should be the verify_user
         # stage.
@@ -264,7 +264,7 @@ class TestEndorsementMessaging(TestCase):
 
         # Get the submission creation page.
         response = self.client.get('/', headers=self.headers)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.OK)
         self.assertEqual(response.content_type, 'text/html; charset=utf-8')
         self.assertIn(b'Submit an Article', response.data)
         token = self._parse_csrf_token(response)
@@ -274,7 +274,7 @@ class TestEndorsementMessaging(TestCase):
                                     data={'new': 'new',
                                           'csrf_token': token},
                                     headers=self.headers)
-        self.assertEqual(response.status_code, status.HTTP_303_SEE_OTHER)
+        self.assertEqual(response.status_code, status.SEE_OTHER)
 
         # Get the next page in the process. This should be the verify_user
         # stage.
@@ -302,7 +302,7 @@ class TestEndorsementMessaging(TestCase):
 
         # Get the submission creation page.
         response = self.client.get('/', headers=self.headers)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.OK)
         self.assertEqual(response.content_type, 'text/html; charset=utf-8')
         self.assertIn(b'Submit an Article', response.data)
         token = self._parse_csrf_token(response)
@@ -312,7 +312,7 @@ class TestEndorsementMessaging(TestCase):
                                     data={'new': 'new',
                                           'csrf_token': token},
                                     headers=self.headers)
-        self.assertEqual(response.status_code, status.HTTP_303_SEE_OTHER)
+        self.assertEqual(response.status_code, status.SEE_OTHER)
 
         # Get the next page in the process. This should be the verify_user
         # stage.
@@ -339,7 +339,7 @@ class TestEndorsementMessaging(TestCase):
 
         # Get the submission creation page.
         response = self.client.get('/', headers=self.headers)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.OK)
         self.assertEqual(response.content_type, 'text/html; charset=utf-8')
         self.assertIn(b'Submit an Article', response.data)
         token = self._parse_csrf_token(response)
@@ -349,7 +349,7 @@ class TestEndorsementMessaging(TestCase):
                                     data={'new': 'new',
                                           'csrf_token': token},
                                     headers=self.headers)
-        self.assertEqual(response.status_code, status.HTTP_303_SEE_OTHER)
+        self.assertEqual(response.status_code, status.SEE_OTHER)
 
         # Get the next page in the process. This should be the verify_user
         # stage.
@@ -415,7 +415,8 @@ class TestJREFWorkflow(TestCase):
                     checksum="a9s9k342900skks03330029k",
                     source_format=SubmissionContent.Format.TEX,
                     identifier=123,
-                    size=593992
+                    uncompressed_size=593992,
+                    compressed_size=59392,
                 ),
                 SetTitle(creator=self.user, title='foo title'),
                 SetAbstract(creator=self.user, abstract='ab stract' * 20),
@@ -464,7 +465,7 @@ class TestJREFWorkflow(TestCase):
         # Get the JREF page.
         endpoint = f'/{self.submission_id}/jref'
         response = self.client.get(endpoint, headers=self.headers)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.OK)
         self.assertEqual(response.content_type, 'text/html; charset=utf-8')
         self.assertIn(b'Journal reference', response.data)
         token = self._parse_csrf_token(response)
@@ -476,7 +477,7 @@ class TestJREFWorkflow(TestCase):
                         'csrf_token': token}
         response = self.client.post(endpoint, data=request_data,
                                     headers=self.headers)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.OK)
         self.assertEqual(response.content_type, 'text/html; charset=utf-8')
         self.assertIn(b'Confirm and Submit', response.data)
         token = self._parse_csrf_token(response)
@@ -485,7 +486,7 @@ class TestJREFWorkflow(TestCase):
         request_data['csrf_token'] = token
         response = self.client.post(endpoint, data=request_data,
                                     headers=self.headers)
-        self.assertEqual(response.status_code, status.HTTP_303_SEE_OTHER)
+        self.assertEqual(response.status_code, status.SEE_OTHER)
 
         with self.app.app_context():
             session = classic.current_session()
@@ -505,7 +506,8 @@ class TestWithdrawalWorkflow(TestCase):
         os.environ['JWT_SECRET'] = self.app.config.get('JWT_SECRET')
         _, self.db = tempfile.mkstemp(suffix='.db')
         self.app.config['CLASSIC_DATABASE_URI'] = f'sqlite:///{self.db}'
-        self.user = User('1234', 'foo@bar.com', endorsements=['astro-ph.GA'])
+        self.user = User('1234', 'foo@bar.com',
+                         endorsements=['astro-ph.GA', 'astro-ph.CO'])
         self.token = generate_token('1234', 'foo@bar.com', 'foouser',
                                     scope=[scopes.CREATE_SUBMISSION,
                                            scopes.EDIT_SUBMISSION,
@@ -543,7 +545,8 @@ class TestWithdrawalWorkflow(TestCase):
                     checksum="a9s9k342900skks03330029k",
                     source_format=SubmissionContent.Format.TEX,
                     identifier=123,
-                    size=593992
+                    uncompressed_size=593992,
+                    compressed_size=59392,
                 ),
                 SetTitle(creator=self.user, title='foo title'),
                 SetAbstract(creator=self.user, abstract='ab stract' * 20),
@@ -592,7 +595,7 @@ class TestWithdrawalWorkflow(TestCase):
         # Get the JREF page.
         endpoint = f'/{self.submission_id}/withdraw'
         response = self.client.get(endpoint, headers=self.headers)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.OK)
         self.assertEqual(response.content_type, 'text/html; charset=utf-8')
         self.assertIn(b'Request withdrawal', response.data)
         token = self._parse_csrf_token(response)
@@ -602,7 +605,7 @@ class TestWithdrawalWorkflow(TestCase):
                         'csrf_token': token}
         response = self.client.post(endpoint, data=request_data,
                                     headers=self.headers)
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.status_code, status.BAD_REQUEST)
         token = self._parse_csrf_token(response)
 
         # Set the withdrawal reason to something reasonable (ha).
@@ -610,7 +613,7 @@ class TestWithdrawalWorkflow(TestCase):
                         'csrf_token': token}
         response = self.client.post(endpoint, data=request_data,
                                     headers=self.headers)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.status_code, status.OK)
         self.assertEqual(response.content_type, 'text/html; charset=utf-8')
         self.assertIn(b'Confirm and Submit', response.data)
         token = self._parse_csrf_token(response)
@@ -620,7 +623,7 @@ class TestWithdrawalWorkflow(TestCase):
         request_data['csrf_token'] = token
         response = self.client.post(endpoint, data=request_data,
                                     headers=self.headers)
-        self.assertEqual(response.status_code, status.HTTP_303_SEE_OTHER)
+        self.assertEqual(response.status_code, status.SEE_OTHER)
 
         with self.app.app_context():
             session = classic.current_session()

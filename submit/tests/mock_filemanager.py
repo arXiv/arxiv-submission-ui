@@ -6,7 +6,7 @@ from flask import Flask, Blueprint, jsonify, request
 from werkzeug.exceptions import RequestEntityTooLarge, BadRequest, \
     Unauthorized, Forbidden, NotFound
 
-from arxiv import status
+from http import HTTPStatus as status
 
 blueprint = Blueprint('filemanager', __name__)
 
@@ -79,7 +79,7 @@ def upload_package():
     # Not sure what the response will look like yet.
     upload_id = max(UPLOADS.keys()) + 1
     upload_status = _set_upload(upload_id, payload)
-    return jsonify(upload_status), status.HTTP_201_CREATED
+    return jsonify(upload_status), status.CREATED
 
 
 @blueprint.route('/<int:upload_id>', methods=['POST'])
@@ -99,7 +99,7 @@ def add_file(upload_id):
     # Not sure what the response will look like yet.
     payload = json.loads(content)
     upload_status = _add_file(upload_id, payload)
-    return jsonify(upload_status), status.HTTP_201_CREATED
+    return jsonify(upload_status), status.CREATED
 
 
 def create_fm_app():

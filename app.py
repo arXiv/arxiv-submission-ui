@@ -11,4 +11,7 @@ logging.getLogger('arxiv.base.alerts').setLevel(logging.ERROR)
 app = create_ui_web_app()
 
 with app.app_context():
-    classic.create_all()
+    try:
+        classic.create_all()
+    except Exception:
+        pass

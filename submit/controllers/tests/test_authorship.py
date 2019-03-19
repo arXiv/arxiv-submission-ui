@@ -2,9 +2,9 @@
 
 from unittest import TestCase, mock
 from werkzeug import MultiDict
-from werkzeug.exceptions import InternalServerError, NotFound
+from werkzeug.exceptions import InternalServerError, NotFound, BadRequest
 from wtforms import Form
-from arxiv import status
+from http import HTTPStatus as status
 import arxiv.submission as events
 from submit.controllers import authorship
 
@@ -51,17 +51,13 @@ class TestVerifyAuthorship(TestCase):
     def test_get_request_with_submission(self, mock_load):
         """GET request with a submission ID."""
         submission_id = 2
-        mock_load.return_value = (
-            mock.MagicMock(submission_id=submission_id,
-                           submitter_is_author=False),
-            []
-        )
-        data, code, headers = authorship.authorship('GET', MultiDict(),
-                                                    self.session,
-                                                    submission_id)
-        self.assertEqual(code, status.HTTP_200_OK, "Returns 200 OK")
-        self.assertIsInstance(data['form'], Form,
-                              "Response data includes a form")
+        before = mock.MagicMock(submission_id=submission_id,
+                                submitter_is_author=False)
+        mock_load.return_value = (before, [])
+        data, code, _ = authorship.authorship('GET', MultiDict(), self.session,
+                                              submission_id)
+        self.assertEqual(code, status.OK, "Returns 200 OK")
+        self.assertIsInstance(data['form'], Form, "Data includes a form")
 
     @mock.patch(f'{authorship.__name__}.AuthorshipForm.Meta.csrf', False)
     @mock.patch('arxiv.submission.load')
@@ -73,105 +69,79 @@ class TestVerifyAuthorship(TestCase):
             raise events.exceptions.NoSuchSubmission('Nada')
 
         mock_load.side_effect = raise_no_such_submission
+        params = MultiDict()
+
         with self.assertRaises(NotFound):
-            authorship.authorship('GET', MultiDict(), self.session,
-                                  submission_id)
+            authorship.authorship('GET', params, self.session, submission_id)
 
     @mock.patch(f'{authorship.__name__}.AuthorshipForm.Meta.csrf', False)
     @mock.patch('arxiv.submission.load')
     def test_post_request(self, mock_load):
         """POST request with no data."""
         submission_id = 2
-        mock_load.return_value = (
-            mock.MagicMock(submission_id=submission_id,
-                           submitter_is_author=False),
-            []
-        )
-        data, code, headers = authorship.authorship('POST', MultiDict(),
-                                                    self.session,
-                                                    submission_id)
-        self.assertEqual(code, status.HTTP_400_BAD_REQUEST,
-                         "Returns 400 bad request")
-        self.assertIsInstance(data['form'], Form,
-                              "Response data includes a form")
+        before = mock.MagicMock(submission_id=submission_id,
+                                submitter_is_author=False)
+        mock_load.return_value = (before, [])
+        params = MultiDict()
+        with self.assertRaises(BadRequest):
+            authorship.authorship('POST', params, self.session, submission_id)
 
     @mock.patch(f'{authorship.__name__}.AuthorshipForm.Meta.csrf', False)
     @mock.patch('arxiv.submission.load')
     def test_not_author_no_proxy(self, mock_load):
         """User indicates they are not author, but also not proxy."""
         submission_id = 2
-        mock_load.return_value = (
-            mock.MagicMock(submission_id=submission_id,
-                           submitter_is_author=False),
-            []
-        )
-        form_data = MultiDict({'authorship': authorship.AuthorshipForm.NO})
-        data, code, headers = authorship.authorship('POST', form_data,
-                                                    self.session,
-                                                    submission_id)
-        self.assertEqual(code, status.HTTP_400_BAD_REQUEST,
-                         "Returns 400 bad request")
-        self.assertIsInstance(data['form'], Form,
-                              "Response data includes a form")
+        before = mock.MagicMock(submission_id=submission_id,
+                                submitter_is_author=False)
+        mock_load.return_value = (before, [])
+        params = MultiDict({'authorship': authorship.AuthorshipForm.NO})
+
+        with self.assertRaises(BadRequest):
+            authorship.authorship('POST', params, self.session, submission_id)
 
     @mock.patch(f'{authorship.__name__}.AuthorshipForm.Meta.csrf', False)
     @mock.patch('submit.controllers.util.url_for')
-    @mock.patch('arxiv.submission.save')
+    @mock.patch(f'{authorship.__name__}.save')
     @mock.patch('arxiv.submission.load')
     def test_post_request_with_data(self, mock_load, mock_save, mock_url_for):
         """POST request with `authorship` set."""
         # Event store does not complain; returns object with `submission_id`.
         submission_id = 2
-        mock_load.return_value = (
-            mock.MagicMock(submission_id=submission_id,
-                           submitter_is_author=False),
-            []
-        )
-        mock_save.return_value = (
-            mock.MagicMock(submission_id=submission_id), []
-        )
-        # `url_for` returns a URL (unsurprisingly).
-        redirect_url = 'https://foo.bar.com/yes'
-        mock_url_for.return_value = redirect_url
+        before = mock.MagicMock(submission_id=submission_id, finalized=False,
+                                submitter_is_author=False)
+        after = mock.MagicMock(submission_id=submission_id, finalized=False)
+        mock_load.return_value = (before, [])
+        mock_save.return_value = (after, [])
+        mock_url_for.return_value = 'https://foo.bar.com/yes'
 
-        form_data = MultiDict({'authorship': 'y', 'action': 'next'})
-        data, code, headers = authorship.authorship('POST', form_data,
-                                                    self.session,
-                                                    submission_id)
-        self.assertEqual(code, status.HTTP_303_SEE_OTHER,
-                         "Returns 303 redirect")
+        params = MultiDict({'authorship': 'y', 'action': 'next'})
+        _, code, _ = authorship.authorship('POST', params, self.session,
+                                           submission_id)
+        self.assertEqual(code, status.SEE_OTHER, "Returns redirect")
 
     @mock.patch(f'{authorship.__name__}.AuthorshipForm.Meta.csrf', False)
     @mock.patch('submit.controllers.util.url_for')
-    @mock.patch('arxiv.submission.save')
+    @mock.patch(f'{authorship.__name__}.save')
     @mock.patch('arxiv.submission.load')
-    def test_verify_fails(self, mock_load, mock_save, mock_url_for):
-        """Event store flakes out on authorship verification."""
+    def test_save_fails(self, mock_load, mock_save, mock_url_for):
+        """Event store flakes out on saving the command."""
         submission_id = 2
-        mock_load.return_value = (
-            mock.MagicMock(submission_id=submission_id,
-                           submitter_is_author=False),
-            []
-        )
+        before = mock.MagicMock(submission_id=submission_id, finalized=False,
+                                submitter_is_author=False)
+        mock_load.return_value = (before, [])
 
-        # Event store does not complain; returns object with `submission_id`
         def raise_on_verify(*ev, **kwargs):
             if type(ev[0]) is events.ConfirmAuthorship:
-                raise events.InvalidStack([
-                    events.InvalidEvent(ev[0], 'foo')
-                ])
-            return (
-                mock.MagicMock(submission_id=kwargs.get('submission_id', 2)),
-                []
-            )
+                raise events.SaveError('The world is ending')
+            submission_id = kwargs.get('submission_id', 2)
+            return (mock.MagicMock(submission_id=submission_id), [])
 
         mock_save.side_effect = raise_on_verify
-        form_data = MultiDict({'authorship': 'y', 'action': 'next'})
-        data, code, headers = authorship.authorship('POST', form_data,
-                                                    self.session, 2)
-        self.assertEqual(code, status.HTTP_400_BAD_REQUEST,
-                         "Returns 400 bad request")
-        self.assertIsInstance(data['form'], Form,
-                              "Response data includes a form")
-        self.assertIn("events", data["form"].errors,
-                      "Exception messages are added to form errors.")
+        params = MultiDict({'authorship': 'y', 'action': 'next'})
+
+        try:
+            authorship.authorship('POST', params, self.session, 2)
+            self.fail('InternalServerError not raised')
+        except InternalServerError as e:
+            data = e.description
+            self.assertIsInstance(data['form'], Form, "Data includes form")

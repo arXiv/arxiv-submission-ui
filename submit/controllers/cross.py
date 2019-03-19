@@ -3,7 +3,7 @@
 from typing import Tuple, Dict, Any, Optional, List
 
 from werkzeug import MultiDict
-from werkzeug.exceptions import InternalServerError, NotFound
+from werkzeug.exceptions import InternalServerError, NotFound, BadRequest
 
 from flask import url_for, Markup
 from wtforms import Form, widgets
@@ -11,16 +11,18 @@ from wtforms.fields import Field, BooleanField, HiddenField
 from wtforms.validators import InputRequired, ValidationError, optional, \
     DataRequired
 
-from arxiv import status
+from http import HTTPStatus as status
 from arxiv.taxonomy import CATEGORIES_ACTIVE as CATEGORIES
 from arxiv.taxonomy import ARCHIVES_ACTIVE as ARCHIVES
 from arxiv.base import logging, alerts
 from arxiv.forms import csrf
 from arxiv.users.domain import Session
-import arxiv.submission as events
+from arxiv.submission import save, RequestCrossList, Submission
+from arxiv.submission.exceptions import SaveError
 
 from ..util import load_submission
-from . import util
+from .util import user_and_client_from_session, OptGroupSelectField, \
+    validate_command
 
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 
@@ -67,8 +69,8 @@ class CrossListForm(csrf.CSRFForm):
         (REMOVE, 'Remove')
     ]
     operation = HiddenField(default=ADD, validators=[optional()])
-    category = util.OptGroupSelectField('Category', choices=CATEGORIES,
-                                        default='', validators=[optional()])
+    category = OptGroupSelectField('Category', choices=CATEGORIES,
+                                   default='', validators=[optional()])
     selected = HiddenListField()
     confirmed = BooleanField('Confirmed',
                              false_values=('false', False, 0, '0', ''))
@@ -84,8 +86,7 @@ class CrossListForm(csrf.CSRFForm):
         if not form.confirmed.data and not field.data:
             raise ValidationError('Please select a category')
 
-    def filter_choices(self, submission: events.domain.Submission,
-                       session: Session,
+    def filter_choices(self, submission: Submission, session: Session,
                        exclude: Optional[List[str]] = None) -> None:
         """Remove redundant choices, and limit to endorsed categories."""
         selected: List[str] = self.category.data
@@ -120,9 +121,9 @@ class CrossListForm(csrf.CSRFForm):
 
 
 def request_cross(method: str, params: MultiDict, session: Session,
-                  submission_id: int) -> Response:
+                  submission_id: int, **kwargs) -> Response:
     """Request cross-list classification for an announced e-print."""
-    submitter, client = util.user_and_client_from_session(session)
+    submitter, client = user_and_client_from_session(session)
     logger.debug(f'method: {method}, submission: {submission_id}. {params}')
 
     # Will raise NotFound if there is no such submission.
@@ -135,7 +136,7 @@ def request_cross(method: str, params: MultiDict, session: Session,
                    " href='https://arxiv.org/help/cross'>the arXiv help"
                    " pages</a> for details."))
         status_url = url_for('ui.create_submission')
-        return {}, status.HTTP_303_SEE_OTHER, {'Location': status_url}
+        return {}, status.SEE_OTHER, {'Location': status_url}
 
     if method == 'GET':
         params = MultiDict({})
@@ -159,28 +160,24 @@ def request_cross(method: str, params: MultiDict, session: Session,
 
     if method == 'POST':
         if not form.validate():
-            return response_data, status.HTTP_400_BAD_REQUEST, {}
+            raise BadRequest(response_data)
+            
         if form.confirmed.data:     # Stop adding new categories, and submit.
             response_data['form'].operation.data = CrossListForm.ADD
             response_data['require_confirmation'] = True
 
-            try:    # Submit the cross-list request.
-                events.save(
-                    events.RequestCrossList(creator=submitter, client=client,
-                                            categories=form.selected.data),
-                    submission_id=submission_id
-                )
-            except events.exceptions.InvalidEvent as e:
-                # Since we're doing validation on the form, this should only
-                # happen if the user really monkeys with the request or if we
-                # have a programming error.
-                logger.error('Cross request made with bad category: %s', e)
+            command = RequestCrossList(creator=submitter, client=client,
+                                       categories=form.selected.data)
+            if not validate_command(form, command, submission, 'category'):
                 alerts.flash_failure(Markup(
                     "There was a problem with your request. Please try again."
                     f" {CONTACT_SUPPORT}"
                 ))
-                return response_data, status.HTTP_400_BAD_REQUEST, {}
-            except events.exceptions.SaveError as e:
+                raise BadRequest(response_data)
+
+            try:    # Submit the cross-list request.
+                save(command, submission_id=submission_id)
+            except SaveError as e:
                 # This would be due to a database error, or something else
                 # that likely isn't the user's fault.
                 logger.error('Could not save cross list request event')
@@ -188,12 +185,12 @@ def request_cross(method: str, params: MultiDict, session: Session,
                     "There was a problem processing your request. Please try"
                     f" again. {CONTACT_SUPPORT}"
                 ))
-                return response_data, status.HTTP_400_BAD_REQUEST, {}
+                raise InternalServerError(response_data) from e
 
             # Success! Send user back to the submission page.
             alerts.flash_success("Cross-list request submitted.")
             status_url = url_for('ui.create_submission')
-            return {}, status.HTTP_303_SEE_OTHER, {'Location': status_url}
+            return {}, status.SEE_OTHER, {'Location': status_url}
         else:   # User is adding or removing a category.
             if form.operation.data:
                 if form.operation.data == CrossListForm.REMOVE:
@@ -210,5 +207,5 @@ def request_cross(method: str, params: MultiDict, session: Session,
                                                  exclude=selected)
             response_data['form'].operation.data = CrossListForm.ADD
             response_data['require_confirmation'] = True
-            return response_data, status.HTTP_200_OK, {}
-    return response_data, status.HTTP_200_OK, {}
+            return response_data, status.OK, {}
+    return response_data, status.OK, {}

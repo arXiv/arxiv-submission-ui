@@ -9,6 +9,7 @@ from arxiv import taxonomy
 from arxiv.submission.domain.process import ProcessStatus
 from arxiv.submission.domain.submission import Compilation
 from .domain import FileStatus, Upload
+from .util import tidy_filesize
 
 NestedFileTree = Mapping[str, Union[FileStatus, 'NestedFileTree']]
 
@@ -171,6 +172,7 @@ def get_filters() -> List[Tuple[str, Callable]]:
         ('get_category_name', get_category_name),
         ('process_status_display', process_status_display),
         ('compilation_status_display', compilation_status_display),
-        ('duration', duration)
+        ('duration', duration),
+        ('tidy_filesize', tidy_filesize)
 
     ]

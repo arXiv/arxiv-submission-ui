@@ -2,9 +2,9 @@
 
 from unittest import TestCase, mock
 from werkzeug import MultiDict
-from werkzeug.exceptions import InternalServerError, NotFound
+from werkzeug.exceptions import InternalServerError, NotFound, BadRequest
 from wtforms import Form
-from arxiv import status
+from http import HTTPStatus as status
 import arxiv.submission as events
 from submit.controllers import classification
 
@@ -52,18 +52,14 @@ class TestClassification(TestCase):
     def test_get_request_with_submission(self, mock_load):
         """GET request with a submission ID."""
         submission_id = 2
-        mock_load.return_value = (
-            mock.MagicMock(submission_id=submission_id), []
-        )
-        data, code, headers = classification.classification(
-            'GET',
-            MultiDict(),
-            self.session,
-            submission_id
-        )
-        self.assertEqual(code, status.HTTP_200_OK, "Returns 200 OK")
-        self.assertIsInstance(data['form'], Form,
-                              "Response data includes a form")
+        before = mock.MagicMock(submission_id=submission_id, finalized=False,
+                                published=False, version=1, arxiv_id=None)
+        mock_load.return_value = (before, [])
+        data, code, _ = classification.classification('GET', MultiDict(),
+                                                      self.session,
+                                                      submission_id)
+        self.assertEqual(code, status.OK, "Returns 200 OK")
+        self.assertIsInstance(data['form'], Form, "Data includes a form")
 
     @mock.patch(f'{classification.__name__}.ClassificationForm.Meta.csrf',
                 False)
@@ -86,72 +82,62 @@ class TestClassification(TestCase):
     def test_post_request(self, mock_load):
         """POST request with no data."""
         submission_id = 2
-        mock_load.return_value = (
-            mock.MagicMock(submission_id=submission_id), []
-        )
-        data, code, headers = classification.classification(
-            'POST',
-            MultiDict(),
-            self.session,
-            submission_id
-        )
-        self.assertEqual(code, status.HTTP_400_BAD_REQUEST,
-                         "Returns 400 bad request")
-        self.assertIsInstance(data['form'], Form,
-                              "Response data includes a form")
+        before = mock.MagicMock(submission_id=submission_id, finalized=False,
+                                published=False, version=1, arxiv_id=None)
+        mock_load.return_value = (before, [])
+
+        try:
+            classification.classification('POST', MultiDict(), self.session,
+                                          submission_id)
+            self.fail('BadRequest not raised')
+        except BadRequest as e:
+            data = e.description
+            self.assertIsInstance(data['form'], Form, "Data includes a form")
 
     @mock.patch(f'{classification.__name__}.ClassificationForm.Meta.csrf',
                 False)
-    @mock.patch('arxiv.submission.save')
+    @mock.patch(f'{classification.__name__}.save')
     @mock.patch('arxiv.submission.load')
     def test_post_with_invalid_category(self, mock_load, mock_save):
         """POST request with invalid category."""
         submission_id = 2
-        mock_load.return_value = (
-            mock.MagicMock(submission_id=submission_id), []
-        )
-        mock_save.return_value = (
-            mock.MagicMock(submission_id=submission_id), []
-        )
-        request_data = MultiDict({
-            'category': 'astro-ph'  # <- expired
-        })
-        data, code, headers = classification.classification(
-            'POST',
-            request_data,
-            self.session,
-            submission_id
-        )
-        self.assertEqual(code, status.HTTP_400_BAD_REQUEST,
-                         "Returns 400 bad request")
-        self.assertIsInstance(data['form'], Form,
-                              "Response data includes a form")
+        before = mock.MagicMock(submission_id=submission_id, finalized=False,
+                                published=False, version=1, arxiv_id=None)
+        mock_load.return_value = (before, [])
+        mock_save.return_value = (before, [])
+
+        params = MultiDict({'category': 'astro-ph'})  # <- expired
+
+        try:
+            classification.classification('POST', params, self.session,
+                                          submission_id)
+            self.fail('BadRequest not raised')
+        except BadRequest as e:
+            data = e.description
+            self.assertIsInstance(data['form'], Form, "Data includes a form")
 
     @mock.patch(f'{classification.__name__}.ClassificationForm.Meta.csrf',
                 False)
-    @mock.patch('arxiv.submission.save')
+    @mock.patch(f'{classification.__name__}.save')
     @mock.patch('arxiv.submission.load')
     def test_post_with_category(self, mock_load, mock_save):
         """POST request with valid category."""
         submission_id = 2
-        mock_load.return_value = (
-            mock.MagicMock(submission_id=submission_id), []
-        )
-        mock_save.return_value = (
-            mock.MagicMock(submission_id=submission_id), []
-        )
-        request_data = MultiDict({
-            'category': 'astro-ph.CO'
-        })
-        data, code, headers = classification.classification(
-            'POST',
-            request_data,
-            self.session,
-            submission_id
-        )
-        self.assertEqual(code, status.HTTP_200_OK, "Returns 200 OK")
-        self.assertIsInstance(data['form'], Form,
-                              "Response data includes a form")
+        before = mock.MagicMock(submission_id=submission_id, finalized=False,
+                                published=False, version=1, arxiv_id=None)
+        mock_clsn = mock.MagicMock(category='astro-ph.CO')
+        after = mock.MagicMock(submission_id=submission_id, finalized=False,
+                               primary_classification=mock_clsn,
+                               published=False, version=1, arxiv_id=None)
+        mock_load.return_value = (before, [])
+        mock_save.return_value = (after, [])
+        params = MultiDict({'category': 'astro-ph.CO'})
+        data, code, _ = classification.classification('POST', params,
+                                                      self.session,
+                                                      submission_id)
+        self.assertEqual(code, status.OK, "Returns 200 OK")
+
+        self.assertIsInstance(data['form'], Form, "Data includes a form")
 
 
 class TestCrossList(TestCase):
@@ -193,19 +179,16 @@ class TestCrossList(TestCase):
     def test_get_request_with_submission(self, mock_load):
         """GET request with a submission ID."""
         submission_id = 2
-        mock_load.return_value = (
-            mock.MagicMock(
-                submission_id=submission_id,
-                primary_classification=mock.MagicMock(
-                    category='astro-ph.EP'
-                )
-            ), []
-        )
-        data, code, headers = classification.cross_list('GET', MultiDict(), self.session,
-                                                        submission_id)
-        self.assertEqual(code, status.HTTP_200_OK, "Returns 200 OK")
-        self.assertIsInstance(data['form'], Form,
-                              "Response data includes a form")
+        mock_clsn = mock.MagicMock(category='astro-ph.EP')
+        before = mock.MagicMock(submission_id=submission_id, finalized=False,
+                                primary_classification=mock_clsn,
+                                published=False, version=1, arxiv_id=None)
+        mock_load.return_value = (before, [])
+        params = MultiDict()
+        data, code, _ = classification.cross_list('GET', params, self.session,
+                                                  submission_id)
+        self.assertEqual(code, status.OK, "Returns 200 OK")
+        self.assertIsInstance(data['form'], Form, "Data includes a form")
 
     @mock.patch(f'{classification.__name__}.ClassificationForm.Meta.csrf',
                 False)
@@ -219,8 +202,8 @@ class TestCrossList(TestCase):
 
         mock_load.side_effect = raise_no_such_submission
         with self.assertRaises(NotFound):
-            classification.cross_list(
-                'GET', MultiDict(), self.session, submission_id)
+            classification.cross_list('GET', MultiDict(), self.session,
+                                      submission_id)
 
     @mock.patch(f'{classification.__name__}.ClassificationForm.Meta.csrf',
                 False)
@@ -228,84 +211,62 @@ class TestCrossList(TestCase):
     def test_post_request(self, mock_load):
         """POST request with no data."""
         submission_id = 2
-        mock_load.return_value = (
-            mock.MagicMock(
-                submission_id=submission_id,
-                primary_classification=mock.MagicMock(
-                    category='astro-ph.EP'
-                )
-            ), []
-        )
-        data, code, headers = classification.cross_list('POST', MultiDict(), self.session,
-                                                        submission_id)
-        self.assertEqual(code, status.HTTP_400_BAD_REQUEST,
-                         "Returns 400 bad request")
-        self.assertIsInstance(data['form'], Form,
-                              "Response data includes a form")
+        mock_clsn = mock.MagicMock(category='astro-ph.EP')
+        before = mock.MagicMock(submission_id=submission_id, finalized=False,
+                                primary_classification=mock_clsn,
+                                published=False, version=1, arxiv_id=None)
+        mock_load.return_value = (before, [])
+
+        try:
+            classification.cross_list('POST', MultiDict(), self.session,
+                                      submission_id)
+            self.fail('BadRequest not raised')
+        except BadRequest as e:
+            data = e.description
+            self.assertIsInstance(data['form'], Form, "Data includes a form")
 
     @mock.patch(f'{classification.__name__}.ClassificationForm.Meta.csrf',
                 False)
-    @mock.patch('arxiv.submission.save')
+    @mock.patch(f'{classification.__name__}.save')
     @mock.patch('arxiv.submission.load')
     def test_post_with_invalid_category(self, mock_load, mock_save):
         """POST request with invalid category."""
         submission_id = 2
-        mock_load.return_value = (
-            mock.MagicMock(
-                submission_id=submission_id,
-                primary_classification=mock.MagicMock(
-                    category='astro-ph.EP'
-                )
-            ), []
-        )
-        mock_save.return_value = (
-            mock.MagicMock(
-                submission_id=submission_id,
-                primary_classification=mock.MagicMock(
-                    category='astro-ph.EP'
-                )
-            ), []
-        )
-        request_data = MultiDict({
-            'category': 'astro-ph'  # <- expired
-        })
-        data, code, headers = classification.classification(
-            'POST',
-            request_data,
-            self.session,
-            submission_id
-        )
-        self.assertEqual(code, status.HTTP_400_BAD_REQUEST,
-                         "Returns 400 bad request")
-        self.assertIsInstance(data['form'], Form,
-                              "Response data includes a form")
+        mock_clsn = mock.MagicMock(category='astro-ph.EP')
+        before = mock.MagicMock(submission_id=submission_id, finalized=False,
+                                primary_classification=mock_clsn,
+                                published=False, version=1, arxiv_id=None)
+        mock_load.return_value = (before, [])
+        mock_save.return_value = (before, [])
+        params = MultiDict({'category': 'astro-ph'})  # <- expired
+        try:
+            classification.classification('POST', params, self.session,
+                                          submission_id)
+            self.fail('BadRequest not raised')
+        except BadRequest as e:
+            data = e.description
+            self.assertIsInstance(data['form'], Form, "Data includes a form")
 
     @mock.patch(f'{classification.__name__}.ClassificationForm.Meta.csrf',
                 False)
-    @mock.patch('arxiv.submission.save')
+    @mock.patch(f'{classification.__name__}.save')
     @mock.patch('arxiv.submission.load')
     def test_post_with_category(self, mock_load, mock_save):
         """POST request with valid category."""
         submission_id = 2
-        mock_load.return_value = (
-            mock.MagicMock(
-                submission_id=submission_id,
-                primary_classification=mock.MagicMock(
-                    category='astro-ph.EP'
-                )
-            ), []
-        )
-        mock_save.return_value = (
-            mock.MagicMock(
-                submission_id=submission_id,
-                primary_classification=mock.MagicMock(
-                    category='astro-ph.EP'
-                )
-            ), []
-        )
-        request_data = MultiDict({'category': 'astro-ph.CO'})
-        data, code, headers = classification.cross_list(
-            'POST', request_data, self.session, submission_id)
-        self.assertEqual(code, status.HTTP_200_OK, "Returns 200 OK")
-        self.assertIsInstance(data['form'], Form,
-                              "Response data includes a form")
+        mock_clsn = mock.MagicMock(category='astro-ph.EP')
+        before = mock.MagicMock(submission_id=submission_id, finalized=False,
+                                primary_classification=mock_clsn,
+                                published=False, version=1, arxiv_id=None)
+        after = mock.MagicMock(submission_id=submission_id, finalized=False,
+                               primary_classification=mock_clsn,
+                               secondary_categories=[
+                                   mock.MagicMock(category='astro-ph.CO')
+                               ], published=False, version=1, arxiv_id=None)
+        mock_load.return_value = (before, [])
+        mock_save.return_value = (after, [])
+        params = MultiDict({'category': 'astro-ph.CO'})
+        data, code, _ = classification.cross_list('POST', params, self.session,
+                                                  submission_id)
+        self.assertEqual(code, status.OK, "Returns 200 OK")
+        self.assertIsInstance(data['form'], Form, "Data includes a form")

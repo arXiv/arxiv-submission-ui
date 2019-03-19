@@ -7,6 +7,11 @@ from werkzeug.exceptions import NotFound
 from arxiv.base.globals import get_application_global
 import arxiv.submission as events
 
+from arxiv.base import logging
+
+logger = logging.getLogger(__name__)
+logger.propagate = False
+
 
 # TODO: look at whether this is going to work.
 def load_submission(submission_id: Optional[int]) \
@@ -29,6 +34,7 @@ def load_submission(submission_id: Optional[int]) \
 
     """
     if submission_id is None:
+        logger.debug('No submission ID')
         raise NotFound('No such submission.')
 
     g = get_application_global()

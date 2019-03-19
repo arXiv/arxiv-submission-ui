@@ -16,6 +16,7 @@ logger.propagate = False
 def is_owner(session: Session, submission_id: str, **kw) -> bool:
     """Check whether the user has privileges to edit a submission."""
     if not request.submission:
+        logger.debug('No submission on request')
         raise NotFound('No such submission')
     logger.debug('Submission owned by %s; request is from %s',
                  str(request.submission.owner.native_id),

@@ -113,6 +113,8 @@ def handle(controller: Callable, template: str, title: str,
     :class:`.Response`
 
     """
+    logger.debug('Handle call to controller %s with template %s, title %s,'
+                 ' and ID %s', controller, template, title, submission_id)
     if request.method == 'GET' and get_params:
         request_data = MultiDict(request.args.items(multi=True))
     else:
@@ -146,20 +148,20 @@ def create_submission():
 
 
 @ui.route(path('delete'), methods=["GET", "POST"])
-@auth.decorators.scoped(auth.scopes.DELETE_SUBMISSION)
+@auth.decorators.scoped(auth.scopes.DELETE_SUBMISSION, authorizer=is_owner)
 def delete_submission(submission_id: int):
     """Delete, or roll a submission back to the last published state."""
     return handle(controllers.delete.delete,
                   'submit/confirm_delete_submission.html',
-                  'Delete submission or replacement')
+                  'Delete submission or replacement', submission_id)
 
 
 @ui.route(path('replace'), methods=["POST"])
-@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION)
+@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION, authorizer=is_owner)
 def create_replacement(submission_id: int):
     """Create a replacement submission."""
     return handle(controllers.create.replace, 'submit/replace.html',
-                  'Create a new version (replacement)')
+                  'Create a new version (replacement)', submission_id)
 
 
 @ui.route(path(), methods=["GET"])

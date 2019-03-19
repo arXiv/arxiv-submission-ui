@@ -25,18 +25,17 @@ def get_workflow(submission: Submission) -> Workflow:
     return SubmissionWorkflow(submission, session)
 
 
-def to_previous(workflow: Workflow, stage: Stage, ident: str) -> Response:
-    previous_stage = workflow.previous_stage(stage)
-    logger.debug('Redirecting to previous stage: %s', previous_stage)
-    loc = url_for(f'ui.{previous_stage.endpoint}', submission_id=ident)
+def to_stage(workflow: Workflow, stage: Stage, ident: str) -> Response:
+    loc = url_for(f'ui.{stage.endpoint}', submission_id=ident)
     return redirect(loc, code=status.SEE_OTHER)
+
+
+def to_previous(workflow: Workflow, stage: Stage, ident: str) -> Response:
+    return to_stage(workflow, workflow.previous_stage(stage), ident)
 
 
 def to_next(workflow: Workflow, stage: Stage, ident: str) -> Response:
-    next_stage = workflow.next_stage(stage)
-    logger.debug('Redirecting to next stage: %s', next_stage)
-    loc = url_for(f'ui.{next_stage.endpoint}', submission_id=ident)
-    return redirect(loc, code=status.SEE_OTHER)
+    return to_stage(workflow, workflow.next_stage(stage), ident)
 
 
 def to_current(workflow: Workflow, stage: Stage, ident: str,
@@ -44,9 +43,7 @@ def to_current(workflow: Workflow, stage: Stage, ident: str,
     next_stage = workflow.current_stage
     if flash:
         alerts.flash_warning(f'Please {next_stage.label} before proceeding.')
-    logger.debug('Redirecting to current stage: %s', next_stage)
-    loc = url_for(f'ui.{next_stage.endpoint}', submission_id=ident)
-    return redirect(loc, code=status.SEE_OTHER)
+    return to_stage(workflow, next_stage, ident)
 
 
 def flow_control(this_stage: Stage, exit: str = EXIT) -> Callable:
@@ -63,6 +60,9 @@ def flow_control(this_stage: Stage, exit: str = EXIT) -> Callable:
             action = request.form.get('action')
             submission, _ = load_submission(submission_id)
             workflow = get_workflow(submission)
+
+            if workflow.complete and not this_stage == workflow.confirmation:
+                return to_stage(workflow, workflow.confirmation, submission_id)
 
             try:
                 if not workflow.can_proceed_to(this_stage):

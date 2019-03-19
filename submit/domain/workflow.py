@@ -212,6 +212,7 @@ class Workflow:
 
     ORDER = []
     REQUIRED = []
+    CONFIRMATION = None
 
     def __init__(self, submission: Submission,
                  session: MutableMapping) -> None:
@@ -229,6 +230,16 @@ class Workflow:
             if prior_stage == stage:
                 return
             yield prior_stage
+
+    @property
+    def complete(self) -> bool:
+        """Determine whether this workflow is complete."""
+        return self.submission.finalized
+
+    @property
+    def confirmation(self) -> Stage:
+        """Get the confirmation :class:`.Stage` for this workflow."""
+        return self.CONFIRMATION
 
     def is_required(self, stage: Stage) -> bool:
         """Check whether a stage is required."""
@@ -337,6 +348,7 @@ class SubmissionWorkflow(Workflow):
         FinalPreview,
         Confirm
     ]
+    CONFIRMATION = Confirm
 
 
 class ReplacementWorkflow(Workflow):

@@ -114,6 +114,12 @@ def validate_command(form: Form, event: Event,
         if message is None:
             message = e.message
         form._errors[field].append(message)
+
+        if hasattr(form, field):
+            field_obj = getattr(form, field)
+            if not field_obj.errors:
+                field_obj.errors = []
+            field_obj.errors.append(message)
         return False
     return True
 

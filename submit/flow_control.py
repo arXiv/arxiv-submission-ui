@@ -72,7 +72,8 @@ def flow_control(this_stage: Stage, exit: str = EXIT) -> Callable:
                 raise BadRequest('Request not allowed for this submission')
 
             # Mark the previous state as complete.
-            workflow.mark_complete(workflow.previous_stage(this_stage))
+            if workflow.previous_stage(this_stage):
+                workflow.mark_complete(workflow.previous_stage(this_stage))
 
             # If the user has proceeded past an optional stage, consider it
             # to be completed.

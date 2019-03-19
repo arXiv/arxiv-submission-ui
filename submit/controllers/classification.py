@@ -10,7 +10,8 @@ from werkzeug.exceptions import InternalServerError, BadRequest
 from flask import url_for, Markup
 from wtforms import SelectField, widgets, HiddenField, validators
 
-from arxiv import status, taxonomy
+from http import HTTPStatus as status
+from arxiv import taxonomy
 from arxiv.forms import csrf
 from arxiv.base import logging, alerts
 from arxiv.submission.domain import Submission
@@ -140,8 +141,8 @@ def classification(method: str, params: MultiDict, session: Session,
             raise InternalServerError(response_data) from e
 
         if params.get('action') in ['previous', 'save_exit', 'next']:
-            return response_data, status.HTTP_303_SEE_OTHER, {}
-    return response_data, status.HTTP_200_OK, {}
+            return response_data, status.SEE_OTHER, {}
+    return response_data, status.OK, {}
 
 
 def cross_list(method: str, params: MultiDict, session: Session,
@@ -220,5 +221,5 @@ def cross_list(method: str, params: MultiDict, session: Session,
                 ))
 
         if action in ['previous', 'save_exit', 'next']:
-            return response_data, status.HTTP_303_SEE_OTHER, {}
-    return response_data, status.HTTP_200_OK, {}
+            return response_data, status.SEE_OTHER, {}
+    return response_data, status.OK, {}

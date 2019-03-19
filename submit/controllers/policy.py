@@ -12,7 +12,7 @@ from flask import url_for
 from wtforms import BooleanField
 from wtforms.validators import InputRequired
 
-from arxiv import status
+from http import HTTPStatus as status
 from arxiv.forms import csrf
 from arxiv.base import logging
 from arxiv.users.domain import Session
@@ -63,8 +63,8 @@ def policy(method: str, params: MultiDict, session: Session,
             response_data['submission'] = submission
 
         if params.get('action') in ['previous', 'save_exit', 'next']:
-            return response_data, status.HTTP_303_SEE_OTHER, {}
-    return response_data, status.HTTP_200_OK, {}
+            return response_data, status.SEE_OTHER, {}
+    return response_data, status.OK, {}
 
 
 class PolicyForm(csrf.CSRFForm):

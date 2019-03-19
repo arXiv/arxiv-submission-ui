@@ -13,7 +13,7 @@ from flask import url_for
 from wtforms import BooleanField, RadioField
 from wtforms.validators import InputRequired, ValidationError, optional
 
-from arxiv import status
+from http import HTTPStatus as status
 from arxiv.base import logging
 from arxiv.forms import csrf
 from arxiv.users.domain import Session
@@ -82,8 +82,8 @@ def authorship(method: str, params: MultiDict, session: Session,
                 raise InternalServerError(response_data) from e
 
         if params.get('action') in ['previous', 'save_exit', 'next']:
-            return response_data, status.HTTP_303_SEE_OTHER, {}
-    return response_data, status.HTTP_200_OK, {}
+            return response_data, status.SEE_OTHER, {}
+    return response_data, status.OK, {}
 
 
 class AuthorshipForm(csrf.CSRFForm):

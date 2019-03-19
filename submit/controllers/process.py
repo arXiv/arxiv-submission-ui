@@ -50,7 +50,7 @@ from flask import url_for, Markup
 from wtforms import SelectField, widgets, HiddenField, validators
 import bleach
 import re
-from arxiv import status
+from http import HTTPStatus as status
 from arxiv.base import logging, alerts
 from arxiv.forms import csrf
 from arxiv.users.domain import Session
@@ -112,7 +112,7 @@ def file_process(method: str, params: MultiDict, session: Session,
         if params.get('action') in ['previous', 'next', 'save_exit']:
             # User is not actually trying to process anything; let flow control
             # in the routes handle the response.
-            return {}, status.HTTP_303_SEE_OTHER, {}
+            return {}, status.SEE_OTHER, {}
         return start_compilation(params, session, submission_id, token)
     raise MethodNotAllowed('Unsupported request')
 
@@ -161,7 +161,7 @@ def compile_status(params: MultiDict, session: Session, submission_id: int,
 
     compilation = submission.latest_compilation
     if not compilation:     # Nothing to do.
-        return response_data, status.HTTP_200_OK, {}
+        return response_data, status.OK, {}
 
     # Determine whether the current state of the uploaded source content has
     # been compiled.
@@ -176,7 +176,7 @@ def compile_status(params: MultiDict, session: Session, submission_id: int,
         response_data.update(_get_log(submission.source_content.identifier,
                                       submission.source_content.checksum,
                                       token))
-    return response_data, status.HTTP_200_OK, {}
+    return response_data, status.OK, {}
 
 
 def start_compilation(params: MultiDict, session: Session, submission_id: int,
@@ -234,7 +234,7 @@ def start_compilation(params: MultiDict, session: Session, submission_id: int,
         )
     alerts.flash_hidden(stat.to_dict(), 'compilation_status')
     redirect = url_for('ui.file_process', submission_id=submission_id)
-    return response_data, status.HTTP_303_SEE_OTHER, {'Location': redirect}
+    return response_data, status.SEE_OTHER, {'Location': redirect}
 
 
 def _get_log(identifier: str, checksum: str, token: str) -> dict:
@@ -254,7 +254,7 @@ def file_preview(params, session: Session, submission_id: int, token: str,
     prod = Compiler.get_product(submission.source_content.identifier,
                                 submission.source_content.checksum, token)
     headers = {'Content-Type': prod.content_type}
-    return prod.stream, status.HTTP_200_OK, headers
+    return prod.stream, status.OK, headers
 
 
 def compilation_log(params, session: Session, submission_id: int, token: str,
@@ -266,7 +266,7 @@ def compilation_log(params, session: Session, submission_id: int, token: str,
         log = Compiler.get_log(submission.source_content.identifier, checksum,
                                token)
         headers = {'Content-Type': log.content_type}
-        return log.stream, status.HTTP_200_OK, headers
+        return log.stream, status.OK, headers
     except exceptions.NotFound:
         raise NotFound("No log output produced")
 
@@ -274,7 +274,7 @@ def compilation_log(params, session: Session, submission_id: int, token: str,
 def compile(params: MultiDict, session: Session, submission_id: int,
             token: str, **kwargs) -> Response:
     redirect = url_for('ui.file_process', submission_id=submission_id)
-    return {}, status.HTTP_303_SEE_OTHER, {'Location': redirect}
+    return {}, status.SEE_OTHER, {'Location': redirect}
 
 
 class CompilationForm(csrf.CSRFForm):

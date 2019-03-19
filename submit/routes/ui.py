@@ -6,7 +6,8 @@ from werkzeug import MultiDict
 from werkzeug.exceptions import InternalServerError, BadRequest
 from flask import Blueprint, make_response, redirect, request, \
                   render_template, url_for, Response, g, send_file, session
-from arxiv import status, taxonomy
+from http import HTTPStatus as status
+from arxiv import taxonomy
 from submit import controllers
 from arxiv.users import auth
 import arxiv.submission as events
@@ -168,7 +169,7 @@ def publish(submission_id: int) -> Response:
     """WARNING WARNING WARNING this is for testing purposes only."""
     util.publish_submission(submission_id)
     target = url_for('ui.submission_status', submission_id=submission_id)
-    return Response(response={}, status=status.HTTP_303_SEE_OTHER,
+    return Response(response={}, status=status.SEE_OTHER,
                     headers={'Location': target})
 
 
@@ -179,7 +180,7 @@ def place_on_hold(submission_id: int) -> Response:
     """WARNING WARNING WARNING this is for testing purposes only."""
     util.place_on_hold(submission_id)
     target = url_for('ui.submission_status', submission_id=submission_id)
-    return Response(response={}, status=status.HTTP_303_SEE_OTHER,
+    return Response(response={}, status=status.SEE_OTHER,
                     headers={'Location': target})
 
 
@@ -190,7 +191,7 @@ def apply_cross(submission_id: int) -> Response:
     """WARNING WARNING WARNING this is for testing purposes only."""
     util.apply_cross(submission_id)
     target = url_for('ui.submission_status', submission_id=submission_id)
-    return Response(response={}, status=status.HTTP_303_SEE_OTHER,
+    return Response(response={}, status=status.SEE_OTHER,
                     headers={'Location': target})
 
 
@@ -201,7 +202,7 @@ def reject_cross(submission_id: int) -> Response:
     """WARNING WARNING WARNING this is for testing purposes only."""
     util.reject_cross(submission_id)
     target = url_for('ui.submission_status', submission_id=submission_id)
-    return Response(response={}, status=status.HTTP_303_SEE_OTHER,
+    return Response(response={}, status=status.SEE_OTHER,
                     headers={'Location': target})
 
 
@@ -212,7 +213,7 @@ def apply_withdrawal(submission_id: int) -> Response:
     """WARNING WARNING WARNING this is for testing purposes only."""
     util.apply_withdrawal(submission_id)
     target = url_for('ui.submission_status', submission_id=submission_id)
-    return Response(response={}, status=status.HTTP_303_SEE_OTHER,
+    return Response(response={}, status=status.SEE_OTHER,
                     headers={'Location': target})
 
 
@@ -223,7 +224,7 @@ def reject_withdrawal(submission_id: int) -> Response:
     """WARNING WARNING WARNING this is for testing purposes only."""
     util.reject_withdrawal(submission_id)
     target = url_for('ui.submission_status', submission_id=submission_id)
-    return Response(response={}, status=status.HTTP_303_SEE_OTHER,
+    return Response(response={}, status=status.SEE_OTHER,
                     headers={'Location': target})
 
 
@@ -383,7 +384,7 @@ def confirmation(submission_id: int) -> Response:
     """Render the final confirmation page."""
     rendered = render_template("submit/confirm_submit.html",
                                pagetitle='Submission Confirmed')
-    return make_response(rendered, status.HTTP_200_OK)
+    return make_response(rendered, status.OK)
 
 # Other workflows.
 

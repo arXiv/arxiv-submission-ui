@@ -4,7 +4,7 @@ from unittest import TestCase, mock
 from werkzeug import MultiDict
 from werkzeug.exceptions import InternalServerError, BadRequest
 from wtforms import Form
-from arxiv import status
+from http import HTTPStatus as status
 from submit.controllers import metadata
 import arxiv.submission as events
 
@@ -56,7 +56,7 @@ class TestOptional(TestCase):
         )
         data, code, headers = metadata.optional(
             'GET', MultiDict(), self.session, submission_id)
-        self.assertEqual(code, status.HTTP_200_OK, "Returns 200 OK")
+        self.assertEqual(code, status.OK, "Returns 200 OK")
         self.assertIsInstance(data['form'], Form,
                               "Response data includes a form")
 
@@ -70,7 +70,7 @@ class TestOptional(TestCase):
         )
         data, code, headers = metadata.optional(
             'POST', MultiDict(), self.session, submission_id)
-        self.assertEqual(code, status.HTTP_200_OK, "Returns 200 OK")
+        self.assertEqual(code, status.OK, "Returns 200 OK")
 
         self.assertIsInstance(data['form'], Form,
                               "Response data includes a form")
@@ -122,7 +122,7 @@ class TestOptional(TestCase):
         })
         data, code, headers = metadata.optional('POST', params, self.session,
                                                 submission_id)
-        self.assertEqual(code, status.HTTP_200_OK, "Returns 200 OK")
+        self.assertEqual(code, status.OK, "Returns 200 OK")
         event_types = [type(ev) for ev in mock_save.call_args[0]]
         self.assertIn(events.SetDOI, event_types, "Sets submission DOI")
         self.assertIn(events.SetJournalReference, event_types,
@@ -162,7 +162,7 @@ class TestOptional(TestCase):
         })
         _, code, _ = metadata.optional('POST', params, self.session,
                                        submission_id)
-        self.assertEqual(code, status.HTTP_200_OK, "Returns 200 OK")
+        self.assertEqual(code, status.OK, "Returns 200 OK")
         self.assertEqual(mock_save.call_count, 0, "No events are generated")
 
     @mock.patch(f'{metadata.__name__}.OptionalMetadataForm.Meta.csrf', False)
@@ -193,7 +193,7 @@ class TestOptional(TestCase):
         })
         _, code, _ = metadata.optional('POST', params, self.session,
                                        submission_id)
-        self.assertEqual(code, status.HTTP_200_OK, "Returns 200 OK")
+        self.assertEqual(code, status.OK, "Returns 200 OK")
         self.assertEqual(mock_save.call_count, 1, "Events are generated")
 
         event_types = [type(ev) for ev in mock_save.call_args[0]]
@@ -244,7 +244,7 @@ class TestMetadata(TestCase):
         mock_load.return_value = (before, [])
         data, code, _ = metadata.metadata('GET', MultiDict(), self.session,
                                           submission_id)
-        self.assertEqual(code, status.HTTP_200_OK, "Returns 200 OK")
+        self.assertEqual(code, status.OK, "Returns 200 OK")
         self.assertIsInstance(data['form'], Form, "Data includes a form")
 
     @mock.patch(f'{metadata.__name__}.CoreMetadataForm.Meta.csrf', False)
@@ -286,7 +286,7 @@ class TestMetadata(TestCase):
         })
         _, code, _ = metadata.metadata('POST', params, self.session,
                                        submission_id)
-        self.assertEqual(code, status.HTTP_200_OK, "Returns 200 OK")
+        self.assertEqual(code, status.OK, "Returns 200 OK")
 
         event_types = [type(ev) for ev in mock_save.call_args[0]]
         self.assertIn(events.SetTitle, event_types, "Sets submission title")
@@ -317,7 +317,7 @@ class TestMetadata(TestCase):
         })
         _, code, _ = metadata.metadata('POST', params, self.session,
                                        submission_id)
-        self.assertEqual(code, status.HTTP_200_OK, "Returns 200 OK")
+        self.assertEqual(code, status.OK, "Returns 200 OK")
         self.assertEqual(mock_save.call_count, 0, "No events are generated")
 
     @mock.patch(f'{metadata.__name__}.CoreMetadataForm.Meta.csrf', False)
@@ -344,7 +344,7 @@ class TestMetadata(TestCase):
         })
         _, code, _ = metadata.metadata('POST', params, self.session,
                                        submission_id)
-        self.assertEqual(code, status.HTTP_200_OK, "Returns 200 OK")
+        self.assertEqual(code, status.OK, "Returns 200 OK")
         self.assertEqual(mock_save.call_count, 1, "One event is generated")
         self.assertIsInstance(mock_save.call_args[0][0], events.SetTitle,
                               "SetTitle is generated")

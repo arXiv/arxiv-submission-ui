@@ -4,7 +4,7 @@ from unittest import TestCase, mock
 from werkzeug import MultiDict
 from werkzeug.exceptions import InternalServerError, NotFound, BadRequest
 from wtforms import Form
-from arxiv import status
+from http import HTTPStatus as status
 import arxiv.submission as events
 from submit.controllers import classification
 
@@ -58,7 +58,7 @@ class TestClassification(TestCase):
         data, code, _ = classification.classification('GET', MultiDict(),
                                                       self.session,
                                                       submission_id)
-        self.assertEqual(code, status.HTTP_200_OK, "Returns 200 OK")
+        self.assertEqual(code, status.OK, "Returns 200 OK")
         self.assertIsInstance(data['form'], Form, "Data includes a form")
 
     @mock.patch(f'{classification.__name__}.ClassificationForm.Meta.csrf',
@@ -135,7 +135,7 @@ class TestClassification(TestCase):
         data, code, _ = classification.classification('POST', params,
                                                       self.session,
                                                       submission_id)
-        self.assertEqual(code, status.HTTP_200_OK, "Returns 200 OK")
+        self.assertEqual(code, status.OK, "Returns 200 OK")
 
         self.assertIsInstance(data['form'], Form, "Data includes a form")
 
@@ -187,7 +187,7 @@ class TestCrossList(TestCase):
         params = MultiDict()
         data, code, _ = classification.cross_list('GET', params, self.session,
                                                   submission_id)
-        self.assertEqual(code, status.HTTP_200_OK, "Returns 200 OK")
+        self.assertEqual(code, status.OK, "Returns 200 OK")
         self.assertIsInstance(data['form'], Form, "Data includes a form")
 
     @mock.patch(f'{classification.__name__}.ClassificationForm.Meta.csrf',
@@ -268,5 +268,5 @@ class TestCrossList(TestCase):
         params = MultiDict({'category': 'astro-ph.CO'})
         data, code, _ = classification.cross_list('POST', params, self.session,
                                                   submission_id)
-        self.assertEqual(code, status.HTTP_200_OK, "Returns 200 OK")
+        self.assertEqual(code, status.OK, "Returns 200 OK")
         self.assertIsInstance(data['form'], Form, "Data includes a form")

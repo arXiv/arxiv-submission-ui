@@ -13,7 +13,7 @@ from flask import url_for
 from wtforms import BooleanField
 from wtforms.validators import InputRequired
 
-from arxiv import status
+from http import HTTPStatus as status
 from arxiv.base import logging
 from arxiv.forms import csrf
 from arxiv.users.domain import Session
@@ -75,8 +75,8 @@ def verify(method: str, params: MultiDict, session: Session,
                 raise InternalServerError(response_data) from e
             response_data['submission'] = submission
 
-        return response_data, status.HTTP_303_SEE_OTHER, {}
-    return response_data, status.HTTP_200_OK, {}
+        return response_data, status.SEE_OTHER, {}
+    return response_data, status.OK, {}
 
 
 class VerifyUserForm(csrf.CSRFForm):

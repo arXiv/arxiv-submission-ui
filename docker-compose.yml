@@ -30,8 +30,22 @@ x-base-service:
     SESSION_COOKIE_SECURE: 0
     COMPILER_ENDPOINT: "http://compiler-api:8000/"
     FILE_MANAGMENT_SQLALCHEMY_DATABASE_URI: "mysql+mysqldb://foouser:foopass@filemanager-maria:3306/uploads?charset=utf8"
+    EMAIL_ENABLED: 1
+    SMTP_HOSTNAME: mailhog
+    SMTP_PORT: 1025
+    SMTP_SSL: 0
+    SMTP_USERNAME: ""
+    SMTP_PASSWORD: ""
 
 services:
+  mailhog:
+    image: mailhog/mailhog
+    container_name: mailhog
+    networks:
+      - arxiv-submission-ui
+    ports:
+      - "8025:8025"
+
   submission-ui-redis:
     image: redis
     container_name: submission-ui-redis
@@ -136,7 +150,7 @@ services:
 
   submission-worker:
     << : *base-service
-    image: arxiv/submission-worker:0.0
+    image: arxiv/submission-worker:0.0.2
     container_name: arxiv-submission-worker
     networks:
       - arxiv-submission-ui

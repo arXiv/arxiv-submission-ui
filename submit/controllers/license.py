@@ -12,7 +12,7 @@ from flask import url_for
 from wtforms.fields import RadioField
 from wtforms.validators import InputRequired
 
-from arxiv import status
+from http import HTTPStatus as status
 from arxiv.forms import csrf
 from arxiv.base import logging
 from arxiv.license import LICENSES
@@ -70,8 +70,8 @@ def license(method: str, params: MultiDict, session: Session,
             raise BadRequest(response_data)
 
     if params.get('action') in ['previous', 'save_exit', 'next']:
-        return response_data, status.HTTP_303_SEE_OTHER, {}
-    return response_data, status.HTTP_200_OK, {}
+        return response_data, status.SEE_OTHER, {}
+    return response_data, status.OK, {}
 
 
 class LicenseForm(csrf.CSRFForm):

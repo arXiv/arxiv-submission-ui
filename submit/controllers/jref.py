@@ -10,7 +10,7 @@ from wtforms.fields import TextField, TextAreaField, Field, BooleanField
 from wtforms.validators import InputRequired, ValidationError, optional, \
     DataRequired
 
-from arxiv import status
+from http import HTTPStatus as status
 from arxiv.base import logging, alerts
 from arxiv.forms import csrf
 from arxiv.users.domain import Session
@@ -67,7 +67,7 @@ def jref(method: str, params: MultiDict, session: Session,
                                     "<a href='https://arxiv.org/help/jref'>"
                                     "the arXiv help pages</a> for details."))
         status_url = url_for('ui.create_submission')
-        return {}, status.HTTP_303_SEE_OTHER, {'Location': status_url}
+        return {}, status.SEE_OTHER, {'Location': status_url}
 
     # The form should be prepopulated based on the current state of the
     # submission.
@@ -98,7 +98,7 @@ def jref(method: str, params: MultiDict, session: Session,
         if not form.confirmed.data:
             response_data['require_confirmation'] = True
             logger.debug('Not confirmed')
-            return response_data, status.HTTP_200_OK, {}
+            return response_data, status.OK, {}
 
         commands, valid = _generate_commands(form, submission, creator, client)
 
@@ -119,9 +119,9 @@ def jref(method: str, params: MultiDict, session: Session,
             # Success! Send user back to the submission page.
             alerts.flash_success("Journal reference updated")
             status_url = url_for('ui.create_submission')
-            return {}, status.HTTP_303_SEE_OTHER, {'Location': status_url}
+            return {}, status.SEE_OTHER, {'Location': status_url}
     logger.debug('Nothing to do, return 200')
-    return response_data, status.HTTP_200_OK, {}
+    return response_data, status.OK, {}
 
 
 def _generate_commands(form: JREFForm, submission: Submission, creator: User,

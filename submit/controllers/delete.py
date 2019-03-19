@@ -5,7 +5,7 @@ from wtforms import BooleanField, validators
 from werkzeug import MultiDict
 from werkzeug.exceptions import BadRequest, InternalServerError
 
-from arxiv import status
+from http import HTTPStatus as status
 from arxiv.base import logging, alerts
 from arxiv.submission import Rollback, save
 from arxiv.forms import csrf
@@ -42,7 +42,7 @@ def delete(method: str, params: MultiDict, session: Session,
     if method == 'GET':
         form = DeleteForm()
         response_data.update({'form': form})
-        return response_data, status.HTTP_200_OK, {}
+        return response_data, status.OK, {}
     elif method == 'POST':
         form = DeleteForm(params)
         response_data.update({'form': form})
@@ -58,6 +58,6 @@ def delete(method: str, params: MultiDict, session: Session,
                 alerts.flash_failure("Whoops!")
                 raise InternalServerError(response_data) from e
             redirect = url_for('ui.create_submission')
-            return {}, status.HTTP_303_SEE_OTHER, {'Location': redirect}
+            return {}, status.SEE_OTHER, {'Location': redirect}
         response_data.update({'form': form})
         raise BadRequest(response_data)

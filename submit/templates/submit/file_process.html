@@ -145,7 +145,7 @@
         </div>
         <div class="level-right">
           <a class="button" href="{{ url_for('ui.compilation_log', submission_id=submission_id) }}" target="_blank">
-            View raw log
+            <span>View raw log</span> <span class="icon"><i class="fa fa-external-link"></i></span>
           </a>
         </div>
       </div>
@@ -184,22 +184,14 @@
   </div>
 </div>
 {% else %}
-<div class="box">
-  <p>PDF submission processing completed.</p>
-</div>
-<div class="message is-success">
-  <div class="message-header">
-    <p><span class="icon"><i class="fa fa-check-circle"></i></span>PDF Processing Successful</p></div>
-  <div class="message-body">
-    <p class="has-text-weight-bold">Be sure to check the compiled preview carefully for any undesired artifacts or errors.</p>
-    <p>Reference numbers and captions are important to check.</p>
-    <p>If you need to make corrections, return to the previous step and adjust your files, then reprocess your submission.</p>
-
-    <p class="has-text-centered">
-      <a class="button is-link" href="{{ url_for('ui.file_preview', submission_id=submission_id) }}" target="_blank" title="PDF preview opens in a new tab">
-        View PDF <span class="icon"><i class="fa fa-external-link"></i></span>
-      </a>
-    </p>
+<div class="columns">
+  <div class="column is-one-third-desktop">
+    <div class="message is-success">
+      <div class="message-body">
+        <p class="has-text-weight-bold"><span class="icon"><i class="fa fa-check-circle"></i></span>PDF Processing Completed</p>
+        <p class="has-text-weight-bold">Before you submit, be sure to check your PDF carefully.</p>
+      </div>
+    </div>
   </div>
 </div>
 {% endif %}

@@ -24,7 +24,7 @@
           {{ form.compiler(**{"aria-labelledby": "compiler"})|safe }}
         </div> -->
 
-        <button class="button is-link" type="submit" value="process" {% if status == "failed" %}disabled=true{% endif %}>Process my submission files</button>
+        <button class="button is-link" type="submit" value="process" {% if status == "failed" %}disabled=true{% endif %}>Process submission files</button>
       </div>
     </div>
     {% endif %}
@@ -54,6 +54,7 @@
             <li>correct any missing file problems</li>
             <li>edit your files if needed</li>
             <li>re-upload any corrected files</li>
+            <li>process your upload after corrections</li>
           </ul>
           <p class="has-text-centered"><a class="button is-link" href="{{ url_for('ui.file_upload', submission_id=submission_id) }}">Go back to Upload Files</a></p>
           <p class="has-text-centered"><a class="button" href="#help">Help: Common TeX Errors</a></p>
@@ -66,9 +67,10 @@
           <p><span class="icon"><i class="fa fa-exclamation-triangle"></i></span>Completed With Warnings</p>
         </div>
         <div class="message-body">
+          <p>Warnings may cause your submission to display incorrectly or be delayed in announcement.</p>
           <ul>
-            <li>Be sure to check the compiled preview carefully for any undesired artifacts or errors.</li>
-            <li>Check the compiler log for warnings and errors.</l>
+            <li>Be sure to <span class="has-text-weight-bold">check the compiled preview carefully</span> for any undesired artifacts or errors - especially references, figures, and captions.</li>
+            <li><span class="has-text-weight-bold">Check the compiler log</span> for warnings and errors.</li>
           </ul>
         </div>
       </div>
@@ -78,12 +80,13 @@
         <div class="message-header">
           <p><span class="icon"><i class="fa fa-check-circle"></i></span>Processing Successful</p></div>
         <div class="message-body">
-          <p>Be sure to check the compiled preview carefully for any undesired artifacts or errors.</p>
+          <p class="has-text-weight-bold">Be sure to check the compiled preview carefully for any undesired artifacts or errors.</p>
+          <p>Reference numbers and captions are important to check.</p>
           <p>If you need to make corrections, return to the previous step and adjust your files, then reprocess your submission.</p>
 
           <p class="has-text-centered">
-            <a class="button is-link" href="{{ url_for('ui.file_preview', submission_id=submission_id) }}" target="_blank">
-              View PDF
+            <a class="button is-link" href="{{ url_for('ui.file_preview', submission_id=submission_id) }}" target="_blank" title="PDF preview opens in a new tab">
+              View PDF <span class="icon"><i class="fa fa-external-link"></i></span>
             </a>
           </p>
         </div>
@@ -182,9 +185,22 @@
 </div>
 {% else %}
 <div class="box">
-  <!-- Liz: this is the language on the legacy interface for PDF-only
-       submissions. Not super informative, but... -->
-  Source has already been processed.
+  <p>PDF submission processing completed.</p>
+</div>
+<div class="message is-success">
+  <div class="message-header">
+    <p><span class="icon"><i class="fa fa-check-circle"></i></span>PDF Processing Successful</p></div>
+  <div class="message-body">
+    <p class="has-text-weight-bold">Be sure to check the compiled preview carefully for any undesired artifacts or errors.</p>
+    <p>Reference numbers and captions are important to check.</p>
+    <p>If you need to make corrections, return to the previous step and adjust your files, then reprocess your submission.</p>
+
+    <p class="has-text-centered">
+      <a class="button is-link" href="{{ url_for('ui.file_preview', submission_id=submission_id) }}" target="_blank" title="PDF preview opens in a new tab">
+        View PDF <span class="icon"><i class="fa fa-external-link"></i></span>
+      </a>
+    </p>
+  </div>
 </div>
 {% endif %}
 

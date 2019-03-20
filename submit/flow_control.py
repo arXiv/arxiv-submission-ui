@@ -9,10 +9,10 @@ from werkzeug.exceptions import BadRequest
 from http import HTTPStatus as status
 from arxiv.base import alerts, logging
 from arxiv.base.globals import get_application_global
-from ..domain.workflow import Stage, Workflow, SubmissionWorkflow, \
+from .domain.workflow import Stage, Workflow, SubmissionWorkflow, \
     ReplacementWorkflow
-from ..domain import Submission
-from ..util import load_submission
+from .domain import Submission
+from .util import load_submission
 
 logger = logging.getLogger(__name__)
 
@@ -25,26 +25,25 @@ def get_workflow(submission: Submission) -> Workflow:
     return SubmissionWorkflow(submission, session)
 
 
-def to_previous(workflow: Workflow, stage: Stage, ident: str) -> Response:
-    previous_stage = workflow.previous_stage(stage)
-    logger.debug('Redirecting to previous stage: %s', previous_stage)
-    loc = url_for(f'ui.{previous_stage.endpoint}', submission_id=ident)
+def to_stage(workflow: Workflow, stage: Stage, ident: str) -> Response:
+    loc = url_for(f'ui.{stage.endpoint}', submission_id=ident)
     return redirect(loc, code=status.SEE_OTHER)
+
+
+def to_previous(workflow: Workflow, stage: Stage, ident: str) -> Response:
+    return to_stage(workflow, workflow.previous_stage(stage), ident)
 
 
 def to_next(workflow: Workflow, stage: Stage, ident: str) -> Response:
-    next_stage = workflow.next_stage(stage)
-    logger.debug('Redirecting to next stage: %s', next_stage)
-    loc = url_for(f'ui.{next_stage.endpoint}', submission_id=ident)
-    return redirect(loc, code=status.SEE_OTHER)
+    return to_stage(workflow, workflow.next_stage(stage), ident)
 
 
-def to_current(workflow: Workflow, stage: Stage, ident: str) -> Response:
+def to_current(workflow: Workflow, stage: Stage, ident: str,
+               flash: bool = True) -> Response:
     next_stage = workflow.current_stage
-    alerts.flash_warning(f'Please {next_stage.label} before proceeding.')
-    logger.debug('Redirecting to current stage: %s', next_stage)
-    loc = url_for(f'ui.{next_stage.endpoint}', submission_id=ident)
-    return redirect(loc, code=status.SEE_OTHER)
+    if flash:
+        alerts.flash_warning(f'Please {next_stage.label} before proceeding.')
+    return to_stage(workflow, next_stage, ident)
 
 
 def flow_control(this_stage: Stage, exit: str = EXIT) -> Callable:
@@ -62,12 +61,19 @@ def flow_control(this_stage: Stage, exit: str = EXIT) -> Callable:
             submission, _ = load_submission(submission_id)
             workflow = get_workflow(submission)
 
+            if workflow.complete and not this_stage == workflow.confirmation:
+                return to_stage(workflow, workflow.confirmation, submission_id)
+
             try:
                 if not workflow.can_proceed_to(this_stage):
                     return to_current(workflow, this_stage, submission_id)
 
             except ValueError:
                 raise BadRequest('Request not allowed for this submission')
+
+            # Mark the previous state as complete.
+            if workflow.previous_stage(this_stage):
+                workflow.mark_complete(workflow.previous_stage(this_stage))
 
             # If the user has proceeded past an optional stage, consider it
             # to be completed.
@@ -84,10 +90,12 @@ def flow_control(this_stage: Stage, exit: str = EXIT) -> Callable:
                 if action == PREVIOUS:
                     return to_previous(workflow, this_stage, submission_id)
                 raise
+            if action == PREVIOUS and \
+                    response.status_code == status.BAD_REQUEST:
+                return to_previous(workflow, this_stage, submission_id)
 
             # Intercept redirection and route based on workflow.
             if response.status_code == status.SEE_OTHER:
-                workflow.mark_complete(this_stage)
                 if action == NEXT:
                     return to_next(workflow, this_stage, submission_id)
                 elif action == PREVIOUS:

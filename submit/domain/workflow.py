@@ -13,6 +13,9 @@ class Stage(type):     # type: ignore
 class BaseStage(metaclass=Stage):
     """Base class for workflow stages."""
 
+    always_check = False
+    """If False, the result will be cached when complete."""
+
 
 def stage_from_endpoint(endpoint: str) -> Stage:
     """Get the :class:`.Stage` for an endpoint."""
@@ -126,16 +129,22 @@ class Process(BaseStage):
     label = 'process your submission files'
     title = "File process"
     display = "Process Files"
+    always_check = True
+    """We need to re-process every time the source is updated."""
 
-    # TODO: this needs a bit more work, since the compilation may have failed
-    # or may not be complete for the current state of the upload workspace.
     @staticmethod
     def complete(submission: Submission) -> bool:
         """Determine whether the submitter has compiled their upload."""
-        return len(submission.compilations) > 0 \
-            or submission.source_content \
-            and submission.source_content.source_format \
-            is SubmissionContent.Format.PDF
+        # TODO: this might be nice as a property on the submission itself.
+        successful = [
+            compilation for compilation in submission.compilations
+            if compilation.status == compilation.Status.SUCCEEDED
+            and compilation.checksum == submission.source_content.checksum
+        ]
+        return len(successful) > 0 \
+            or (submission.source_content
+                and submission.source_content.source_format
+                is SubmissionContent.Format.PDF)
 
 
 class Metadata(BaseStage):
@@ -203,6 +212,7 @@ class Workflow:
 
     ORDER = []
     REQUIRED = []
+    CONFIRMATION = None
 
     def __init__(self, submission: Submission,
                  session: MutableMapping) -> None:
@@ -220,6 +230,16 @@ class Workflow:
             if prior_stage == stage:
                 return
             yield prior_stage
+
+    @property
+    def complete(self) -> bool:
+        """Determine whether this workflow is complete."""
+        return self.submission.finalized
+
+    @property
+    def confirmation(self) -> Stage:
+        """Get the confirmation :class:`.Stage` for this workflow."""
+        return self.CONFIRMATION
 
     def is_required(self, stage: Stage) -> bool:
         """Check whether a stage is required."""
@@ -247,15 +267,18 @@ class Workflow:
     def complete_or_optional(self, stage: Stage) -> bool:
         return self.is_complete(stage) or not self.is_required(stage)
 
+    def _key(self) -> str:
+        return f'{self.submission.submission_id}::{self.__class__.__name__}'
+
     def _get_states(self) -> dict:
-        if str(self.submission.submission_id) in self.session:
-            states = self.session[str(self.submission.submission_id)]
+        if self._key() in self.session:
+            states = self.session[self._key()]
         else:
             states = {}
         return states
 
     def _set_states(self, states: dict) -> None:
-        self.session[str(self.submission.submission_id)] = states
+        self.session[self._key()] = states
 
     @property
     def current_states(self) -> Dict[str, bool]:
@@ -268,7 +291,9 @@ class Workflow:
             # If the status is not set in the client session, or if the client
             # session shows that the state is incomplete, check the submission
             # itself for a fresh look.
-            if stage.endpoint not in states or not states[stage.endpoint]:
+            if stage.endpoint not in states \
+                    or not states[stage.endpoint] \
+                    or stage.always_check:
                 states[stage.endpoint] = stage.complete(self.submission)
 
             # Mark all previous stages as complete if this stage is complete.
@@ -326,6 +351,7 @@ class SubmissionWorkflow(Workflow):
         FinalPreview,
         Confirm
     ]
+    CONFIRMATION = Confirm
 
 
 class ReplacementWorkflow(Workflow):

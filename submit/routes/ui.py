@@ -16,7 +16,7 @@ from arxiv.base import logging
 
 from .auth import is_owner
 from ..domain import workflow, Submission
-from .util import flow_control, get_workflow
+from ..flow_control import flow_control, get_workflow
 from .. import util
 
 logger = logging.getLogger(__name__)
@@ -66,7 +66,15 @@ def inject_stage() -> Dict[str, Optional[workflow.Stage]]:
         stage = workflow.stage_from_endpoint(endpoint)
     except ValueError:
         stage = None
-    return {'this_stage': stage}
+
+    def get_current_stage_for_submission(submission: Submission) -> str:
+        """Get the endpoint of the current step for a submission."""
+        return get_workflow(submission).current_stage.endpoint
+
+    return {
+        'this_stage': stage,
+        'get_current_stage_for_submission': get_current_stage_for_submission
+    }
 
 
 @ui.context_processor
@@ -105,6 +113,8 @@ def handle(controller: Callable, template: str, title: str,
     :class:`.Response`
 
     """
+    logger.debug('Handle call to controller %s with template %s, title %s,'
+                 ' and ID %s', controller, template, title, submission_id)
     if request.method == 'GET' and get_params:
         request_data = MultiDict(request.args.items(multi=True))
     else:
@@ -138,20 +148,20 @@ def create_submission():
 
 
 @ui.route(path('delete'), methods=["GET", "POST"])
-@auth.decorators.scoped(auth.scopes.DELETE_SUBMISSION)
+@auth.decorators.scoped(auth.scopes.DELETE_SUBMISSION, authorizer=is_owner)
 def delete_submission(submission_id: int):
     """Delete, or roll a submission back to the last published state."""
     return handle(controllers.delete.delete,
                   'submit/confirm_delete_submission.html',
-                  'Delete submission or replacement')
+                  'Delete submission or replacement', submission_id)
 
 
 @ui.route(path('replace'), methods=["POST"])
-@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION)
+@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION, authorizer=is_owner)
 def create_replacement(submission_id: int):
     """Create a replacement submission."""
     return handle(controllers.create.replace, 'submit/replace.html',
-                  'Create a new version (replacement)')
+                  'Create a new version (replacement)', submission_id)
 
 
 @ui.route(path(), methods=["GET"])

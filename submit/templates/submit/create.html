@@ -1,72 +1,140 @@
 {% extends "submit/base.html" %}
 
+{% block title_preamble %}{% endblock %}
+{% block title %}Manage Submissions{% endblock %}
+
 {% block within_content %}
-<div class="columns">
-  <div class="column is-one-third">
-    <p class="help-text">Click on the button below to start a new submission.</p>
-
-    <form class="form" method="POST" action="{{ url_for('ui.create_submission') }}">
-      {{ form.csrf_token }}
-      <button name="new" class="button" value="new" aria-label="New submission">New submission</button>
-    </form>
+<section class="columns is-marginless section">
+  <div class="column is-narrow">
+    <div class="box" style="padding: 2rem;">
+      <form class="form" method="POST" action="{{ url_for('ui.create_submission') }}">
+        {{ form.csrf_token }}
+        <button name="new" class="button is-large is-link" value="new" aria-label="Create New Submission" style="margin-bottom: 1.5rem;">Start a New Submission</button>
+      </form>
+      <h3>Helpful Tips</h3>
+      <ul style="list-style: none;">
+        <li><a href="#">Pre-Submission Checklist</a></li>
+        <li><a href="#">List of Included TeX Packages</a></li>
+      </ul>
+    </div>
   </div>
-  <div class="column is-two-thirds">
-    {% for submission in user_submissions %}
-    <div class="box">
+  <div class="column">
+      <p class="has-text-right help">
+        <a href="#">Submission 0.1.4 released 2019-05-04 </a>
+        <button class="button is-small" id="feedback-button" style="vertical-align: baseline;">Feedback?</button>
+      </p>
+        <div class="message is-link beta-before" style="position: relative; margin-left: 3em;">
+          <div class="message-body">
+            <p class="subtitle" style="margin-left: 1.25em;">Thank you for using our new submission system!</p>
+            <p>This interface is a beta release. If you encounter unexpected behavior or problems,
+              please <a href="{{ url_for('contact') }}">contact us</a>.</p>
+          </div>
+        </div> <!-- end message -->
+  </div>
+</section>
 
-      <div class="level">
-        <div class="level-left">
-          Submission {{ submission.submission_id }}; created {{ submission.created|timesince }}
-        </div>
-        {{ submission.status}}
+<section class="section">
+  <div class="level is-marginless">
+      <div class="level-left">
+        <h2>Submissions in Progress</h2>
+      </div>
+      <div class="level-right is-marginless">
+        <p class="help">Only submissions started with this interface are listed.
+        <a href="#">View classic list</a></p>
+      </div>
+  </div>
+  <div class="box">
+    {% if user_submissions|selectattr('active')|list|length > 0 %}
+        <table class="table is-fullwidth is-hoverable">
+          <tr>
+            <th scope="col">Status</th>
+            <th scope="col">Identifier</th>
+            <th scope="col">Title</th>
+            <th scope="col">Created</th>
+            <th scope="col">Actions</th>
+          </tr>
+        {% for submission in user_submissions %}
+          {% if not submission.published %}
+            <tr>
+              <td>{{ submission.status }}</td>
+              <td>submit/{{ submission.submission_id }}</td>
+              <td>{% if submission.metadata.title %}
+                  {{ submission.metadata.title }}
+                  {% else %}
+                  Submission {{ submission.submission_id }}
+                  {% endif %}</td>
+              <td>{{ submission.created|timesince }}</td>
+              <td>
+                {% if submission.status=='submitted' and not submission.has_active_requests %}
+                  <a class="button is-link is-outlined is-small is-short">
+                  <span class="icon"><i class="fa fa-undo"></i> </span>
+                  <span>Unsubmit</span></a>
+                {% else %}
+                  <a class="button is-link is-outlined is-small is-short" href="{{ url_for('ui.' + get_current_stage_for_submission(submission), submission_id=submission.submission_id) }}">
+                  <span class="icon"><i class="fa fa-pencil"></i> </span>
+                  <span>Edit</span></a>
+                {% endif %}
+                <a href="{{ url_for('ui.delete_submission', submission_id=submission.submission_id) }}">
+                  <span class="icon">
+                    <i class="fa fa-trash" aria-label="Delete"><span class="sr-only">Delete this submission</span></i>
+                  </span>
+                </a>
+              </td>
+            </tr>
+          {% endif %}
+        {% endfor %}
+        </table>
+      {% else %}
+        <p>No submissions currently in progress</p>
+      {% endif %}
+  </div>
+</section>
+
+<section class="section">
+  <h2>Announced Articles</h2>
+  <div class="box">
+    {% if user_submissions|selectattr('published')|list|length > 0 %}
+    <table class="table is-fullwidth is-hoverable">
+      <tr>
+        <th scope="col">Identifier</th>
+        <th scope="col">Primary Classification</th>
+        <th scope="col">Title</th>
+        <th scope="col">Actions</th>
+      </tr>
+      {% for submission in user_submissions %}
         {% if submission.published %}
-        <div class="level-right">
+      <tr>
+        <td>{{ submission.arxiv_id }}</td>
+        <td><span class="tag is-link">{{ submission.primary_classification.category }}</span></td>
+        <td>{{ submission.metadata.title }}</td>
+        <td>
           {% if submission.has_active_requests %}
             {% for request in submission.active_user_requests %}
             <div class="tags has-addons">
-              <span class="tag is-dark">{{ request.NAME }}</span>
+              <span class="tag">{{ request.NAME }}</span>
               <span class="tag is-info">{{ request.status }}</span>
             </div>
             {% endfor %}
           {% else %}
           <form class="form" method="POST" action="{{ url_for('ui.create_replacement', submission_id=submission.submission_id) }}">
             {{ form.csrf_token }}
-            <button name="new" class="button is-link is-small" value="new" aria-label="New version (replacement)">Replace</button>
-            <a href="{{ url_for('ui.jref', submission_id=submission.submission_id) }}" class="button is-link is-small" aria-label="Update journal reference">Add Journal Reference</a>
-            <a href="{{ url_for('ui.withdraw', submission_id=submission.submission_id) }}" class="button is-link is-small" aria-label="Request withdrawal">Withdraw</a>
-            <a href="{{ url_for('ui.request_cross', submission_id=submission.submission_id) }}" class="button is-link is-small" aria-label="Request cross-list">Add cross-list</a>
+            <div class="buttons is-multiline">
+              <button name="new" class="button is-link is-outlined is-small" value="new" aria-label="New version (replacement)">Replace</button>
+              <a href="{{ url_for('ui.jref', submission_id=submission.submission_id) }}" class="button is-link is-outlined is-small" aria-label="Update journal reference">Add Journal Reference</a>
+              <a href="{{ url_for('ui.withdraw', submission_id=submission.submission_id) }}" class="button is-link is-outlined is-small" aria-label="Request withdrawal">Withdraw</a>
+              <a href="{{ url_for('ui.request_cross', submission_id=submission.submission_id) }}" class="button is-link is-outlined is-small" aria-label="Request cross-list">Add cross-list</a>
+            </div>
           </form>
           {% endif %}
-
-        </div>
-        {% endif %}
-      </div>
-      {% if not submission.published and not submission.has_active_requests %}
-      <li>
-        <a href="{{ url_for('ui.' + get_workflow(submission).current_stage.endpoint, submission_id=submission.submission_id) }}">Version {{ submission.version }}; updated {{ submission.updated|timesince }}</a>. <span class="tag">{{ submission.status }}</span>
-        <a href="{{ url_for('ui.delete_submission', submission_id=submission.submission_id) }}">
-          <span class="icon">
-            <i class="fa fa-trash" aria-label="Delete"><span class="sr-only">Delete this submission</span></i>
-          </span>
-        </a>
-      </li>
+        </td>
+      </tr>
       {% endif %}
-      {% for version in submission.versions %}
-        <li>
-          arXiv:{{ version.arxiv_id }}v{{ version.version }}; published {{ version.updated|timesince }}. <span class="tag">{{ version.status }}</span>
-          {% if version.user_requests %}
-            <ul style="margin-top: 0px;">
-              {% for request_id, request in version.user_requests.items() %}
-                <li>{{ request.NAME }} requested {{ request.created|timesince }}, {{ request.status }} {{ request.updated|timesince }}</li>
-              {% endfor %}
-            </ul>
-          {% endif %}
-        </li>
-
       {% endfor %}
-    </div>
-    {% endfor %}
+    </table>
+    {% else %}
+      <p>No announced articles</p>
+    {% endif %}
   </div>
-</div>
+</section>
 
 {% endblock %}

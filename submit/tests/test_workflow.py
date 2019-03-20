@@ -69,7 +69,6 @@ class TestSubmissionWorkflow(TestCase):
         response = self.client.get('/', headers=self.headers)
         self.assertEqual(response.status_code, status.OK)
         self.assertEqual(response.content_type, 'text/html; charset=utf-8')
-        self.assertIn(b'Submit an Article', response.data)
         token = self._parse_csrf_token(response)
 
         # Create a submission.
@@ -228,7 +227,6 @@ class TestEndorsementMessaging(TestCase):
         response = self.client.get('/', headers=self.headers)
         self.assertEqual(response.status_code, status.OK)
         self.assertEqual(response.content_type, 'text/html; charset=utf-8')
-        self.assertIn(b'Submit an Article', response.data)
         token = self._parse_csrf_token(response)
 
         # Create a submission.
@@ -266,7 +264,6 @@ class TestEndorsementMessaging(TestCase):
         response = self.client.get('/', headers=self.headers)
         self.assertEqual(response.status_code, status.OK)
         self.assertEqual(response.content_type, 'text/html; charset=utf-8')
-        self.assertIn(b'Submit an Article', response.data)
         token = self._parse_csrf_token(response)
 
         # Create a submission.
@@ -304,7 +301,6 @@ class TestEndorsementMessaging(TestCase):
         response = self.client.get('/', headers=self.headers)
         self.assertEqual(response.status_code, status.OK)
         self.assertEqual(response.content_type, 'text/html; charset=utf-8')
-        self.assertIn(b'Submit an Article', response.data)
         token = self._parse_csrf_token(response)
 
         # Create a submission.
@@ -341,7 +337,6 @@ class TestEndorsementMessaging(TestCase):
         response = self.client.get('/', headers=self.headers)
         self.assertEqual(response.status_code, status.OK)
         self.assertEqual(response.content_type, 'text/html; charset=utf-8')
-        self.assertIn(b'Submit an Article', response.data)
         token = self._parse_csrf_token(response)
 
         # Create a submission.

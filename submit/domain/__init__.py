@@ -106,6 +106,9 @@ class Upload(NamedTuple):
     source_format: SubmissionContent.Format = SubmissionContent.Format.UNKNOWN
     checksum: Optional[str] = None
     size: Optional[int] = None
+    """Size in bytes of the uncompressed upload workspace."""
+    compressed_size: Optional[int] = None
+    """Size in bytes of the compressed upload package."""
     files: List[FileStatus] = []
     errors: List[FileError] = []
 

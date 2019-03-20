@@ -82,6 +82,7 @@ class FileManager(service.HTTPIntegration):
                 ) for fdata in data['files']
             ],
             errors=non_file_errors,
+            compressed_size=data['upload_compressed_size'],
             size=data['upload_total_size'],
             checksum=data['checksum'],
             source_format=SubmissionContent.Format(data['source_format'])

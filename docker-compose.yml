@@ -82,7 +82,7 @@ services:
 
   filemanager:
     << : *base-service
-    image: arxiv/filemanager:0.0
+    image: arxiv/filemanager:0.0.2
     # You can uncomment these lines to build this from a local
     # repo. You may need to update `context`.
     # build:

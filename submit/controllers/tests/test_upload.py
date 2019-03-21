@@ -56,7 +56,7 @@ class TestUpload(TestCase):
         """GET request for submission with no upload package."""
         submission_id = 2
         subm = mock.MagicMock(submission_id=submission_id, source_content=None,
-                              finalized=False, published=False, arxiv_id=None,
+                              finalized=False, announced=False, arxiv_id=None,
                               version=1)
         mock_load.return_value = (subm, [])
         params = MultiDict({})
@@ -84,7 +84,7 @@ class TestUpload(TestCase):
                     compressed_size=1000,
                     source_format=SubmissionContent.Format.TEX
                 ),
-                finalized=False, published=False, arxiv_id=None, version=1
+                finalized=False, announced=False, arxiv_id=None, version=1
             ), []
         )
         mock_filemanager.get_upload_status.return_value = (
@@ -141,7 +141,7 @@ class TestUpload(TestCase):
                 compressed_size=1000,
                 source_format=SubmissionContent.Format.TEX
             ),
-            finalized=False, published=False, arxiv_id=None, version=1
+            finalized=False, announced=False, arxiv_id=None, version=1
         )
         mock_load.return_value = (mock_submission, [])
         mock_save.return_value = (mock_submission, [])
@@ -228,7 +228,7 @@ class TestDelete(TestCase):
                     compressed_size=1000,
                     source_format=SubmissionContent.Format.TEX
                 ),
-                finalized=False, published=False, arxiv_id=None, version=1
+                finalized=False, announced=False, arxiv_id=None, version=1
             ), []
         )
         file_path = 'anc/foo.jpeg'
@@ -256,7 +256,7 @@ class TestDelete(TestCase):
                     compressed_size=1000,
                     source_format=SubmissionContent.Format.TEX
                 ),
-                finalized=False, published=False, arxiv_id=None, version=1
+                finalized=False, announced=False, arxiv_id=None, version=1
             ), []
         )
         file_path = 'anc/foo.jpeg'
@@ -290,7 +290,7 @@ class TestDelete(TestCase):
                     compressed_size=1000,
                     source_format=SubmissionContent.Format.TEX
                 ),
-                finalized=False, published=False, arxiv_id=None, version=1
+                finalized=False, announced=False, arxiv_id=None, version=1
             ), []
         )
         mock_save.return_value = (
@@ -303,7 +303,7 @@ class TestDelete(TestCase):
                     compressed_size=1000,
                     source_format=SubmissionContent.Format.TEX
                 ),
-                finalized=False, published=False, arxiv_id=None, version=1
+                finalized=False, announced=False, arxiv_id=None, version=1
             ), []
         )
         file_path = 'anc/foo.jpeg'

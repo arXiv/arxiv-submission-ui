@@ -76,14 +76,13 @@ def tidy_filesize(size: int) -> str:
 
 
 # TODO: remove me!
-def publish_submission(submission_id: int) -> None:
+def announce_submission(submission_id: int) -> None:
     """WARNING WARNING WARNING this is for testing purposes only."""
     dbss = events.services.classic._get_db_submission_rows(submission_id)
-    i = events.services.classic._get_head_idx(dbss)
-    head = dbss[i]
+    head = sorted([o for o in dbss if o.is_new_version()], key=lambda o: o.submission_id)[-1]
     session = events.services.classic.current_session()
-    if not head.is_published():
-        head.status = events.services.classic.models.Submission.PUBLISHED
+    if not head.is_announced():
+        head.status = events.services.classic.models.Submission.ANNOUNCED
     if head.document is None:
         paper_id = datetime.now().strftime('%s')[-4:] \
             + "." \
@@ -102,7 +101,7 @@ def place_on_hold(submission_id: int) -> None:
     i = events.services.classic._get_head_idx(dbss)
     head = dbss[i]
     session = events.services.classic.current_session()
-    if head.is_published() or head.is_on_hold():
+    if head.is_announced() or head.is_on_hold():
         return
     head.status = events.services.classic.models.Submission.ON_HOLD
     session.add(head)
@@ -116,7 +115,7 @@ def apply_cross(submission_id: int) -> None:
     i = events.services.classic._get_head_idx(dbss)
     for dbs in dbss[:i]:
         if dbs.is_crosslist():
-            dbs.status = events.services.classic.models.Submission.PUBLISHED
+            dbs.status = events.services.classic.models.Submission.announced
             session.add(dbs)
             session.commit()
 
@@ -140,7 +139,7 @@ def apply_withdrawal(submission_id: int) -> None:
     i = events.services.classic._get_head_idx(dbss)
     for dbs in dbss[:i]:
         if dbs.is_withdrawal():
-            dbs.status = events.services.classic.models.Submission.PUBLISHED
+            dbs.status = events.services.classic.models.Submission.announced
             session.add(dbs)
             session.commit()
 

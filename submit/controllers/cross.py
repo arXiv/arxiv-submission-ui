@@ -129,10 +129,10 @@ def request_cross(method: str, params: MultiDict, session: Session,
     # Will raise NotFound if there is no such submission.
     submission, submission_events = load_submission(submission_id)
 
-    # The submission must be published for this to be a cross-list request.
-    if not submission.published:
+    # The submission must be announced for this to be a cross-list request.
+    if not submission.announced:
         alerts.flash_failure(
-            Markup("Submission must first be published. See <a"
+            Markup("Submission must first be announced. See <a"
                    " href='https://arxiv.org/help/cross'>the arXiv help"
                    " pages</a> for details."))
         status_url = url_for('ui.create_submission')
@@ -161,7 +161,7 @@ def request_cross(method: str, params: MultiDict, session: Session,
     if method == 'POST':
         if not form.validate():
             raise BadRequest(response_data)
-            
+
         if form.confirmed.data:     # Stop adding new categories, and submit.
             response_data['form'].operation.data = CrossListForm.ADD
             response_data['require_confirmation'] = True

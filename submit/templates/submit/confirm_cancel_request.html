@@ -10,7 +10,7 @@
 <h2>{{ submission.metadata.title }}</h2>
 
 
-<form method="POST" action="{{ url_for('ui.cancel_request', submission_id=submission_id, request_type=user_request.NAME.lower()) }}">
+<form method="POST" action="{{ url_for('ui.cancel_request', submission_id=submission_id, request_id=user_request.request_id) }}">
   {{ form.csrf_token }}
   <div class="columns">
     <div class="column is-half is-offset-one-quarter">

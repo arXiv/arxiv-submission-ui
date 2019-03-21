@@ -13,7 +13,7 @@
 
 {% block content %}
   <h1 class="title">Withdraw article</h1>
-
+  {{ submission.user_requests }}
   {% if require_confirmation and not confirmed %}
   <div class="notification is-info">
     <p>This preview shows the abstract page as it will be updated. Please
@@ -90,7 +90,7 @@
               <p>
                 Articles that have been announced and made public cannot be
                 completely removed. However, you may submit a withdrawal
-                notification for your article. Previously published versions of this article will still be publicly available.
+                notification for your article. Previously announced versions of this article will still be publicly available.
               </p>
             </div>
           {% endif %}

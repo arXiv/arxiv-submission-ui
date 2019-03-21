@@ -75,34 +75,36 @@ def delete(method: str, params: MultiDict, session: Session,
 
 
 def cancel_request(method: str, params: MultiDict, session: Session,
-                   submission_id: int, request_type: str,
+                   submission_id: int, request_id: str,
                    **kwargs) -> Response:
     submission, submission_events = load_submission(submission_id)
 
-    if request_type == WithdrawalRequest.NAME.lower():
-        request_klass = WithdrawalRequest
-    elif request_type == CrossListClassificationRequest.NAME.lower():
-        request_klass = CrossListClassificationRequest
+    # if request_type == WithdrawalRequest.NAME.lower():
+    #     request_klass = WithdrawalRequest
+    # elif request_type == CrossListClassificationRequest.NAME.lower():
+    #     request_klass = CrossListClassificationRequest
+    if request_id in submission.user_requests:
+        user_request = submission.user_requests[request_id]
     else:
         raise NotFound('No such request')
 
-    # Get the most recent user request of this type.
-    this_request: Optional[UserRequest] = None
-    for user_request in submission.active_user_requests[::-1]:
-        if isinstance(user_request, request_klass):
-            this_request = user_request
-            break
-    if this_request is None:
-        raise NotFound('No such request')
+    # # Get the most recent user request of this type.
+    # this_request: Optional[UserRequest] = None
+    # for user_request in submission.active_user_requests[::-1]:
+    #     if isinstance(user_request, request_klass):
+    #         this_request = user_request
+    #         break
+    # if this_request is None:
+    #     raise NotFound('No such request')
 
-    if not this_request.is_pending():
-        raise BadRequest(f'Request is already {this_request.status}')
+    if not user_request.is_pending():
+        raise BadRequest(f'Request is already {user_request.status}')
 
     response_data = {
         'submission': submission,
         'submission_id': submission.submission_id,
-        'request_id': this_request.request_id,
-        'user_request': this_request,
+        'request_id': user_request.request_id,
+        'user_request': user_request,
     }
 
     if method == 'GET':
@@ -114,8 +116,8 @@ def cancel_request(method: str, params: MultiDict, session: Session,
         response_data.update({'form': form})
         if form.validate() and form.confirmed.data:
             user, client = user_and_client_from_session(session)
-            command = CancelRequest(request_id=this_request.request_id,
-                                    creator=user, client=client)
+            command = CancelRequest(request_id=request_id, creator=user,
+                                    client=client)
             if not validate_command(form, command, submission, 'confirmed'):
                 raise BadRequest(response_data)
 

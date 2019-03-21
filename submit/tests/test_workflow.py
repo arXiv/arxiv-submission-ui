@@ -433,7 +433,7 @@ class TestJREFWorkflow(TestCase):
             # announced!
             db_submission = session.query(classic.models.Submission) \
                 .get(self.submission.submission_id)
-            db_submission.status = classic.models.Submission.announced
+            db_submission.status = classic.models.Submission.ANNOUNCED
             db_document = classic.models.Document(paper_id='1234.5678')
             db_submission.doc_paper_id = '1234.5678'
             db_submission.document = db_document
@@ -563,7 +563,7 @@ class TestWithdrawalWorkflow(TestCase):
             # announced!
             db_submission = session.query(classic.models.Submission) \
                 .get(self.submission.submission_id)
-            db_submission.status = classic.models.Submission.announced
+            db_submission.status = classic.models.Submission.ANNOUNCED
             db_document = classic.models.Document(paper_id='1234.5678')
             db_submission.doc_paper_id = '1234.5678'
             db_submission.document = db_document

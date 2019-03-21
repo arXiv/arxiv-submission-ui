@@ -115,7 +115,7 @@ def apply_cross(submission_id: int) -> None:
     i = events.services.classic._get_head_idx(dbss)
     for dbs in dbss[:i]:
         if dbs.is_crosslist():
-            dbs.status = events.services.classic.models.Submission.announced
+            dbs.status = events.services.classic.models.Submission.ANNOUNCED
             session.add(dbs)
             session.commit()
 
@@ -139,7 +139,7 @@ def apply_withdrawal(submission_id: int) -> None:
     i = events.services.classic._get_head_idx(dbss)
     for dbs in dbss[:i]:
         if dbs.is_withdrawal():
-            dbs.status = events.services.classic.models.Submission.announced
+            dbs.status = events.services.classic.models.Submission.ANNOUNCED
             session.add(dbs)
             session.commit()
 

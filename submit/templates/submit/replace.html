@@ -6,7 +6,7 @@
 <h1 class="title">Start a New Replacement</h1>
 
 {% if submission and submission.version >= 1 %}
-  <h2 class="replacement is-size-5 subtitle">Replacement for: arXiv:{{ submission.arxiv_id }}v{{ submission.version }} {{ submission.metadata.title }}</h2>
+  <h2 class="replacement is-size-5 subtitle">Replacing arXiv:{{ submission.arxiv_id }}v{{ submission.version }} {{ submission.metadata.title }}</h2>
 {% endif %}
 
 <div class="message is-link">

@@ -8,7 +8,7 @@
 {% endblock addl_head %}
 
 {% block content %}
-  <h1 class="title">Request cross-list classification</h1>
+  <h1 class="title">Request Cross-List Classification</h1>
   <h2 class="replacement is-size-5">{% if primary %}
   <span class="tag is-link has-text-weight-bold" style="vertical-align: text-bottom; font-style: normal;">{{ submission.primary_classification.category }}</span>
   {% endif %}
@@ -17,16 +17,9 @@
   {% endfor %}
   arXiv:{{ submission.arxiv_id }}v{{ submission.version }} {{ submission.metadata.title }}</h2>
 
-  {% if require_confirmation and not confirmed %}
-
-  {% else %}
-
-  {% endif %}
-
   <div class="columns">
     <div class="column">
       <h2 id="crosslist" class="is-size-5">New cross-list(s)</h2>
-
       {# This formset is used to send POST requests to REMOVE secondaries from the list. #}
       {% if formset %}
         {% for category, subform in formset.items() %}

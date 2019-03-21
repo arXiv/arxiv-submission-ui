@@ -12,7 +12,7 @@
 {% endblock addl_head %}
 
 {% block content %}
-  <h1 class="title">Withdraw request for article</h1>
+  <h1 class="title">Request Article Withdrawal</h1>
   <h2 class="replacement subtitle is-size-5">arXiv:{{ submission.arxiv_id }}v{{ submission.version }} {{ submission.metadata.title }}</h2>
 
   {% if require_confirmation and not confirmed %}
@@ -43,7 +43,7 @@
   {% else %}
   <div class="message is-link">
     <div class="message-body">
-      <p><span class="icon is-link"><i class="fa fa-info-circle"></i></span>A reason for withdrawing the article is required and will be publicly posted in the Comments field. The reason should be specific. For example if there was an error, describe the error and what section of the paper the error appears in.</p>
+      <p><span class="icon is-link"><i class="fa fa-info-circle"></i></span>A reason for withdrawing the article is required and will be <span class="has-text-weight-bold">publicly posted in the Comments field</span>. The reason should be specific. For example if there was an error, describe the error and what section of the paper the error appears in.</p>
     </div>
   </div>
 
@@ -51,8 +51,8 @@
   <ol>
     <li>The paper cannot be completely removed. Previous versions will remain accessible.<br />See help pages on: <a href="{{ url_for('help_withdraw') }}">withdrawals</a>, <a href="{{ url_for('help_version') }}">versions</a> and <a href="{{ url_for('help_license') }}">licenses</a>.</li>
     <li>Inappropriate withdrawal requests will be denied.</li>
-    <li>It is not appropriate to withdraw a paper because it is published or submitted to a journal. Instead you could submit a <a href="{{ url_for('help_jref') }}">journal-ref</a>.</li>
-    <li>It is not appropriate to withdraw a paper because it is being updated. Instead you could submit a <a href="{{ url_for('help_replace') }}">replacement</a>.</li>
+    <li>It is not appropriate to withdraw a paper because it is published or submitted to a journal. Instead you could submit a <a href="{{ url_for('ui.jref', submission_id=submission.submission_id) }}">journal-ref</a>.</li>
+    <li>It is not appropriate to withdraw a paper because it is being updated. Instead you could submit a <a href="{{ url_for('ui.create_replacement', submission_id=submission.submission_id) }}">replacement</a>.</li>
     <li>You may modify the abstract field only if the comments field is inadequate for your explanation. Removing the abstract totally is inappropriate and will result in a denial of your withdrawal request.</li>
   </ol>
   {% endif %}

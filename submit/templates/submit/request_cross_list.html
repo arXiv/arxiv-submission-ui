@@ -110,7 +110,7 @@
     </div>
   </div>
   <div class="buttons submit-nav" role="navigation">
-      <a href="{{ url_for('ui.submission_status', submission_id=submission_id) }}" name="cancel" class="button is-outlined" value="cancel" aria-label="Cancel">Cancel</a>
+      <a href="{{ url_for('ui.manage_submissions') }}" name="cancel" class="button is-outlined" value="cancel" aria-label="Cancel">Cancel</a>
       {% if require_confirmation and not confirmed %}
         <form method="POST" class="form form-margin" action="{{ url_for('ui.request_cross', submission_id=submission_id) }}">
           {{ form.csrf_token }}

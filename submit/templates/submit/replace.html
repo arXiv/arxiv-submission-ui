@@ -2,8 +2,10 @@
 
 {% import "submit/submit_macros.html" as submit_macros %}
 
-{% block title -%}{%- endblock title %}
-{% if submission and submission.version > 1 %}
+{% block content %}
+<h1 class="title">Start a New Replacement</h1>
+
+{% if submission and submission.version >= 1 %}
   <h2 class="replacement is-size-5 subtitle">Replacement for: arXiv:{{ submission.arxiv_id }}v{{ submission.version }} {{ submission.metadata.title }}</h2>
 {% endif %}
 
@@ -20,16 +22,15 @@
   <li>After the fifth revision, papers will not be announced in the daily mailings.</li>
 </ul>
 
-<p>You can add a DOI, journal reference, or report number without submitting a replacement if that is the only change being made. To do so, cancel this replacement and <a href="{{ url_for('ui.jref', submission_id=submission.submission_id) }}"submit a journal reference.</a></p>
+<p>You can add a DOI, journal reference, or report number without submitting a replacement if that is the only change being made. To do so, cancel this replacement and <a href="{{ url_for('ui.jref', submission_id=submission.submission_id) }}">submit a journal reference.</a></p>
 
-{% block within_content %}
 <form class="form" method="POST" action="{{ url_for('ui.create_replacement', submission_id=submission.submission_id) }}">
   {{ form.csrf_token }}
   <input type="hidden" name="confirmed", value="true" />
   <div class="buttons submit-nav" role="navigation">
-      <a href="{{ url_for('ui.submission_status', submission_id=submission_id) }}" name="cancel" class="button is-outlined" value="cancel" aria-label="Cancel">Cancel</a>
+      <a href="{{ url_for('ui.manage_submissions') }}" name="cancel" class="button is-outlined" value="cancel" aria-label="Cancel">Cancel</a>
       <button name="new" class="button is-link is-small" value="new" aria-label="New version (replacement)">I understand, replace this article</button>
   </div>
 </form>
 
-{% endblock within_content %}
+{% endblock content %}

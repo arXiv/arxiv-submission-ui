@@ -148,7 +148,7 @@
 
 
     <div class="buttons submit-nav" role="navigation">
-        <a href="{{ url_for('ui.submission_status', submission_id=submission_id) }}" name="cancel" class="button is-outlined" value="cancel" aria-label="Cancel">Cancel</a>
+        <a href="{{ url_for('ui.manage_submissions') }}" name="cancel" class="button is-outlined" value="cancel" aria-label="Cancel">Cancel</a>
         {% if require_confirmation and not confirmed %}
         <button name="action" type="submit" class="button is-link is-outlined" value="submit" aria-label="Edit">Edit</button>
         <button name="confirmed" type="submit" class="button is-success" value="1" aria-label="Confirm and Submit">Confirm and Submit</button>

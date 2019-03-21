@@ -72,3 +72,11 @@ class FinalizationForm(csrf.CSRFForm):
          it will appear on arXiv.',
         [InputRequired('Please confirm that the submission is ready')]
     )
+
+def confirm(method: str, params: MultiDict, session: Session, submission_id: int, **kwargs) -> Response:
+    submission, submission_events = load_submission(submission_id)
+    response_data = {
+        'submission_id': submission_id,
+        'submission': submission
+    }
+    return response_data, status.OK, {}

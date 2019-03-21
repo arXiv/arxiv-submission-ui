@@ -392,9 +392,7 @@ def final_preview(submission_id: int) -> Response:
 @flow_control(workflow.Confirm)
 def confirmation(submission_id: int) -> Response:
     """Render the final confirmation page."""
-    rendered = render_template("submit/confirm_submit.html",
-                               pagetitle='Submission Confirmed')
-    return make_response(rendered, status.OK)
+    return handle(controllers.final.confirm, "submit/confirm_submit.html", 'Submission Confirmed', submission_id)
 
 # Other workflows.
 

@@ -1,13 +1,17 @@
 """Provides controllers used to delete/roll back a submission."""
 
+from typing import Optional
+
 from flask import url_for
 from wtforms import BooleanField, validators
 from werkzeug import MultiDict
-from werkzeug.exceptions import BadRequest, InternalServerError
+from werkzeug.exceptions import BadRequest, InternalServerError, NotFound
 
 from http import HTTPStatus as status
 from arxiv.base import logging, alerts
-from arxiv.submission import Rollback, save
+from arxiv.submission import Rollback, save, CancelRequest
+from arxiv.submission.domain import WithdrawalRequest, \
+    CrossListClassificationRequest, UserRequest
 from arxiv.forms import csrf
 from arxiv.users.domain import Session
 from .util import Response, user_and_client_from_session, validate_command
@@ -16,6 +20,13 @@ from ..util import load_submission
 
 class DeleteForm(csrf.CSRFForm):
     """Form for deleting a submission or a revision."""
+
+    confirmed = BooleanField('Confirmed',
+                             validators=[validators.DataRequired()])
+
+
+class CancelRequestForm(csrf.CSRFForm):
+    """Form for cancelling a request."""
 
     confirmed = BooleanField('Confirmed',
                              validators=[validators.DataRequired()])
@@ -56,6 +67,62 @@ def delete(method: str, params: MultiDict, session: Session,
                 save(command, submission_id=submission_id)
             except Exception as e:
                 alerts.flash_failure("Whoops!")
+                raise InternalServerError(response_data) from e
+            redirect = url_for('ui.create_submission')
+            return {}, status.SEE_OTHER, {'Location': redirect}
+        response_data.update({'form': form})
+        raise BadRequest(response_data)
+
+
+def cancel_request(method: str, params: MultiDict, session: Session,
+                   submission_id: int, request_type: str,
+                   **kwargs) -> Response:
+    submission, submission_events = load_submission(submission_id)
+
+    if request_type == WithdrawalRequest.NAME.lower():
+        request_klass = WithdrawalRequest
+    elif request_type == CrossListClassificationRequest.NAME.lower():
+        request_klass = CrossListClassificationRequest
+    else:
+        raise NotFound('No such request')
+
+    # Get the most recent user request of this type.
+    this_request: Optional[UserRequest] = None
+    for user_request in submission.active_user_requests[::-1]:
+        if isinstance(user_request, request_klass):
+            this_request = user_request
+            break
+    if this_request is None:
+        raise NotFound('No such request')
+
+    if not this_request.is_pending():
+        raise BadRequest(f'Request is already {this_request.status}')
+
+    response_data = {
+        'submission': submission,
+        'submission_id': submission.submission_id,
+        'request_id': this_request.request_id,
+        'user_request': this_request,
+    }
+
+    if method == 'GET':
+        form = CancelRequestForm()
+        response_data.update({'form': form})
+        return response_data, status.OK, {}
+    elif method == 'POST':
+        form = CancelRequestForm(params)
+        response_data.update({'form': form})
+        if form.validate() and form.confirmed.data:
+            user, client = user_and_client_from_session(session)
+            command = CancelRequest(request_id=this_request.request_id,
+                                    creator=user, client=client)
+            if not validate_command(form, command, submission, 'confirmed'):
+                raise BadRequest(response_data)
+
+            try:
+                save(command, submission_id=submission_id)
+            except Exception as e:
+                alerts.flash_failure("Whoops!" + str(e))
                 raise InternalServerError(response_data) from e
             redirect = url_for('ui.create_submission')
             return {}, status.SEE_OTHER, {'Location': redirect}

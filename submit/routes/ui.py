@@ -156,6 +156,15 @@ def delete_submission(submission_id: int):
                   'Delete submission or replacement', submission_id)
 
 
+@ui.route(path('cancel/<string:request_type>'), methods=["GET", "POST"])
+@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION, authorizer=is_owner)
+def cancel_request(submission_id: int, request_type: str):
+    """Cancel a pending request."""
+    return handle(controllers.delete.cancel_request,
+                  'submit/confirm_cancel_request.html', 'Cancel request',
+                  submission_id, request_type=request_type)
+
+
 @ui.route(path('replace'), methods=["POST"])
 @auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION, authorizer=is_owner)
 def create_replacement(submission_id: int):

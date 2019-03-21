@@ -111,8 +111,12 @@
           {% if submission.has_active_requests %}
             {% for request in submission.active_user_requests %}
             <div class="tags has-addons">
-              <span class="tag">{{ request.NAME }}</span>
-              <span class="tag is-info">{{ request.status }}</span>
+              <span class="tag is-warning">{{ request.NAME }} {{ request.status }}</span>
+              <a href="{{ url_for('ui.cancel_request', submission_id=submission.submission_id, request_type=request.NAME.lower()) }}" class="tag is-danger">
+                  <span class="icon">
+                    <i class="fa fa-trash" aria-label="Delete"><span class="sr-only">Delete this submission</span></i>
+                  </span>
+              </a>
             </div>
             {% endfor %}
           {% else %}

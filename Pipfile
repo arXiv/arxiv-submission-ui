@@ -18,10 +18,10 @@ arxiv-base = "==0.15.3rc7"
 mypy_extensions = "*"
 arxiv-auth = "==0.3.2rc6"
 mysqlclient = "==1.4.2"
-arxiv-submission-core = "==0.6.2rc27"
 mimesis = "==2.1.0"
 backports-datetime-fromisoformat = "*"
 flask-session = "*"
+arxiv-submission-core = {path = "./../arxiv-submission-core/core"}
 
 [dev-packages]
 pydocstyle = "*"

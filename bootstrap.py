@@ -64,6 +64,7 @@ with app.app_context():
             scopes.CREATE_SUBMISSION,
             scopes.EDIT_SUBMISSION,
             scopes.VIEW_SUBMISSION,
+            scopes.DELETE_SUBMISSION,
             scopes.READ_UPLOAD,
             scopes.WRITE_UPLOAD,
             scopes.DELETE_UPLOAD_FILE,

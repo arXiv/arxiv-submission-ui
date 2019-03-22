@@ -1,8 +1,23 @@
 {% extends "submit/base.html" %}
 
-{% block title -%}Preview and Approve your Submission{%- endblock title %}
+{% block title -%}Preview and Approve Your Submission{%- endblock title %}
 
 {% block within_content %}
+<div class="columns">
+  <div class="column">
+    <div class="message is-link">
+      <div class="message-body">
+        <p><span class="icon"><i class="fa fa-info-circle"></i></span>
+        <span class="has-text-weight-bold">Check your submission carefully!</span>
+        Once your submission has been announced, amendments to files or core
+        metadata may only be made through
+        <a href="{{ url_for('help_replace') }}">replacement</a> or
+        <a href="{{ url_for('help_withdraw')}}">withdrawal</a>.</p>
+        <p>Exception: You will be able to update <a href="{{ url_for('help_jref')}}">journal reference, DOI, MSC or ACM classification, or report number information</a> at any time without a new revision.</p>
+      </div>
+    </div>
+  </div>
+</div>
 
 {% if submission.version > 1 %}
   {% set arxiv_id = submission.arxiv_id %}
@@ -10,47 +25,61 @@
   {% set arxiv_id = "0000.00000" %}
 {% endif %}
 
-{{ macros.abs(
-  arxiv_id,
-  submission.metadata.title,
-  submission.metadata.authors_display,
-  submission.metadata.abstract,
-  submission.created,
-  submission.primary_classification.category,
-  comments = submission.metadata.comments,
-  msc_class = submission.metadata.msc_class,
-  acm_class = submission.metadata.acm_class,
-  journal_ref = submission.metadata.journal_ref,
-  doi = submission.metadata.doi,
-  report_num = submission.metadata.report_num,
-  version = submission.version,
-  submission_history = submission_history,
-  secondary_categories = submission.secondary_categories) }}
+<section class="section">
+  <h2><span style="margin-right: 0.5em;">Final Preview: arXiv abstract</span><a href="{{ url_for('ui.add_metadata', submission_id=submission_id) }}" class="button is-small is-link is-outlined"><span class="icon"><i class="fa fa-pencil"></i></span><span class="has-text-weight-normal">Make Changes to Metadata</span></a></h2>
+  <div class="box">
+  {{ macros.abs(
+    arxiv_id,
+    submission.metadata.title,
+    submission.metadata.authors_display,
+    submission.metadata.abstract,
+    submission.created,
+    submission.primary_classification.category,
+    comments = submission.metadata.comments,
+    msc_class = submission.metadata.msc_class,
+    acm_class = submission.metadata.acm_class,
+    journal_ref = submission.metadata.journal_ref,
+    doi = submission.metadata.doi,
+    report_num = submission.metadata.report_num,
+    version = submission.version,
+    submission_history = submission_history,
+    secondary_categories = submission.secondary_categories) }}
+  </div>
+</section>
 
-<form method="POST" action="{{ url_for('ui.final_preview', submission_id=submission_id) }}">
-  {{ form.csrf_token }}
-  {% if form.proceed.errors %}<div class="notification is-danger">{% endif %}
-  <div class="field">
-    <div class="control">
-      <div class="checkbox">
-        {{ form.proceed }}
-        {{ form.proceed.label }}
+<section class="section" style="margin-top: 1em;">
+  <h2><span style="margin-right: 0.5em;">Final Preview: PDF</span><a href="{{ url_for('ui.file_upload', submission_id=submission_id) }}" class="button is-small is-link is-outlined"><span class="icon"><i class="fa fa-pencil"></i></span><span class="has-text-weight-normal">Make Changes to Files</span></a></h2>
+  <div class="box">
+    <div class="columns">
+      <div class="column is-narrow">
+        <a href="##" class="button is-link" style="margin: 0.5em;">View PDF</a>
       </div>
-      {% for error in form.proceed.errors %}
-        <p class="help is-danger">{{ error }}</p>
-      {% endfor %}
+      <div class="column is-centered-vertically">
+        <form method="POST" action="{{ url_for('ui.final_preview', submission_id=submission_id) }}">
+          {{ form.csrf_token }}
+          {% if form.proceed.errors %}<div class="notification is-danger">{% endif %}
+          <div class="field">
+            <div class="control">
+              <div class="checkbox">
+                {{ form.proceed }}
+                {{ form.proceed.label }}
+              </div>
+              {% for error in form.proceed.errors %}
+                <p class="help is-danger">{{ error }}</p>
+              {% endfor %}
+            </div>
+          </div>
+          {% if form.proceed.errors %}</div>{% endif %}
+      </div>
     </div>
   </div>
-  {% if form.proceed.errors %}</div>{% endif %}
+</section>
 
   <div class="buttons submit-nav" role="navigation">
       <a href="{{ url_for('ui.delete_submission', submission_id=submission_id) }}" name="cancel" class="button has-text-grey is-light is-outlined" style="border:0" value="cancel" aria-label="Cancel submission" title="Cancel submission"><span class="icon"><i class="fa fa-trash fa-lg"></i></a>
       <button name="action" class="button" value="previous" aria-label="Go back one step">Go Back</button>
       <button name="action" type="submit" class="button" value="save_exit" aria-label="Save and Exit">Save and Exit</button>
-      <button name="action" class="button is-link" value="next" aria-label="Save and continue" style="background-color: #20ff05; color: #000;">
-        Submit to arXiv
-        <img src="https://arxiv.org/favicon.ico" style="height: 20px; margin-left: 2px;" />
-      </button>
+      <button name="action" class="button is-success" value="next" aria-label="Confirm and submit">Confirm and Submit</button>
   </div>
 
 </form>

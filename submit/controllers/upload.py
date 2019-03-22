@@ -361,11 +361,13 @@ def _update(form: UploadForm, submission: Submission, stat: Upload,
         command = UpdateUploadPackage(creator=submitter, client=client,
                                       checksum=stat.checksum,
                                       uncompressed_size=stat.size,
+                                      compressed_size=stat.compressed_size,
                                       source_format=stat.source_format)
     else:
         command = SetUploadPackage(creator=submitter, client=client,
                                    identifier=stat.identifier,
                                    checksum=stat.checksum,
+                                   compressed_size=stat.compressed_size,
                                    uncompressed_size=stat.size,
                                    source_format=stat.source_format)
 

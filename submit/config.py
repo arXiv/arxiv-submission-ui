@@ -103,6 +103,7 @@ URLS = [
     ("help_metadata", "/help/prep", BASE_SERVER),
     ("help_jref", "/help/jref", BASE_SERVER),
     ("help_withdraw", "/help/withdraw", BASE_SERVER),
+    ("help_replace", "/help/replace", BASE_SERVER),
     ("help_endorse", "/help/endorsement", BASE_SERVER),
     ("clickthrough", "/ct?url=<url>&v=<v>", BASE_SERVER),
     ("help_endorse", "/help/endorsement", BASE_SERVER),

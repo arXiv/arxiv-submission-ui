@@ -41,8 +41,8 @@ def finalize(method: str, params: MultiDict, session: Session,
     if method == 'POST':
         if form.validate():
             logger.debug('Form is valid, with data: %s', str(form.data))
-            abandoned_all_hope = form.proceed.data
-            if abandoned_all_hope:
+            proofread_confirmed = form.proceed.data
+            if proofread_confirmed:
                 command = FinalizeSubmission(creator=submitter)
                 if not validate_command(form, command, submission):
                     raise BadRequest(response_data)
@@ -68,6 +68,15 @@ class FinalizationForm(csrf.CSRFForm):
     """Make sure the user is really really really ready to submit."""
 
     proceed = BooleanField(
-        'This is the point of no return! Today is a good day to die.',
-        [InputRequired('You cannot proceed without giving up all hope')]
+        'By checking this box, I confirm that I have reviewed my submission as \
+         it will appear on arXiv.',
+        [InputRequired('Please confirm that the submission is ready')]
     )
+
+def confirm(method: str, params: MultiDict, session: Session, submission_id: int, **kwargs) -> Response:
+    submission, submission_events = load_submission(submission_id)
+    response_data = {
+        'submission_id': submission_id,
+        'submission': submission
+    }
+    return response_data, status.OK, {}

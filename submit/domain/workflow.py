@@ -167,6 +167,7 @@ class Process(BaseStage):
         successful = [
             compilation for compilation in submission.compilations
             if compilation.status == compilation.Status.SUCCEEDED
+            and submission.source_content
             and compilation.checksum == submission.source_content.checksum
         ]
         return len(successful) > 0 \
@@ -324,6 +325,8 @@ class Workflow:
     @get_instance
     def can_proceed_to(self, stage: Optional[BaseStage]) -> bool:
         """Determine whether the user can proceed to a stage."""
+        print('can proceed to %s?' % stage, self.is_done(self.previous_stage(stage)))
+
         return self.is_done(self.previous_stage(stage)) \
             or self.previous_stage(stage).is_optional() \
             or all(map(self.is_done, self.iter_prior(stage)))
@@ -371,6 +374,7 @@ class Workflow:
         """
         if stage is None:
             return True
+        print('is done?', stage, self.is_complete(stage), self.is_seen(stage))
         return ((self.is_complete(stage) or stage.is_optional())
                 and (self.is_seen(stage) or not stage.must_see))
 

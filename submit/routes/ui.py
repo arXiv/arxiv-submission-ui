@@ -50,10 +50,10 @@ def load_submission() -> None:
             util.load_submission(submission_id)
     except Unavailable as e:
         raise InternalServerError('Could not connect to database') from e
-    except Exception as e:
-        logger.error('Encountered %s while loading %s', e, submission_id)
-        request.submission = None
-        request.events = None
+    # except Exception as e:
+    #     logger.error('Encountered %s while loading %s', e, submission_id)
+    #     request.submission = None
+    #     request.events = None
 
 
 @ui.context_processor
@@ -150,10 +150,19 @@ def create_submission():
 @ui.route(path('delete'), methods=["GET", "POST"])
 @auth.decorators.scoped(auth.scopes.DELETE_SUBMISSION, authorizer=is_owner)
 def delete_submission(submission_id: int):
-    """Delete, or roll a submission back to the last published state."""
+    """Delete, or roll a submission back to the last announced state."""
     return handle(controllers.delete.delete,
                   'submit/confirm_delete_submission.html',
                   'Delete submission or replacement', submission_id)
+
+
+@ui.route(path('cancel/<string:request_id>'), methods=["GET", "POST"])
+@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION, authorizer=is_owner)
+def cancel_request(submission_id: int, request_id: str):
+    """Cancel a pending request."""
+    return handle(controllers.delete.cancel_request,
+                  'submit/confirm_cancel_request.html', 'Cancel request',
+                  submission_id, request_id=request_id)
 
 
 @ui.route(path('replace'), methods=["POST"])
@@ -173,11 +182,11 @@ def submission_status(submission_id: int) -> Response:
 
 
 # TODO: remove me!!
-@ui.route(path('publish'), methods=["GET"])
+@ui.route(path('announce'), methods=["GET"])
 @auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION, authorizer=is_owner)
-def publish(submission_id: int) -> Response:
+def announce(submission_id: int) -> Response:
     """WARNING WARNING WARNING this is for testing purposes only."""
-    util.publish_submission(submission_id)
+    util.announce_submission(submission_id)
     target = url_for('ui.submission_status', submission_id=submission_id)
     return Response(response={}, status=status.SEE_OTHER,
                     headers={'Location': target})

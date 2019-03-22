@@ -5,7 +5,9 @@ from arxiv.submission.services import classic
 import logging
 
 logging.getLogger('arxiv.submission.services.classic.interpolate') \
-    .setLevel(logging.ERROR)
+    .setLevel(logging.DEBUG)
+logging.getLogger('arxiv.submission.services.classic.models') \
+    .setLevel(logging.DEBUG)
 logging.getLogger('arxiv.base.alerts').setLevel(logging.ERROR)
 
 app = create_ui_web_app()

@@ -27,7 +27,7 @@ Response = Tuple[Dict[str, Any], int, Dict[str, Any]]  # pylint: disable=C0103
 
 
 class JREFForm(csrf.CSRFForm, FieldMixin):
-    """Set DOI and/or journal reference on a published submission."""
+    """Set DOI and/or journal reference on a announced submission."""
 
     doi = TextField('DOI', validators=[optional()],
                     description=("Full DOI of the version of record. For"
@@ -54,16 +54,16 @@ class JREFForm(csrf.CSRFForm, FieldMixin):
 
 def jref(method: str, params: MultiDict, session: Session,
          submission_id: int, **kwargs) -> Response:
-    """Set journal reference metadata on a published submission."""
+    """Set journal reference metadata on a announced submission."""
     creator, client = user_and_client_from_session(session)
     logger.debug(f'method: {method}, submission: {submission_id}. {params}')
 
     # Will raise NotFound if there is no such submission.
     submission, submission_events = load_submission(submission_id)
 
-    # The submission must be published for this to be a real JREF submission.
-    if not submission.published:
-        alerts.flash_failure(Markup("Submission must first be published. See "
+    # The submission must be announced for this to be a real JREF submission.
+    if not submission.announced:
+        alerts.flash_failure(Markup("Submission must first be announced. See "
                                     "<a href='https://arxiv.org/help/jref'>"
                                     "the arXiv help pages</a> for details."))
         status_url = url_for('ui.create_submission')

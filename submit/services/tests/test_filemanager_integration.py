@@ -28,7 +28,7 @@ class TestFileManagerIntegration(TestCase):
         print('starting file management service')
         os.environ['JWT_SECRET'] = 'foosecret'
         start_fm = subprocess.run(
-            'docker run -d -e JWT_SECRET=foosecret -p 8003:8000 arxiv/filemanager:0.1rc2 /bin/bash -c \'python bootstrap.py; uwsgi --http-socket :8000 -M -t 3000 --manage-script-name --processes 8 --threads 1 --async 100 --ugreen --mount /=/opt/arxiv/wsgi.py --logformat "%(addr) %(addr) - %(user_id)|%(session_id) [%(rtime)] [%(uagent)] \\"%(method) %(uri) %(proto)\\" %(status) %(size) %(micros) %(ttfb)"\'',
+            'docker run -d -e JWT_SECRET=foosecret -p 8003:8000 arxiv/filemanager:0.0.2 /bin/bash -c \'python bootstrap.py; uwsgi --http-socket :8000 -M -t 3000 --manage-script-name --processes 8 --threads 1 --async 100 --ugreen --mount /=/opt/arxiv/wsgi.py --logformat "%(addr) %(addr) - %(user_id)|%(session_id) [%(rtime)] [%(uagent)] \\"%(method) %(uri) %(proto)\\" %(status) %(size) %(micros) %(ttfb)"\'',
             stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
 
         if start_fm.returncode != 0:

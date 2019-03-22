@@ -352,7 +352,7 @@ def file_process(submission_id: int) -> Response:
                   token=request.environ['token'])
 
 
-@ui.route(path('preview'), methods=["GET"])
+@ui.route(path('preview.pdf'), methods=["GET"])
 @auth.decorators.scoped(auth.scopes.VIEW_SUBMISSION, authorizer=is_owner)
 def file_preview(submission_id: int) -> Response:
     data, code, headers = controllers.file_preview(

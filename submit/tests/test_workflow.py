@@ -387,7 +387,7 @@ class TestJREFWorkflow(TestCase):
         self.headers = {'Authorization': self.token}
         self.client = self.app.test_client()
 
-        # Create and publish a submission.
+        # Create and announce a submission.
         with self.app.app_context():
             classic.create_all()
             session = classic.current_session()
@@ -430,10 +430,10 @@ class TestJREFWorkflow(TestCase):
                 FinalizeSubmission(creator=self.user)
             )
 
-            # Published!
+            # announced!
             db_submission = session.query(classic.models.Submission) \
                 .get(self.submission.submission_id)
-            db_submission.status = classic.models.Submission.PUBLISHED
+            db_submission.status = classic.models.Submission.ANNOUNCED
             db_document = classic.models.Document(paper_id='1234.5678')
             db_submission.doc_paper_id = '1234.5678'
             db_submission.document = db_document
@@ -517,7 +517,7 @@ class TestWithdrawalWorkflow(TestCase):
         self.headers = {'Authorization': self.token}
         self.client = self.app.test_client()
 
-        # Create and publish a submission.
+        # Create and announce a submission.
         with self.app.app_context():
             classic.create_all()
             session = classic.current_session()
@@ -560,10 +560,10 @@ class TestWithdrawalWorkflow(TestCase):
                 FinalizeSubmission(creator=self.user)
             )
 
-            # Published!
+            # announced!
             db_submission = session.query(classic.models.Submission) \
                 .get(self.submission.submission_id)
-            db_submission.status = classic.models.Submission.PUBLISHED
+            db_submission.status = classic.models.Submission.ANNOUNCED
             db_document = classic.models.Document(paper_id='1234.5678')
             db_submission.doc_paper_id = '1234.5678'
             db_submission.document = db_document
@@ -586,7 +586,7 @@ class TestWithdrawalWorkflow(TestCase):
         return token
 
     def test_request_withdrawal(self):
-        """User requests withdrawal of a published submission."""
+        """User requests withdrawal of a announced submission."""
         # Get the JREF page.
         endpoint = f'/{self.submission_id}/withdraw'
         response = self.client.get(endpoint, headers=self.headers)

@@ -19,13 +19,15 @@ logger = logging.getLogger(__name__)
 EXIT = 'ui.create_submission'
 
 
-def get_workflow(submission: Submission) -> Workflow:
-    if submission.version > 1:
+def get_workflow(submission: Optional[Submission]) -> Workflow:
+    if submission is not None and submission.version > 1:
         return ReplacementWorkflow(submission, session)
     return SubmissionWorkflow(submission, session)
 
 
 def to_stage(workflow: Workflow, stage: Stage, ident: str) -> Response:
+    if stage is None:
+        return redirect(url_for('ui.create_submission'), code=status.SEE_OTHER)
     loc = url_for(f'ui.{stage.endpoint}', submission_id=ident)
     return redirect(loc, code=status.SEE_OTHER)
 

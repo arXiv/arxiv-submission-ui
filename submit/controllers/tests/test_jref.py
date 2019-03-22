@@ -56,10 +56,10 @@ class TestJREFSubmission(TestCase):
     @mock.patch(f'{jref.__name__}.url_for')
     @mock.patch(f'{jref.__name__}.JREFForm.Meta.csrf', False)
     @mock.patch('arxiv.submission.load')
-    def test_GET_with_unpublished(self, mock_load, mock_url_for, mock_alerts):
-        """GET request for an unpublished submission."""
+    def test_GET_with_unannounced(self, mock_load, mock_url_for, mock_alerts):
+        """GET request for an unannounced submission."""
         submission_id = 2
-        before = mock.MagicMock(submission_id=submission_id, published=False,
+        before = mock.MagicMock(submission_id=submission_id, announced=False,
                                 arxiv_id=None, version=1)
         mock_load.return_value = (before, [])
         mock_url_for.return_value = "/url/for/submission/status"
@@ -80,10 +80,10 @@ class TestJREFSubmission(TestCase):
     @mock.patch(f'{jref.__name__}.url_for')
     @mock.patch(f'{jref.__name__}.JREFForm.Meta.csrf', False)
     @mock.patch('arxiv.submission.load')
-    def test_POST_with_unpublished(self, mock_load, mock_url_for, mock_alerts):
-        """POST request for an unpublished submission."""
+    def test_POST_with_unannounced(self, mock_load, mock_url_for, mock_alerts):
+        """POST request for an unannounced submission."""
         submission_id = 2
-        before = mock.MagicMock(submission_id=submission_id, published=False,
+        before = mock.MagicMock(submission_id=submission_id, announced=False,
                                 arxiv_id=None, version=1)
         mock_load.return_value = (before, [])
         mock_url_for.return_value = "/url/for/submission/status"
@@ -103,10 +103,10 @@ class TestJREFSubmission(TestCase):
 
     @mock.patch(f'{jref.__name__}.JREFForm.Meta.csrf', False)
     @mock.patch('arxiv.submission.load')
-    def test_GET_with_published(self, mock_load):
-        """GET request for a published submission."""
+    def test_GET_with_announced(self, mock_load):
+        """GET request for a announced submission."""
         submission_id = 2
-        before = mock.MagicMock(submission_id=submission_id, published=True,
+        before = mock.MagicMock(submission_id=submission_id, announced=True,
                                 arxiv_id='2002.01234', version=1)
         mock_load.return_value = (before, [])
         params = MultiDict()
@@ -119,10 +119,10 @@ class TestJREFSubmission(TestCase):
     @mock.patch(f'{jref.__name__}.JREFForm.Meta.csrf', False)
     @mock.patch('arxiv.submission.load')
     @mock.patch(f'{jref.__name__}.save', mock_save)
-    def test_POST_with_published(self, mock_load, mock_url_for, mock_alerts):
-        """POST request for a published submission."""
+    def test_POST_with_announced(self, mock_load, mock_url_for, mock_alerts):
+        """POST request for a announced submission."""
         submission_id = 2
-        before = mock.MagicMock(submission_id=submission_id, published=True,
+        before = mock.MagicMock(submission_id=submission_id, announced=True,
                                 arxiv_id='2002.01234', version=1)
         mock_load.return_value = (before, [])
         mock_url_for.return_value = "/url/for/submission/status"

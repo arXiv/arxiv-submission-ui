@@ -139,11 +139,19 @@ def handle(controller: Callable, template: str, title: str,
     return Response(response=context, status=code, headers=headers)
 
 
-@ui.route('/', methods=["GET", "POST"])
+@ui.route('/', methods=["GET"])
+@auth.decorators.scoped(auth.scopes.CREATE_SUBMISSION)
+def manage_submissions():
+    """Display the submission management dashboard."""
+    return handle(controllers.create.create, 'submit/manage_submissions.html',
+                  'Manage submissions')
+
+
+@ui.route('/', methods=["POST"])
 @auth.decorators.scoped(auth.scopes.CREATE_SUBMISSION)
 def create_submission():
     """Create a new submission."""
-    return handle(controllers.create.create, 'submit/create.html',
+    return handle(controllers.create.create, 'submit/manage_submissions.html',
                   'Create a new submission')
 
 
@@ -156,7 +164,7 @@ def delete_submission(submission_id: int):
                   'Delete submission or replacement', submission_id)
 
 
-@ui.route(path('replace'), methods=["POST"])
+@ui.route(path('replace'), methods=["GET", "POST"])
 @auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION, authorizer=is_owner)
 def create_replacement(submission_id: int):
     """Create a replacement submission."""

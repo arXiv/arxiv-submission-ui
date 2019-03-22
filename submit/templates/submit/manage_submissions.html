@@ -116,15 +116,14 @@
             </div>
             {% endfor %}
           {% else %}
-          <form class="form" method="POST" action="{{ url_for('ui.create_replacement', submission_id=submission.submission_id) }}">
-            {{ form.csrf_token }}
-            <div class="buttons is-multiline">
-              <button name="new" class="button is-link is-outlined is-small" value="new" aria-label="New version (replacement)">Replace</button>
-              <a href="{{ url_for('ui.jref', submission_id=submission.submission_id) }}" class="button is-link is-outlined is-small" aria-label="Update journal reference">Add Journal Reference</a>
-              <a href="{{ url_for('ui.withdraw', submission_id=submission.submission_id) }}" class="button is-link is-outlined is-small" aria-label="Request withdrawal">Withdraw</a>
-              <a href="{{ url_for('ui.request_cross', submission_id=submission.submission_id) }}" class="button is-link is-outlined is-small" aria-label="Request cross-list">Add cross-list</a>
-            </div>
-          </form>
+          
+          <div class="buttons is-multiline">
+            <a href="{{ url_for('ui.create_replacement', submission_id=submission.submission_id) }}" class="button is-link is-outlined is-small" aria-label="New version (replacement)">Replace</a>
+            <a href="{{ url_for('ui.jref', submission_id=submission.submission_id) }}" class="button is-link is-outlined is-small" aria-label="Update journal reference">Add Journal Reference</a>
+            <a href="{{ url_for('ui.withdraw', submission_id=submission.submission_id) }}" class="button is-link is-outlined is-small" aria-label="Request withdrawal">Withdraw</a>
+            <a href="{{ url_for('ui.request_cross', submission_id=submission.submission_id) }}" class="button is-link is-outlined is-small" aria-label="Request cross-list">Add cross-list</a>
+          </div>
+
           {% endif %}
         </td>
       </tr>

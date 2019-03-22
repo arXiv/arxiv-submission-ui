@@ -61,25 +61,37 @@ def create(method: str, params: MultiDict, session: Session, *args,
 def replace(method: str, params: MultiDict, session: Session,
             submission_id: int, **kwargs) -> Response:
     """Create a new version, and redirect to workflow."""
-    if method == 'GET':     # Display a splash page.
-        raise MethodNotAllowed('GET requests not supported at this endpoint')
-
-    # We're using a form here for CSRF protection.
-    form = CreateSubmissionForm(params)
-    if not form.validate():
-        raise BadRequest('Invalid request')
-
     submitter, client = user_and_client_from_session(session)
-    submission, _ = load_submission(submission_id)
-    command = CreateSubmissionVersion(creator=submitter, client=client)
-    if not validate_command(form, command, submission):
-        raise BadRequest({})
+    submission, submission_events = load_submission(submission_id)
+    response_data = {
+        'submission_id': submission_id,
+        'submission': submission,
+        'submitter': submitter,
+        'client': client,
+    }
 
-    try:
-        submission, _ = save(command, submission_id=submission_id)
-    except SaveError as e:
-        logger.error('Could not save command: %s', e)
-        raise InternalServerError({}) from e
+    if method == 'GET':     # Display a splash page.
+        response_data['form'] = CreateSubmissionForm()
 
-    loc = url_for('ui.verify_user', submission_id=submission.submission_id)
-    return {}, status.SEE_OTHER, {'Location': loc}
+    if method == 'POST':
+        # We're using a form here for CSRF protection.
+        form = CreateSubmissionForm(params)
+        response_data['form'] = form
+        if not form.validate():
+            raise BadRequest('Invalid request')
+
+        submitter, client = user_and_client_from_session(session)
+        submission, _ = load_submission(submission_id)
+        command = CreateSubmissionVersion(creator=submitter, client=client)
+        if not validate_command(form, command, submission):
+            raise BadRequest({})
+
+        try:
+            submission, _ = save(command, submission_id=submission_id)
+        except SaveError as e:
+            logger.error('Could not save command: %s', e)
+            raise InternalServerError({}) from e
+
+        loc = url_for('ui.verify_user', submission_id=submission.submission_id)
+        return {}, status.SEE_OTHER, {'Location': loc}
+    return response_data, status.OK, {}

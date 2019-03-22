@@ -139,11 +139,19 @@ def handle(controller: Callable, template: str, title: str,
     return Response(response=context, status=code, headers=headers)
 
 
-@ui.route('/', methods=["GET", "POST"])
+@ui.route('/', methods=["GET"])
+@auth.decorators.scoped(auth.scopes.CREATE_SUBMISSION)
+def manage_submissions():
+    """Display the submission management dashboard."""
+    return handle(controllers.create.create, 'submit/manage_submissions.html',
+                  'Manage submissions')
+
+
+@ui.route('/', methods=["POST"])
 @auth.decorators.scoped(auth.scopes.CREATE_SUBMISSION)
 def create_submission():
     """Create a new submission."""
-    return handle(controllers.create.create, 'submit/create.html',
+    return handle(controllers.create.create, 'submit/manage_submissions.html',
                   'Create a new submission')
 
 

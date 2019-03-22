@@ -64,22 +64,22 @@ def flow_control(this_stage: Stage, exit: str = EXIT) -> Callable:
             if workflow.complete and not this_stage == workflow.confirmation:
                 return to_stage(workflow, workflow.confirmation, submission_id)
 
-            try:
-                if not workflow.can_proceed_to(this_stage):
-                    return to_current(workflow, this_stage, submission_id)
+            # try:
+            if not workflow.can_proceed_to(this_stage):
+                return to_current(workflow, this_stage, submission_id)
 
-            except ValueError:
-                raise BadRequest('Request not allowed for this submission')
+            # except ValueError:
+            #     raise BadRequest('Request not allowed for this submission')
 
-            # Mark the previous state as complete.
+            # Mark the previous state as seen.
             if workflow.previous_stage(this_stage):
-                workflow.mark_complete(workflow.previous_stage(this_stage))
+                workflow.mark_seen(workflow.previous_stage(this_stage))
 
             # If the user has proceeded past an optional stage, consider it
-            # to be completed.
+            # to be seen.
             if not workflow.is_required(workflow.previous_stage(this_stage)) \
                     and workflow.previous_stage(this_stage) is not None:
-                workflow.mark_complete(workflow.previous_stage(this_stage))
+                workflow.mark_seen(workflow.previous_stage(this_stage))
 
             # If the user selects "go back", we attempt to save their input
             # above. But if the input does not validate, we don't prevent them

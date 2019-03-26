@@ -95,8 +95,13 @@ ol.file-tree {
   padding: 0 0.2em; }
 
 .tex-danger {
-  background-color: rgba(204, 3, 0, 0.34);
+  background-color: rgba(204, 3, 0, 0.3);
   color: #340f0e;
+  padding: 0 0.2em; }
+
+.tex-fatal {
+  background-color: #cd0200;
+  color: rgba 255, 255, 255, 1;
   padding: 0 0.2em; }
 
 /* Classes for responsive bubble-style progress bar */

@@ -126,6 +126,7 @@ def handle(controller: Callable, template: str, title: str,
                                          request.session, submission_id,
                                          **kwargs)
     except (BadRequest, InternalServerError) as e:
+        logger.debug('Caught %s from controller', e)
         context.update(e.description)
         return make_response(render_template(template, **context), e.code)
     except Unavailable as e:

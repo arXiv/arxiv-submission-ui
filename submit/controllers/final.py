@@ -68,12 +68,14 @@ class FinalizationForm(csrf.CSRFForm):
     """Make sure the user is really really really ready to submit."""
 
     proceed = BooleanField(
-        'By checking this box, I confirm that I have reviewed my submission as \
-         it will appear on arXiv.',
+        'By checking this box, I confirm that I have reviewed my submission as'
+        ' it will appear on arXiv.',
         [InputRequired('Please confirm that the submission is ready')]
     )
 
-def confirm(method: str, params: MultiDict, session: Session, submission_id: int, **kwargs) -> Response:
+
+def confirm(method: str, params: MultiDict, session: Session,
+            submission_id: int, **kwargs) -> Response:
     submission, submission_events = load_submission(submission_id)
     response_data = {
         'submission_id': submission_id,

@@ -31,7 +31,7 @@
 
     {% if status %}
       {% if status.value == "in_progress" %}
-      <div class="message is-warning">
+      <div id="status-message" data-status="{{ status.value }}" class="message is-warning">
         <div class="message-header">
           <p><span class="icon"><i class="fa fa-tasks"></i></span>Processing Underway</p></div>
         <div class="message-body">
@@ -44,7 +44,7 @@
       </div>
 
       {% elif status.value == "failed" %}
-      <div class="message is-danger">
+      <div id="status-message" data-status="{{ status.value }}" class="message is-danger">
         <div class="message-header">
           <p><span class="icon"><i class="fa fa-exclamation-triangle"></i></span>Processing Failed</p></div>
         <div class="message-body">
@@ -62,7 +62,7 @@
       </div>
 
       {% elif status.value == "succeeded" and warnings %}
-      <div class="message is-warning">
+      <div id="status-message" data-status="{{ status.value }}" class="message is-warning">
         <div class="message-header">
           <p><span class="icon"><i class="fa fa-exclamation-triangle"></i></span>Completed With Warnings</p>
         </div>
@@ -76,7 +76,7 @@
       </div>
 
       {% elif status.value == "succeeded" %}
-      <div class="message is-success">
+      <div id="status-message" data-status="{{ status.value }}" class="message is-success">
         <div class="message-header">
           <p><span class="icon"><i class="fa fa-check-circle"></i></span>Processing Successful</p></div>
         <div class="message-body">

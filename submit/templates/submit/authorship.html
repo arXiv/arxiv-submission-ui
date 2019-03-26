@@ -28,14 +28,14 @@
       </div>
       {% if form.proxy.errors %}
         {% for error in form.proxy.errors %}
-          <p class="help is-danger">{{ error }}</p>
+          <p class="help is-danger field-error">{{ error }}</p>
         {% endfor %}
       {% endif %}
     </div>
   </div>
   {% if form.authorship.errors %}
     {% for error in form.authorship.errors %}
-      <p class="help is-danger">{{ error }}</p>
+      <p class="help is-danger field-error">{{ error }}</p>
     {% endfor %}
   {% endif %}
   {% if form.authorship.errors %}</div>{% endif %}

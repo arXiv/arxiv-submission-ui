@@ -56,7 +56,7 @@ from arxiv.forms import csrf
 from arxiv.users.domain import Session
 from arxiv.integration.api import exceptions
 from arxiv.submission import save, SaveError, AddProcessStatus, Submission
-from arxiv.submission.tasks import is_async
+from arxiv.submission.tasks import is_async, get_task_status
 from arxiv.submission.services.compiler import Compiler
 from arxiv.submission.domain.compilation import Status
 from arxiv.submission.domain.submission import Compilation, SubmissionContent
@@ -168,6 +168,7 @@ def compile_status(params: MultiDict, session: Session, submission_id: int,
     is_current = compilation.checksum == submission.source_content.checksum
     if is_current:
         response_data['status'] = compilation.status
+        response_data['current_compilation'] = compilation
 
     # if Compilation failure, then show errors, opportunity to restart.
     # if Compilation success, then show preview.
@@ -176,6 +177,12 @@ def compile_status(params: MultiDict, session: Session, submission_id: int,
         response_data.update(_get_log(submission.source_content.identifier,
                                       submission.source_content.checksum,
                                       token))
+
+    # TODO: make sure that monitoring task is still running; if not, check and
+    # update the status directly.
+    # elif is_current and compilation.status == Compilation.Status.IN_PROGRESS:
+    #   ...
+    # print(get_task_status(submission.processes[-1].monitoring_task))
     return response_data, status.OK, {}
 
 

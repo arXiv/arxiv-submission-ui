@@ -115,11 +115,14 @@ class FileUpload(BaseStage):
     label = 'upload your submission files'
     title = "File upload"
     display = "Upload Files"
+    always_check = True
 
     @staticmethod
     def complete(submission: Submission) -> bool:
         """Determine whether the submitter has uploaded files."""
-        return submission.source_content is not None
+        return submission.source_content is not None and \
+            submission.source_content.checksum is not None and \
+            submission.source_content.source_format != SubmissionContent.Format.INVALID
 
 
 class Process(BaseStage):

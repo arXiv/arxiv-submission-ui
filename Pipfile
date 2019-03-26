@@ -21,7 +21,7 @@ mysqlclient = "==1.4.2"
 mimesis = "==2.1.0"
 backports-datetime-fromisoformat = "*"
 flask-session = "*"
-arxiv-submission-core = "==0.7.1rc4"
+arxiv-submission-core = {path = "./../arxiv-submission-core/core"}
 
 [dev-packages]
 pydocstyle = "*"
@@ -32,6 +32,7 @@ coverage = "*"
 "nose2" = "*"
 sphinx = "*"
 sphinx-autodoc-typehints = "*"
+beautifulsoup4 = "*"
 
 [pipenv]
 allow_prereleases = true

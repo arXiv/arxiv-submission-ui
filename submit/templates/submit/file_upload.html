@@ -71,6 +71,11 @@
           <button type="submit" class="button is-link">Upload</button>
         </div>
       </div>
+      {% if form.file.errors %}
+        {% for error in form.file.errors %}
+          <p class="help is-danger field-error">{{ error }}</p>
+        {% endfor %}
+      {% endif %}
       <p class="is-marginless help has-text-grey">
         You can upload all your files at once as a single .tar.gz or .zip file, or upload individual files as needed.
       </p>

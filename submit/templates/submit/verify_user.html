@@ -94,7 +94,7 @@
         {{ form.verify_user.label }}
       </div>
       {% for error in form.verify_user.errors %}
-        <p class="help is-danger">{{ error }}</p>
+        <p class="help is-danger field-error">{{ error }}</p>
       {% endfor %}
     </div>
   </div>

@@ -130,3 +130,13 @@ ENABLE_CALLBACKS = os.environ.get('ENABLE_CALLBACKS', '0')
 
 
 # AUTH_UPDATED_SESSION_REF = True
+
+AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID', None)
+AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY', None)
+AWS_REGION = os.environ.get('AWS_REGION', 'us-east-1')
+
+KINESIS_STREAM = os.environ.get("KINESIS_STREAM", "SubmissionEvents")
+KINESIS_SHARD_ID = os.environ.get("KINESIS_SHARD_ID", "0")
+KINESIS_START_TYPE = os.environ.get("KINESIS_START_TYPE", "TRIM_HORIZON")
+KINESIS_ENDPOINT = os.environ.get("KINESIS_ENDPOINT", None)
+KINESIS_VERIFY = bool(int(os.environ.get("KINESIS_VERIFY", "1")))

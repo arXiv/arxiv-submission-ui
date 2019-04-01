@@ -7,7 +7,6 @@ x-base-service:
     SECRET_KEY: "not secure only use for development"
     DOCKER_HOST: "unix:///var/run/docker.sock"
     REDIS_ENDPOINT: "submission-ui-redis"
-    SUBMISSION_BROKER_URL: "redis://submission-ui-redis:6379/0"
     ENABLE_ASYNC: 1
     ENABLE_CALLBACKS: 1
     AWS_SECRET_ACCESS_KEY: "${AWS_SECRET_ACCESS_KEY}"
@@ -15,7 +14,7 @@ x-base-service:
     COMPILER_DOCKER_IMAGE: "${COMPILER_DOCKER_IMAGE}"
     HOST_SOURCE_ROOT: "${HOST_SOURCE_ROOT}"
     AWS_S3_REGION_NAME: "us-east-1"
-    S3_ENDPOINT: "https://compiler-localstack:4572"
+    S3_ENDPOINT: "https://localstack:4572"
     S3_VERIFY: 0
     FILE_MANAGER_ENDPOINT: "http://arxiv-filemanager:8000/filemanager/api"
     FILE_MANAGER_CONTENT_PATH: "/{source_id}/content"
@@ -36,6 +35,12 @@ x-base-service:
     SMTP_SSL: 0
     SMTP_USERNAME: ""
     SMTP_PASSWORD: ""
+    KINESIS_STREAM: "SubmissionEvents"
+    KINESIS_VERIFY: 0
+    KINESIS_ENDPOINT: "https://localstack:4568"
+    KINESIS_START_TYPE: "TRIM_HORIZON"
+    SUBMISSION_AGENT_BROKER_URL: "redis://submission-ui-redis:6379/0"
+    SUBMISSION_AGENT_DATABASE_URI: "mysql+mysqldb://foouser:foopass@submission-agent-maria:3306/agent?charset=utf8"
 
 services:
   mailhog:
@@ -68,6 +73,20 @@ services:
       MYSQL_DATABASE: submission
     command: ["mysqld", "--character-set-server=utf8mb4", "--collation-server=utf8mb4_unicode_ci"]
 
+  submission-agent-maria:
+    image: mariadb:10.3
+    container_name: submission-agent-maria
+    networks:
+      - arxiv-submission-ui
+    ports:
+      - "3308:3306"
+    environment:
+      MYSQL_USER: foouser
+      MYSQL_PASSWORD: foopass
+      MYSQL_ROOT_PASSWORD: foorootpassword
+      MYSQL_DATABASE: agent
+    command: ["mysqld", "--character-set-server=utf8mb4", "--collation-server=utf8mb4_unicode_ci"]
+
   filemanager-maria:
     image: mariadb:10.3
     container_name: filemanager-maria
@@ -96,9 +115,9 @@ services:
     ports:
       - "8001:8000"
 
-  compiler-localstack:
+  localstack:
     image: atlassianlabs/localstack
-    container_name: compiler-localstack
+    container_name: localstack
     networks:
       - arxiv-submission-ui
     ports:
@@ -123,7 +142,7 @@ services:
     ports:
       - 8100:8000
     depends_on:
-      - compiler-localstack
+      - localstack
       - compiler-worker
     networks:
       - arxiv-submission-ui
@@ -146,19 +165,33 @@ services:
       - "${HOST_SOURCE_ROOT}:/tmp"
       - /var/run/docker.sock:/var/run/docker.sock
     depends_on:
-      - compiler-localstack
+      - localstack
 
-  # submission-worker:
-  #   << : *base-service
-  #   image: arxiv/submission-worker:0.0.8
-  #   container_name: arxiv-submission-worker
-  #   networks:
-  #     - arxiv-submission-ui
-  #   volumes:
-  #     - "${HOST_SOURCE_ROOT}:/tmp"
-  #     - /var/run/docker.sock:/var/run/docker.sock
-  #   depends_on:
-  #     - submission-ui-redis
+  submission-worker:
+    << : *base-service
+    image: arxiv/submission-worker:0.0.9
+    container_name: arxiv-submission-worker
+    networks:
+      - arxiv-submission-ui
+    volumes:
+      - "${HOST_SOURCE_ROOT}:/tmp"
+      - /var/run/docker.sock:/var/run/docker.sock
+    depends_on:
+      - submission-ui-redis
+
+  submission-agent:
+    << : *base-service
+    image: arxiv/submission-agent:0.0.9
+    container_name: arxiv-submission-agent
+    networks:
+      - arxiv-submission-ui
+    volumes:
+      - "${HOST_SOURCE_ROOT}:/tmp"
+      - /var/run/docker.sock:/var/run/docker.sock
+    depends_on:
+      - submission-ui-redis
+      - submission-agent-maria
+      - localstack
 
   # This just runs once at the beginning to set up the database, then exits 0.
   submission-bootstrap:

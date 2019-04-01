@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "afa870e3dfebf4272ebda856b4fc47fda2189c152ce04a949ddfc55b28f1bcdc"
+            "sha256": "d347b19cc455b7d779f421b7d519235e0cddb3b36c7cad14e04edc20f651b9d6"
         },
         "pipfile-spec": 6,
         "requires": {},
@@ -37,10 +37,10 @@
         },
         "arxiv-submission-core": {
             "hashes": [
-                "sha256:fb8a69b071ca421f3423f4d5eb9bbbf0c7bb93c5d6229df1c4fd1fc7bbf9d5ef"
+                "sha256:ab16023bdecdd707abf1e46963f96da84fa6c6ce3ddd274d1c0a2fb9d511a113"
             ],
             "index": "pypi",
-            "version": "==0.7.1rc6"
+            "version": "==0.7.1rc10"
         },
         "attrs": {
             "hashes": [
@@ -397,10 +397,10 @@
         },
         "vine": {
             "hashes": [
-                "sha256:133ee6d7a9016f177ddeaf191c1f58421a1dcc6ee9a42c58b34bed40e1d2cd87",
-                "sha256:ea4947cc56d1fd6f2095c8d543ee25dad966f78692528e68b4fada11ba3f98af"
+                "sha256:72df526b66563b6e49b4072c927427fa2648040c2f11ee4e5d847b4811df73a9",
+                "sha256:971dfaa5e6039bd8fb5a96b9e4f15f792c1acfdc26fd69ef8b36149812194e32"
             ],
-            "version": "==1.3.0"
+            "version": "==5.0.0a1"
         },
         "webencodings": {
             "hashes": [

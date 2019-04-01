@@ -61,7 +61,7 @@
         </div>
       </div>
 
-      {% elif status.value == "succeeded" and warnings %}
+      {% elif status.value == "completed" and warnings %}
       <div id="status-message" data-status="{{ status.value }}" class="message is-warning">
         <div class="message-header">
           <p><span class="icon"><i class="fa fa-exclamation-triangle"></i></span>Completed With Warnings</p>
@@ -75,7 +75,7 @@
         </div>
       </div>
 
-      {% elif status.value == "succeeded" %}
+      {% elif status.value == "completed" %}
       <div id="status-message" data-status="{{ status.value }}" class="message is-success">
         <div class="message-header">
           <p><span class="icon"><i class="fa fa-check-circle"></i></span>Processing Successful</p></div>
@@ -94,24 +94,6 @@
       {% endif %}
     {% endif %}
 
-    {% for compilation in compilations[::-1] %}
-      <li>
-        {% if compilation.checksum == submission.source_content.checksum %}Current package{% else %}Previous package{% endif %} started {{ compilation.start_time|timesince }}
-        {%- if compilation.status == compilation.Status.SUCCEEDED or compilation.status == compilation.Status.FAILED -%}
-          , {{ compilation.status|compilation_status_display }} after {{ (compilation.end_time - compilation.start_time)|duration }}.
-          {%- if compilation.status == compilation.Status.SUCCEEDED -%}
-          <a href="{{ url_for('ui.file_preview', submission_id=submission_id) }}?checksum={{ compilation.checksum }}" target="_blank">
-            View PDF.
-          </a>
-          {%- endif -%}
-          <a href="{{ url_for('ui.compilation_log', submission_id=submission_id) }}?checksum={{ compilation.checksum }}" target="_blank">
-            View log.
-          </a>
-        {%- else -%}
-          .
-        {%- endif %}
-      </li>
-    {% endfor %}
   </div>
 
   <div class="column is-two-thirds-desktop is-one-half-tablet">

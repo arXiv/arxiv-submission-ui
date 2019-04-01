@@ -138,16 +138,7 @@ class Process(BaseStage):
     @staticmethod
     def complete(submission: Submission) -> bool:
         """Determine whether the submitter has compiled their upload."""
-        # TODO: this might be nice as a property on the submission itself.
-        successful = [
-            compilation for compilation in submission.compilations
-            if compilation.status == compilation.Status.SUCCEEDED
-            and compilation.checksum == submission.source_content.checksum
-        ]
-        return len(successful) > 0 \
-            or (submission.source_content
-                and submission.source_content.source_format
-                is SubmissionContent.Format.PDF)
+        return submission.submitter_compiled_preview
 
 
 class Metadata(BaseStage):

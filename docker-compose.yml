@@ -148,17 +148,17 @@ services:
     depends_on:
       - compiler-localstack
 
-  submission-worker:
-    << : *base-service
-    image: arxiv/submission-worker:0.0.8
-    container_name: arxiv-submission-worker
-    networks:
-      - arxiv-submission-ui
-    volumes:
-      - "${HOST_SOURCE_ROOT}:/tmp"
-      - /var/run/docker.sock:/var/run/docker.sock
-    depends_on:
-      - submission-ui-redis
+  # submission-worker:
+  #   << : *base-service
+  #   image: arxiv/submission-worker:0.0.8
+  #   container_name: arxiv-submission-worker
+  #   networks:
+  #     - arxiv-submission-ui
+  #   volumes:
+  #     - "${HOST_SOURCE_ROOT}:/tmp"
+  #     - /var/run/docker.sock:/var/run/docker.sock
+  #   depends_on:
+  #     - submission-ui-redis
 
   # This just runs once at the beginning to set up the database, then exits 0.
   submission-bootstrap:

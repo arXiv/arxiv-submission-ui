@@ -27,7 +27,7 @@ from arxiv.base import logging, alerts
 from arxiv.forms import csrf
 from arxiv.submission.domain.submission import SubmissionContent
 from arxiv.submission import SetUploadPackage, UpdateUploadPackage, save, \
-    Submission, User, Client
+    Submission, User, Client, UnConfirmCompiledPreview
 from arxiv.submission.exceptions import InvalidStack, SaveError
 from arxiv.users.domain import Session
 
@@ -192,13 +192,15 @@ def delete_all(method: str, params: MultiDict, session: Session,
                                       checksum=stat.checksum,
                                       uncompressed_size=stat.size,
                                       source_format=stat.source_format)
-
+        commands = [command]
+        if submission.submitter_compiled_preview:
+            commands.append(UnConfirmCompiledPreview(creator=submitter))
         if not validate_command(form, command, submission):
             logger.debug('Command validation failed')
             raise BadRequest(rdata)
 
         try:
-            submission, _ = save(command, submission_id=submission_id)
+            submission, _ = save(*commands, submission_id=submission_id)
         except SaveError:
             alerts.flash_failure(Markup(
                 'There was a problem carrying out your request. Please try'
@@ -310,9 +312,11 @@ def delete(method: str, params: MultiDict, session: Session,
             if not validate_command(form, command, submission):
                 logger.debug('Command validation failed')
                 raise BadRequest(rdata)
-
+            commands = [command]
+            if submission.submitter_compiled_preview:
+                commands.append(UnConfirmCompiledPreview(creator=submitter))
             try:
-                submission, _ = save(command, submission_id=submission_id)
+                submission, _ = save(*commands, submission_id=submission_id)
             except SaveError:
                 alerts.flash_failure(Markup(
                     'There was a problem carrying out your request. Please try'
@@ -365,12 +369,16 @@ def _update(form: UploadForm, submission: Submission, stat: Upload,
     """
     existing_upload = getattr(submission.source_content, 'identifier', None)
 
+    commands = []
     if existing_upload == stat.identifier:
         command = UpdateUploadPackage(creator=submitter, client=client,
                                       checksum=stat.checksum,
                                       uncompressed_size=stat.size,
                                       compressed_size=stat.compressed_size,
                                       source_format=stat.source_format)
+        commands.append(command)
+        if submission.submitter_compiled_preview:
+            commands.append(UnConfirmCompiledPreview(creator=submitter))
     else:
         command = SetUploadPackage(creator=submitter, client=client,
                                    identifier=stat.identifier,
@@ -378,13 +386,14 @@ def _update(form: UploadForm, submission: Submission, stat: Upload,
                                    compressed_size=stat.compressed_size,
                                    uncompressed_size=stat.size,
                                    source_format=stat.source_format)
+        commands.append(command)
 
     if not validate_command(form, command, submission):
         logger.debug('Command validation failed')
         raise BadRequest(rdata)
 
     try:
-        submission, _ = save(command, submission_id=submission.submission_id)
+        submission, _ = save(*commands, submission_id=submission.submission_id)
     except SaveError:
         alerts.flash_failure(Markup(
             'There was a problem carrying out your request. Please try'

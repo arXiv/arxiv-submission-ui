@@ -3,6 +3,21 @@
 {% block title -%}Verify Your Contact Information{%- endblock title %}
 
 {% block within_content %}
+<div class="message is-info">
+  <div class="message-body">
+    <div class="columns">
+      <div class="column">
+        <div class="is-pulled-left">
+          <span class="icon has-text-link"><i class="fa fa-info-circle"></i></span>
+        </div>
+      <p>Check this information carefully! A <span class="has-text-weight-bold">current email address is required</span> to complete your submission.</p>
+    </div>
+    <div class="column is-narrow">
+      <p><a class="button is-small" href="{{ url_for('account') }}">Edit User Information</a></p>
+    </div>
+    </div>
+  </div>
+</div>
 <div class="columns">
   <div class="column is-two-thirds-tablet">
     <article class="user-info">
@@ -39,14 +54,12 @@
     </article>
   </div>
   <div class="column">
-    <div class="message is-info">
+    <div class="message is-warning">
       <div class="message-body">
         <div class="is-pulled-left">
-          <span class="icon has-text-link"><i class="fa fa-info-circle"></i></span>
+          <span class="icon"><i class="fa fa-exclamation-circle"></i></span>
         </div>
-      <p>Check this information carefully!</p>
-      <p>A <span class="has-text-weight-bold">current email address is required</span> to complete your submission.</p>
-      <p><a class="button" href="{{ url_for('account') }}">Edit User Information</a></p>
+      <p>Do you plan to submit this work to a journal with a <span class="has-text-weight-bold">blind review process</span>? Submission to arXiv cannot be hidden in a way that fulfills anonymous conditions. Check your target journal's review policies before submitting to arXiv.</p>
       </div>
     </div>
     {% if submitter.endorsements|endorsetype == 'Some' %}

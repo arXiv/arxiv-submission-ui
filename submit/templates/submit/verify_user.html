@@ -56,10 +56,7 @@
   <div class="column">
     <div class="message is-warning">
       <div class="message-body">
-        <div class="is-pulled-left">
-          <span class="icon"><i class="fa fa-exclamation-circle"></i></span>
-        </div>
-      <p>Do you plan to submit this work to a journal with a <span class="has-text-weight-bold">blind review process</span>? Submission to arXiv cannot be hidden in a way that fulfills anonymous conditions. Check your target journal's review policies before submitting to arXiv.</p>
+      <p>The name and email address of the submitter will be <a href="{{ url_for('help_email') }}"">viewable to registered arXiv users</a>.</p>
       </div>
     </div>
     {% if submitter.endorsements|endorsetype == 'Some' %}

@@ -108,7 +108,9 @@ URLS = [
     ("clickthrough", "/ct?url=<url>&v=<v>", BASE_SERVER),
     ("help_endorse", "/help/endorsement", BASE_SERVER),
     ("help_replace", "/help/replace", BASE_SERVER),
-    ("help_version", "/help/replace#versions", BASE_SERVER)
+    ("help_version", "/help/replace#versions", BASE_SERVER),
+    ("help_email", "/help/email-protection", BASE_SERVER),
+    ("help_author", "/help/prep#author", BASE_SERVER)
 ]
 """
 URLs for external services, for use with :func:`flask.url_for`.

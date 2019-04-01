@@ -83,6 +83,27 @@ ol.file-tree {
       ol.file-tree > li ol li:first-child {
         margin-top: 0; }
 
+/* For highlighting TeX logs */
+.tex-info {
+  background-color: rgba(0, 104, 173, 0.15);
+  color: #082031;
+  padding: 0 0.2em; }
+
+.tex-warning {
+  background-color: rgba(214, 118, 0, 0.4);
+  color: #211608;
+  padding: 0 0.2em; }
+
+.tex-danger {
+  background-color: rgba(204, 3, 0, 0.3);
+  color: #340f0e;
+  padding: 0 0.2em; }
+
+.tex-fatal {
+  background-color: #cd0200;
+  color: rgba 255, 255, 255, 1;
+  padding: 0 0.2em; }
+
 /* Classes for responsive bubble-style progress bar */
 ul.progressbar {
   width: 100%;

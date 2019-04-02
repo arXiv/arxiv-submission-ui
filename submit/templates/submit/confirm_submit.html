@@ -8,7 +8,7 @@
     <div class="message is-success">
       <div class="message-body">
         <p class="has-font-weight-bold"><span class="icon"><i class="fa fa-check-circle"></i></span> Your submission has been successfully received.</p>
-        <p>Your submission time stamp is: {{ submission.submitted }}.</p>
+        <p>Your submission time stamp is: {{ submission.submitted.strftime('%FT%TZ') }}.</p>
         <p>To view status or unsubmit your submission, use the links on the <a href="/">Manage Submissions</a> page.</p>
         <!-- TODO: change this link to whatever the URL for manage submissions will be -->
       </div>

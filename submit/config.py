@@ -109,6 +109,8 @@ URLS = [
     ("help_endorse", "/help/endorsement", BASE_SERVER),
     ("help_replace", "/help/replace", BASE_SERVER),
     ("help_version", "/help/replace#versions", BASE_SERVER),
+    ("help_email", "/help/email-protection", BASE_SERVER),
+    ("help_author", "/help/prep#author", BASE_SERVER),
     ("help_mistakes", "/help/faq/mistakes", BASE_SERVER),
     ("help_texprobs", "/help/faq/texprobs", BASE_SERVER)
 ]

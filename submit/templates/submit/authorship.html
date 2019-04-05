@@ -5,41 +5,54 @@
 {% block within_content %}
 <form method="POST" action="{{ url_for('ui.authorship',submission_id=submission_id) }}">
   {{ form.csrf_token }}
-  {% if form.authorship.errors %}<div class="notification is-danger">{% endif %}
-  {% for field in form.authorship %}
-    <div class="field">
-      <div class="control">
-        <div class="radio">
-          {{ field|safe }}
-          {{ field.label }}
+  <div class="columns">
+    <div class="column is-three-fifths">
+      {% if form.authorship.errors %}<div class="notification is-danger">{% endif %}
+      {% for field in form.authorship %}
+        <div class="field">
+          <div class="control">
+            <div class="radio">
+              {{ field|safe }}
+              {{ field.label }}
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+
+      <div class="field">
+        <div class="control" style="margin-left: 2.5em; margin-top: -1em">
+          <div class="checkbox">
+            {{ form.proxy }}
+            {{ form.proxy.label }}
+            <a href="{{ url_for('help_third_party_submission') }}" class="help-bubble">
+              <i class="fa fa-question-circle is-info"></i>
+              <div class="bubble-text">Third party submissions may have additional requirements. Click for detailed help page.</div></a>
+          </div>
+          {% if form.proxy.errors %}
+            {% for error in form.proxy.errors %}
+              <p class="help is-danger">{{ error }}</p>
+            {% endfor %}
+          {% endif %}
         </div>
       </div>
-    </div>
-  {% endfor %}
-
-  <div class="field">
-    <div class="control" style="margin-left: 2.5em; margin-top: -1em">
-      <div class="checkbox">
-        {{ form.proxy }}
-        {{ form.proxy.label }}
-        <a href="{{ url_for('help_third_party_submission') }}" class="help-bubble">
-          <i class="fa fa-question-circle is-info"></i>
-          <div class="bubble-text">Third party submissions may have additional requirements. Click for detailed help page.</div></a>
-      </div>
-      {% if form.proxy.errors %}
-        {% for error in form.proxy.errors %}
-          <p class="help is-danger field-error">{{ error }}</p>
+      {% if form.authorship.errors %}
+        {% for error in form.authorship.errors %}
+          <p class="help is-danger">{{ error }}</p>
         {% endfor %}
       {% endif %}
+      {% if form.authorship.errors %}</div>{% endif %}
+  </div>
+  <div class="column">
+    <div class="message is-info">
+      <div class="message-body">
+        <div class="is-pulled-left">
+          <span class="icon"><i class="fa fa-info-circle"></i></span>
+        </div>
+      <p>Complete and accurate authorship is required and will be <a href="{{ url_for('help_author') }}"">displayed in the public metadata</a>.</p>
+      </div>
     </div>
   </div>
-  {% if form.authorship.errors %}
-    {% for error in form.authorship.errors %}
-      <p class="help is-danger field-error">{{ error }}</p>
-    {% endfor %}
-  {% endif %}
-  {% if form.authorship.errors %}</div>{% endif %}
-
+</div>
 
 {{ submit_macros.submit_nav(submission_id) }}
 </form>

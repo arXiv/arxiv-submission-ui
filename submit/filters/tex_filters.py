@@ -15,15 +15,22 @@ DISABLE_HTEX = r'(\~+\sRunning htex.*\s\~+)'
 DISABLE_HLATEX = r'(\~+\sRunning hlatex.*\s\~+)'
 DISABLE_HPDFLATEX = r'(\~+\sRunning hpdflatex.*\s\~+)'
 
-RUN_ORDER = ['last', 'first', 'second', 'third', 'forth']
+RUN_ORDER = ['last', 'first', 'second', 'third', 'fourth']
 
 def compilation_log_display(autotex_log: str) -> str:
     """
+    Highlight interesting features in autotex log.
 
-    :param autotex_log:
-    :return:
+    Parameters
+    ----------
+    autotex_log : str
+        Complete autotex log containing output from series of TeX runs.
+
+    Returns
+    -------
+        Returns highlighted autotex log.
+
     """
-
     # Create summary information detailing runs and markup key.
 
     run_summary = ("If you are attempting to compile "

@@ -57,7 +57,7 @@
             <li>process your upload after corrections</li>
           </ul>
           <p class="has-text-centered"><a class="button is-link" href="{{ url_for('ui.file_upload', submission_id=submission_id) }}">Go back to Upload Files</a></p>
-          <p class="has-text-centered"><a class="button" href="#help">Help: Common TeX Errors</a></p>
+          <p class="has-text-centered"><a class="button" href="{{ url_for('help_mistakes') }}">Help: Common TeX Errors</a></p>
         </div>
       </div>
 
@@ -72,6 +72,12 @@
             <li>Be sure to <span class="has-text-weight-bold">check the compiled preview carefully</span> for any undesired artifacts or errors - especially references, figures, and captions.</li>
             <li><span class="has-text-weight-bold">Check the compiler log</span> for warnings and errors.</li>
           </ul>
+          <p class="has-text-centered">
+            <a class="button is-link" href="{{ url_for('ui.file_preview', submission_id=submission_id) }}" target="_blank" title="PDF preview opens in a new tab">
+              <span>View PDF</span> <span class="icon"><i class="fa fa-external-link"></i></span>
+            </a>
+          </p>
+          <p class="has-text-centered"><a class="button" href="{{ url_for('help_texprobs') }}">Help: TeX Rendering Problems</a></p>
         </div>
       </div>
 

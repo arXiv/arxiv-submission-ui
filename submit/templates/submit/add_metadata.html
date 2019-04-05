@@ -8,7 +8,9 @@
   {% with field = form.title %}
   <div class="field">
     <div class="control">
-      <label class="label">{{ field.label.text }} <span class="icon has-text-link"><i class="fa fa-question-circle"></i></span></label>
+      <label class="label">{{ field.label.text }} <a href="{{ url_for('help_metadata') }}" class="help-bubble">
+        <i class="fa fa-question-circle is-info"></i>
+        <div class="bubble-text">Unicode, TeX accent characters, and MathJax are supported. Click for detailed information.</div></a></label>
       {% if field.errors %}
         <div class="help is-danger field-error">
           {% for error in field.errors %}
@@ -33,7 +35,9 @@
   {% with field = form.authors_display %}
   <div class="field">
     <div class="control">
-      <label class="label">{{ field.label.text }} <span class="icon has-text-link"><i class="fa fa-question-circle"></i></span></label>
+      <label class="label">{{ field.label.text }} <a href="{{ url_for('help_metadata') }}" class="help-bubble">
+        <i class="fa fa-question-circle is-info"></i>
+        <div class="bubble-text">Click for detailed information on author name formatting.</div></a></label>
       {% if field.errors %}
         <div class="help is-danger field-error">
           {% for error in field.errors %}
@@ -47,7 +51,7 @@
       </p>
       {% endif %}
       {% if field.errors %}
-        {{ field(class="input is-danger")|safe }}
+        {{ field(class="textarea is-danger")|safe }}
       {% else %}
         {{ field(class="textarea")|safe }}
       {% endif %}
@@ -58,7 +62,9 @@
   {% with field = form.abstract %}
   <div class="field">
     <div class="control">
-      <label class="label">{{ field.label.text }} <span class="icon has-text-link"><i class="fa fa-question-circle"></i></span></label>
+      <label class="label">{{ field.label.text }} <a href="{{ url_for('help_metadata') }}" class="help-bubble">
+        <i class="fa fa-question-circle is-info"></i>
+        <div class="bubble-text">Unicode, TeX accent characters, and MathJax are supported. Click for detailed information.</div></a></label>
       {% if field.errors %}
         <div class="help is-danger field-error">
           {% for error in field.errors %}
@@ -72,7 +78,7 @@
       </p>
       {% endif %}
       {% if field.errors %}
-        {{ field(class="input is-danger")|safe }}
+        {{ field(class="textarea is-danger")|safe }}
       {% else %}
         {{ field(class="textarea")|safe }}
       {% endif %}
@@ -83,7 +89,9 @@
   {% with field = form.comments %}
   <div class="field">
     <div class="control">
-      <label class="label">{{ field.label.text }} <span class="icon has-text-link"><i class="fa fa-question-circle"></i></span></label>
+      <label class="label">{{ field.label.text }} <a href="{{ url_for('help_metadata') }}" class="help-bubble">
+        <i class="fa fa-question-circle is-info"></i>
+        <div class="bubble-text">Unicode, TeX accent characters. and MathJax are supported. Click for detailed information.</div></a></label>
       {% if field.errors %}
         <div class="help is-danger field-error">
           {% for error in field.errors %}

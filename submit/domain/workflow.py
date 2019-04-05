@@ -1,7 +1,8 @@
 """Defines submission stages and workflows supported by this UI."""
 
-from typing import Iterable, MutableMapping, NamedTuple, Optional, Dict
-
+from typing import Iterable, MutableMapping, NamedTuple, Optional, Dict, \
+    Union, Callable
+from functools import wraps
 from arxiv.submission.domain import Submission
 from arxiv.submission.domain.submission import SubmissionContent
 
@@ -13,8 +14,36 @@ class Stage(type):     # type: ignore
 class BaseStage(metaclass=Stage):
     """Base class for workflow stages."""
 
-    always_check = False
-    """If False, the result will be cached when complete."""
+    endpoint: str
+    label: str
+    title: str
+    display: str
+    requested: bool
+    must_see: bool
+
+    def __init__(self, required: bool = True, must_see: bool = False) -> None:
+        """
+        Configure the stage for a particular workflow.
+
+        Parameters
+        ----------
+        required : bool
+            This stage must be complete to proceed.
+        must_see : bool
+            This stage must be seen (even if already complete) to proceed.
+
+        """
+        self.required = required
+        self.must_see = must_see
+
+    def is_optional(self):
+        """Inverse of :attr:`.required`."""
+        return not self.required
+
+    @property
+    def type(self):
+        """Convenience method for getting type; to support use in templates."""
+        return type(self)
 
 
 def stage_from_endpoint(endpoint: str) -> Stage:
@@ -34,7 +63,7 @@ class VerifyUser(BaseStage):
     display = 'Verify User'
 
     @staticmethod
-    def complete(submission: Submission) -> bool:
+    def is_complete(submission: Submission) -> bool:
         """Determine whether the submitter has verified their information."""
         return submission.submitter_contact_verified is True
 
@@ -48,7 +77,7 @@ class Authorship(BaseStage):
     display = "Authorship"
 
     @staticmethod
-    def complete(submission: Submission) -> bool:
+    def is_complete(submission: Submission) -> bool:
         """Determine whether the submitter has indicated authorship."""
         return submission.submitter_is_author is not None
 
@@ -62,7 +91,7 @@ class License(BaseStage):
     display = "License"
 
     @staticmethod
-    def complete(submission: Submission) -> bool:
+    def is_complete(submission: Submission) -> bool:
         """Determine whether the submitter has selected a license."""
         return submission.license is not None
 
@@ -76,7 +105,7 @@ class Policy(BaseStage):
     display = "Policy"
 
     @staticmethod
-    def complete(submission: Submission) -> bool:
+    def is_complete(submission: Submission) -> bool:
         """Determine whether the submitter has accepted arXiv policies."""
         return submission.submitter_accepts_policy is True
 
@@ -90,7 +119,7 @@ class Classification(BaseStage):
     display = "Category"
 
     @staticmethod
-    def complete(submission: Submission) -> bool:
+    def is_complete(submission: Submission) -> bool:
         """Determine whether the submitter selected a primary category."""
         return submission.primary_classification is not None
 
@@ -104,7 +133,7 @@ class CrossList(BaseStage):
     display = "Cross-list"
 
     @staticmethod
-    def complete(submission: Submission) -> bool:
+    def is_complete(submission: Submission) -> bool:
         return len(submission.secondary_classification) > 0
 
 
@@ -118,7 +147,7 @@ class FileUpload(BaseStage):
     always_check = True
 
     @staticmethod
-    def complete(submission: Submission) -> bool:
+    def is_complete(submission: Submission) -> bool:
         """Determine whether the submitter has uploaded files."""
         return submission.source_content is not None and \
             submission.source_content.checksum is not None and \
@@ -132,13 +161,13 @@ class Process(BaseStage):
     label = 'process your submission files'
     title = "File process"
     display = "Process Files"
-    always_check = True
     """We need to re-process every time the source is updated."""
 
     @staticmethod
-    def complete(submission: Submission) -> bool:
+    def is_complete(submission: Submission) -> bool:
         """Determine whether the submitter has compiled their upload."""
         return submission.submitter_compiled_preview
+
 
 
 class Metadata(BaseStage):
@@ -150,7 +179,7 @@ class Metadata(BaseStage):
     display = "Metadata"
 
     @staticmethod
-    def complete(submission: Submission) -> bool:
+    def is_complete(submission: Submission) -> bool:
         """Determine whether the submitter has entered required metadata."""
         return (submission.metadata.title is not None
                 and submission.metadata.abstract is not None
@@ -166,7 +195,7 @@ class OptionalMetadata(BaseStage):
     display = "Opt. Metadata"
 
     @staticmethod
-    def complete(submission: Submission) -> bool:
+    def is_complete(submission: Submission) -> bool:
         """Determine whether the user has set optional metadata fields."""
         return (submission.metadata.doi is not None
                 or submission.metadata.msc_class is not None
@@ -184,7 +213,7 @@ class FinalPreview(BaseStage):
     display = "Preview"
 
     @staticmethod
-    def complete(submission: Submission) -> bool:
+    def is_complete(submission: Submission) -> bool:
         """Determine whether the submission is finalized."""
         return submission.finalized
 
@@ -198,8 +227,19 @@ class Confirm(BaseStage):
     display = "Confirmed"
 
     @staticmethod
-    def complete(submission: Submission) -> bool:
+    def is_complete(submission: Submission) -> bool:
         return False
+
+
+def get_instance(func: Callable) -> Callable:
+    """Look up the stage instance before calling ``func``."""
+    @wraps(func)
+    def inner(workflow: 'Workflow', stage: Optional[Union[Stage, BaseStage]]):
+        if stage and not isinstance(stage, BaseStage):
+            idx = workflow._order.index(stage)
+            stage: BaseStage = workflow.ORDER[idx]
+        return func(workflow, stage)
+    return inner
 
 
 class Workflow:
@@ -208,10 +248,24 @@ class Workflow:
     REQUIRED = []
     CONFIRMATION = None
 
-    def __init__(self, submission: Submission,
-                 session: MutableMapping) -> None:
+    def __init__(self, submission: Submission, seen: MutableMapping) -> None:
+        """
+        Initialize for a specific submission, and a mapping for seen stages.
+
+        Parameters
+        ----------
+        submission : :class:`.Submission`
+            The submission that is subject to this workflow.
+        seen : mapping
+            A mapping that we can use to track what stages the user has seen
+            for a particular submission and workflow. For example, this could
+            be a client session.
+
+        """
         self.submission = submission
-        self.session = session
+        self._seen = seen
+        self._key = f'{submission.submission_id}::{self.__class__.__name__}'
+        self._order = [type(stage) for stage in self.ORDER]
 
     def __iter__(self):
         """Iterate over stages in this workflow."""
@@ -231,144 +285,124 @@ class Workflow:
         return self.submission.finalized
 
     @property
+    def current_stage(self):
+        """Get the first stage in the workflow that is not done."""
+        for stage in self:
+            if not self.is_done(stage):
+                return stage
+
+    @property
     def confirmation(self) -> Stage:
         """Get the confirmation :class:`.Stage` for this workflow."""
         return self.CONFIRMATION
 
-    def is_required(self, stage: Stage) -> bool:
-        """Check whether a stage is required."""
-        return stage in self.REQUIRED
-
-    def next_stage(self, stage: Stage) -> Optional[Stage]:
+    @get_instance
+    def next_stage(self, stage: Optional[BaseStage]) -> Optional[BaseStage]:
         """Get the next stage."""
+        if stage is None:
+            return None
         idx = self.ORDER.index(stage)
         if idx + 1 >= len(self.ORDER):
             return None
         return self.ORDER[idx + 1]
 
-    def previous_stage(self, stage: Stage) -> Optional[Stage]:
+    @get_instance
+    def previous_stage(self, stage: Optional[BaseStage]) -> Optional[BaseStage]:
         """Get the previous stage."""
+        if stage is None:
+            return None
         idx = self.ORDER.index(stage)
         if idx == 0:
             return None
         return self.ORDER[idx - 1]
 
-    def can_proceed_to(self, stage: Stage) -> bool:
+    @get_instance
+    def can_proceed_to(self, stage: Optional[BaseStage]) -> bool:
         """Determine whether the user can proceed to a stage."""
-        return self.is_complete(self.previous_stage(stage)) \
-            or all(map(self.complete_or_optional, self.iter_prior(stage)))
+        return self.is_done(self.previous_stage(stage)) \
+            or self.previous_stage(stage).is_optional() \
+            or all(map(self.is_done, self.iter_prior(stage)))
 
-    def complete_or_optional(self, stage: Stage) -> bool:
-        return self.is_complete(stage) or not self.is_required(stage)
+    @get_instance
+    def is_required(self, stage: Optional[BaseStage]) -> bool:
+        """Check whether a stage is required."""
+        if stage is None:
+            return False
+        return stage.required
 
-    def _key(self) -> str:
-        return f'{self.submission.submission_id}::{self.__class__.__name__}'
-
-    def _get_states(self) -> dict:
-        if self._key() in self.session:
-            states = self.session[self._key()]
-        else:
-            states = {}
-        return states
-
-    def _set_states(self, states: dict) -> None:
-        self.session[self._key()] = states
-
-    @property
-    def current_states(self) -> Dict[str, bool]:
-        """Get the current state of all stages in the workflow."""
-        # Check the client session for state info first.
-        states = self._get_states()
-        # Completion just means that "we have gotten this far." So if we
-        # encounter a complete stage, the previous stages "just are" complete.
-        for stage in self.ORDER[::-1]:
-            # If the status is not set in the client session, or if the client
-            # session shows that the state is incomplete, check the submission
-            # itself for a fresh look.
-            if stage.endpoint not in states \
-                    or not states[stage.endpoint] \
-                    or stage.always_check:
-                states[stage.endpoint] = stage.complete(self.submission)
-
-            # Mark all previous stages as complete if this stage is complete.
-            if states[stage.endpoint]:
-                for previous_stage in self.iter_prior(stage):
-                    states[previous_stage.endpoint] = True
-                break   # Nothing more to do.
-        self._set_states(states)
-        return states
-
-    def is_complete(self, stage: Optional[Stage]) -> bool:
+    @get_instance
+    def is_complete(self, stage: Optional[BaseStage]) -> bool:
         """Determine whether or not a stage is complete."""
         if stage is None:
             return True
-        return self.current_states[stage.endpoint]
+        return stage.is_complete(self.submission)
 
-    def mark_complete(self, stage: Stage) -> None:
-        """Mark a stage as complete."""
-        states = self._get_states()
-        states[stage.endpoint] = True
-        self._set_states(states)
+    def mark_seen(self, stage: Stage) -> None:
+        """Mark a stage as seen by the user."""
+        try:
+            seen = self._seen[self._key]
+        except KeyError:
+            seen = {}
+        seen[stage.endpoint] = True
+        self._seen[self._key] = seen
 
-    @property
-    def current_stage(self):
-        """Get the first incomplete stage in the workflow."""
-        for stage in self:
-            if not self.is_complete(stage):
-                return stage
+    def is_seen(self, stage: Optional[Stage]) -> bool:
+        """Determine whether or not the user has seen this stage."""
+        if stage is None:
+            return True
+        try:
+            seen = self._seen[self._key]
+        except KeyError:
+            seen = {}
+        return seen.get(stage.endpoint, False)
+
+    @get_instance
+    def is_done(self, stage: Optional[BaseStage]) -> bool:
+        """
+        Evaluate whether a stage is sufficiently addressed for this workflow.
+
+        This considers whether the stage is complete (if required), and whether
+        the stage has been seen (if it must be seen).
+        """
+        if stage is None:
+            return True
+        return ((self.is_complete(stage) or stage.is_optional())
+                and (self.is_seen(stage) or not stage.must_see))
 
 
 class SubmissionWorkflow(Workflow):
+    """Workflow for new submissions."""
+
     ORDER = [
-        VerifyUser,
-        Authorship,
-        License,
-        Policy,
-        Classification,
-        CrossList,
-        FileUpload,
-        Process,
-        Metadata,
-        OptionalMetadata,
-        FinalPreview,
-        Confirm
-    ]
-    REQUIRED = [
-        VerifyUser,
-        Authorship,
-        License,
-        Policy,
-        Classification,
-        FileUpload,
-        Process,
-        Metadata,
-        FinalPreview,
-        Confirm
+        VerifyUser(),
+        Authorship(),
+        License(),
+        Policy(),
+        Classification(),
+        CrossList(required=False, must_see=True),
+        FileUpload(),
+        Process(),
+        Metadata(),
+        OptionalMetadata(required=False, must_see=True),
+        FinalPreview(),
+        Confirm()
     ]
     CONFIRMATION = Confirm
 
 
 class ReplacementWorkflow(Workflow):
+    """Workflow for replacements."""
+
     ORDER = [
-        VerifyUser,
-        Authorship,
-        License,
-        Policy,
-        FileUpload,
-        Process,
-        Metadata,
-        OptionalMetadata,
-        FinalPreview,
-        Confirm
+        VerifyUser(must_see=True),
+        Authorship(must_see=True),
+        License(must_see=True),
+        Policy(must_see=True),
+        FileUpload(must_see=True),
+        Process(must_see=True),
+        Metadata(must_see=True),
+        OptionalMetadata(required=False, must_see=True),
+        FinalPreview(must_see=True),
+        Confirm(must_see=True)
     ]
-    REQUIRED = [
-        VerifyUser,
-        Authorship,
-        License,
-        Policy,
-        FileUpload,
-        Process,
-        Metadata,
-        FinalPreview,
-        Confirm
-    ]
+    CONFIRMATION = Confirm

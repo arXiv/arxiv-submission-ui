@@ -14,7 +14,7 @@
     <p class="sr-only" id="progress">Steps in Submission Process</p>
     <ul class="progressbar">
       {% for stage in workflow %}
-      <li class="{% if workflow.is_complete(stage) or this_stage == stage %}is-complete{% endif %} {% if this_stage == stage %}is-active{% endif %}">
+      <li class="{% if workflow.is_done(stage) or this_stage == stage.type %}is-complete{% endif %} {% if this_stage == stage.type %}is-active{% endif %}">
         <a class="is-size-7" title="{{ stage.title }}" href="{% if submission_id %}{{ url_for('ui.' + stage.endpoint, submission_id=submission_id) }}{% endif %}">
           {{ stage.display }}
         </a>

@@ -32,10 +32,15 @@ def finalize(method: str, params: MultiDict, session: Session,
     submission, submission_events = load_submission(submission_id)
 
     form = FinalizationForm(params)
+
+    # The abs preview macro expects a specific struct for submission history.
+    submission_history = [{'submitted_date': s.created, 'version': s.version}
+                          for s in submission.versions]
     response_data = {
         'submission_id': submission_id,
         'form': form,
-        'submission': submission
+        'submission': submission,
+        'submission_history': submission_history
     }
 
     if method == 'POST':

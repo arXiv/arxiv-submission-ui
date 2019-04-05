@@ -117,6 +117,7 @@ def metadata(method: str, params: MultiDict, session: Session,
         if commands:   # Metadata has changed.
             if not all(valid):
                 logger.debug('Not all commands are valid')
+                response_data['form'] = form
                 raise BadRequest(response_data)
 
             try:

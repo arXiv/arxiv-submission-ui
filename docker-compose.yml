@@ -14,7 +14,7 @@ x-base-service:
     COMPILER_DOCKER_IMAGE: "${COMPILER_DOCKER_IMAGE}"
     HOST_SOURCE_ROOT: "${HOST_SOURCE_ROOT}"
     AWS_S3_REGION_NAME: "us-east-1"
-    S3_ENDPOINT: "https://localstack:4572"
+    S3_ENDPOINT: "https://submission-localstack:4572"
     S3_VERIFY: 0
     FILE_MANAGER_ENDPOINT: "http://arxiv-filemanager:8000/filemanager/api"
     FILE_MANAGER_CONTENT_PATH: "/{source_id}/content"
@@ -23,12 +23,12 @@ x-base-service:
     # FLASK_DEBUG: 1
     VERBOSE_COMPILE: 1
     JWT_SECRET: "foosecret"
-    CLASSIC_DATABASE_URI: "mysql+mysqldb://foouser:foopass@submission-ui-maria:3306/submission?charset=utf8"
+    CLASSIC_DATABASE_URI: "mysql+mysqldb://foouser:foopass@submission-ui-maria:3306/submission?charset=utf8mb4"
     # CLASSIC_DATABASE_URI: "sqlite:///db.sqlite"
     FLASK_SECRET: 'what'
     SESSION_COOKIE_SECURE: 0
     COMPILER_ENDPOINT: "http://compiler-api:8000/"
-    FILE_MANAGMENT_SQLALCHEMY_DATABASE_URI: "mysql+mysqldb://foouser:foopass@filemanager-maria:3306/uploads?charset=utf8"
+    FILE_MANAGMENT_SQLALCHEMY_DATABASE_URI: "mysql+mysqldb://foouser:foopass@filemanager-maria:3306/uploads?charset=utf8mb4"
     EMAIL_ENABLED: 1
     SMTP_HOSTNAME: mailhog
     SMTP_PORT: 1025
@@ -37,10 +37,10 @@ x-base-service:
     SMTP_PASSWORD: ""
     KINESIS_STREAM: "SubmissionEvents"
     KINESIS_VERIFY: 0
-    KINESIS_ENDPOINT: "https://localstack:4568"
+    KINESIS_ENDPOINT: "https://submission-localstack:4568"
     KINESIS_START_TYPE: "TRIM_HORIZON"
     SUBMISSION_AGENT_BROKER_URL: "redis://submission-ui-redis:6379/0"
-    SUBMISSION_AGENT_DATABASE_URI: "mysql+mysqldb://foouser:foopass@submission-agent-maria:3306/agent?charset=utf8"
+    SUBMISSION_AGENT_DATABASE_URI: "mysql+mysqldb://foouser:foopass@submission-agent-maria:3306/agent?charset=utf8mb4"
 
 services:
   mailhog:
@@ -115,9 +115,9 @@ services:
     ports:
       - "8001:8000"
 
-  localstack:
+  submission-localstack:
     image: atlassianlabs/localstack
-    container_name: localstack
+    container_name: submission-localstack
     networks:
       - arxiv-submission-ui
     ports:
@@ -142,7 +142,7 @@ services:
     ports:
       - 8100:8000
     depends_on:
-      - localstack
+      - submission-localstack
       - compiler-worker
     networks:
       - arxiv-submission-ui
@@ -165,11 +165,11 @@ services:
       - "${HOST_SOURCE_ROOT}:/tmp"
       - /var/run/docker.sock:/var/run/docker.sock
     depends_on:
-      - localstack
+      - submission-localstack
 
   submission-worker:
     << : *base-service
-    image: arxiv/submission-worker:0.0.9
+    image: arxiv/submission-worker:0.0.10
     container_name: arxiv-submission-worker
     networks:
       - arxiv-submission-ui
@@ -181,7 +181,7 @@ services:
 
   submission-agent:
     << : *base-service
-    image: arxiv/submission-agent:0.0.9
+    image: arxiv/submission-agent:0.0.10
     container_name: arxiv-submission-agent
     networks:
       - arxiv-submission-ui
@@ -191,7 +191,7 @@ services:
     depends_on:
       - submission-ui-redis
       - submission-agent-maria
-      - localstack
+      - submission-localstack
 
   # This just runs once at the beginning to set up the database, then exits 0.
   submission-bootstrap:
@@ -228,7 +228,7 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: arxiv-submission-ui
-    command: uwsgi --http-socket :8000 -M -t 3000 --manage-script-name --wsgi-disable-file-wrapper --processes 8 --threads 1 --async 100 --ugreen  --mount /=wsgi.py --logformat "%(addr) %(addr) - %(user_id)|%(session_id) [%(rtime)] [%(uagent)] \"%(method) %(uri) %(proto)\" %(status) %(size) %(micros) %(ttfb)"
+    command: uwsgi --http-socket :8000 -M -t 3000 --buffer-size 65535 --manage-script-name --wsgi-disable-file-wrapper --processes 8 --threads 1 --async 100 --ugreen  --mount /=wsgi.py --logformat "%(addr) %(addr) - %(user_id)|%(session_id) [%(rtime)] [%(uagent)] \"%(method) %(uri) %(proto)\" %(status) %(size) %(micros) %(ttfb)"
     # command: flask run -p 8000 -h 0.0.0.0
     # volumes:
     #   - ./submit/:/opt/arxiv/submit/

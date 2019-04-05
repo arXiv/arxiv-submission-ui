@@ -13,14 +13,14 @@
 </a>
 
 <pre>
-{{ submission.to_dict()|pprint }}
+{{ submission|asdict|pprint }}
 </pre>
 
 {% for event in events %}
 <li class="">
   {{ event.NAMED.capitalize() }} {{ event.created|timesince }} ({{event.event_id}})
   <pre>
-  {{ event.to_dict()|pprint }}
+  {{ event|asdict|pprint }}
   </pre>
 </li>
 {% endfor %}

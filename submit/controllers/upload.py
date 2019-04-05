@@ -28,7 +28,7 @@ from arxiv.forms import csrf
 from arxiv.submission.domain.submission import SubmissionContent
 from arxiv.submission import SetUploadPackage, UpdateUploadPackage, save, \
     Submission, User, Client, UnConfirmCompiledPreview
-from arxiv.submission.exceptions import InvalidStack, SaveError
+from arxiv.submission.exceptions import InvalidEvent, SaveError
 from arxiv.users.domain import Session
 
 from .util import validate_command, user_and_client_from_session

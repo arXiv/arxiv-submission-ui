@@ -1,19 +1,21 @@
 """Provides routes for the submission user interface."""
 
-from typing import Optional, Callable, Dict, List
+from typing import Optional, Callable, Dict, List, Union
+from http import HTTPStatus as status
 
 from werkzeug import MultiDict
 from werkzeug.exceptions import InternalServerError, BadRequest
-from flask import Blueprint, make_response, redirect, request, \
+from flask import Blueprint, make_response, redirect, request, Markup, \
                   render_template, url_for, Response, g, send_file, session
-from http import HTTPStatus as status
+
+
 from arxiv import taxonomy
-from submit import controllers
 from arxiv.users import auth
 import arxiv.submission as events
 from arxiv.submission.services.classic.exceptions import Unavailable
-from arxiv.base import logging
+from arxiv.base import logging, alerts
 
+from .. import controllers
 from .auth import is_owner
 from ..domain import workflow, Submission
 from ..flow_control import flow_control, get_workflow
@@ -22,6 +24,11 @@ from .. import util
 logger = logging.getLogger(__name__)
 
 ui = Blueprint('ui', __name__, url_prefix='/')
+
+SUPPORT = Markup(
+    'If you continue to experience problems, please contact'
+    ' <a href="mailto:help@arxiv.org"> arXiv support</a>.'
+)
 
 
 def path(endpoint: Optional[str] = None) -> str:
@@ -50,10 +57,6 @@ def load_submission() -> None:
             util.load_submission(submission_id)
     except Unavailable as e:
         raise InternalServerError('Could not connect to database') from e
-    # except Exception as e:
-    #     logger.error('Encountered %s while loading %s', e, submission_id)
-    #     request.submission = None
-    #     request.events = None
 
 
 @ui.context_processor
@@ -83,6 +86,19 @@ def inject_workflow() -> Dict[str, Optional[workflow.Workflow]]:
     if hasattr(request, 'submission'):
         return {'workflow': get_workflow(request.submission)}
     return {'workflow': None, 'get_workflow': get_workflow}
+
+
+def add_immediate_alert(context: dict, severity: str,
+                        message: Union[str, dict], title: Optional[str] = None,
+                        dismissable: bool = True, safe: bool = False) -> None:
+    """Add an alert for immediate display."""
+    if safe and isinstance(message, str):
+        message = Markup(message)
+    data = {'message': message, 'title': title, 'dismissable': dismissable}
+
+    if 'immediate_alerts' not in context:
+        context['immediate_alerts'] = []
+    context['immediate_alerts'].append((severity, data))
 
 
 def handle(controller: Callable, template: str, title: str,
@@ -128,6 +144,9 @@ def handle(controller: Callable, template: str, title: str,
     except (BadRequest, InternalServerError) as e:
         logger.debug('Caught %s from controller', e)
         context.update(e.description)
+        context.update({'error': e})
+        message = Markup(f'Something unexpected went wrong. {SUPPORT}')
+        add_immediate_alert(context, alerts.FAILURE, message)
         return make_response(render_template(template, **context), e.code)
     except Unavailable as e:
         raise InternalServerError('Could not connect to database') from e

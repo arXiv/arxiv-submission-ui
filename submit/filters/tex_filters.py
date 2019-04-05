@@ -179,7 +179,7 @@ def compilation_log_display(autotex_log: str) -> str:
 
             if re.search(regex, line, re.IGNORECASE):
                 markup_enabled = False
-                new_log = new_log + f"DISABLE MARKUP:{line}\n"
+                #new_log = new_log + f"DISABLE MARKUP:{line}\n"
                 break
 
         # Enable markiup for runs that user is interested in
@@ -187,7 +187,7 @@ def compilation_log_display(autotex_log: str) -> str:
 
             if re.search(regex, line, re.IGNORECASE):
                 markup_enabled = True
-                new_log = new_log + f"ENABLE MARKUP:{line}\n"
+                #new_log = new_log + f"ENABLE MARKUP:{line}\n"
                 #log_summary = log_summary + "\tRun: " + re.search(regex, line, re.IGNORECASE).group() + '\n'
                 found = run_regex.search(line)
                 if found:
@@ -225,8 +225,8 @@ def compilation_log_display(autotex_log: str) -> str:
             regex = r'('+ filter + r')'
 
 
-            if run and current_run and re.search('PATH', line):
-                new_log = new_log + f"RUN:{run}:{RUN_ORDER.index(run)} CURRENT:{current_run}:{RUN_ORDER.index(current_run)}:Last:{last_run_for_engine[current_engine]}" + '\n'
+            #if run and current_run and re.search('PATH', line):
+            #    new_log = new_log + f"RUN:{run}:{RUN_ORDER.index(run)} CURRENT:{current_run}:{RUN_ORDER.index(current_run)}:Last:{last_run_for_engine[current_engine]}" + '\n'
 
             if not run:
                 run = 'first'
@@ -236,14 +236,14 @@ def compilation_log_display(autotex_log: str) -> str:
                 #new_log = new_log + f"NOT RIGHT RUN LEVEL: SKIP:{filter}" + '\n'
                 continue
 
-            if re.search('PATH', line):
-                new_log = new_log + f"APPLY FILTER:{filter}" + '\n'
+            #if re.search('PATH', line):
+            #    new_log = new_log + f"APPLY FILTER:{filter}" + '\n'
 
             if re.search(regex, line, re.IGNORECASE):
                 line = re.sub(regex, rf'<span class="tex-{level}">\1</span>', line, flags=re.IGNORECASE)
-                if re.search('PATH', line):
-                    rx = rf'<span class="tex-{level}">\1</span>'
-                    new_log = new_log + f"MATCH FILTER:{filter} using level:{level} rx:{rx}" + '\n'
+                #if re.search('PATH', line):
+                #    rx = rf'<span class="tex-{level}">\1</span>'
+                #    new_log = new_log + f"MATCH FILTER:{filter} using level:{level} rx:{rx}" + '\n'
                 break
 
         # Append line to new marked up log
@@ -251,7 +251,7 @@ def compilation_log_display(autotex_log: str) -> str:
 
     # Put together a nice report, list TeX runs, markup info, and marked up log.
     # In future we can add 'Recommendation' section or collect critical errors.
-    new_log = run_summary + log_summary + '\n\nMarked Up Log:\n\n' + new_log + "I'm DONE"
+    new_log = run_summary + log_summary + '\n\nMarked Up Log:\n\n' + new_log
 
     return new_log
 

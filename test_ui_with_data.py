@@ -25,7 +25,9 @@ import os
 import time
 import re
 from itertools import groupby
-from collections import defaultdict
+from collections import defaultdict, OrderedDict
+from multiprocessing import Pool
+from functools import partial
 
 import click
 import requests
@@ -60,29 +62,51 @@ CSRF_PATTERN = (r'\<input id="csrf_token" name="csrf_token" type="hidden"'
 @click.option('--endpoint', help='UI endpoint to hit')
 def run_test(data, out, endpoint):
     headers = {'Authorization': _new_auth_token()}
-    results = defaultdict(dict)
-    for datum in load_data(data):
-        if datum['version'] > 1:    # Skip replacements for now.
-            continue
-        submission_id = create_submission(endpoint, headers)
-        prior_endpoint = None
-        for stage in workflow.SubmissionWorkflow.ORDER:
-            if stage in data_getters:
-                try:
-                    test_runners[stage](endpoint, stage, datum, submission_id, headers)
-                except GetStageFailed as e:
-                    results[datum['submission_id']][prior_endpoint] = 0
-                    print('%s %s (bounced back)' % (str(e), prior_endpoint))
-                    break
-                except PostStageFailed as e:
-                    results[datum['submission_id']][stage.endpoint] = 0
-                    print('%s %s (on post)' % (str(e), stage.endpoint))
-                    break
-                prior_endpoint = stage.endpoint
-                results[datum['submission_id']][stage.endpoint] = 1
-        if all([v == 1 for v in results[datum['submission_id']].values()]):
-            print(datum['submission_id'], 'Succeeded!')
-    print(results)
+    # results = defaultdict(dict)
+    with Pool(10) as pool:
+        run_test_case_part = partial(run_test_case, endpoint, headers=headers)
+        jobs = pool.imap_unordered(run_test_case_part, load_data(data))
+
+        def done(obj):
+            if obj is None:
+                return
+            submission_id, result = obj
+            print(submission_id, '::', result)
+        [done(obj) for obj in jobs]
+
+
+def run_test_case(endpoint, datum, headers={}):
+    if datum['version'] > 1:    # Skip replacements for now.
+        print(f'Replacement: {datum["submission_id"]}')
+        return
+    if datum['package'] is None or not os.path.exists(datum['package']):
+        print(f'No source content for {datum["submission_id"]}')
+        return
+    if datum['source_format'] not in ['ps', 'tex']:
+        print(f'{datum["submission_id"]} is {datum["source_format"]}, skipping for now')
+    submission_id = create_submission(endpoint, headers)
+    prior_endpoint = None
+    result = OrderedDict()
+    for stage in workflow.SubmissionWorkflow.ORDER:
+        if stage in data_getters:
+            try:
+                test_runners[stage](endpoint, stage, datum, submission_id, headers)
+            except GetStageFailed as e:
+                result[prior_endpoint] = 0
+                # results[datum['submission_id']]
+                print('%s %s (bounced back)' % (str(e), prior_endpoint))
+                break
+            except PostStageFailed as e:
+                result[stage.endpoint] = 0
+                # results[datum['submission_id']]
+                print('%s %s (on post)' % (str(e), stage.endpoint))
+                break
+            prior_endpoint = stage.endpoint
+            result[stage.endpoint] = 1
+            # results[datum['submission_id']][stage.endpoint] = 1
+    if all([v == 1 for v in result.values()]):
+        print(datum['submission_id'], 'Succeeded!')
+    return datum['submission_id'], result
 
 
 def create_submission(base_url, headers):
@@ -148,7 +172,7 @@ def test_upload(base_url, stage, datum, submission_id, headers):
         payload.update(dict(files=files_data))
     response = requests.post(target, **payload, allow_redirects=False)
     if response.status_code != status.SEE_OTHER:
-        print(submission_id, stage.endpoint,
+        print(datum['submission_id'], stage.endpoint,
               parse_errors(response.content.decode('utf-8')))
         raise PostStageFailed('Failed at %s (upload)' % stage.endpoint)
 
@@ -164,7 +188,7 @@ def test_upload(base_url, stage, datum, submission_id, headers):
     payload = dict(data=request_data, headers=headers)
     response = requests.post(target, **payload, allow_redirects=False)
     if response.status_code != status.SEE_OTHER:
-        print(submission_id, stage.endpoint,
+        print(datum['submission_id'], stage.endpoint,
               parse_errors(response.content.decode('utf-8')))
         raise PostStageFailed('Failed at %s (proceed)' % stage.endpoint)
 
@@ -183,7 +207,7 @@ def test_compile(base_url, stage, datum, submission_id, headers):
     payload = dict(data=request_data, headers=headers)
     response = requests.post(target, **payload, allow_redirects=False)
     if response.status_code != status.SEE_OTHER:
-        print(submission_id, stage.endpoint,
+        print(datum['submission_id'], stage.endpoint,
               parse_errors(response.content.decode('utf-8')))
         raise PostStageFailed('Failed at %s (upload)' % stage.endpoint)
 
@@ -193,7 +217,11 @@ def test_compile(base_url, stage, datum, submission_id, headers):
     csrf_token = _parse_csrf_token(response.content)
 
     soup = BeautifulSoup(response.content.decode('utf-8'), 'html.parser')
-    datstat = soup.find(id="status-message")["data-status"]
+    stat_elem = soup.find(id="status-message")
+    if stat_elem:
+        datstat = stat_elem["data-status"]
+    else:
+        datstat = 'failed'
     while datstat == 'in_progress':
         time.sleep(2)
         response = get_form(base_url, stage, headers, submission_id)
@@ -201,7 +229,11 @@ def test_compile(base_url, stage, datum, submission_id, headers):
             raise GetStageFailed('Failed at %s' % stage.endpoint)
         csrf_token = _parse_csrf_token(response.content)
         soup = BeautifulSoup(response.content.decode('utf-8'), 'html.parser')
-        datstat = soup.find(id="status-message")["data-status"]
+        stat_elem = soup.find(id="status-message")
+        if stat_elem:
+            datstat = stat_elem["data-status"]
+        else:
+            datstat = 'failed'
 
     if datstat == 'failed':
         raise PostStageFailed('Processing failed')

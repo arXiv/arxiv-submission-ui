@@ -112,11 +112,41 @@ def file_process(method: str, params: MultiDict, session: Session,
         return compile_status(params, session, submission_id, token)
     elif method == "POST":
         if params.get('action') in ['previous', 'next', 'save_exit']:
+            _check_status(params, session, submission_id, token)
             # User is not actually trying to process anything; let flow control
             # in the routes handle the response.
             return {}, status.SEE_OTHER, {}
         return start_compilation(params, session, submission_id, token)
     raise MethodNotAllowed('Unsupported request')
+
+
+def _check_status(params: MultiDict, session: Session,  submission_id: int,
+                  token: str, **kwargs) -> None:
+    """
+    Check for cases in which the preview already exists.
+
+    This will catch cases in which the submission is PDF-only, or otherwise
+    requires no further compilation.
+    """
+    submitter, client = user_and_client_from_session(session)
+    submission, submission_events = load_submission(submission_id)
+
+    if not submission.submitter_compiled_preview \
+            and not _must_process(submission):
+
+        form = CompilationForm(params)  # Providing CSRF protection.
+        if not form.validate():
+            raise BadRequest('Invalid request; please try again.')
+
+        command = ConfirmCompiledPreview(creator=submitter, client=client)
+        try:
+            submission, _ = save(command, submission_id=submission_id)
+        except SaveError as e:
+            alerts.flash_failure(Markup(
+                'There was a problem carrying out your request. Please'
+                f' try again. {PLEASE_CONTACT_SUPPORT}'
+            ))
+            raise InternalServerError('Could not save changes') from e
 
 
 def compile_status(params: MultiDict, session: Session, submission_id: int,
@@ -145,6 +175,7 @@ def compile_status(params: MultiDict, session: Session, submission_id: int,
         Extra headers to add/update on the response. This should include
         the `Location` header for use in the 303 redirect response, if
         applicable.
+
     """
     submitter, client = user_and_client_from_session(session)
     submission, submission_events = load_submission(submission_id)
@@ -156,6 +187,11 @@ def compile_status(params: MultiDict, session: Session, submission_id: int,
         'status': None,
         'must_process': _must_process(submission)
     }
+
+    # Not all submissions require processing.
+    if not _must_process(submission):
+        logger.debug('No processing required')
+        return response_data, status.OK, {}
 
     # Determine whether the current state of the uploaded source content has
     # been compiled.

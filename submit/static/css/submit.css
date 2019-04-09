@@ -110,7 +110,8 @@ ol.file-tree > li ol li:first-child {
 
 /* For highlighting TeX logs */
 .tex-help {
-  background-color: rgba(152, 35, 255, 0.4);
+  background-color: rgba(28, 97, 246, 0.4);
+  /* background-color: rgba(152, 35, 255, 0.40) */
   color: #082031;
   padding: 0 0.2em;
 }
@@ -153,7 +154,7 @@ ol.file-tree > li ol li:first-child {
 
 .tex-fatal {
   background-color: #cd0200;
-  color: rgba 255, 255, 255, 1;
+  color: rgba 0, 0, 0, 1;
   padding: 0 0.2em;
 }
 

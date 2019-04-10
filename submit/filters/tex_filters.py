@@ -187,6 +187,13 @@ def compilation_log_display(autotex_log: str, submission_id: int, compilation_st
         ['abort', r'The fontspec package requires either XeTeX or LuaTeX.', ''],
         ['abort', r'{cannot-use-pdftex}', ''],
 
+        # These should be abort level errors but we are not set up to support
+        # multiple errors of this type at the moment.
+        ['fatal', '\*\*\* AutoTeX ABORTING \*\*\*', ''],
+        ['fatal', '.*AutoTeX returned error: missfont.log present.', ''],
+        ['fatal', 'dvips: Font .* not found; characters will be left blank.', ''],
+        ['fatal', '.*missfont.log present.', ''],
+
         # Fatal
         ['fatal', r'Fatal .* error', ''],
         ['fatal', 'fatal', ''],
@@ -223,6 +230,7 @@ def compilation_log_display(autotex_log: str, submission_id: int, compilation_st
     ]
     abort_markup = False
     error_summary = ''
+    missing_font_markup = False
 
     final_run_had_errors = False
     final_run_had_warnings = False
@@ -318,21 +326,43 @@ def compilation_log_display(autotex_log: str, submission_id: int, compilation_st
                         final_run_had_warnings = True
                     if level == 'danger' or level == 'fatal':
                         final_run_had_errors = True
-                    final_run_had_errors = True
-                    final_run_had_warnings = False
+
                 if actual_level == 'abort':
+
                     if error_summary == '':
                         error_summary = error_summary \
                                         + '\nSummary of <span class="tex-fatal">Critical Errors:</span>\n\n'
-                        error_summary = error_summary + \
-                                        ("\tAt the current time arXiv does not support XeTeX/LuaTeX.\n\n"
-                                         '\tIf you believe that your submission requires a compilation '
-                                         'method \n\tunsupported by arXiv, please contact '
-                                         '<span class=\"tex-help\">help@arxiv.org</span> for '
-                                         '\n\tmore information and provide them with this '
-                                         f'submit/{submission_id} identifier.\n\n')
+                    else:
+                        error_summary = error_summary + '\n'
+
+                    error_summary = error_summary + (
+                        "\tAt the current time arXiv does not support XeTeX/LuaTeX.\n\n"
+                        '\tIf you believe that your submission requires a compilation '
+                        'method \n\tunsupported by arXiv, please contact '
+                        '<span class=\"tex-help\">help@arxiv.org</span> for '
+                        '\n\tmore information and provide them with this '
+                        f'submit/{submission_id} identifier.\n\n')
                     abort_markup = True
 
+                # Hack alert - Cringe - Handle missfont while I'm working on converter.
+                # TODO: Need to formalize detecting errors that need to be
+                # TODO: reported in error summary
+                if not missing_font_markup and level == 'fatal' and re.search("missfont.log present", line):
+                    if error_summary == '':
+                        error_summary = error_summary \
+                                        + '\nSummary of <span class="tex-fatal">Critical Errors:</span>\n\n'
+                    else:
+                        error_summary = error_summary + '\n'
+
+                    error_summary = error_summary + (
+                        "\tA font required by your paper is not available. You "
+                        "may try to \n\tsubstitue and alternative font. If "
+                        "this is due to a problem with \n\tour system, please "
+                        "contact <span class=\"tex-help\">help@arxiv.org</span>"
+                        " for more information \n\tand provide them with this "
+                        f'submit/{submission_id} identifier.\n\n')
+
+                    missing_font_markup = True
                 break
 
         # Append line to new marked up log

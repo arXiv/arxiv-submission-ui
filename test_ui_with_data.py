@@ -77,35 +77,38 @@ def run_test(data, out, endpoint):
 
 def run_test_case(endpoint, datum, headers={}):
     if datum['version'] > 1:    # Skip replacements for now.
-        print(f'Replacement: {datum["submission_id"]}')
+        # print(f'Replacement: {datum["submission_id"]}')
         return
     if datum['package'] is None or not os.path.exists(datum['package']):
-        print(f'No source content for {datum["submission_id"]}')
+        # print(f'No source content for {datum["submission_id"]}')
         return
-    if datum['source_format'] not in ['ps', 'tex']:
-        print(f'{datum["submission_id"]} is {datum["source_format"]}, skipping for now')
+    if datum['source_format'] not in ['ps', 'tex', 'pdftex']:
+        # print(f'{datum["submission_id"]} is {datum["source_format"]}, skipping for now')
+        return
+    # print(f'run for {datum["submission_id"]}')
     submission_id = create_submission(endpoint, headers)
     prior_endpoint = None
     result = OrderedDict()
-    for stage in workflow.SubmissionWorkflow.ORDER:
+    for stage in [type(stage) for stage in workflow.SubmissionWorkflow.ORDER]:
+        # print(stage)
         if stage in data_getters:
             try:
                 test_runners[stage](endpoint, stage, datum, submission_id, headers)
             except GetStageFailed as e:
                 result[prior_endpoint] = 0
                 # results[datum['submission_id']]
-                print('%s %s (bounced back)' % (str(e), prior_endpoint))
+                # print('%s %s (bounced back)' % (str(e), prior_endpoint))
                 break
             except PostStageFailed as e:
                 result[stage.endpoint] = 0
                 # results[datum['submission_id']]
-                print('%s %s (on post)' % (str(e), stage.endpoint))
+                # print('%s %s (on post)' % (str(e), stage.endpoint))
                 break
             prior_endpoint = stage.endpoint
             result[stage.endpoint] = 1
             # results[datum['submission_id']][stage.endpoint] = 1
-    if all([v == 1 for v in result.values()]):
-        print(datum['submission_id'], 'Succeeded!')
+    # if all([v == 1 for v in result.values()]):
+        # print(datum['submission_id'], 'Succeeded!')
     return datum['submission_id'], result
 
 

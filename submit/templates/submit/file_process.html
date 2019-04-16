@@ -157,7 +157,7 @@
       </div>
       <!-- TODO: don't hard-code this. -->
       <div style="max-height: 50vh; height: 50vh; overflow-y: scroll; color: black; max-width: 100%;">
-        <pre><code class="article">{{ log_output }}</code></pre>
+        <pre><code class="article">{{ log_output | compilation_log_display(submission.submission_id, status.value) | safe }}</code></pre>
       </div>
       <!-- Log parsing is not supported in v0.1
       {% if errors %}

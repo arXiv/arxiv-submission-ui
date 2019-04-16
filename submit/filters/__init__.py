@@ -8,9 +8,15 @@ from pytz import UTC
 from arxiv import taxonomy
 from arxiv.submission.domain.process import ProcessStatus
 from arxiv.submission.domain.submission import Compilation, Submission
-from .domain import FileStatus, Upload
-from .util import tidy_filesize
-from .flow_control import get_workflow
+#from .domain import FileStatus, Upload
+from submit.domain import FileStatus, Upload
+from submit.util import tidy_filesize
+from submit.flow_control import get_workflow
+
+from .tex_filters import compilation_log_display
+
+# additions for compilation log markup
+import re
 
 NestedFileTree = Mapping[str, Union[FileStatus, 'NestedFileTree']]
 
@@ -175,4 +181,5 @@ def get_filters() -> List[Tuple[str, Callable]]:
         ('compilation_status_display', compilation_status_display),
         ('duration', duration),
         ('tidy_filesize', tidy_filesize),
+        ('compilation_log_display', compilation_log_display)
     ]

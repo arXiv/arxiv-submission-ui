@@ -182,6 +182,6 @@ def get_filters() -> List[Tuple[str, Callable]]:
         ('compilation_status_display', compilation_status_display),
         ('duration', duration),
         ('tidy_filesize', tidy_filesize),
-        ('asdict', asdict)
+        ('asdict', asdict),
         ('compilation_log_display', compilation_log_display)
     ]

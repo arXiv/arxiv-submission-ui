@@ -47,12 +47,12 @@ In addition, the compose config maps ports for backend services and data
 stores to your local machine. So you can also start the UI via the Flask
 development server for quicker cycles.
 
-| Service      | Env var                   | Endpoint                                                               |
-|--------------|---------------------------|------------------------------------------------------------------------|
-| File manager | ``FILE_MANAGER_ENDPOINT`` | http://localhost:8001/filemanager/api                                  |
-| Compiler     | ``COMPILER_ENDPOINT``     | http://localhost:8100/                                                 |
-| Redis        | ``SUBMISSION_BROKER_URL`` | redis://localhost:6380                                                 |
-| Legacy DB    | ``CLASSIC_DATABASE_URI``  | mysql+mysqldb://foouser:foopass@127.0.0.1:3307/submission?charset=utf8 |
+| Service      | Env var                   | Endpoint                                                                  |
+|--------------|---------------------------|---------------------------------------------------------------------------|
+| File manager | ``FILE_MANAGER_ENDPOINT`` | http://localhost:8001/filemanager/api                                     |
+| Compiler     | ``COMPILER_ENDPOINT``     | http://localhost:8100/                                                    |
+| Redis        | ``SUBMISSION_BROKER_URL`` | redis://localhost:6380                                                    |
+| Legacy DB    | ``CLASSIC_DATABASE_URI``  | mysql+mysqldb://foouser:foopass@127.0.0.1:3307/submission?charset=utf8mb4 |
 
 
 So you can start the submission UI in dev mode with something like:
@@ -67,7 +67,7 @@ $ ENABLE_ASYNC=1 ENABLE_CALLBACKS=1 \
 >   COMPILER_ENDPOINT=http://localhost:8100/ \
 >   FILE_MANAGER_ENDPOINT=http://localhost:8001/filemanager/api \
 >   SUBMISSION_BROKER_URL=redis://localhost:6380 \
->   CLASSIC_DATABASE_URI="mysql+mysqldb://foouser:foopass@127.0.0.1:3307/submission?charset=utf8" \
+>   CLASSIC_DATABASE_URI="mysql+mysqldb://foouser:foopass@127.0.0.1:3307/submission?charset=utf8mb4" \
 >   LOGLEVEL=10 FLASK_APP=app.py FLASK_DEBUG=1 \
 >   pipenv run flask run
 ```

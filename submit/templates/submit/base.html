@@ -9,6 +9,22 @@
 {% endblock addl_head %}
 
 {% block content %}
+
+  {# Sometimes we need to show an alert immediately, without a redirect. #}
+  {% block immediate_alerts %}
+    {% if immediate_alerts -%}
+        <div class="notifications" role="alert">
+          {% for category, message in immediate_alerts -%}
+            <div class="notification is-{{ category }}">
+              {% if message.dismissable %}<button class="delete notification-dismiss"></button>{% endif %}
+              {% if message.title %}<h2 class="is-size-5 is-marginless">{{ message.title }}</h2>{%- endif %}
+              <p>{{ message.message }}</p>
+            </div>
+          {%- endfor %}
+        </div>
+      {%- endif %}
+  {% endblock %}
+
 {% if submission_id and workflow %}
   {{ submit_macros.progress_bar(submission_id, workflow, this_stage) }}
 {% endif %}

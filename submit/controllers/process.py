@@ -45,6 +45,7 @@ import io
 from werkzeug import MultiDict
 from werkzeug.exceptions import InternalServerError, BadRequest, NotFound, \
     MethodNotAllowed
+from dataclasses import asdict
 
 from flask import url_for, Markup
 from wtforms import SelectField, widgets, HiddenField, validators
@@ -56,9 +57,10 @@ from arxiv.forms import csrf
 from arxiv.users.domain import Session
 from arxiv.integration.api import exceptions
 from arxiv.submission import save, SaveError, AddProcessStatus, Submission
-from arxiv.submission.tasks import is_async
+
 from arxiv.submission.services.compiler import Compiler
-from arxiv.submission.domain.compilation import Status
+from arxiv.submission import ConfirmCompiledPreview
+from arxiv.submission.domain.compilation import Compilation
 from arxiv.submission.domain.submission import Compilation, SubmissionContent
 from ..util import load_submission
 from .util import validate_command, user_and_client_from_session
@@ -110,11 +112,41 @@ def file_process(method: str, params: MultiDict, session: Session,
         return compile_status(params, session, submission_id, token)
     elif method == "POST":
         if params.get('action') in ['previous', 'next', 'save_exit']:
+            _check_status(params, session, submission_id, token)
             # User is not actually trying to process anything; let flow control
             # in the routes handle the response.
             return {}, status.SEE_OTHER, {}
         return start_compilation(params, session, submission_id, token)
     raise MethodNotAllowed('Unsupported request')
+
+
+def _check_status(params: MultiDict, session: Session,  submission_id: int,
+                  token: str, **kwargs) -> None:
+    """
+    Check for cases in which the preview already exists.
+
+    This will catch cases in which the submission is PDF-only, or otherwise
+    requires no further compilation.
+    """
+    submitter, client = user_and_client_from_session(session)
+    submission, submission_events = load_submission(submission_id)
+
+    if not submission.submitter_compiled_preview \
+            and not _must_process(submission):
+
+        form = CompilationForm(params)  # Providing CSRF protection.
+        if not form.validate():
+            raise BadRequest('Invalid request; please try again.')
+
+        command = ConfirmCompiledPreview(creator=submitter, client=client)
+        try:
+            submission, _ = save(command, submission_id=submission_id)
+        except SaveError as e:
+            alerts.flash_failure(Markup(
+                'There was a problem carrying out your request. Please'
+                f' try again. {PLEASE_CONTACT_SUPPORT}'
+            ))
+            raise InternalServerError('Could not save changes') from e
 
 
 def compile_status(params: MultiDict, session: Session, submission_id: int,
@@ -143,10 +175,8 @@ def compile_status(params: MultiDict, session: Session, submission_id: int,
         Extra headers to add/update on the response. This should include
         the `Location` header for use in the 303 redirect response, if
         applicable.
-    """
-    # GET
-    # submit.controllers.file_process.status
 
+    """
     submitter, client = user_and_client_from_session(session)
     submission, submission_events = load_submission(submission_id)
     form = CompilationForm()
@@ -154,25 +184,42 @@ def compile_status(params: MultiDict, session: Session, submission_id: int,
         'submission_id': submission_id,
         'submission': submission,
         'form': form,
-        'compilations': submission.compilations,
         'status': None,
         'must_process': _must_process(submission)
     }
 
-    compilation = submission.latest_compilation
-    if not compilation:     # Nothing to do.
+    # Not all submissions require processing.
+    if not _must_process(submission):
+        logger.debug('No processing required')
         return response_data, status.OK, {}
 
     # Determine whether the current state of the uploaded source content has
     # been compiled.
-    is_current = compilation.checksum == submission.source_content.checksum
-    if is_current:
-        response_data['status'] = compilation.status
+    source_id = submission.source_content.identifier
+    source_state = submission.source_content.checksum
+    try:
+        compilation = Compiler.get_status(source_id, source_state, token)
+    except exceptions.NotFound:     # Nothing to do.
+        logger.debug('No such compilation')
+        return response_data, status.OK, {}
+
+    response_data['status'] = compilation.status
+    response_data['current_compilation'] = compilation
+
+    if compilation.status is Compilation.Status.SUCCEEDED:
+        command = ConfirmCompiledPreview(creator=submitter, client=client)
+        try:
+            submission, _ = save(command, submission_id=submission_id)
+        except SaveError:
+            alerts.flash_failure(Markup(
+                'There was a problem carrying out your request. Please try'
+                f' again. {PLEASE_CONTACT_SUPPORT}'
+            ))
 
     # if Compilation failure, then show errors, opportunity to restart.
     # if Compilation success, then show preview.
     terminal_states = [Compilation.Status.FAILED, Compilation.Status.SUCCEEDED]
-    if is_current and compilation.status in terminal_states:
+    if compilation.status in terminal_states:
         response_data.update(_get_log(submission.source_content.identifier,
                                       submission.source_content.checksum,
                                       token))
@@ -188,7 +235,6 @@ def start_compilation(params: MultiDict, session: Session, submission_id: int,
         'submission_id': submission_id,
         'submission': submission,
         'form': form,
-        'compilations': submission.compilations,
         'status': None,
         'must_process': _must_process(submission)
     }
@@ -204,35 +250,15 @@ def start_compilation(params: MultiDict, session: Session, submission_id: int,
         raise InternalServerError(response_data) from e
 
     response_data['status'] = stat
-    if stat.status is Status.FAILED:
+    if stat.status is Compilation.Status.FAILED:
         alerts.flash_failure(f"Compilation failed")
-
-    failed = stat.status is Status.FAILED
-    succeeded = stat.status is Status.SUCCEEDED
-    in_progress = stat.status is Status.IN_PROGRESS
-    previous = [c.identifier for c in submission.compilations]
-    new_compilation = stat.identifier not in previous
-    process = AddProcessStatus.Process.COMPILATION
-    if in_progress or (new_compilation and (failed or succeeded)):
-        command = AddProcessStatus(creator=submitter, client=client,
-                                   process=process, service=Compiler.NAME,
-                                   version=Compiler.VERSION,
-                                   identifier=stat.identifier)
-        if not validate_command(form, command, submission):
-            raise BadRequest(response_data)
-
-        try:
-            submission, _ = save(command, submission_id=submission_id)
-        except SaveError as e:
-            raise InternalServerError(response_data) from e
-        response_data['submission'] = submission
+    else:
         alerts.flash_success(
             "We are compiling your submission. This may take a minute or two."
             " This page will refresh automatically every 5 seconds. You can "
             " also refresh this page manually to check the current status. ",
             title="Compilation started"
         )
-    alerts.flash_hidden(stat.to_dict(), 'compilation_status')
     redirect = url_for('ui.file_process', submission_id=submission_id)
     return response_data, status.SEE_OTHER, {'Location': redirect}
 

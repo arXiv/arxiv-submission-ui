@@ -4,6 +4,7 @@ from typing import List, Tuple, Optional, Union, Dict, Mapping, Callable
 from collections import OrderedDict
 from datetime import datetime, timedelta
 from pytz import UTC
+from dataclasses import asdict
 
 from arxiv import taxonomy
 from arxiv.submission.domain.process import ProcessStatus
@@ -181,5 +182,6 @@ def get_filters() -> List[Tuple[str, Callable]]:
         ('compilation_status_display', compilation_status_display),
         ('duration', duration),
         ('tidy_filesize', tidy_filesize),
+        ('asdict', asdict),
         ('compilation_log_display', compilation_log_display)
     ]

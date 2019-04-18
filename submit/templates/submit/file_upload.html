@@ -71,6 +71,11 @@
           <button type="submit" class="button is-link">Upload</button>
         </div>
       </div>
+      {% if form.file.errors %}
+        {% for error in form.file.errors %}
+          <p class="help is-danger field-error">{{ error }}</p>
+        {% endfor %}
+      {% endif %}
       <p class="is-marginless help has-text-grey">
         You can upload all your files at once as a single .tar.gz or .zip file, or upload individual files as needed.
       </p>
@@ -83,6 +88,10 @@
       <p class="help has-text-right" style="margin-right: .5rem">
         <a href="{{ url_for('ui.file_delete_all', submission_id=submission_id) }}">
           Remove All<span class="icon"><i class="fa fa-trash" aria-label="Delete all"></i></span></a>
+      </p>
+      {% elif error %}
+      <p class="title is-4 breathe-vertical has-text-centered has-text-danger">
+        Something isn't working right now. Please try again.
       </p>
       {% else %}
       <p class="title is-4 breathe-vertical has-text-centered">

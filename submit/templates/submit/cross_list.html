@@ -49,7 +49,7 @@
           {% endif %}
           </div>
           {% if field.errors %}
-            <div class="help is-danger">
+            <div class="help is-danger field-error">
               {% for error in field.errors %}
                   {{ error }}
               {% endfor %}

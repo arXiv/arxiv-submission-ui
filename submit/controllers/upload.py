@@ -27,8 +27,8 @@ from arxiv.base import logging, alerts
 from arxiv.forms import csrf
 from arxiv.submission.domain.submission import SubmissionContent
 from arxiv.submission import SetUploadPackage, UpdateUploadPackage, save, \
-    Submission, User, Client
-from arxiv.submission.exceptions import InvalidStack, SaveError
+    Submission, User, Client, UnConfirmCompiledPreview
+from arxiv.submission.exceptions import InvalidEvent, SaveError
 from arxiv.users.domain import Session
 
 from .util import validate_command, user_and_client_from_session
@@ -90,21 +90,23 @@ def upload_files(method: str, params: MultiDict, session: Session,
 
     """
     if files is None or token is None:
+        logger.debug('Missing files or auth token')
         raise BadRequest("Missing files or auth token")
 
     submission, _ = load_submission(submission_id)
+    print(submission.source_content)
 
-    rdata = {'submission_id': submission_id, 'submission': submission}
+    rdata = {
+        'submission_id': submission_id,
+        'submission': submission,
+        'form': UploadForm()
+    }
 
     if method == 'GET':
         return _get_upload(params, session, submission, rdata, token)
 
     # User is attempting an upload of some kind.
     elif method == 'POST':
-        if params.get('action') in ['previous', 'next', 'save_exit']:
-            # User is not actually trying to upload anything; let flow control
-            # in the routes handle the response.
-            return {}, status.SEE_OTHER, {}
         # Otherwise, treat this as an upload attempt.
         return _post_upload(params, files, session, submission, rdata, token)
     raise MethodNotAllowed('Nope')
@@ -144,6 +146,7 @@ def delete_all(method: str, params: MultiDict, session: Session,
 
     """
     if token is None:
+        logger.debug('Missing auth token')
         raise BadRequest('Missing auth token')
 
     submission, submission_events = load_submission(submission_id)
@@ -161,6 +164,7 @@ def delete_all(method: str, params: MultiDict, session: Session,
         rdata.update({'form': form})
 
         if not (form.validate() and form.confirmed.data):
+            logger.debug('Invalid form data')
             raise BadRequest(rdata)
 
         try:
@@ -188,12 +192,15 @@ def delete_all(method: str, params: MultiDict, session: Session,
                                       checksum=stat.checksum,
                                       uncompressed_size=stat.size,
                                       source_format=stat.source_format)
-
+        commands = [command]
+        if submission.submitter_compiled_preview:
+            commands.append(UnConfirmCompiledPreview(creator=submitter))
         if not validate_command(form, command, submission):
+            logger.debug('Command validation failed')
             raise BadRequest(rdata)
 
         try:
-            submission, _ = save(command, submission_id=submission_id)
+            submission, _ = save(*commands, submission_id=submission_id)
         except SaveError:
             alerts.flash_failure(Markup(
                 'There was a problem carrying out your request. Please try'
@@ -248,6 +255,7 @@ def delete(method: str, params: MultiDict, session: Session,
 
     """
     if token is None:
+        logger.debug('Missing auth token')
         raise BadRequest('Missing auth token')
 
     submission, submission_events = load_submission(submission_id)
@@ -268,6 +276,7 @@ def delete(method: str, params: MultiDict, session: Session,
 
     if method == 'POST':
         if not (form.validate() and form.confirmed.data):
+            logger.debug('Invalid form data')
             raise BadRequest(rdata)
 
         stat: Optional[Upload] = None
@@ -301,10 +310,13 @@ def delete(method: str, params: MultiDict, session: Session,
                                           uncompressed_size=stat.size,
                                           source_format=stat.source_format)
             if not validate_command(form, command, submission):
+                logger.debug('Command validation failed')
                 raise BadRequest(rdata)
-
+            commands = [command]
+            if submission.submitter_compiled_preview:
+                commands.append(UnConfirmCompiledPreview(creator=submitter))
             try:
-                submission, _ = save(command, submission_id=submission_id)
+                submission, _ = save(*commands, submission_id=submission_id)
             except SaveError:
                 alerts.flash_failure(Markup(
                     'There was a problem carrying out your request. Please try'
@@ -357,12 +369,16 @@ def _update(form: UploadForm, submission: Submission, stat: Upload,
     """
     existing_upload = getattr(submission.source_content, 'identifier', None)
 
+    commands = []
     if existing_upload == stat.identifier:
         command = UpdateUploadPackage(creator=submitter, client=client,
                                       checksum=stat.checksum,
                                       uncompressed_size=stat.size,
                                       compressed_size=stat.compressed_size,
                                       source_format=stat.source_format)
+        commands.append(command)
+        if submission.submitter_compiled_preview:
+            commands.append(UnConfirmCompiledPreview(creator=submitter))
     else:
         command = SetUploadPackage(creator=submitter, client=client,
                                    identifier=stat.identifier,
@@ -370,12 +386,14 @@ def _update(form: UploadForm, submission: Submission, stat: Upload,
                                    compressed_size=stat.compressed_size,
                                    uncompressed_size=stat.size,
                                    source_format=stat.source_format)
+        commands.append(command)
 
     if not validate_command(form, command, submission):
+        logger.debug('Command validation failed')
         raise BadRequest(rdata)
 
     try:
-        submission, _ = save(command, submission_id=submission.submission_id)
+        submission, _ = save(*commands, submission_id=submission.submission_id)
     except SaveError:
         alerts.flash_failure(Markup(
             'There was a problem carrying out your request. Please try'
@@ -425,6 +443,7 @@ def _get_upload(params: MultiDict, session: Session, submission: Submission,
             stat = FileManager.get_upload_status(upload_id, token)
         except exceptions.RequestFailed as e:
             # TODO: handle specific failure cases.
+            logger.debug('Failed to get upload status: %s', e)
             raise InternalServerError(rdata) from e
     rdata.update({'status': stat})
     if stat:
@@ -473,6 +492,7 @@ def _new_upload(params: MultiDict, pointer: FileStorage, session: Session,
     rdata.update({'form': form})
 
     if not form.validate():
+        logger.debug('Invalid form data')
         raise BadRequest(rdata)
 
     try:
@@ -482,6 +502,7 @@ def _new_upload(params: MultiDict, pointer: FileStorage, session: Session,
             'There was a problem carrying out your request. Please try'
             f' again. {PLEASE_CONTACT_SUPPORT}'
         ))
+        logger.debug('Failed to upload package: %s', e)
         raise InternalServerError(rdata) from e
 
     submission = _update(form, submission, stat, submitter, client, rdata)
@@ -556,19 +577,32 @@ def _new_file(params: MultiDict, pointer: FileStorage, session: Session,
 
         alerts.flash_failure("Something went wrong. Please try again.",
                              title="Whoops")
-        redirect = url_for('ui.file_upload',
-                           submission_id=submission.submission_id)
-        return {}, status.SEE_OTHER, {'Location': redirect}
+        # redirect = url_for('ui.file_upload',
+        #                    submission_id=submission.submission_id)
+        # return {}, status.SEE_OTHER, {'Location': redirect}
+        logger.debug('Invalid form data')
+        raise BadRequest(rdata)
     ancillary: bool = form.ancillary.data
 
     try:
         stat = FileManager.add_file(upload_id, pointer, token,
                                     ancillary=ancillary)
     except exceptions.RequestFailed as e:
+        try:
+            e_data = e.response.json()
+        except Exception:
+            e_data = None
+        if e_data is not None and 'reason' in e_data:
+            alerts.flash_failure(Markup(
+                'There was a problem carrying out your request:'
+                f' {e_data["reason"]}. {PLEASE_CONTACT_SUPPORT}'
+            ))
+            raise BadRequest(rdata)
         alerts.flash_failure(Markup(
             'There was a problem carrying out your request. Please try'
             f' again. {PLEASE_CONTACT_SUPPORT}'
         ))
+        logger.debug('Failed to add file: %s', )
         raise InternalServerError(rdata) from e
 
     submission = _update(form, submission, stat, submitter, client, rdata)
@@ -632,17 +666,14 @@ def _post_upload(params: MultiDict, files: MultiDict, session: Session,
     try:    # Make sure that we have a file to work with.
         pointer = files['file']
     except KeyError:   # User is going back, saving/exiting, or next step.
-        headers = {}
+        pointer = None
 
+    if not pointer:
         # Don't flash a message if the user is just trying to go back to the
         # previous page.
-        if params.get('action') != 'previous':
-            alerts.flash_failure(Markup('Please select a file to upload'))
-            submission_id = submission.submission_id
-            headers['Location'] = url_for('ui.file_upload',
-                                          submission_id=submission_id)
-        return {}, status.SEE_OTHER, headers
-
+        action = params.get('action', None)
+        if action:
+            return {}, status.SEE_OTHER, {}
     if submission.source_content is None:   # New upload package.
         return _new_upload(params, pointer, session, submission, rdata, token)
     return _new_file(params, pointer, session, submission, rdata, token)

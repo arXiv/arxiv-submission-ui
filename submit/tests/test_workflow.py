@@ -3,7 +3,7 @@
 import os
 import re
 import tempfile
-from unittest import TestCase
+from unittest import TestCase, mock
 from urllib.parse import urlparse
 
 from submit.factory import create_ui_web_app
@@ -63,6 +63,7 @@ class TestSubmissionWorkflow(TestCase):
             self.fail('Could not find CSRF token')
         return token
 
+    @mock.patch('arxiv.submission.core.StreamPublisher', mock.MagicMock())
     def test_create_submission(self):
         """User creates a new submission, and proceeds up to upload stage."""
         # Get the submission creation page.
@@ -211,6 +212,7 @@ class TestEndorsementMessaging(TestCase):
             self.fail('Could not find CSRF token')
         return token
 
+    @mock.patch('arxiv.submission.core.StreamPublisher', mock.MagicMock())
     def test_no_endorsements(self):
         """User is not endorsed (auto or otherwise) for anything."""
         self.token = generate_token('1234', 'foo@bar.com', 'foouser',
@@ -247,6 +249,7 @@ class TestEndorsementMessaging(TestCase):
             'User should be informed that they have no endorsements.'
         )
 
+    @mock.patch('arxiv.submission.core.StreamPublisher', mock.MagicMock())
     def test_some_categories(self):
         """User is endorsed (auto or otherwise) for some categories."""
         self.token = generate_token('1234', 'foo@bar.com', 'foouser',
@@ -284,6 +287,7 @@ class TestEndorsementMessaging(TestCase):
             'User should be informed that they have some endorsements.'
         )
 
+    @mock.patch('arxiv.submission.core.StreamPublisher', mock.MagicMock())
     def test_some_archives(self):
         """User is endorsed (auto or otherwise) for some whole archives."""
         self.token = generate_token('1234', 'foo@bar.com', 'foouser',
@@ -321,6 +325,7 @@ class TestEndorsementMessaging(TestCase):
             'User should be informed that they have some endorsements.'
         )
 
+    @mock.patch('arxiv.submission.core.StreamPublisher', mock.MagicMock())
     def test_all_endorsements(self):
         """User is endorsed for everything."""
         self.token = generate_token('1234', 'foo@bar.com', 'foouser',
@@ -366,6 +371,7 @@ class TestEndorsementMessaging(TestCase):
 class TestJREFWorkflow(TestCase):
     """Tests that progress through the JREF workflow."""
 
+    @mock.patch('arxiv.submission.core.StreamPublisher', mock.MagicMock())
     def setUp(self):
         """Create an application instance."""
         self.app = create_ui_web_app()
@@ -455,6 +461,7 @@ class TestJREFWorkflow(TestCase):
             self.fail('Could not find CSRF token')
         return token
 
+    @mock.patch('arxiv.submission.core.StreamPublisher', mock.MagicMock())
     def test_create_submission(self):
         """User creates a new submission, and proceeds up to upload stage."""
         # Get the JREF page.
@@ -495,6 +502,7 @@ class TestJREFWorkflow(TestCase):
 class TestWithdrawalWorkflow(TestCase):
     """Tests that progress through the withdrawal request workflow."""
 
+    @mock.patch('arxiv.submission.core.StreamPublisher', mock.MagicMock())
     def setUp(self):
         """Create an application instance."""
         self.app = create_ui_web_app()
@@ -585,6 +593,7 @@ class TestWithdrawalWorkflow(TestCase):
             self.fail('Could not find CSRF token')
         return token
 
+    @mock.patch('arxiv.submission.core.StreamPublisher', mock.MagicMock())
     def test_request_withdrawal(self):
         """User requests withdrawal of a announced submission."""
         # Get the JREF page.

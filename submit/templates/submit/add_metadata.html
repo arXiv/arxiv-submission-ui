@@ -12,7 +12,7 @@
         <i class="fa fa-question-circle is-info"></i>
         <div class="bubble-text">Unicode, TeX accent characters, and MathJax are supported. Click for detailed information.</div></a></label>
       {% if field.errors %}
-        <div class="help is-danger">
+        <div class="help is-danger field-error">
           {% for error in field.errors %}
               {{ error }}
           {% endfor %}
@@ -39,7 +39,7 @@
         <i class="fa fa-question-circle is-info"></i>
         <div class="bubble-text">Click for detailed information on author name formatting.</div></a></label>
       {% if field.errors %}
-        <div class="help is-danger">
+        <div class="help is-danger field-error">
           {% for error in field.errors %}
               {{ error }}
           {% endfor %}
@@ -66,7 +66,7 @@
         <i class="fa fa-question-circle is-info"></i>
         <div class="bubble-text">Unicode, TeX accent characters, and MathJax are supported. Click for detailed information.</div></a></label>
       {% if field.errors %}
-        <div class="help is-danger">
+        <div class="help is-danger field-error">
           {% for error in field.errors %}
               {{ error }}
           {% endfor %}
@@ -93,7 +93,7 @@
         <i class="fa fa-question-circle is-info"></i>
         <div class="bubble-text">Unicode, TeX accent characters. and MathJax are supported. Click for detailed information.</div></a></label>
       {% if field.errors %}
-        <div class="help is-danger">
+        <div class="help is-danger field-error">
           {% for error in field.errors %}
               {{ error }}
           {% endfor %}

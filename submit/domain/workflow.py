@@ -144,11 +144,14 @@ class FileUpload(BaseStage):
     label = 'upload your submission files'
     title = "File upload"
     display = "Upload Files"
+    always_check = True
 
     @staticmethod
     def is_complete(submission: Submission) -> bool:
         """Determine whether the submitter has uploaded files."""
-        return submission.source_content is not None
+        return submission.source_content is not None and \
+            submission.source_content.checksum is not None and \
+            submission.source_content.source_format != SubmissionContent.Format.INVALID
 
 
 class Process(BaseStage):
@@ -163,17 +166,8 @@ class Process(BaseStage):
     @staticmethod
     def is_complete(submission: Submission) -> bool:
         """Determine whether the submitter has compiled their upload."""
-        # TODO: this might be nice as a property on the submission itself.
-        successful = [
-            compilation for compilation in submission.compilations
-            if compilation.status == compilation.Status.SUCCEEDED
-            and submission.source_content
-            and compilation.checksum == submission.source_content.checksum
-        ]
-        return len(successful) > 0 \
-            or (submission.source_content
-                and submission.source_content.source_format
-                is SubmissionContent.Format.PDF)
+        return submission.submitter_compiled_preview
+
 
 
 class Metadata(BaseStage):

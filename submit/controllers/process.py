@@ -247,8 +247,6 @@ def start_compilation(params: MultiDict, session: Session, submission_id: int,
     #
     # Date segment is optional and added automatically by converter.
     #
-    # TODO: Get category and add to label
-    #
     stamp_label = f'arXiv:submit/{submission_id}'
 
     if submission.primary_classification \

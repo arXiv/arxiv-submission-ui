@@ -239,11 +239,31 @@ def start_compilation(params: MultiDict, session: Session, submission_id: int,
         'must_process': _must_process(submission)
     }
 
+    # Create label and link for PS/PDF stamp/watermark.
+    #
+    # Stamp format for submission is of form [identifier category date]
+    #
+    # "arXiv:submit/<submission_id>  [<primary category>] DD MON YYYY
+    #
+    # Date segment is optional and added automatically by converter.
+    #
+    stamp_label = f'arXiv:submit/{submission_id}'
+
+    if submission.primary_classification \
+                and submission.primary_classification.category:
+        # Create stamp label string - for now we'll let converter
+        #                             add date segment to stamp label
+        primary_category = submission.primary_classification.category
+        stamp_label = stamp_label + f'  [{primary_category}]'
+
+    stamp_link = f'/{submission_id}/preview.pdf'
+
     if not form.validate():
         raise BadRequest(response_data)
     try:
         stat = Compiler.compile(submission.source_content.identifier,
-                                submission.source_content.checksum, token)
+                                submission.source_content.checksum, token,
+                                stamp_label, stamp_link)
     except exceptions.RequestFailed as e:
         alerts.flash_failure(f"We couldn't compile your submission. {SUPPORT}",
                              title="Compilation failed")

@@ -15,10 +15,10 @@
         </div>
         <div class="field">
           <div class="control">
-            <!-- #TODO needs Bulma extension installed to have the styled toggle, switch to is-success for unchecked version. If possible, style label text into solid area of toggle. -->
+            <!-- #TODO needs Bulma extension installed (preferably in base) to have the styled toggle, switch color to is-success for unchecked version. If possible, style label text into solid area of toggle. -->
             <input id="LockToggle" type="checkbox" name="LockToggle" class="switch is-rounded is-danger" checked="checked">
               <label for="LockToggle">LOCKED</label>
-            <span>Admin One 2019-04-20</span>
+            <span>{% user.fullname %} 2019-04-20</span>
           </div>
         </div>
       </div>

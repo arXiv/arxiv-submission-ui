@@ -25,14 +25,20 @@ x-base-service:
     AWS_S3_REGION_NAME: "us-east-1"
     S3_ENDPOINT: "https://submission-localstack:4572"
     S3_VERIFY: 0
+
     FILEMANAGER_ENDPOINT: "http://arxiv-filemanager:8000/filemanager/api"
     FILEMANAGER_CONTENT_PATH: "/{source_id}/content"
 
     VERBOSE_COMPILE: 1
     JWT_SECRET: "foosecret"
     CLASSIC_DATABASE_URI: "mysql+mysqldb://foouser:foopass@submission-ui-maria:3306/submission?charset=utf8mb4"
-    COMPILER_ENDPOINT: "http://compiler-api:8000/"
     FILE_MANAGMENT_SQLALCHEMY_DATABASE_URI: "mysql+mysqldb://foouser:foopass@filemanager-maria:3306/uploads?charset=utf8mb4"
+
+    COMPILER_ENDPOINT: "http://compiler-api:8000/"
+    COMPILER_VERIFY: 0
+
+    PLAINTEXT_ENDPOINT: "http://plaintext-api:8000/"
+    PLAINTEXT_VERIFY: 0
 
     # Route e-mail to mailhog.
     EMAIL_ENABLED: 1
@@ -251,6 +257,10 @@ services:
       - 8000:8000
     networks:
       - arxiv-submission-ui
+    depends_on:
+      - compiler-api
+      - filemanager
+
   #  depends_on:
   #    - submission-bootstrap
   mock-classifier:
@@ -262,6 +272,91 @@ services:
     networks:
       - arxiv-submission-ui
 
+  plaintext-worker:
+    image: arxiv/plaintext-worker:0.3.2rc3
+    environment:
+      REDIS_ENDPOINT: "submission-ui-redis:6379"
+      AWS_ACCESS_KEY_ID: "foo"
+      AWS_SECRET_ACCESS_KEY: "bar"
+      # KINESIS_VERIFY: ""
+      # KINESIS_ENDPOINT: "plaintext-test-redis:4568"
+      LOGLEVEL: 10
+      COMPILER_ENDPOINT: "http://compiler-api:8000/"
+      COMPILER_VERIFY: 0
+      DOCKER_HOST: "unix:///var/run/docker.sock"
+
+      VAULT_ENABLED: "1"
+      NAMESPACE: "production"
+      KUBE_TOKEN: "fookubetoken"
+      VAULT_HOST: "mock-vault"
+      VAULT_PORT: "8200"
+      VAULT_ROLE: "plaintext"
+      VAULT_CREDENTIAL: "foocredential"
+      VAULT_SCHEME: "http"
+
+      WAIT_FOR_SERVICES: 1
+      WAIT_ON_STARTUP: 5
+
+    networks:
+      - arxiv-submission-ui
+    volumes:
+      # - docker:/var/lib/docker
+      # - docker-run:/var/run
+      - pdfs:/pdfs
+      - data:/data
+      - /var/run/docker.sock:/var/run/docker.sock
+    depends_on:
+      - submission-ui-redis
+
+  plaintext-api:
+    image: arxiv/plaintext-api:0.3.2rc3
+    container_name: plaintext-api
+    environment:
+      REDIS_ENDPOINT: "submission-ui-redis:6379"
+      AWS_ACCESS_KEY_ID: "foo"
+      AWS_SECRET_ACCESS_KEY: "bar"
+      # KINESIS_VERIFY: ""
+      # KINESIS_ENDPOINT: "plaintext-test-redis:4568"
+      LOGLEVEL: 10
+      JWT_SECRET: foosecret
+      COMPILER_ENDPOINT: "http://compiler-api:8000/"
+      COMPILER_VERIFY: 0
+      VAULT_ENABLED: "1"
+      NAMESPACE: "production"
+      KUBE_TOKEN: "fookubetoken"
+      VAULT_HOST: "mock-vault"
+      VAULT_PORT: "8200"
+      VAULT_ROLE: "plaintext"
+      VAULT_CREDENTIAL: "foocredential"
+      VAULT_SCHEME: "http"
+
+      WAIT_FOR_SERVICES: 1
+      WAIT_ON_STARTUP: 5
+
+    volumes:
+      - data:/data
+    networks:
+      - arxiv-submission-ui
+    depends_on:
+      - submission-ui-redis
+
+  mock-vault:
+    image: arxiv/mock-vault
+    build:
+      context: .
+      dockerfile: Dockerfile-mock-vault
+    container_name: mock-vault
+    environment:
+      JWT_SECRET: foosecret
+    networks:
+      - arxiv-submission-ui
+
 
 networks:
   arxiv-submission-ui:
+
+volumes:
+  pdfs:
+  data:
+  docker:
+  docker-run:

@@ -149,3 +149,7 @@ KINESIS_VERIFY = bool(int(os.environ.get("KINESIS_VERIFY", "1")))
 
 WAIT_FOR_SERVICES = bool(int(os.environ.get('WAIT_FOR_SERVICES', '0')))
 WAIT_ON_STARTUP = int(os.environ.get('WAIT_ON_STARTUP', '0'))
+
+CLASSIFIER_ENDPOINT = os.environ.get('CLASSIFIER_ENDPOINT',
+                                     'http://localhost:8000')
+CLASSIFIER_VERIFY = bool(int(os.environ.get('CLASSIFIER_VERIFY', '0')))

@@ -13,8 +13,8 @@ from ..filemanager import FileManager
 from ...domain import Upload, FileStatus, FileError
 
 mock_app = mock.MagicMock(config={
-    'FILE_MANAGER_ENDPOINT': 'http://localhost:8003/filemanager/api',
-    'FILE_MANAGER_VERIFY': False
+    'FILEMANAGER_ENDPOINT': 'http://localhost:8003/filemanager/api',
+    'FILEMANAGER_VERIFY': False
 })
 
 

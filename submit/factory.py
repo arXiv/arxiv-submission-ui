@@ -1,10 +1,12 @@
 """Application factory for references service components."""
 
-import logging
-
+import logging as pylogging
+import time
+from typing import Any
+from typing_extensions import Protocol
 from flask import Flask
 
-from arxiv.base import Base
+from arxiv.base import Base, logging
 from arxiv.users import auth
 from arxiv.base.middleware import wrap, request_logs
 from arxiv.submission.services import classic
@@ -13,20 +15,20 @@ from arxiv.submission import init_app
 from .routes import ui
 from .services import FileManager
 from . import filters
-import logging
 
-logging.getLogger('arxiv.submission.services.classic.interpolate').setLevel(40)
-logging.getLogger('arxiv.submission.domain.event.event').setLevel(40)
+
+pylogging.getLogger('arxiv.submission.services.classic.interpolate') \
+    .setLevel(40)
+pylogging.getLogger('arxiv.submission.domain.event.event').setLevel(40)
+logger = logging.getLogger(__name__)
 
 
 def create_ui_web_app() -> Flask:
     """Initialize an instance of the search frontend UI web application."""
     app = Flask('submit', static_folder='static', template_folder='templates')
-    classic.init_app(app)
+    app.config.from_pyfile('config.py')
     init_app(app)
     FileManager.init_app(app)
-    app.config.from_pyfile('config.py')
-
     Base(app)
     auth.Auth(app)
     app.register_blueprint(ui.ui)
@@ -34,4 +36,38 @@ def create_ui_web_app() -> Flask:
     wrap(app, [auth.middleware.AuthMiddleware])
     for filter_name, filter_func in filters.get_filters():
         app.jinja_env.filters[filter_name] = filter_func
+
+    if app.config['WAIT_FOR_SERVICES']:
+        time.sleep(app.config['WAIT_ON_STARTUP'])
+        with app.app_context():
+            wait_for(FileManager.current_session())
+        logger.info('All upstream services are available; ready to start')
+
     return app
+
+
+# This stuff may be worth moving to base; so far it has proven pretty
+# ubiquitously helpful, and kind of makes sense in arxiv.integration.service.
+
+class IAwaitable(Protocol):
+    """An object that provides an ``is_available`` predicate."""
+
+    def is_available(self, **kwargs: Any) -> bool:
+        """Check whether an object (e.g. a service) is available."""
+        ...
+
+
+def wait_for(service: IAwaitable, delay: int = 2, **extra: Any) -> None:
+    """Wait for a service to become available."""
+    if hasattr(service, '__name__'):
+        service_name = service.__name__    # type: ignore
+    elif hasattr(service, '__class__'):
+        service_name = service.__class__.__name__
+    else:
+        service_name = str(service)
+
+    logger.info('await %s', service_name)
+    while not service.is_available(**extra):
+        logger.info('service %s is not available; try again', service_name)
+        time.sleep(delay)
+    logger.info('service %s is available!', service_name)

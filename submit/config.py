@@ -62,15 +62,17 @@ JWT_SECRET = os.environ.get('JWT_SECRET', 'foosecret')
 SECRET_KEY = os.environ.get('FLASK_SECRET', 'fooflasksecret')
 CSRF_SECRET = os.environ.get('FLASK_SECRET', 'csrfbarsecret')
 
-FILE_MANAGER_HOST = os.environ.get('FILE_MANAGER_HOST', 'arxiv.org')
-FILE_MANAGER_PORT = os.environ.get('FILE_MANAGER_PORT', '443')
-FILE_MANAGER_PROTO = os.environ.get('FILE_MANAGER_PROTO', 'https')
-FILE_MANAGER_PATH = os.environ.get('FILE_MANAGER_PATH', '')
-FILE_MANAGER_ENDPOINT = os.environ.get(
-    'FILE_MANAGER_ENDPOINT',
-    f'{FILE_MANAGER_PROTO}://{FILE_MANAGER_HOST}:{FILE_MANAGER_PORT}/{FILE_MANAGER_PATH}'
+FILEMANAGER_HOST = os.environ.get('FILEMANAGER_HOST', 'arxiv.org')
+FILEMANAGER_PORT = os.environ.get('FILEMANAGER_PORT', '443')
+FILEMANAGER_PROTO = os.environ.get('FILEMANAGER_PROTO', 'https')
+FILEMANAGER_PATH = os.environ.get('FILEMANAGER_PATH', '')
+FILEMANAGER_ENDPOINT = os.environ.get(
+    'FILEMANAGER_ENDPOINT',
+    f'{FILEMANAGER_PROTO}://{FILEMANAGER_HOST}:{FILEMANAGER_PORT}/{FILEMANAGER_PATH}'
 )
-FILE_MANAGER_VERIFY = bool(int(os.environ.get('FILE_MANAGER_VERIFY', '1')))
+FILEMANAGER_VERIFY = bool(int(os.environ.get('FILEMANAGER_VERIFY', '1')))
+FILEMANAGER_STATUS_ENDPOINT = os.environ.get('FILEMANAGER_STATUS_ENDPOINT',
+                                             'status')
 
 COMPILER_HOST = os.environ.get('COMPILER_HOST', 'arxiv.org')
 COMPILER_PORT = os.environ.get('COMPILER_PORT', '443')
@@ -144,3 +146,6 @@ KINESIS_SHARD_ID = os.environ.get("KINESIS_SHARD_ID", "0")
 KINESIS_START_TYPE = os.environ.get("KINESIS_START_TYPE", "TRIM_HORIZON")
 KINESIS_ENDPOINT = os.environ.get("KINESIS_ENDPOINT", None)
 KINESIS_VERIFY = bool(int(os.environ.get("KINESIS_VERIFY", "1")))
+
+WAIT_FOR_SERVICES = bool(int(os.environ.get('WAIT_FOR_SERVICES', '0')))
+WAIT_ON_STARTUP = int(os.environ.get('WAIT_ON_STARTUP', '0'))

@@ -9,6 +9,7 @@ ADD Pipfile Pipfile.lock /opt/arxiv/
 RUN pip install -U pip pipenv
 ENV LC_ALL en_US.utf-8
 ENV LANG en_US.utf-8
+
 RUN pipenv install
 
 ENV PATH "/opt/arxiv:${PATH}"

@@ -5,42 +5,55 @@ x-base-service:
   tty: true
   environment:
     SECRET_KEY: "not secure only use for development"
+    FLASK_SECRET: 'what'
+    LOGLEVEL: 10
+    SESSION_COOKIE_SECURE: 0
     DOCKER_HOST: "unix:///var/run/docker.sock"
     REDIS_ENDPOINT: "submission-ui-redis"
     ENABLE_ASYNC: 1
     ENABLE_CALLBACKS: 1
+
+    WAIT_FOR_SERVICES: 1
+    WAIT_ON_STARTUP: 5
+
     AWS_SECRET_ACCESS_KEY: "${AWS_SECRET_ACCESS_KEY}"
     AWS_ACCESS_KEY_ID: "${AWS_ACCESS_KEY_ID}"
+
+    # Compiler config.
     COMPILER_DOCKER_IMAGE: "${COMPILER_DOCKER_IMAGE}"
     HOST_SOURCE_ROOT: "${HOST_SOURCE_ROOT}"
     AWS_S3_REGION_NAME: "us-east-1"
     S3_ENDPOINT: "https://submission-localstack:4572"
     S3_VERIFY: 0
-    FILE_MANAGER_ENDPOINT: "http://arxiv-filemanager:8000/filemanager/api"
-    FILE_MANAGER_CONTENT_PATH: "/{source_id}/content"
-    LOGLEVEL: 10
-    # FLASK_APP: /opt/arxiv/app.py
-    # FLASK_DEBUG: 1
+    FILEMANAGER_ENDPOINT: "http://arxiv-filemanager:8000/filemanager/api"
+    FILEMANAGER_CONTENT_PATH: "/{source_id}/content"
+
     VERBOSE_COMPILE: 1
     JWT_SECRET: "foosecret"
     CLASSIC_DATABASE_URI: "mysql+mysqldb://foouser:foopass@submission-ui-maria:3306/submission?charset=utf8mb4"
-    # CLASSIC_DATABASE_URI: "sqlite:///db.sqlite"
-    FLASK_SECRET: 'what'
-    SESSION_COOKIE_SECURE: 0
     COMPILER_ENDPOINT: "http://compiler-api:8000/"
     FILE_MANAGMENT_SQLALCHEMY_DATABASE_URI: "mysql+mysqldb://foouser:foopass@filemanager-maria:3306/uploads?charset=utf8mb4"
+
+    # Route e-mail to mailhog.
     EMAIL_ENABLED: 1
     SMTP_HOSTNAME: mailhog
     SMTP_PORT: 1025
     SMTP_SSL: 0
     SMTP_USERNAME: ""
     SMTP_PASSWORD: ""
+
+    # Kinesis events.
     KINESIS_STREAM: "SubmissionEvents"
     KINESIS_VERIFY: 0
     KINESIS_ENDPOINT: "https://submission-localstack:4568"
     KINESIS_START_TYPE: "TRIM_HORIZON"
+
+    # Async config for the submission agent.
     SUBMISSION_AGENT_BROKER_URL: "redis://submission-ui-redis:6379/0"
     SUBMISSION_AGENT_DATABASE_URI: "mysql+mysqldb://foouser:foopass@submission-agent-maria:3306/agent?charset=utf8mb4"
+
+    CLASSIFIER_ENDPOINT: "http://mock-classifier:8000"
+    CLASSIFIER_VERIFY: 0
 
 services:
   mailhog:
@@ -50,6 +63,8 @@ services:
       - arxiv-submission-ui
     ports:
       - "8025:8025"
+    logging:
+      driver: none
 
   submission-ui-redis:
     image: redis
@@ -72,6 +87,8 @@ services:
       MYSQL_ROOT_PASSWORD: foorootpassword
       MYSQL_DATABASE: submission
     command: ["mysqld", "--character-set-server=utf8mb4", "--collation-server=utf8mb4_unicode_ci"]
+    logging:
+      driver: none
 
   submission-agent-maria:
     image: mariadb:10.3
@@ -86,6 +103,8 @@ services:
       MYSQL_ROOT_PASSWORD: foorootpassword
       MYSQL_DATABASE: agent
     command: ["mysqld", "--character-set-server=utf8mb4", "--collation-server=utf8mb4_unicode_ci"]
+    logging:
+      driver: none
 
   filemanager-maria:
     image: mariadb:10.3
@@ -98,6 +117,8 @@ services:
       MYSQL_ROOT_PASSWORD: foorootpassword
       MYSQL_DATABASE: uploads
     command: ["mysqld", "--character-set-server=utf8mb4", "--collation-server=utf8mb4_unicode_ci"]
+    logging:
+      driver: none
 
   filemanager:
     << : *base-service
@@ -126,10 +147,12 @@ services:
     environment:
       USE_SSL: 'true'
       DEBUG: 'true'
+    logging:
+      driver: none
 
   compiler-api:
     << : *base-service
-    image: arxiv/compiler:0.0
+    image: arxiv/compiler:0.0.3
     # You can uncomment these lines to build this from a local
     # repo. You may need to update `context`.
     # build:
@@ -149,7 +172,7 @@ services:
 
   compiler-worker:
     << : *base-service
-    image: arxiv/compiler:0.0
+    image: arxiv/compiler:0.0.3
     # You can uncomment these lines to build this from a local
     # repo. You may need to update `context`.
     # build:
@@ -169,7 +192,7 @@ services:
 
   submission-worker:
     << : *base-service
-    image: arxiv/submission-worker:0.0.10
+    image: arxiv/submission-worker:0.0.11
     container_name: arxiv-submission-worker
     networks:
       - arxiv-submission-ui
@@ -181,7 +204,7 @@ services:
 
   submission-agent:
     << : *base-service
-    image: arxiv/submission-agent:0.0.10
+    image: arxiv/submission-agent:0.0.11
     container_name: arxiv-submission-agent
     networks:
       - arxiv-submission-ui
@@ -213,14 +236,6 @@ services:
     networks:
       - arxiv-submission-ui
 
-  compiler-bootstrap:
-    << : *base-service
-    image: arxiv/compiler:0.0
-    container_name: compiler-bootstrap
-    command: pipenv run python bootstrap.py
-    networks:
-      - arxiv-submission-ui
-
   submission-ui:
     << : *base-service
     image: arxiv/submission-ui
@@ -238,6 +253,14 @@ services:
       - arxiv-submission-ui
   #  depends_on:
   #    - submission-bootstrap
+  mock-classifier:
+    image: arxiv/mock-classifier
+    build:
+      context: .
+      dockerfile: Dockerfile-mock-classifier
+    container_name: mock-classifier
+    networks:
+      - arxiv-submission-ui
 
 
 networks:

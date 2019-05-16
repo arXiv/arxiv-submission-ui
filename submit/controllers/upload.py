@@ -94,7 +94,6 @@ def upload_files(method: str, params: MultiDict, session: Session,
         raise BadRequest("Missing files or auth token")
 
     submission, _ = load_submission(submission_id)
-    print(submission.source_content)
 
     rdata = {
         'submission_id': submission_id,
@@ -103,11 +102,13 @@ def upload_files(method: str, params: MultiDict, session: Session,
     }
 
     if method == 'GET':
+        logger.debug('GET; load current upload state')
         return _get_upload(params, session, submission, rdata, token)
 
     # User is attempting an upload of some kind.
     elif method == 'POST':
         # Otherwise, treat this as an upload attempt.
+        logger.debug('POST; user is uploading file(s)')
         return _post_upload(params, files, session, submission, rdata, token)
     raise MethodNotAllowed('Nope')
 
@@ -484,6 +485,7 @@ def _new_upload(params: MultiDict, pointer: FileStorage, session: Session,
 
     """
     submitter, client = user_and_client_from_session(session)
+    fm = FileManager.current_session()
 
     # Using a form object provides some extra assurance that this is a legit
     # request; provides CSRF goodies.
@@ -496,7 +498,7 @@ def _new_upload(params: MultiDict, pointer: FileStorage, session: Session,
         raise BadRequest(rdata)
 
     try:
-        stat = FileManager.upload_package(pointer, token)
+        stat = fm.upload_package(pointer, token)
     except exceptions.RequestFailed as e:
         alerts.flash_failure(Markup(
             'There was a problem carrying out your request. Please try'
@@ -564,6 +566,7 @@ def _new_file(params: MultiDict, pointer: FileStorage, session: Session,
 
     """
     submitter, client = user_and_client_from_session(session)
+    fm = FileManager.current_session()
     upload_id = submission.source_content.identifier
 
     # Using a form object provides some extra assurance that this is a legit
@@ -585,8 +588,7 @@ def _new_file(params: MultiDict, pointer: FileStorage, session: Session,
     ancillary: bool = form.ancillary.data
 
     try:
-        stat = FileManager.add_file(upload_id, pointer, token,
-                                    ancillary=ancillary)
+        stat = fm.add_file(upload_id, pointer, token, ancillary=ancillary)
     except exceptions.RequestFailed as e:
         try:
             e_data = e.response.json()
@@ -671,11 +673,15 @@ def _post_upload(params: MultiDict, files: MultiDict, session: Session,
     if not pointer:
         # Don't flash a message if the user is just trying to go back to the
         # previous page.
+        logger.debug('No files on request')
         action = params.get('action', None)
         if action:
+            logger.debug('User is navigating away from upload UI')
             return {}, status.SEE_OTHER, {}
     if submission.source_content is None:   # New upload package.
+        logger.debug('New upload package')
         return _new_upload(params, pointer, session, submission, rdata, token)
+    logger.debug('Adding additional files')
     return _new_file(params, pointer, session, submission, rdata, token)
 
 

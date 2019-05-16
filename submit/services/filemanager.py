@@ -51,7 +51,19 @@ class FileManager(service.HTTPIntegration):
     class Meta:
         """Configuration for :class:`FileManager`."""
 
-        service_name = "file_manager"
+        service_name = "filemanager"
+
+    def is_available(self) -> bool:
+        """Check our connection to the filemanager service."""
+        config = get_application_config()
+        status_endpoint = config.get('FILEMANAGER_STATUS_ENDPOINT', 'status')
+        try:
+            response = self.request('get', status_endpoint)
+            return bool(response.status_code == 200)
+        except Exception as e:
+            logger.error('Error when calling filemanager: %s', e)
+            return False
+        return True
 
     def _parse_upload_status(self, data: dict) -> Upload:
         file_errors = defaultdict(list)
@@ -82,7 +94,7 @@ class FileManager(service.HTTPIntegration):
                 ) for fdata in data['files']
             ],
             errors=non_file_errors,
-            compressed_size=0, #data['upload_compressed_size'],
+            compressed_size=data['upload_compressed_size'],
             size=data['upload_total_size'],
             checksum=data['checksum'],
             source_format=SubmissionContent.Format(data['source_format'])

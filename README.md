@@ -49,7 +49,7 @@ development server for quicker cycles.
 
 | Service      | Env var                   | Endpoint                                                                  |
 |--------------|---------------------------|---------------------------------------------------------------------------|
-| File manager | ``FILE_MANAGER_ENDPOINT`` | http://localhost:8001/filemanager/api                                     |
+| File manager | ``FILEMANAGER_ENDPOINT`` | http://localhost:8001/filemanager/api                                     |
 | Compiler     | ``COMPILER_ENDPOINT``     | http://localhost:8100/                                                    |
 | Redis        | ``SUBMISSION_BROKER_URL`` | redis://localhost:6380                                                    |
 | Legacy DB    | ``CLASSIC_DATABASE_URI``  | mysql+mysqldb://foouser:foopass@127.0.0.1:3307/submission?charset=utf8mb4 |
@@ -65,7 +65,7 @@ $ pipenv install --dev
 $ ENABLE_ASYNC=1 ENABLE_CALLBACKS=1 \
 >   JWT_SECRET=foosecret \
 >   COMPILER_ENDPOINT=http://localhost:8100/ \
->   FILE_MANAGER_ENDPOINT=http://localhost:8001/filemanager/api \
+>   FILEMANAGER_ENDPOINT=http://localhost:8001/filemanager/api \
 >   SUBMISSION_BROKER_URL=redis://localhost:6380 \
 >   CLASSIC_DATABASE_URI="mysql+mysqldb://foouser:foopass@127.0.0.1:3307/submission?charset=utf8mb4" \
 >   LOGLEVEL=10 FLASK_APP=app.py FLASK_DEBUG=1 \

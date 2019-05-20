@@ -6,7 +6,7 @@ x-base-service:
   environment:
     SECRET_KEY: "not secure only use for development"
     FLASK_SECRET: 'what'
-    LOGLEVEL: 10
+    LOGLEVEL: 40
     SESSION_COOKIE_SECURE: 0
     DOCKER_HOST: "unix:///var/run/docker.sock"
     REDIS_ENDPOINT: "submission-ui-redis"
@@ -61,6 +61,13 @@ x-base-service:
     CLASSIFIER_ENDPOINT: "http://mock-classifier:8000"
     CLASSIFIER_VERIFY: 0
 
+    VAULT_ENABLED: "1"
+    NAMESPACE: "production"
+    KUBE_TOKEN: "fookubetoken"
+    VAULT_HOST: "mock-vault"
+    VAULT_PORT: "8200"
+    VAULT_SCHEME: "http"
+
 services:
   mailhog:
     image: mailhog/mailhog
@@ -79,6 +86,8 @@ services:
       - arxiv-submission-ui
     ports:
       - "6380:6379"
+    logging:
+      driver: none
 
   submission-ui-maria:
     image: mariadb:10.3
@@ -280,7 +289,7 @@ services:
       AWS_SECRET_ACCESS_KEY: "bar"
       # KINESIS_VERIFY: ""
       # KINESIS_ENDPOINT: "plaintext-test-redis:4568"
-      LOGLEVEL: 10
+      LOGLEVEL: 40
       COMPILER_ENDPOINT: "http://compiler-api:8000/"
       COMPILER_VERIFY: 0
       DOCKER_HOST: "unix:///var/run/docker.sock"
@@ -317,7 +326,7 @@ services:
       AWS_SECRET_ACCESS_KEY: "bar"
       # KINESIS_VERIFY: ""
       # KINESIS_ENDPOINT: "plaintext-test-redis:4568"
-      LOGLEVEL: 10
+      LOGLEVEL: 40
       JWT_SECRET: foosecret
       COMPILER_ENDPOINT: "http://compiler-api:8000/"
       COMPILER_VERIFY: 0

@@ -2,6 +2,7 @@
 
 from flask import Flask, send_file, jsonify, request
 from datetime import datetime
+from pytz import UTC
 
 application = Flask(__name__)
 
@@ -16,7 +17,8 @@ tokens = {}
 def log_in():
     global TOK_ID
     TOK_ID += 1
-    tokens[TOK_ID] = datetime.now()
+    tokens[TOK_ID] = datetime.now(UTC)
+    request.data, request.get_json()
     return jsonify({'auth': {'client_token': f'{TOK_ID}'}})
 
 
@@ -24,6 +26,7 @@ def log_in():
 def get_kv_secret(path):
     global KV_ID
     KV_ID += 1
+    request.data
     return jsonify({
         "request_id": f"foo-request-{KV_ID}",
         "lease_id": "",
@@ -51,6 +54,7 @@ def get_aws_secret(role):
     """Get an AWS credential."""
     global AWS_ID
     AWS_ID += 1
+    request.data
     return jsonify({
         "request_id": f"a-request-id-{AWS_ID}",
         "lease_id": f"aws/creds/{role}/a-lease-id-{AWS_ID}",
@@ -67,24 +71,44 @@ def get_aws_secret(role):
     })
 
 
-@application.route('/v1/auth/token/lookup')
-def look_up_a_token(self):
+@application.route('/v1/auth/token/lookup-self', methods=['GET', 'POST'])
+@application.route('/v1/auth/token/lookup', methods=['GET', 'POST'])
+def look_up_a_token():
     """Look up an auth token."""
-    tok = request.get_json()['token']
+    try:
+        data = request.get_json(force=True)
+    except Exception:
+        data = None
+    if data:
+        tok = data['token']
+    else:
+        tok = request.headers.get('TOK_ID')
+    request.data
+
+    try:
+        creation_time = int(round(datetime.timestamp(tokens[tok]), 0))
+        issue_time = tokens[tok].isoformat()
+    except Exception:
+        _now = datetime.now(UTC)
+        creation_time = int(round(datetime.timestamp(_now)))
+        issue_time = _now.isoformat()
+        tokens[tok] = _now
+    expire_time = datetime.fromtimestamp(creation_time + 2764790)
+
     return jsonify({
       "data": {
         "accessor": "8609694a-cdbc-db9b-d345-e782dbb562ed",
-        "creation_time": int(round(datetime.timestamp(tokens[tok]), 0)),
+        "creation_time": creation_time,
         "creation_ttl": 2764800,
         "display_name": "fooname",
         "entity_id": "7d2e3179-f69b-450c-7179-ac8ee8bd8ca9",
-        "expire_time": "2018-05-19T11:35:54.466476215-04:00",
+        "expire_time": expire_time.isoformat(),
         "explicit_max_ttl": 0,
-        "id": "cf64a70f-3a12-3f6c-791d-6cef6d390eed",
+        "id": tok,
         "identity_policies": [
           "dev-group-policy"
         ],
-        "issue_time": tokens[tok].isoformat(),
+        "issue_time": issue_time,
         "meta": {
           "username": "tesla"
         },

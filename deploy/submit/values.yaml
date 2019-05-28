@@ -1,0 +1,20 @@
+namespace: development
+deployment:
+  name: submission-ui
+
+service:
+  name: submission-ui
+
+image.tag: 0.1
+labels:
+  subsystem: submission
+
+replicas: 1
+
+authenticator:
+  service: authenticator
+
+ingress:
+  name: submission-ui
+  host: changeme
+  path: /

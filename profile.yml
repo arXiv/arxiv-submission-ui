@@ -1,0 +1,28 @@
+# Application profile
+
+application:
+  slug: submission-ui
+  subsystem: submission-moderation
+  service_group: backend
+  containers:
+  - name: ui
+    type:  wsgi
+    resources:
+      memory:
+        min: 128Mi
+        max: 256Mi
+      cpu:
+        min: 100m
+        max: 300m
+  dependencies:
+  - name: classic
+    type: mysql
+    description: Classic submission DB.
+  - name: filemanager
+    type: http
+    description: File manager service.
+  - name: compiler
+    type: http
+    description: Compiler service.
+  - type: kinesis
+    description: SubmissionEvents

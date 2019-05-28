@@ -1,0 +1,52 @@
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  name: "{{ default "submission-ui" .Values.deployment.name }}"
+  labels:
+    subsystem: "{{ .Values.labels.subsystem }}"
+    container: "{{ default "submission-ui" .Values.deployment.name }}"
+    service-group: ui
+    log-style: uwsgi
+    env: "{{ .Values.namespace }}"
+  namespace: "{{ .Values.namespace }}"
+spec:
+  replicas: {{ default 1 .Values.replicas }}
+  template:
+    metadata:
+      labels:
+        subsystem: "{{ .Values.labels.subsystem }}"
+        container: "{{ default "submission-ui" .Values.deployment.name }}"
+        service-group: ui
+        log-style: uwsgi
+        env: "{{ .Values.namespace }}"
+      namespace: "{{ .Values.namespace }}"
+      # annotations:
+      #   prometheus.io/scrape: 'true'
+    spec:
+      # This should keep the pods from clustering together on the same node.
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: container
+                operator: In
+                values:
+                - "{{ default "submission-ui" .Values.deployment.name }}"
+            topologyKey: kubernetes.io/hostname
+      containers:
+      - name: "{{ default "submission-ui" .Values.deployment.name }}"
+        image: arxiv/submission-ui:{{ .Values.image.tag }}
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8000
+        env:
+        - name: LOGLEVEL
+          value: "{{ default "40" .Values.loglevel }}"
+        resources:
+          limits:
+            cpu: 300m
+            memory: 256Mi
+          requests:
+            cpu: 100m
+            memory: 128Mi

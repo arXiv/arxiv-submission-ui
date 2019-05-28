@@ -1,0 +1,7 @@
+name: submission-ui
+version: 0.1.1
+appVersion: 0.1.1
+description: Submission user interface
+sources:
+  - https://github.com/arxiv/arxiv-submission-ui
+engine: gotpl

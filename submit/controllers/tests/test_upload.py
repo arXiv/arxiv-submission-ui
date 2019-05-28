@@ -145,7 +145,8 @@ class TestUpload(TestCase):
         )
         mock_load.return_value = (mock_submission, [])
         mock_save.return_value = (mock_submission, [])
-        mock_filemanager.add_file.return_value = Upload(
+        mock_fm = mock.MagicMock()
+        mock_fm.add_file.return_value = Upload(
             identifier=25,
             checksum='a1s2d3f4',
             size=593920,
@@ -167,6 +168,7 @@ class TestUpload(TestCase):
             )],
             errors=[]
         )
+        mock_filemanager.current_session.return_value = mock_fm
         params = MultiDict({})
         mock_file = mock.MagicMock()
         files = MultiDict({'file': mock_file})
@@ -174,7 +176,7 @@ class TestUpload(TestCase):
                                          submission_id, files=files,
                                          token='footoken')
         self.assertEqual(code, status.SEE_OTHER, 'Returns 303')
-        self.assertEqual(mock_filemanager.add_file.call_count, 1,
+        self.assertEqual(mock_fm.add_file.call_count, 1,
                          'Calls the file management service')
         self.assertTrue(mock_filemanager.add_file.called_with(mock_file))
 

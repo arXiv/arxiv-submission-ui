@@ -6,10 +6,11 @@ from typing import Any
 from typing_extensions import Protocol
 from flask import Flask
 
+from arxiv import vault
 from arxiv.base import Base, logging
 from arxiv.users import auth
 from arxiv.base.middleware import wrap, request_logs
-from arxiv.submission.services import classic
+from arxiv.submission.services import classic, Compiler
 from arxiv.submission import init_app
 
 from .routes import ui
@@ -27,13 +28,26 @@ def create_ui_web_app() -> Flask:
     """Initialize an instance of the search frontend UI web application."""
     app = Flask('submit', static_folder='static', template_folder='templates')
     app.config.from_pyfile('config.py')
-    init_app(app)
-    FileManager.init_app(app)
+
     Base(app)
     auth.Auth(app)
     app.register_blueprint(ui.ui)
 
-    wrap(app, [auth.middleware.AuthMiddleware])
+    # Initialize services.
+    init_app(app)
+    Compiler.init_app(app)
+    FileManager.init_app(app)
+
+    middleware = [request_logs.ClassicLogsMiddleware,
+                  auth.middleware.AuthMiddleware]
+    if app.config['VAULT_ENABLED']:
+        middleware.insert(0, vault.middleware.VaultMiddleware)
+    wrap(app, middleware)
+
+    # Make sure that we have all of the secrets that we need to run.
+    if app.config['VAULT_ENABLED']:
+        app.middlewares['VaultMiddleware'].update_secrets({})
+
     for filter_name, filter_func in filters.get_filters():
         app.jinja_env.filters[filter_name] = filter_func
 
@@ -41,6 +55,7 @@ def create_ui_web_app() -> Flask:
         time.sleep(app.config['WAIT_ON_STARTUP'])
         with app.app_context():
             wait_for(FileManager.current_session())
+            wait_for(Compiler.current_session())
         logger.info('All upstream services are available; ready to start')
 
     return app

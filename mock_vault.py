@@ -71,6 +71,25 @@ def get_aws_secret(role):
     })
 
 
+@application.route('/v1/database/creds/<role>', methods=['GET', 'POST'])
+def get_database_creds(role):
+    return jsonify({
+        "request_id": "303d63bd-e2f3-cfcd-75c1-1c18af2d26a8",
+        "lease_id": f"database/creds/{role}/4544a565-6946-20e7-d407-2c7dfc9ea779",
+        "renewable": True,
+        "lease_duration": 1800,
+        "data": {
+            "password": "foo-USr5K5e3KyXOSDfB",
+            "username": "v-root-filemanage-annxS09rxJIaWu"
+        },
+        "wrap_info": None,
+        "warnings": [
+            "TTL of \"1h0m0s\" exceeded the effective max_ttl of \"30m0s\"; TTL value is capped accordingly"
+        ],
+        "auth": None
+    })
+
+
 @application.route('/v1/auth/token/lookup-self', methods=['GET', 'POST'])
 @application.route('/v1/auth/token/lookup', methods=['GET', 'POST'])
 def look_up_a_token():

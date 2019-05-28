@@ -9,6 +9,9 @@ import os
 ON = 'yes'
 OFF = 'no'
 
+NAMESPACE = os.environ.get('NAMESPACE')
+"""Namespace in which this service is deployed; to qualify keys for secrets."""
+
 DEBUG = os.environ.get('DEBUG') == ON
 """enable/disable debug mode"""
 
@@ -47,7 +50,7 @@ logging in debug mode, 'production' will only log in production and 'never'
 disables it entirely.
 """
 
-SERVER_NAME = None# "foohost:8000"   #os.environ.get('SERVER_NAME', None)
+SERVER_NAME = None  # "foohost:8000"   #os.environ.get('SERVER_NAME', None)
 """
 the name and port number of the server. Required for subdomain support
 (e.g.: 'myapp.dev:5000') Note that localhost does not support subdomains so
@@ -153,3 +156,40 @@ WAIT_ON_STARTUP = int(os.environ.get('WAIT_ON_STARTUP', '0'))
 CLASSIFIER_ENDPOINT = os.environ.get('CLASSIFIER_ENDPOINT',
                                      'http://localhost:8000')
 CLASSIFIER_VERIFY = bool(int(os.environ.get('CLASSIFIER_VERIFY', '0')))
+
+
+VAULT_ENABLED = bool(int(os.environ.get('VAULT_ENABLED', '0')))
+"""Enable/disable secret retrieval from Vault."""
+
+KUBE_TOKEN = os.environ.get('KUBE_TOKEN', 'fookubetoken')
+"""Service account token for authenticating with Vault. May be a file path."""
+
+VAULT_HOST = os.environ.get('VAULT_HOST', 'foovaulthost')
+"""Vault hostname/address."""
+
+VAULT_PORT = os.environ.get('VAULT_PORT', '1234')
+"""Vault API port."""
+
+VAULT_ROLE = os.environ.get('VAULT_ROLE', 'submission-ui')
+"""Vault role linked to this application's service account."""
+
+VAULT_CERT = os.environ.get('VAULT_CERT')
+"""Path to CA certificate for TLS verification when talking to Vault."""
+
+VAULT_SCHEME = os.environ.get('VAULT_SCHEME', 'https')
+"""Default is ``https``."""
+
+NS_AFFIX = '' if NAMESPACE == 'production' else f'-{NAMESPACE}'
+VAULT_REQUESTS = [
+    {'type': 'generic',
+     'name': 'JWT_SECRET',
+     'mount_point': f'secret{NS_AFFIX}/',
+     'path': 'jwt',
+     'key': 'jwt-secret',
+     'minimum_ttl': 3600},
+    {'type': 'aws',
+     'name': 'AWS_S3_CREDENTIAL',
+     'mount_point': f'aws{NS_AFFIX}/',
+     'role': os.environ.get('VAULT_CREDENTIAL')}
+]
+"""Requests for Vault secrets."""

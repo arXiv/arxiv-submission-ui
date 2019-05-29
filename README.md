@@ -43,6 +43,8 @@ pass the JWT in the ``Authorization`` header.
 
 You should be able to access the UI at http://localhost:8000.
 
+## Running the UI locally
+
 In addition, the compose config maps ports for backend services and data
 stores to your local machine. So you can also start the UI via the Flask
 development server for quicker cycles.

@@ -10,7 +10,7 @@ python:
   - "3.6"
 script:
   - pip install pipenv
-  - pipenv install --dev
+  - pipenv install --dev --skip-lock
   - pipenv run nose2 --with-coverage
 #  - ./tests/lint.sh
   - ./tests/docstyle.sh

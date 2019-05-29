@@ -29,6 +29,7 @@ CSRF_PATTERN = (r'\<input id="csrf_token" name="csrf_token" type="hidden"'
 class TestSubmissionWorkflow(TestCase):
     """Tests that progress through the submission workflow in various ways."""
 
+    @mock.patch('arxiv.submission.core.StreamPublisher', mock.MagicMock())
     def setUp(self):
         """Create an application instance."""
         self.app = create_ui_web_app()

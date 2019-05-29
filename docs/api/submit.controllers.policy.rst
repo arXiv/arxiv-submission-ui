@@ -1,5 +1,5 @@
 submit.controllers.policy module
-=================================
+================================
 
 .. automodule:: submit.controllers.policy
     :members:

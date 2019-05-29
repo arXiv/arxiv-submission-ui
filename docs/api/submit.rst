@@ -1,5 +1,5 @@
 submit package
-================
+==============
 
 .. automodule:: submit
     :members:
@@ -12,15 +12,19 @@ Subpackages
 .. toctree::
 
     submit.controllers
+    submit.domain
+    submit.filters
     submit.routes
     submit.services
+    submit.tests
 
 Submodules
 ----------
+
 .. toctree::
 
-    submit.config
-    submit.domain
-    submit.factory
-    submit.filters
-    submit.util
+   submit.config
+   submit.factory
+   submit.flow_control
+   submit.util
+

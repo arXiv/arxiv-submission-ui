@@ -41,7 +41,27 @@ submission-bootstrap     | 2 aggregat2070@gmail.com eyJ0eXAiOiJKV1QiLCJhbGciOiJI
 Those are some JWTs you can use to access the submission UI. You will need to
 pass the JWT in the ``Authorization`` header.
 
-You should be able to access the UI at http://localhost:8000.
+Keep in mind that it can take a little while for everything to spin up -- each
+service checks for all of its upstreams to be available, and provisions any
+necessary AWS resources (in localstack).
+
+Some of the last things you should see are the submission agent spooling
+through some test messages.
+
+```
+arxiv-submission-agent    | application 29/May/2019:15:20:24 +0000 - __main__ - None - [arxiv:null] - INFO: "Processing record 49596144802018655118071366264305326833780872579347644418"
+arxiv-submission-agent    | application 29/May/2019:15:20:24 +0000 - __main__ - None - [arxiv:null] - INFO: "Skipping record 49596144802018655118071366264305326833780872579347644418"
+arxiv-submission-agent    | application 29/May/2019:15:20:24 +0000 - __main__ - None - [arxiv:null] - INFO: "Processing record 49596144802018655118071366264306535759600487208522350594"
+arxiv-submission-agent    | application 29/May/2019:15:20:24 +0000 - __main__ - None - [arxiv:null] - INFO: "Skipping record 49596144802018655118071366264306535759600487208522350594"
+arxiv-submission-agent    | application 29/May/2019:15:20:24 +0000 - __main__ - None - [arxiv:null] - INFO: "Processing record 49596144802018655118071366264307744685420103555683975170"
+arxiv-submission-agent    | application 29/May/2019:15:20:24 +0000 - __main__ - None - [arxiv:null] - INFO: "Skipping record 49596144802018655118071366264307744685420103555683975170"
+arxiv-submission-agent    | application 29/May/2019:15:20:24 +0000 - __main__ - None - [arxiv:null] - INFO: "Processing record 49596144802018655118071366264308953611239718184858681346"
+arxiv-submission-agent    | application 29/May/2019:15:20:24 +0000 - __main__ - None - [arxiv:null] - INFO: "Skipping record 49596144802018655118071366264308953611239718184858681346"
+```
+
+You should be able to access the UI at http://localhost:8000. If you don't
+get a response right away, the UI is probably still waiting for something
+to come up.
 
 ## Running the UI locally
 

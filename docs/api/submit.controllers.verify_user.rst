@@ -1,5 +1,5 @@
-submit.controllers.verify_user module
-=====================================
+submit.controllers.verify\_user module
+======================================
 
 .. automodule:: submit.controllers.verify_user
     :members:

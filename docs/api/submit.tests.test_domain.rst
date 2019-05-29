@@ -1,7 +1,7 @@
-submit.controllers.upload module
+submit.tests.test\_domain module
 ================================
 
-.. automodule:: submit.controllers.upload
+.. automodule:: submit.tests.test_domain
     :members:
     :undoc-members:
     :show-inheritance:

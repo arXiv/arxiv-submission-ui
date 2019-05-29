@@ -14,7 +14,11 @@ import os
 import sys
 sys.path.insert(0, os.path.abspath('.'))
 sys.path.append(os.path.abspath('..'))
+import patched_sphinx_autodoc_typehints
+from submit.factory import create_ui_web_app
 
+app = create_ui_web_app()
+app.app_context().push()
 
 # -- Project information -----------------------------------------------------
 
@@ -34,9 +38,13 @@ release = '0.1'
 extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.intersphinx',
-    'sphinx.ext.coverage',
+    'sphinx.ext.todo',
+    'sphinx.ext.imgmath',
     'sphinx.ext.viewcode',
+    'sphinx.ext.napoleon',
+    'sphinx.ext.graphviz',
     'sphinx.ext.githubpages',
+    'patched_sphinx_autodoc_typehints'
 ]
 
 
@@ -60,3 +68,15 @@ html_theme = 'alabaster'
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
+
+intersphinx_mapping = {
+    'python':  ('https://docs.python.org/3.6', None),
+    'arxitecture':  ('https://arxiv.github.io/arxiv-arxitecture/', None),
+    'arxiv.submission':  ('https://arxiv.github.io/arxiv-submission-core/', None),
+    'arxiv.taxonomy': ('https://arxiv.github.io/arxiv-base', None),
+    'arxiv.base':  ('https://arxiv.github.io/arxiv-base', None),
+    'browse':  ('https://arxiv.github.io/arxiv-browse/', None),
+    'search':  ('https://arxiv.github.io/arxiv-search/', None),
+    'zero':  ('https://arxiv.github.io/arxiv-zero/', None),
+    'hvac': ('https://hvac.readthedocs.io/en/stable/', None)
+}

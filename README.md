@@ -14,10 +14,10 @@ with correct wiring is to use the provided docker-compose configuration.
 
 ```bash
 cd /path/to/arxiv-submission-ui
-mkdir /tmp/foo     # Compiler service will use this.
+mkdir /tmp/foo          # Compiler service will use this.
 docker-compose pull     # Pulls in images that you might not have already.
-HOST_SOURCE_ROOT=/tmp/foo COMPILER_DOCKER_IMAGE=[ will share via slack ]:0.8 docker-compose build
-HOST_SOURCE_ROOT=/tmp/foo COMPILER_DOCKER_IMAGE=[ will share via slack ]:0.8 docker-compose up
+docker-compose build    # Builds the submission UI
+DIND_SOURCE_ROOT=/tmp/foo CONVERTER_DOCKER_IMAGE=626657773168.dkr.ecr.us-east-1.amazonaws.com/arxiv/converter:0.9 docker-compose up
 ```
 
 To get a fresh deployment (e.g. after significant changes to backend stuff),

@@ -1,13 +1,12 @@
+name: submission-ui
 namespace: development
-deployment:
-  name: submission-ui
 
-service:
-  name: submission-ui
+image:
+  tag: 0.1
 
-image.tag: 0.1
 labels:
   subsystem: submission
+  service_group: frontend
 
 replicas: 1
 

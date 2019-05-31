@@ -4,30 +4,66 @@ Flask configuration.
 Docstrings are from the `Flask configuration documentation
 <http://flask.pocoo.org/docs/0.12/config/>`_.
 """
-import os
+from typing import Optional
+import warnings
+from os import environ
 
-ON = 'yes'
-OFF = 'no'
-
-NAMESPACE = os.environ.get('NAMESPACE')
+NAMESPACE = environ.get('NAMESPACE')
 """Namespace in which this service is deployed; to qualify keys for secrets."""
 
-DEBUG = os.environ.get('DEBUG') == ON
+LOGLEVEL = int(environ.get('LOGLEVEL', '20'))
+"""
+Logging verbosity.
+
+See `https://docs.python.org/3/library/logging.html#levels`_.
+"""
+
+JWT_SECRET = environ.get('JWT_SECRET')
+"""Secret key for signing + verifying authentication JWTs."""
+
+CSRF_SECRET = environ.get('FLASK_SECRET', 'csrfbarsecret')
+"""Secret used for generating CSRF tokens."""
+
+if not JWT_SECRET:
+    warnings.warn('JWT_SECRET is not set; authn/z may not work correctly!')
+
+
+WAIT_FOR_SERVICES = bool(int(environ.get('WAIT_FOR_SERVICES', '0')))
+"""Disable/enable waiting for upstream services to be available on startup."""
+if not WAIT_FOR_SERVICES:
+    warnings.warn('Awaiting upstream services is disabled; this should'
+                  ' probably be enabled in production.')
+
+WAIT_ON_STARTUP = int(environ.get('WAIT_ON_STARTUP', '0'))
+"""Number of seconds to wait before checking upstream services on startup."""
+
+ENABLE_CALLBACKS = bool(int(environ.get('ENABLE_CALLBACKS', '1')))
+"""Enable/disable the :func:`Event.bind` feature."""
+
+SESSION_COOKIE_NAME = 'submission_ui_session'
+"""Cookie used to store submission-related information."""
+
+
+# --- FLASK CONFIGURATION ---
+
+DEBUG = bool(int(environ.get('DEBUG', '0')))
 """enable/disable debug mode"""
 
-TESTING = os.environ.get('TESTING') == ON
+TESTING = bool(int(environ.get('TESTING', '0')))
 """enable/disable testing mode"""
 
+SECRET_KEY = environ.get('FLASK_SECRET', 'fooflasksecret')
+"""Flask secret key."""
+
 PROPAGATE_EXCEPTIONS = \
-    True if os.environ.get('PROPAGATE_EXCEPTIONS') == ON else None
+    True if bool(int(environ.get('PROPAGATE_EXCEPTIONS', '0'))) else None
 """
 explicitly enable or disable the propagation of exceptions. If not set or
 explicitly set to None this is implicitly true if either TESTING or DEBUG is
 true.
 """
 
-PRESERVE_CONTEXT_ON_EXCEPTION = \
-    True if os.environ.get('PRESERVE_CONTEXT_ON_EXCEPTION') == ON else None
+PRESERVE_CONTEXT_ON_EXCEPTION: Optional[bool] = None
 """
 By default if the application is in debug mode the request context is not
 popped on exceptions to enable debuggers to introspect the data. This can be
@@ -35,14 +71,17 @@ disabled by this key. You can also use this setting to force-enable it for non
 debug execution which might be useful to debug production applications (but
 also very risky).
 """
+if bool(int(environ.get('PRESERVE_CONTEXT_ON_EXCEPTION', '0'))):
+    PRESERVE_CONTEXT_ON_EXCEPTION = True
 
-USE_X_SENDFILE = os.environ.get('USE_X_SENDFILE') == ON
+
+USE_X_SENDFILE = bool(int(environ.get('USE_X_SENDFILE', '0')))
 """Enable/disable x-sendfile"""
 
-LOGGER_NAME = os.environ.get('LOGGER_NAME', 'search')
+LOGGER_NAME = environ.get('LOGGER_NAME', 'search')
 """The name of the logger."""
 
-LOGGER_HANDLER_POLICY = os.environ.get('LOGGER_HANDLER_POLICY', 'debug')
+LOGGER_HANDLER_POLICY = environ.get('LOGGER_HANDLER_POLICY', 'debug')
 """
 the policy of the default logging handler. The default is 'always' which means
 that the default logging handler is always active. 'debug' will only activate
@@ -50,7 +89,7 @@ logging in debug mode, 'production' will only log in production and 'never'
 disables it entirely.
 """
 
-SERVER_NAME = None  # "foohost:8000"   #os.environ.get('SERVER_NAME', None)
+SERVER_NAME = None  # "foohost:8000"   #environ.get('SERVER_NAME', None)
 """
 the name and port number of the server. Required for subdomain support
 (e.g.: 'myapp.dev:5000') Note that localhost does not support subdomains so
@@ -59,38 +98,94 @@ default enables URL generation without a request context but with an
 application context.
 """
 
-SQLALCHEMY_DATABASE_URI = os.environ.get('CLASSIC_DATABASE_URI', 'sqlite:///')
 
-JWT_SECRET = os.environ.get('JWT_SECRET', 'foosecret')
-SECRET_KEY = os.environ.get('FLASK_SECRET', 'fooflasksecret')
-CSRF_SECRET = os.environ.get('FLASK_SECRET', 'csrfbarsecret')
+# --- DATABASE CONFIGURATION ---
 
-FILEMANAGER_HOST = os.environ.get('FILEMANAGER_HOST', 'arxiv.org')
-FILEMANAGER_PORT = os.environ.get('FILEMANAGER_PORT', '443')
-FILEMANAGER_PROTO = os.environ.get('FILEMANAGER_PROTO', 'https')
-FILEMANAGER_PATH = os.environ.get('FILEMANAGER_PATH', '')
-FILEMANAGER_ENDPOINT = os.environ.get(
-    'FILEMANAGER_ENDPOINT',
-    f'{FILEMANAGER_PROTO}://{FILEMANAGER_HOST}:{FILEMANAGER_PORT}/{FILEMANAGER_PATH}'
+CLASSIC_DATABASE_URI = environ.get('CLASSIC_DATABASE_URI', 'sqlite:///')
+"""Full database URI for the classic system."""
+
+SQLALCHEMY_DATABASE_URI = CLASSIC_DATABASE_URI
+"""Full database URI for the classic system."""
+
+SQLALCHEMY_TRACK_MODIFICATIONS = False
+"""Track modifications feature should always be disabled."""
+
+
+# Integration with the file manager service.
+FILE_MANAGER_HOST = environ.get('FILEMANAGER_SERVICE_HOST', 'arxiv.org')
+"""Hostname or addreess of the filemanager service."""
+
+FILE_MANAGER_PORT = environ.get('FILEMANAGER_SERVICE_PORT', '443')
+"""Port for the filemanager service."""
+
+FILE_MANAGER_PROTO = environ.get(f'FILEMANAGER_PORT_{FILE_MANAGER_PORT}_PROTO',
+                                 'https')
+"""Protocol for the filemanager service."""
+
+FILE_MANAGER_PATH = environ.get('FILE_MANAGER_PATH', '').lstrip('/')
+"""Path at which the filemanager service is deployed."""
+
+FILE_MANAGER_ENDPOINT = environ.get(
+    'FILE_MANAGER_ENDPOINT',
+    '%s://%s:%s/%s' % (FILE_MANAGER_PROTO, FILE_MANAGER_HOST,
+                       FILE_MANAGER_PORT, FILE_MANAGER_PATH)
 )
-FILEMANAGER_VERIFY = bool(int(os.environ.get('FILEMANAGER_VERIFY', '1')))
-FILEMANAGER_STATUS_ENDPOINT = os.environ.get('FILEMANAGER_STATUS_ENDPOINT',
-                                             'status')
+"""
+Full URL to the root filemanager service API endpoint.
 
-COMPILER_HOST = os.environ.get('COMPILER_HOST', 'arxiv.org')
-COMPILER_PORT = os.environ.get('COMPILER_PORT', '443')
-COMPILER_PROTO = os.environ.get('COMPILER_PROTO', 'https')
-COMPILER_PATH = os.environ.get('COMPILER_PATH', '')
-COMPILER_ENDPOINT = os.environ.get(
+If not explicitly provided, this is composed from :const:`FILE_MANAGER_HOST`,
+:const:`FILE_MANAGER_PORT`, :const:`FILE_MANAGER_PROTO`, and
+:const:`FILE_MANAGER_PATH`.
+"""
+
+FILE_MANAGER_VERIFY = bool(int(environ.get('FILE_MANAGER_VERIFY', '1')))
+"""Enable/disable SSL certificate verification for filemanager service."""
+
+FILE_MANAGER_STATUS_ENDPOINT = environ.get('FILEMANAGER_STATUS_ENDPOINT',
+                                           'status')
+"""Path to the file manager service status endpoint."""
+
+if FILE_MANAGER_PROTO == 'https' and not FILE_MANAGER_VERIFY:
+    warnings.warn('Certificate verification for filemanager is disabled; this'
+                  ' should not be disabled in production.')
+
+
+# Integration with the compiler service.
+COMPILER_HOST = environ.get('COMPILER_SERVICE_HOST', 'arxiv.org')
+"""Hostname or addreess of the compiler service."""
+
+COMPILER_PORT = environ.get('COMPILER_SERVICE_PORT', '443')
+"""Port for the compiler service."""
+
+COMPILER_PROTO = environ.get(f'COMPILER_PORT_{COMPILER_PORT}_PROTO', 'https')
+"""Protocol for the compiler service."""
+
+COMPILER_PATH = environ.get('COMPILER_PATH', '')
+"""Path at which the compiler service is deployed."""
+
+COMPILER_ENDPOINT = environ.get(
     'COMPILER_ENDPOINT',
-    f'{COMPILER_PROTO}://{COMPILER_HOST}:{COMPILER_PORT}/{COMPILER_PATH}'
+    '%s://%s:%s/%s' % (COMPILER_PROTO, COMPILER_HOST, COMPILER_PORT,
+                       COMPILER_PATH)
 )
-COMPILER_VERIFY = bool(int(os.environ.get('COMPILER_VERIFY', '1')))
+"""
+Full URL to the root compiler service API endpoint.
 
-SESSION_COOKIE_NAME = 'submission_ui_session'
+If not explicitly provided, this is composed from :const:`COMPILER_HOST`,
+:const:`COMPILER_PORT`, :const:`COMPILER_PROTO`, and :const:`COMPILER_PATH`.
+"""
 
-EXTERNAL_URL_SCHEME = os.environ.get('EXTERNAL_URL_SCHEME', 'https')
-BASE_SERVER = os.environ.get('BASE_SERVER', 'arxiv.org')
+COMPILER_VERIFY = bool(int(environ.get('COMPILER_VERIFY', '1')))
+"""Enable/disable SSL certificate verification for compiler service."""
+
+if COMPILER_PROTO == 'https' and not COMPILER_VERIFY:
+    warnings.warn('Certificate verification for compiler is disabled; this'
+                  ' should not be disabled in production.')
+
+
+
+EXTERNAL_URL_SCHEME = environ.get('EXTERNAL_URL_SCHEME', 'https')
+BASE_SERVER = environ.get('BASE_SERVER', 'arxiv.org')
 
 URLS = [
     ("help_license", "/help/license", BASE_SERVER),
@@ -127,56 +222,89 @@ if these pages seem relevant to other services.
 For details, see :mod:`arxiv.base.urls`.
 """
 
-ENABLE_ASYNC = os.environ.get('ENABLE_ASYNC', '0')
+AUTH_UPDATED_SESSION_REF = False
 """
-If ``1``, asynchronous callbacks will be dispatched to the worker.
+Authn/z info is at ``request.session`` instead of ``request.auth``.
 
-Otherwise they will be executed in the thread in which they are called.
+See `https://arxiv-org.atlassian.net/browse/ARXIVNG-2186`_.
 """
 
-ENABLE_CALLBACKS = os.environ.get('ENABLE_CALLBACKS', '0')
-"""If ``0``, callbacks bound to events will not be executed."""
+# --- AWS CONFIGURATION ---
+
+AWS_ACCESS_KEY_ID = environ.get('AWS_ACCESS_KEY_ID', 'nope')
+"""
+Access key for requests to AWS services.
+
+If :const:`VAULT_ENABLED` is ``True``, this will be overwritten.
+"""
+
+AWS_SECRET_ACCESS_KEY = environ.get('AWS_SECRET_ACCESS_KEY', 'nope')
+"""
+Secret auth key for requests to AWS services.
+
+If :const:`VAULT_ENABLED` is ``True``, this will be overwritten.
+"""
+
+AWS_REGION = environ.get('AWS_REGION', 'us-east-1')
+"""Default region for calling AWS services."""
 
 
-# AUTH_UPDATED_SESSION_REF = True
+# --- KINESIS CONFIGURATION ---
 
-AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID', None)
-AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY', None)
-AWS_REGION = os.environ.get('AWS_REGION', 'us-east-1')
+KINESIS_STREAM = environ.get("KINESIS_STREAM", "SubmissionEvents")
+"""Name of the stream on which to produce and consume events."""
 
-KINESIS_STREAM = os.environ.get("KINESIS_STREAM", "SubmissionEvents")
-KINESIS_SHARD_ID = os.environ.get("KINESIS_SHARD_ID", "0")
-KINESIS_START_TYPE = os.environ.get("KINESIS_START_TYPE", "TRIM_HORIZON")
-KINESIS_ENDPOINT = os.environ.get("KINESIS_ENDPOINT", None)
-KINESIS_VERIFY = bool(int(os.environ.get("KINESIS_VERIFY", "1")))
+KINESIS_SHARD_ID = environ.get("KINESIS_SHARD_ID", "0")
+"""
+Shard ID for this agent instance.
 
-WAIT_FOR_SERVICES = bool(int(os.environ.get('WAIT_FOR_SERVICES', '0')))
-WAIT_ON_STARTUP = int(os.environ.get('WAIT_ON_STARTUP', '0'))
+There must only be one agent process running per shard.
+"""
 
-CLASSIFIER_ENDPOINT = os.environ.get('CLASSIFIER_ENDPOINT',
-                                     'http://localhost:8000')
-CLASSIFIER_VERIFY = bool(int(os.environ.get('CLASSIFIER_VERIFY', '0')))
+KINESIS_START_TYPE = environ.get("KINESIS_START_TYPE", "TRIM_HORIZON")
+"""Start type to use when no checkpoint is available."""
+
+KINESIS_ENDPOINT = environ.get("KINESIS_ENDPOINT", None)
+"""
+Alternate endpoint for connecting to Kinesis.
+
+If ``None``, uses the boto3 defaults for the :const:`AWS_REGION`. This is here
+mainly to support development with localstack or other mocking frameworks.
+"""
+
+KINESIS_VERIFY = bool(int(environ.get("KINESIS_VERIFY", "1")))
+"""
+Enable/disable TLS certificate verification when connecting to Kinesis.
+
+This is here support development with localstack or other mocking frameworks.
+"""
+
+if not KINESIS_VERIFY:
+    warnings.warn('Certificate verification for Kinesis is disabled; this'
+                  ' should not be disabled in production.')
 
 
-VAULT_ENABLED = bool(int(os.environ.get('VAULT_ENABLED', '0')))
+# --- VAULT INTEGRATION CONFIGURATION ---
+
+VAULT_ENABLED = bool(int(environ.get('VAULT_ENABLED', '0')))
 """Enable/disable secret retrieval from Vault."""
 
-KUBE_TOKEN = os.environ.get('KUBE_TOKEN', 'fookubetoken')
+KUBE_TOKEN = environ.get('KUBE_TOKEN', 'fookubetoken')
 """Service account token for authenticating with Vault. May be a file path."""
 
-VAULT_HOST = os.environ.get('VAULT_HOST', 'foovaulthost')
+VAULT_HOST = environ.get('VAULT_HOST', 'foovaulthost')
 """Vault hostname/address."""
 
-VAULT_PORT = os.environ.get('VAULT_PORT', '1234')
+VAULT_PORT = environ.get('VAULT_PORT', '1234')
 """Vault API port."""
 
-VAULT_ROLE = os.environ.get('VAULT_ROLE', 'submission-ui')
+VAULT_ROLE = environ.get('VAULT_ROLE', 'submission-ui')
 """Vault role linked to this application's service account."""
 
-VAULT_CERT = os.environ.get('VAULT_CERT')
+VAULT_CERT = environ.get('VAULT_CERT')
 """Path to CA certificate for TLS verification when talking to Vault."""
 
-VAULT_SCHEME = os.environ.get('VAULT_SCHEME', 'https')
+VAULT_SCHEME = environ.get('VAULT_SCHEME', 'https')
 """Default is ``https``."""
 
 NS_AFFIX = '' if NAMESPACE == 'production' else f'-{NAMESPACE}'
@@ -190,6 +318,6 @@ VAULT_REQUESTS = [
     {'type': 'aws',
      'name': 'AWS_S3_CREDENTIAL',
      'mount_point': f'aws{NS_AFFIX}/',
-     'role': os.environ.get('VAULT_CREDENTIAL')}
+     'role': environ.get('VAULT_CREDENTIAL')}
 ]
 """Requests for Vault secrets."""

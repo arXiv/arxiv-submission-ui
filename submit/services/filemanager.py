@@ -56,7 +56,7 @@ class FileManager(service.HTTPIntegration):
     def is_available(self, **kwargs) -> bool:
         """Check our connection to the filemanager service."""
         config = get_application_config()
-        status_endpoint = config.get('FILEMANAGER_STATUS_ENDPOINT', 'status')
+        status_endpoint = config.get('FILE_MANAGER_STATUS_ENDPOINT', 'status')
         timeout: float = kwargs.get('timeout', 0.2)
         try:
             response = self.request('get', status_endpoint, timeout=timeout)

@@ -34,7 +34,8 @@ def get_kv_secret(path):
         "lease_duration": 0,
         "data": {
             "data": {
-                "jwt-secret": "foosecret"
+                "jwt-secret": "foosecret",
+                "uri": "foo-r-i"
             },
             "metadata": {
                 "created_time": "2019-04-18T12:58:32.820693897Z",

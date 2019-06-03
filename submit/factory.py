@@ -33,11 +33,6 @@ def create_ui_web_app() -> Flask:
     auth.Auth(app)
     app.register_blueprint(ui.ui)
 
-    # Initialize services.
-    init_app(app)
-    Compiler.init_app(app)
-    FileManager.init_app(app)
-
     middleware = [request_logs.ClassicLogsMiddleware,
                   auth.middleware.AuthMiddleware]
     if app.config['VAULT_ENABLED']:
@@ -51,11 +46,18 @@ def create_ui_web_app() -> Flask:
     for filter_name, filter_func in filters.get_filters():
         app.jinja_env.filters[filter_name] = filter_func
 
+    # Initialize services.
+    init_app(app)
+    Compiler.init_app(app)
+    FileManager.init_app(app)
+
     if app.config['WAIT_FOR_SERVICES']:
         time.sleep(app.config['WAIT_ON_STARTUP'])
         with app.app_context():
-            wait_for(FileManager.current_session())
-            wait_for(Compiler.current_session())
+            wait_for(FileManager.current_session(),
+                     timeout=app.config['FILEMANAGER_STATUS_TIMEOUT'])
+            wait_for(Compiler.current_session(),
+                     timeout=app.config['COMPILER_STATUS_TIMEOUT'])
         logger.info('All upstream services are available; ready to start')
 
     return app

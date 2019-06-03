@@ -11,6 +11,14 @@ from os import environ
 NAMESPACE = environ.get('NAMESPACE')
 """Namespace in which this service is deployed; to qualify keys for secrets."""
 
+APPLICATION_ROOT = environ.get('APPLICATION_ROOT', None)
+"""Path where application is deployed."""
+
+SITE_URL_PREFIX = environ.get('APPLICATION_ROOT', None)
+
+RELATIVE_STATIC_PATHS = True
+RELATIVE_STATIC_PREFIX = environ.get('APPLICATION_ROOT', None)
+
 LOGLEVEL = int(environ.get('LOGLEVEL', '20'))
 """
 Logging verbosity.
@@ -112,40 +120,43 @@ SQLALCHEMY_TRACK_MODIFICATIONS = False
 
 
 # Integration with the file manager service.
-FILE_MANAGER_HOST = environ.get('FILEMANAGER_SERVICE_HOST', 'arxiv.org')
+FILEMANAGER_HOST = environ.get('FILEMANAGER_SERVICE_HOST', 'arxiv.org')
 """Hostname or addreess of the filemanager service."""
 
-FILE_MANAGER_PORT = environ.get('FILEMANAGER_SERVICE_PORT', '443')
+FILEMANAGER_PORT = environ.get('FILEMANAGER_SERVICE_PORT', '443')
 """Port for the filemanager service."""
 
-FILE_MANAGER_PROTO = environ.get(f'FILEMANAGER_PORT_{FILE_MANAGER_PORT}_PROTO',
-                                 'https')
+FILEMANAGER_PROTO = environ.get(f'FILEMANAGER_PORT_{FILEMANAGER_PORT}_PROTO',
+                                environ.get('FILEMANAGER_PROTO', 'https'))
 """Protocol for the filemanager service."""
 
-FILE_MANAGER_PATH = environ.get('FILE_MANAGER_PATH', '').lstrip('/')
+FILEMANAGER_PATH = environ.get('FILEMANAGER_PATH', '').lstrip('/')
 """Path at which the filemanager service is deployed."""
 
-FILE_MANAGER_ENDPOINT = environ.get(
-    'FILE_MANAGER_ENDPOINT',
-    '%s://%s:%s/%s' % (FILE_MANAGER_PROTO, FILE_MANAGER_HOST,
-                       FILE_MANAGER_PORT, FILE_MANAGER_PATH)
+FILEMANAGER_ENDPOINT = environ.get(
+    'FILEMANAGER_ENDPOINT',
+    '%s://%s:%s/%s' % (FILEMANAGER_PROTO, FILEMANAGER_HOST,
+                       FILEMANAGER_PORT, FILEMANAGER_PATH)
 )
 """
 Full URL to the root filemanager service API endpoint.
 
-If not explicitly provided, this is composed from :const:`FILE_MANAGER_HOST`,
-:const:`FILE_MANAGER_PORT`, :const:`FILE_MANAGER_PROTO`, and
-:const:`FILE_MANAGER_PATH`.
+If not explicitly provided, this is composed from :const:`FILEMANAGER_HOST`,
+:const:`FILEMANAGER_PORT`, :const:`FILEMANAGER_PROTO`, and
+:const:`FILEMANAGER_PATH`.
 """
 
-FILE_MANAGER_VERIFY = bool(int(environ.get('FILE_MANAGER_VERIFY', '1')))
+FILEMANAGER_VERIFY = bool(int(environ.get('FILEMANAGER_VERIFY', '1')))
 """Enable/disable SSL certificate verification for filemanager service."""
 
-FILE_MANAGER_STATUS_ENDPOINT = environ.get('FILEMANAGER_STATUS_ENDPOINT',
-                                           'status')
+FILEMANAGER_STATUS_ENDPOINT = environ.get('FILEMANAGER_STATUS_ENDPOINT',
+                                          'status')
 """Path to the file manager service status endpoint."""
 
-if FILE_MANAGER_PROTO == 'https' and not FILE_MANAGER_VERIFY:
+FILEMANAGER_STATUS_TIMEOUT \
+    = float(environ.get('FILEMANAGER_STATUS_TIMEOUT', 1.0))
+
+if FILEMANAGER_PROTO == 'https' and not FILEMANAGER_VERIFY:
     warnings.warn('Certificate verification for filemanager is disabled; this'
                   ' should not be disabled in production.')
 
@@ -157,7 +168,8 @@ COMPILER_HOST = environ.get('COMPILER_SERVICE_HOST', 'arxiv.org')
 COMPILER_PORT = environ.get('COMPILER_SERVICE_PORT', '443')
 """Port for the compiler service."""
 
-COMPILER_PROTO = environ.get(f'COMPILER_PORT_{COMPILER_PORT}_PROTO', 'https')
+COMPILER_PROTO = environ.get(f'COMPILER_PORT_{COMPILER_PORT}_PROTO',
+                             environ.get('COMPILER_PROTO', 'https'))
 """Protocol for the compiler service."""
 
 COMPILER_PATH = environ.get('COMPILER_PATH', '')
@@ -175,13 +187,15 @@ If not explicitly provided, this is composed from :const:`COMPILER_HOST`,
 :const:`COMPILER_PORT`, :const:`COMPILER_PROTO`, and :const:`COMPILER_PATH`.
 """
 
+COMPILER_STATUS_TIMEOUT \
+    = float(environ.get('COMPILER_STATUS_TIMEOUT', 1.0))
+
 COMPILER_VERIFY = bool(int(environ.get('COMPILER_VERIFY', '1')))
 """Enable/disable SSL certificate verification for compiler service."""
 
 if COMPILER_PROTO == 'https' and not COMPILER_VERIFY:
     warnings.warn('Certificate verification for compiler is disabled; this'
                   ' should not be disabled in production.')
-
 
 
 EXTERNAL_URL_SCHEME = environ.get('EXTERNAL_URL_SCHEME', 'https')
@@ -318,6 +332,12 @@ VAULT_REQUESTS = [
     {'type': 'aws',
      'name': 'AWS_S3_CREDENTIAL',
      'mount_point': f'aws{NS_AFFIX}/',
-     'role': environ.get('VAULT_CREDENTIAL')}
+     'role': environ.get('VAULT_CREDENTIAL')},
+    {'type': 'generic',
+     'name': 'SQLALCHEMY_DATABASE_URI',
+     'mount_point': f'secret{NS_AFFIX}/',
+     'path': 'beta-mysql',
+     'key': 'uri',
+     'minimum_ttl': 360000},
 ]
 """Requests for Vault secrets."""

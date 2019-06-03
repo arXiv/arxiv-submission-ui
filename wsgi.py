@@ -9,14 +9,14 @@ logging.getLogger('arxiv.submission.services.classic.interpolate') \
 logging.getLogger('arxiv.base.alerts').setLevel(logging.ERROR)
 
 
-_application = create_ui_web_app()
+__flask_app__ = create_ui_web_app()
 
 
 def application(environ, start_response):
     """WSGI application factory."""
+    global __flask_app__
     for key, value in environ.items():
-        if key == 'SERVER_NAME':
-            continue
-        if key in _application.config:
-            _application.config[key] = value
-    return _application(environ, start_response)
+        if key in __flask_app__.config and key != 'SERVER_NAME':
+            __flask_app__.config[key] = value
+            os.environ[key] = value
+    return __flask_app__(environ, start_response)

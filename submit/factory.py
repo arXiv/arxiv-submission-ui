@@ -19,14 +19,15 @@ from . import filters
 
 
 pylogging.getLogger('arxiv.submission.services.classic.interpolate') \
-    .setLevel(40)
-pylogging.getLogger('arxiv.submission.domain.event.event').setLevel(40)
+    .setLevel(10)
+pylogging.getLogger('arxiv.submission.domain.event.event').setLevel(10)
 logger = logging.getLogger(__name__)
 
 
 def create_ui_web_app() -> Flask:
     """Initialize an instance of the search frontend UI web application."""
     app = Flask('submit', static_folder='static', template_folder='templates')
+    app.url_map.strict_slashes = False
     app.config.from_pyfile('config.py')
 
     Base(app)

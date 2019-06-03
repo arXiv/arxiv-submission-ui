@@ -215,7 +215,7 @@ class FinalPreview(BaseStage):
     @staticmethod
     def is_complete(submission: Submission) -> bool:
         """Determine whether the submission is finalized."""
-        return submission.finalized
+        return submission.is_finalized
 
 
 class Confirm(BaseStage):
@@ -282,7 +282,7 @@ class Workflow:
     @property
     def complete(self) -> bool:
         """Determine whether this workflow is complete."""
-        return self.submission.finalized
+        return self.submission.is_finalized
 
     @property
     def current_stage(self):

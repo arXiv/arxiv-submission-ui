@@ -46,7 +46,7 @@ def request_withdrawal(method: str, params: MultiDict, session: Session,
     submission, _ = load_submission(submission_id)
 
     # The submission must be announced for this to be a withdrawal request.
-    if not submission.announced:
+    if not submission.is_announced:
         alerts.flash_failure(Markup(
             "Submission must first be announced. See "
             "<a href='https://arxiv.org/help/withdraw'>the arXiv help pages"

@@ -23,10 +23,10 @@
         <a href="#">Submission 0.1.4 released 2019-05-04 </a>
         <button class="button is-small" id="feedback-button" style="vertical-align: baseline;">Feedback?</button>
       </p>
-        <div class="message is-link beta-before" style="position: relative; margin-left: 3em;">
+        <div class="message is-link alpha-before" style="position: relative; margin-left: 3em;">
           <div class="message-body">
             <p class="subtitle" style="margin-left: 1.25em;">Thank you for using our new submission system!</p>
-            <p>This interface is a beta release. If you encounter unexpected behavior or problems,
+            <p>This interface is an alpha release. If you encounter unexpected behavior or problems,
               please <a href="{{ url_for('contact') }}">contact us</a>.</p>
           </div>
         </div> <!-- end message -->
@@ -44,7 +44,7 @@
       </div>
   </div>
   <div class="box">
-    {% if user_submissions|selectattr('active')|list|length > 0 %}
+    {% if user_submissions|selectattr('is_active')|list|length > 0 %}
         <table class="table is-fullwidth is-hoverable">
           <tr>
             <th scope="col">Status</th>
@@ -54,7 +54,7 @@
             <th scope="col">Actions</th>
           </tr>
         {% for submission in user_submissions %}
-          {% if not submission.announced %}
+          {% if not submission.is_announced %}
             <tr>
               <td>{{ submission.status }}</td>
               <td>submit/{{ submission.submission_id }}</td>
@@ -65,7 +65,7 @@
                   {% endif %}</td>
               <td>{{ submission.created|timesince }}</td>
               <td>
-                {% if submission.status=='submitted' and not submission.has_active_requests %}
+                {% if submission.status == submission.SUBMITTED and not submission.has_active_requests %}
                   <a class="button is-link is-outlined is-small is-short">
                   <span class="icon"><i class="fa fa-undo"></i> </span>
                   <span>Unsubmit</span></a>
@@ -93,7 +93,7 @@
 <section class="section">
   <h2>Announced Articles</h2>
   <div class="box">
-    {% if user_submissions|selectattr('announced')|list|length > 0 %}
+    {% if user_submissions|selectattr('is_announced')|list|length > 0 %}
     <table class="table is-fullwidth is-hoverable">
       <tr>
         <th scope="col">Identifier</th>
@@ -102,7 +102,7 @@
         <th scope="col">Actions</th>
       </tr>
       {% for submission in user_submissions %}
-        {% if submission.announced %}
+        {% if submission.is_announced %}
       <tr>
         <td>{{ submission.arxiv_id }}</td>
         <td><span class="tag is-link">{{ submission.primary_classification.category }}</span></td>
@@ -120,7 +120,7 @@
             </div>
             {% endfor %}
           {% else %}
-          
+
           <div class="buttons is-multiline">
             <a href="{{ url_for('ui.create_replacement', submission_id=submission.submission_id) }}" class="button is-link is-outlined is-small" aria-label="New version (replacement)">Replace</a>
             <a href="{{ url_for('ui.jref', submission_id=submission.submission_id) }}" class="button is-link is-outlined is-small" aria-label="Update journal reference">Add Journal Reference</a>

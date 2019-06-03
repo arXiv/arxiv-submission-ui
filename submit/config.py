@@ -11,13 +11,13 @@ from os import environ
 NAMESPACE = environ.get('NAMESPACE')
 """Namespace in which this service is deployed; to qualify keys for secrets."""
 
-APPLICATION_ROOT = environ.get('APPLICATION_ROOT', None)
+APPLICATION_ROOT = environ.get('APPLICATION_ROOT', '/')
 """Path where application is deployed."""
 
-SITE_URL_PREFIX = environ.get('APPLICATION_ROOT', None)
+SITE_URL_PREFIX = environ.get('APPLICATION_ROOT', '/')
 
-RELATIVE_STATIC_PATHS = True
-RELATIVE_STATIC_PREFIX = environ.get('APPLICATION_ROOT', None)
+# RELATIVE_STATIC_PATHS = True
+RELATIVE_STATIC_PREFIX = environ.get('APPLICATION_ROOT', '')
 
 LOGLEVEL = int(environ.get('LOGLEVEL', '20'))
 """

@@ -11,7 +11,7 @@ Things that still need to be done:
 """
 
 from typing import Tuple, Dict, Any, Optional, List
-
+import traceback
 from werkzeug import MultiDict
 from werkzeug.exceptions import InternalServerError, BadRequest, \
     MethodNotAllowed
@@ -445,6 +445,7 @@ def _get_upload(params: MultiDict, session: Session, submission: Submission,
         except exceptions.RequestFailed as e:
             # TODO: handle specific failure cases.
             logger.debug('Failed to get upload status: %s', e)
+            logger.error(traceback.format_exc())
             raise InternalServerError(rdata) from e
     rdata.update({'status': stat})
     if stat:
@@ -505,6 +506,7 @@ def _new_upload(params: MultiDict, pointer: FileStorage, session: Session,
             f' again. {PLEASE_CONTACT_SUPPORT}'
         ))
         logger.debug('Failed to upload package: %s', e)
+        logger.error(traceback.format_exc())
         raise InternalServerError(rdata) from e
 
     submission = _update(form, submission, stat, submitter, client, rdata)
@@ -605,6 +607,7 @@ def _new_file(params: MultiDict, pointer: FileStorage, session: Session,
             f' again. {PLEASE_CONTACT_SUPPORT}'
         ))
         logger.debug('Failed to add file: %s', )
+        logger.error(traceback.format_exc())
         raise InternalServerError(rdata) from e
 
     submission = _update(form, submission, stat, submitter, client, rdata)

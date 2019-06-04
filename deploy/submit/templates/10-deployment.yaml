@@ -90,6 +90,9 @@ spec:
 
         - name: APPLICATION_ROOT
           value: "{{ .Values.ingress.path }}"
+        - name: BASE_SERVER
+          value: "{{ .Values.base_server }}"
+
 
         volumeMounts:
           - name: vault-certificate

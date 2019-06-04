@@ -13,6 +13,7 @@ metadata:
       more_set_headers "Request-Id: $req_id";
     ingress.kubernetes.io/auth-url: http://{{ .Values.authenticator.service }}.{{ .Values.namespace }}.svc.cluster.local/auth
     ingress.kubernetes.io/auth-response-headers: Authorization
+    ingress.kubernetes.io/proxy-body-size: 50m
     # ingress.kubernetes.io/rewrite-target: /
 spec:
   tls:  # This will use the default certificate for the ingress controller.

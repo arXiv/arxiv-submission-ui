@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "d1a14e39d9d8991a75f140736fdbf8872b09174f5113d02dd766382c6b8d94d5"
+            "sha256": "499ebd19d9239ca48ac0cbb170ec1bebc84f674e1900f4219f03f80ac2e33d6d"
         },
         "pipfile-spec": 6,
         "requires": {},
@@ -37,10 +37,10 @@
         },
         "arxiv-submission-core": {
             "hashes": [
-                "sha256:46ca7a648a7e2e7174c4a93be0ad724a6deb33411815629976d86e4d0c2a8aec"
+                "sha256:5467a21caa246d82baaf351e1bfde1d66acea6ea3763e930af0d9bf767a52139"
             ],
             "index": "pypi",
-            "version": "==0.7.1rc35"
+            "version": "==0.7.1rc37"
         },
         "arxiv-vault": {
             "hashes": [

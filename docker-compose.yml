@@ -60,11 +60,12 @@ x-base-service:
     # Async config for the submission agent.
     SUBMISSION_AGENT_BROKER_URL: "redis://submission-ui-redis:6379/0"
     SUBMISSION_AGENT_DATABASE_URI: "mysql+mysqldb://foouser:foopass@submission-agent-maria:3306/agent?charset=utf8mb4"
+    # AGENT_DATABASE_HOST: "submission-agent-maria"
 
     CLASSIFIER_ENDPOINT: "http://mock-classifier:8000"
     CLASSIFIER_VERIFY: 0
 
-    VAULT_ENABLED: "1"
+    VAULT_ENABLED: "0"
     NAMESPACE: "production"
     KUBE_TOKEN: "fookubetoken"
     VAULT_HOST: "mock-vault"
@@ -121,8 +122,8 @@ services:
       MYSQL_ROOT_PASSWORD: foorootpassword
       MYSQL_DATABASE: agent
     command: ["mysqld", "--character-set-server=utf8mb4", "--collation-server=utf8mb4_unicode_ci"]
-    logging:
-      driver: none
+    # logging:
+    #   driver: none
 
   filemanager-maria:
     image: mariadb:10.3
@@ -140,7 +141,7 @@ services:
 
   filemanager:
     << : *base-service
-    image: arxiv/filemanager:0.0.3
+    image: arxiv/filemanager:f4d3f277e8870db29691f2a79bdd4904a86e39ab
     # You can uncomment these lines to build this from a local
     # repo. You may need to update `context`.
     # build:
@@ -174,7 +175,7 @@ services:
 
   compiler-api:
     << : *base-service
-    image: arxiv/compiler:0.0.4
+    image: arxiv/compiler:764eaae3f1e750e2ec8adc93e7d9ba507db319f8
     # You can uncomment these lines to build this from a local
     # repo. You may need to update `context`.
     # build:
@@ -195,7 +196,7 @@ services:
 
   compiler-worker:
     << : *base-service
-    image: arxiv/compiler:0.0.4
+    image: arxiv/compiler:764eaae3f1e750e2ec8adc93e7d9ba507db319f8
     # You can uncomment these lines to build this from a local
     # repo. You may need to update `context`.
     # build:
@@ -216,7 +217,7 @@ services:
 
   submission-worker:
     << : *base-service
-    image: arxiv/submission-worker:0.0.11
+    image: arxiv/submission-worker:bb0a8c1c8a188674fd4453f974c7b59e56e195d9
     container_name: arxiv-submission-worker
     volumes:
       - "${DIND_SOURCE_ROOT}:/tmp"
@@ -229,7 +230,7 @@ services:
 
   submission-agent:
     << : *base-service
-    image: arxiv/submission-agent:0.0.11
+    image: arxiv/submission-agent:bb0a8c1c8a188674fd4453f974c7b59e56e195d9
     container_name: arxiv-submission-agent
     volumes:
       - "${DIND_SOURCE_ROOT}:/tmp"
@@ -259,7 +260,7 @@ services:
 
   filemanager-bootstrap:
     << : *base-service
-    image: arxiv/filemanager:0.0.3
+    image: arxiv/filemanager:f4d3f277e8870db29691f2a79bdd4904a86e39ab
     container_name: filemanager-bootstrap
     command: python bootstrap.py
     depends_on:
@@ -300,7 +301,7 @@ services:
       - arxiv-submission-ui
 
   plaintext-worker:
-    image: arxiv/plaintext-worker:0.3.2rc4
+    image: arxiv/plaintext-worker:703e8644cf82c09fe99960b6775b0c677f7d1bc5
     environment:
       REDIS_ENDPOINT: "submission-ui-redis:6379"
       AWS_ACCESS_KEY_ID: "foo"
@@ -312,7 +313,7 @@ services:
       COMPILER_VERIFY: 0
       DOCKER_HOST: "unix:///var/run/docker.sock"
 
-      VAULT_ENABLED: "1"
+      VAULT_ENABLED: "0"
       NAMESPACE: "production"
       KUBE_TOKEN: "fookubetoken"
       VAULT_HOST: "mock-vault"
@@ -338,7 +339,7 @@ services:
       - arxiv-submission-ui
 
   plaintext-api:
-    image: arxiv/plaintext-api:0.3.2rc4
+    image: arxiv/plaintext-api:703e8644cf82c09fe99960b6775b0c677f7d1bc5
     container_name: plaintext-api
     environment:
       REDIS_ENDPOINT: "submission-ui-redis:6379"
@@ -350,7 +351,7 @@ services:
       JWT_SECRET: foosecret
       COMPILER_ENDPOINT: "http://compiler-api:8000/"
       COMPILER_VERIFY: 0
-      VAULT_ENABLED: "1"
+      VAULT_ENABLED: "0"
       NAMESPACE: "production"
       KUBE_TOKEN: "fookubetoken"
       VAULT_HOST: "mock-vault"

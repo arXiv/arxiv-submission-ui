@@ -40,3 +40,6 @@ filemanager:
   proto: http
   path: "/filemanager/api"
   status_timeout: 1.0
+
+
+base_server: "development.arxiv.org"

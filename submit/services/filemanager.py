@@ -133,7 +133,8 @@ class FileManager(service.HTTPIntegration):
         files = {'file': (pointer.filename, pointer, pointer.mimetype)}
         data, _, _ = self.json('post', '/', token, files=files,
                                expected_code=[status.CREATED,
-                                              status.OK])
+                                              status.OK],
+                               timeout=30)
         return self._parse_upload_status(data)
 
     def get_upload_status(self, upload_id: int, token: str) -> Upload:
@@ -192,7 +193,8 @@ class FileManager(service.HTTPIntegration):
         data, _, _ = self.json('post', f'/{upload_id}', token,
                                data={'ancillary': ancillary}, files=files,
                                expected_code=[status.CREATED,
-                                              status.OK])
+                                              status.OK],
+                               timeout=30)
         return self._parse_upload_status(data)
 
     def delete_all(self, upload_id: str, token: str) -> None:

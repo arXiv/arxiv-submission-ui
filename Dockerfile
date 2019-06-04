@@ -17,6 +17,8 @@ ENV PATH "/opt/arxiv:${PATH}"
 ADD wsgi.py uwsgi.ini app.py bootstrap.py /opt/arxiv/
 ADD submit/ /opt/arxiv/submit/
 
+ENV APPLICATION_ROOT "/"
+
 EXPOSE 8000
 
 ENTRYPOINT ["pipenv", "run"]

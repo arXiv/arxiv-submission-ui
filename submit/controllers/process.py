@@ -146,6 +146,8 @@ def _check_status(params: MultiDict, session: Session,  submission_id: int,
                 'There was a problem carrying out your request. Please'
                 f' try again. {PLEASE_CONTACT_SUPPORT}'
             ))
+            logger.error('Error while saving command %s: %s',
+                         command.event_id, e)
             raise InternalServerError('Could not save changes') from e
 
 
@@ -267,6 +269,8 @@ def start_compilation(params: MultiDict, session: Session, submission_id: int,
     except exceptions.RequestFailed as e:
         alerts.flash_failure(f"We couldn't compile your submission. {SUPPORT}",
                              title="Compilation failed")
+        logger.error('Error while requesting compilation for %s: %s',
+                     submission_id, e)
         raise InternalServerError(response_data) from e
 
     response_data['status'] = stat

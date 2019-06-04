@@ -48,7 +48,7 @@ def workflow_route(stage: workflow.Stage, methods=["GET", "POST"]) -> Callable:
 
 def redirect_to_login(*args, **kwargs) -> str:
     """Send the unauthorized user to the log in page."""
-    return url_for('login')
+    return redirect(url_for('login'))
 
 
 @ui.before_request

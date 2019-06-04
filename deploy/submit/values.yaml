@@ -9,7 +9,8 @@ labels:
   subsystem: submission
   service_group: frontend
 
-replicas: 1
+scaling:
+  replicas: 1
 
 authenticator:
   service: authenticator

@@ -58,6 +58,13 @@ spec:
             path: "{{ .Values.ingress.path }}/status"
             port: 8000
 
+        readinessProbe:
+          initialDelaySeconds: 120
+          periodSeconds: 30
+          httpGet:
+            path: "{{ .Values.ingress.path }}/status"
+            port: 8000
+
         env:
         - name: LOGLEVEL
           value: "{{ .Values.loglevel }}"

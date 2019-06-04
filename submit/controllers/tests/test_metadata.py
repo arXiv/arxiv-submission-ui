@@ -83,7 +83,7 @@ class TestOptional(TestCase):
         submission_id = 2
         mock_submission = mock.MagicMock(
             submission_id=submission_id,
-            finalized=False,
+            is_finalized=False,
             metadata=mock.MagicMock()
         )
         mock_load.return_value = (mock_submission, [])
@@ -109,7 +109,7 @@ class TestOptional(TestCase):
         """POST request with all fields."""
         submission_id = 2
         mock_submission = mock.MagicMock(submission_id=submission_id,
-                                         finalized=False,
+                                         is_finalized=False,
                                          metadata=mock.MagicMock())
         mock_load.return_value = (mock_submission, [])
         mock_save.return_value = (mock_submission, [])
@@ -142,7 +142,7 @@ class TestOptional(TestCase):
         submission_id = 2
         mock_submission = mock.MagicMock(
             submission_id=submission_id,
-            finalized=False,
+            is_finalized=False,
             metadata=mock.MagicMock(**{
                 'doi': '10.0001/123456',
                 'journal_ref': 'foo journal 10 2010: 12-345',
@@ -173,7 +173,7 @@ class TestOptional(TestCase):
         submission_id = 2
         mock_submission = mock.MagicMock(
             submission_id=submission_id,
-            finalized=False,
+            is_finalized=False,
             metadata=mock.MagicMock(**{
                 'doi': '10.0001/123456',
                 'journal_ref': 'foo journal 10 2010: 12-345',
@@ -270,7 +270,7 @@ class TestMetadata(TestCase):
         submission_id = 2
         mock_submission = mock.MagicMock(
             submission_id=submission_id,
-            finalized=False,
+            is_finalized=False,
             metadata=mock.MagicMock(
                 title='the old title',
                 abstract='not the abstract that you are looking for',
@@ -301,7 +301,7 @@ class TestMetadata(TestCase):
         submission_id = 2
         mock_submission = mock.MagicMock(
             submission_id=submission_id,
-            finalized=False,
+            is_finalized=False,
             metadata=mock.MagicMock(
                 title='the old title',
                 abstract='not the abstract that you are looking for',
@@ -328,7 +328,7 @@ class TestMetadata(TestCase):
         submission_id = 2
         mock_submission = mock.MagicMock(
             submission_id=submission_id,
-            finalized=False,
+            is_finalized=False,
             metadata=mock.MagicMock(
                 title='the old title',
                 abstract='not the abstract that you are looking for',
@@ -357,7 +357,7 @@ class TestMetadata(TestCase):
         submission_id = 2
         mock_submission = mock.MagicMock(
             submission_id=submission_id,
-            finalized=False,
+            is_finalized=False,
             metadata=mock.MagicMock(
                 title='the old title',
                 abstract='not the abstract that you are looking for',
@@ -386,7 +386,7 @@ class TestMetadata(TestCase):
         submission_id = 2
         mock_submission = mock.MagicMock(
             submission_id=submission_id,
-            finalized=False,
+            is_finalized=False,
             metadata=mock.MagicMock(
                 title='the old title',
                 abstract='not the abstract that you are looking for',

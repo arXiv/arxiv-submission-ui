@@ -159,6 +159,12 @@ def handle(controller: Callable, template: str, title: str,
     return Response(response=context, status=code, headers=headers)
 
 
+@ui.route('/status', methods=['GET'])
+def service_status():
+    """Status endpoint."""
+    return 'ok'
+
+
 @ui.route('/', methods=["GET"])
 @auth.decorators.scoped(auth.scopes.CREATE_SUBMISSION)
 def manage_submissions():

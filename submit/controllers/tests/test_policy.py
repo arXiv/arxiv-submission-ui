@@ -51,7 +51,8 @@ class TestConfirmPolicy(TestCase):
     def test_get_request_with_submission(self, mock_load):
         """GET request with a submission ID."""
         submission_id = 2
-        before = mock.MagicMock(submission_id=submission_id, finalized=False,
+        before = mock.MagicMock(submission_id=submission_id,
+                                is_finalized=False,
                                 submitter_accepts_policy=False)
         mock_load.return_value = (before, [])
         data = MultiDict()
@@ -78,7 +79,8 @@ class TestConfirmPolicy(TestCase):
     def test_post_request(self, mock_load):
         """POST request with no data."""
         submission_id = 2
-        before = mock.MagicMock(submission_id=submission_id, finalized=False,
+        before = mock.MagicMock(submission_id=submission_id,
+                                is_finalized=False,
                                 submitter_accepts_policy=False)
         mock_load.return_value = (before, [])
 
@@ -95,7 +97,8 @@ class TestConfirmPolicy(TestCase):
     def test_not_author_no_proxy(self, mock_load):
         """User indicates they are not author, but also not proxy."""
         submission_id = 2
-        before = mock.MagicMock(submission_id=submission_id, finalized=False,
+        before = mock.MagicMock(submission_id=submission_id,
+                                is_finalized=False,
                                 submitter_accepts_policy=False)
         mock_load.return_value = (before, [])
         params = MultiDict({})
@@ -114,9 +117,10 @@ class TestConfirmPolicy(TestCase):
         """POST request with `policy` set."""
         # Event store does not complain; returns object with `submission_id`.
         submission_id = 2
-        before = mock.MagicMock(submission_id=submission_id, finalized=False,
+        before = mock.MagicMock(submission_id=submission_id,
+                                is_finalized=False,
                                 submitter_accepts_policy=False)
-        after = mock.MagicMock(submission_id=submission_id, finalized=False)
+        after = mock.MagicMock(submission_id=submission_id, is_finalized=False)
         mock_load.return_value = (before, [])
         mock_save.return_value = (after, [])
         mock_url_for.return_value = 'https://foo.bar.com/yes'
@@ -132,7 +136,8 @@ class TestConfirmPolicy(TestCase):
     def test_save_fails(self, mock_load, mock_save, mock_url_for):
         """Event store flakes out on saving policy acceptance."""
         submission_id = 2
-        before = mock.MagicMock(submission_id=submission_id, finalized=False,
+        before = mock.MagicMock(submission_id=submission_id,
+                                is_finalized=False,
                                 submitter_accepts_policy=False)
         mock_load.return_value = (before, [])
 

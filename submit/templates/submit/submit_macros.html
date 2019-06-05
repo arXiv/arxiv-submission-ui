@@ -1,0 +1,26 @@
+{% macro submit_nav(submission_id) %}
+
+  <div class="buttons submit-nav" role="navigation">
+      <a href="{{ url_for('ui.delete_submission', submission_id=submission_id) }}" name="cancel" class="button has-text-grey is-light is-outlined" style="border:0" value="cancel" aria-label="Cancel submission" title="Cancel submission"><span class="icon"><i class="fa fa-trash fa-lg"></i></a>
+      <button name="action" class="button" value="previous" aria-label="Go back one step">Go Back</button>
+      <button name="action" type="submit" class="button" value="save_exit" aria-label="Save and Exit">Save and Exit</button>
+      <button name="action" class="button is-link" value="next" aria-label="Save and continue">Save and Continue</button>
+  </div>
+
+{% endmacro %}
+
+{% macro progress_bar(submission_id, workflow, this_stage) %}
+  <nav class="is-hidden-mobile" role="navigation" aria-labelledby="progress">
+    <p class="sr-only" id="progress">Steps in Submission Process</p>
+    <ul class="progressbar">
+      {% for stage in workflow %}
+      <li class="{% if workflow.is_done(stage) or this_stage == stage.type %}is-complete{% endif %} {% if this_stage == stage.type %}is-active{% endif %}">
+        <a class="is-size-7" title="{{ stage.title }}" href="{% if submission_id %}{{ url_for('ui.' + stage.endpoint, submission_id=submission_id) }}{% endif %}">
+          {{ stage.display }}
+        </a>
+      </li>
+      {% endfor %}
+    </ul>
+  </nav>
+
+{% endmacro %}

@@ -1,0 +1,45 @@
+name: submission-ui
+namespace: development
+loglevel: 10
+
+image:
+  tag: 0.1
+
+labels:
+  subsystem: submission
+  service_group: frontend
+
+replicas: 1
+
+authenticator:
+  service: authenticator
+
+ingress:
+  name: submission-ui
+  host: changeme
+  path: /
+
+vault:
+  host: changeme
+  port: 8200
+  role: submission-ui
+  credential: submission-ui
+
+config:
+  wait_for_services: 1
+  wait_on_startup: 5
+
+kinesis:
+  stream: SubmissionEvents-development
+  shard_id: 0
+
+compiler:
+  proto: http
+
+filemanager:
+  proto: http
+  path: "/filemanager/api"
+  status_timeout: 1.0
+
+
+base_server: "development.arxiv.org"

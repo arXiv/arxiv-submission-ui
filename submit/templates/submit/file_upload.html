@@ -1,0 +1,166 @@
+{% extends "submit/base.html" %}
+
+{% macro display_tree(key, item, even) %}
+  {% if key %}
+  <li class="{% if item.errors %}is-warning{% elif item.modified and item|just_updated %}is-success{% endif %} {% if even %}even{% endif %}">
+  {% endif %}
+    {% if item.name %}
+    <div class="columns">
+      <div class="column">
+        {{ item.name }}
+      </div>
+      <div class="column is-one-third-tablet">
+          <div class="columns is-mobile">
+            <div class="column">{{ item.size|filesizeformat }}</div>
+            <div class="column">{{ item.modified|timesince }}</div>
+            <div class="column has-text-centered is-narrow">
+             <a href="{{ url_for('ui.file_delete', submission_id=submission_id) }}?path={{ item.path }}">
+               <span class="icon">
+                 <i class="fa fa-trash"><span class="sr-only">Delete this file</span></i>
+               </span>
+             </a>
+            </div>
+          </div>
+      </div>
+    </div>
+    {% else %}
+    {% if key %}<span class="icon"><i class="fa fa-folder-open-o"></i></span>{{ key }}/{% endif %}
+    <ol class="{% if not key %}file-tree{% endif %}" style="list-style-type: none;">
+      {% for k, subitem in item.items() %}
+      {{ display_tree(k, subitem, loop.cycle('', 'even')) }}
+      {% endfor %}
+    </ol>
+    {% endif %}
+    {% if item.errors %}
+        {% for error in item.errors %}
+        <p class="help has-text-weight-bold is-marginless {% if error.error_type == error.Levels.ERROR %}is-danger{% else %}is-warning{% endif %}">
+          {{ error.message }}
+        </p>
+        {% endfor %}
+      {% endif %}
+  {% if key %}
+  </li>
+  {% endif %}
+{% endmacro %}
+
+{% block title -%}Upload Files{%- endblock title %}
+
+{% block within_content %}
+<form class="form" action="{{ url_for('ui.file_upload', submission_id=submission_id) }}" method="POST" enctype="multipart/form-data">
+  <div class="columns">
+    <div class="column is-two-thirds-desktop is-three-quarters-tablet">
+      {{ form.csrf_token }}
+      <div class="field is-grouped is-grouped-multiline">
+        <div class="control is-expanded">
+          <div class="file has-name is-fullwidth">
+            <label class="file-label">
+              {{ form.file(class="file-input") }}
+              <span class="file-cta">
+                <span class="file-icon"><i class="fa fa-upload"></i></span>
+                <span class="file-label">Choose a file…</span>
+              </span>
+              <span id="filename" class="file-name">Select a file to upload</span>
+            </label>
+          </div>
+        </div>
+        <div class="control" style="margin-top: .35em">
+          <label class="checkbox">
+            {{ form.ancillary }} Ancillary <a class="icon has-text-link help-bubble" href="{{ url_for('help_ancillary_files') }}"><i class="fa fa-info-circle"></i><div class="bubble-text">Ancillary files will be placed in an /anc directory automatically.</div></a>
+        </div>
+        <div class="control">
+          <button type="submit" class="button is-link">Upload</button>
+        </div>
+      </div>
+      {% if form.file.errors %}
+        {% for error in form.file.errors %}
+          <p class="help is-danger field-error">{{ error }}</p>
+        {% endfor %}
+      {% endif %}
+      <p class="is-marginless help has-text-grey">
+        You can upload all your files at once as a single .tar.gz or .zip file, or upload individual files as needed.
+      </p>
+
+      {% if status and status.files %}
+      <h3>Files currently attached to this submission ({{ status.size|filesizeformat }})</h3>
+
+      {{ display_tree(None, status.files|group_files) }}
+
+      <p class="help has-text-right" style="margin-right: .5rem">
+        <a href="{{ url_for('ui.file_delete_all', submission_id=submission_id) }}">
+          Remove All<span class="icon"><i class="fa fa-trash" aria-label="Delete all"></i></span></a>
+      </p>
+      {% elif error %}
+      <p class="title is-4 breathe-vertical has-text-centered has-text-danger">
+        Something isn't working right now. Please try again.
+      </p>
+      {% else %}
+      <p class="title is-4 breathe-vertical has-text-centered">
+        There's nothing here!
+      </p>
+      {% endif %}
+      <div class="message is-link">
+        <div class="message-header">
+          <p><span class="icon"><i class="fa fa-exclamation-triangle"></i></span>Submitting TeX</p>
+        </div>
+        <div class="message-body">
+          <ul>
+            <li>TeX and (La)TeX submissions are highly encouraged. This format is the most likely to retain readability and high-quality output in the future.</li>
+            <li>PDF documents created from TeX are not typically accepted. The TeX source must be submitted and compiled by arXiv.
+            <a href="{{ url_for('help_whytex') }}">Why?</a></li>
+            <li>TeX source uploaded to arXiv will be made publicly available.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="column is-one-third-desktop is-one-quarter-tablet">
+      {% if immediate_notifications %}
+        {% for notification in immediate_notifications %}
+        <div class="notification is-{{ notification.severity }}" role="alert">
+          {% if notification.title %}<h2 class="is-size-5 is-marginless">{{ notification.title }}</h2>{% endif %}
+          <p>
+            {{ notification.body}}
+          </p>
+        </div>
+        {% endfor %}
+      {% endif %}
+      <div class="message is-info">
+        <div class="message-body">
+          <p class="has-text-weight-semibold"><span class="icon has-text-link"><i class="fa fa-info-circle"></i></span>Accepted formats, in order of preference</p>
+          <ul>
+            <li><a href="{{ url_for('help_submit_tex') }}">(La)TeX, AMS(La)TeX, PDFLaTeX</a></li>
+            <li><a href="{{ url_for('help_submit_pdf') }}">PDF</a></li>
+            <li><a href="{{ url_for('help_submit_html') }}">HTML (for proceedings index only)</a></li>
+          </ul>
+
+          <p class="has-text-weight-semibold"><span class="icon has-text-link"><i class="fa fa-info-circle"></i></span>Accepted formats for figures</p>
+          <ul>
+            <li>PostScript (PS/EPS)</li>
+            <li>JPG (best for photographs)</li>
+            <li>GIF or PNG</li>
+            <li>PDF figures (only with PDFLaTeX)</li>
+          </ul>
+
+
+          <p class="has-text-weight-semibold"><span class="icon has-text-link"><i class="fa fa-info-circle"></i></span>Accepted file properties</p>
+          <ul>
+            <li>Names containing a-z A-Z 0-9 . , - _</li>
+            <li>Total compressed package size limit: 6MB</li>
+            <li>Total uncompressed package size limit: 18MB</li>
+            <li>Individual PDF size limit: 15MB</li>
+          </ul>
+
+
+          <p class="has-text-weight-semibold"><span class="icon has-text-link"><i class="fa fa-info-circle"></i></span>TeX style and class files</p>
+          <ul>
+            <li><a href="help_default_packages">Default packages</a></li>
+            <li><a href="help_submit_tex">What to include</a></li>
+            <!-- <li><a href="#">Upload FAQ</a></li> -->
+          </ul>
+
+        </div>
+      </div>
+    </div>
+  </div>
+{{ submit_macros.submit_nav(submission_id) }}
+</form>
+{% endblock within_content %}

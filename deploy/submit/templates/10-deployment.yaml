@@ -1,0 +1,118 @@
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  name: "{{ default "submission-ui" .Values.name }}"
+  namespace: "{{ .Values.namespace }}"
+  labels:
+    subsystem: "{{ .Values.labels.subsystem }}"
+    container: "{{ default "submission-ui" .Values.name }}"
+    service-group: ui
+    log-style: uwsgi
+    env: "{{ .Values.namespace }}"
+
+spec:
+  replicas: {{ default 1 .Values.replicas }}
+  template:
+    metadata:
+      namespace: "{{ .Values.namespace }}"
+      labels:
+        subsystem: "{{ .Values.labels.subsystem }}"
+        container: "{{ default "submission-ui" .Values.name }}"
+        service-group: ui
+        log-style: uwsgi
+        env: "{{ .Values.namespace }}"
+      # annotations:
+      #   prometheus.io/scrape: 'true'
+    spec:
+      serviceAccount: "{{ default "submission-ui" .Values.name }}"
+      volumes:
+      - name: vault-token
+        emptyDir: {}
+      - name: vault-certificate
+        secret:
+          secretName: vault-certificate
+
+      # This should keep the pods from clustering together on the same node.
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: container
+                operator: In
+                values:
+                - "{{ default "submission-ui" .Values.name }}"
+            topologyKey: kubernetes.io/hostname
+
+      containers:
+      - name: "{{ default "submission-ui" .Values.name }}"
+        image: arxiv/submission-ui:{{ .Values.image.tag }}
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8000
+
+        livenessProbe:
+          initialDelaySeconds: 120
+          periodSeconds: 30
+          httpGet:
+            path: "{{ .Values.ingress.path }}/status"
+            port: 8000
+
+        env:
+        - name: LOGLEVEL
+          value: "{{ .Values.loglevel }}"
+        - name: VAULT_ENABLED
+          value: "1"
+        - name: VAULT_HOST
+          value: "{{ .Values.vault.host }}"
+        - name: VAULT_PORT
+          value: "{{ .Values.vault.port }}"
+        - name: VAULT_CERT
+          value: /etc/vault-certificate/vaulttls.cert.pem
+        - name: VAULT_ROLE
+          value: "{{ .Values.vault.role }}-{{ .Values.namespace }}"
+        - name: VAULT_CREDENTIAL
+          value: "{{ .Values.vault.credential }}"
+        - name: KUBE_TOKEN
+          value: /var/run/secrets/kubernetes.io/serviceaccount/token
+        - name: NAMESPACE
+          value: "{{ .Values.namespace }}"
+
+        - name: WAIT_FOR_SERVICES
+          value: "{{ .Values.config.wait_for_services }}"
+        - name: WAIT_ON_STARTUP
+          value: "{{ .Values.config.wait_on_startup }}"
+        - name: KINESIS_STREAM
+          value: "{{ .Values.kinesis.stream }}"
+        - name: KINESIS_SHARD_ID
+          value: "{{ .Values.kinesis.shard_id }}"
+
+        - name: COMPILER_PROTO
+          value: "{{ .Values.compiler.proto }}"
+        - name: FILEMANAGER_PROTO
+          value: "{{ .Values.filemanager.proto }}"
+        - name: FILEMANAGER_PATH
+          value: "{{ .Values.filemanager.path }}"
+        - name: FILEMANAGER_STATUS_TIMEOUT
+          value: "{{ .Values.filemanager.status_timeout }}"
+
+        - name: APPLICATION_ROOT
+          value: "{{ .Values.ingress.path }}"
+        - name: BASE_SERVER
+          value: "{{ .Values.base_server }}"
+
+
+        volumeMounts:
+          - name: vault-certificate
+            mountPath: /etc/vault-certificate
+            readOnly: true
+          - name: vault-token
+            mountPath: /etc/vault
+
+        resources:
+          limits:
+            cpu: 300m
+            memory: 256Mi
+          requests:
+            cpu: 100m
+            memory: 128Mi

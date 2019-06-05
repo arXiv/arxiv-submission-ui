@@ -5,6 +5,7 @@ from werkzeug import MultiDict
 from werkzeug.exceptions import InternalServerError, BadRequest, \
     MethodNotAllowed
 from flask import url_for
+from retry import retry
 
 from http import HTTPStatus as status
 from arxiv.forms import csrf
@@ -31,8 +32,8 @@ def create(method: str, params: MultiDict, session: Session, *args,
     submitter, client = user_and_client_from_session(session)
     response_data = {}
     if method == 'GET':     # Display a splash page.
-        response_data['user_submissions'] = \
-            load_submissions_for_user(session.user.user_id)
+        response_data['user_submissions'] \
+            = _load_submissions_for_user(session.user.user_id)
         params = MultiDict()
 
     # We're using a form here for CSRF protection.
@@ -95,3 +96,8 @@ def replace(method: str, params: MultiDict, session: Session,
         loc = url_for('ui.verify_user', submission_id=submission.submission_id)
         return {}, status.SEE_OTHER, {'Location': loc}
     return response_data, status.OK, {}
+
+
+@retry(tries=3, delay=0.1, backoff=2)
+def _load_submissions_for_user(user_id: str):
+    return load_submissions_for_user(user_id)

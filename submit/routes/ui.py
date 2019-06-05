@@ -46,6 +46,11 @@ def workflow_route(stage: workflow.Stage, methods=["GET", "POST"]) -> Callable:
     return deco
 
 
+def redirect_to_login(*args, **kwargs) -> str:
+    """Send the unauthorized user to the log in page."""
+    return redirect(url_for('login'))
+
+
 @ui.before_request
 def load_submission() -> None:
     """Load the submission before the request is processed."""
@@ -166,7 +171,8 @@ def service_status():
 
 
 @ui.route('/', methods=["GET"])
-@auth.decorators.scoped(auth.scopes.CREATE_SUBMISSION)
+@auth.decorators.scoped(auth.scopes.CREATE_SUBMISSION,
+                        unauthorized=redirect_to_login)
 def manage_submissions():
     """Display the submission management dashboard."""
     return handle(controllers.create.create, 'submit/manage_submissions.html',
@@ -174,7 +180,8 @@ def manage_submissions():
 
 
 @ui.route('/', methods=["POST"])
-@auth.decorators.scoped(auth.scopes.CREATE_SUBMISSION)
+@auth.decorators.scoped(auth.scopes.CREATE_SUBMISSION,
+                        unauthorized=redirect_to_login)
 def create_submission():
     """Create a new submission."""
     return handle(controllers.create.create, 'submit/manage_submissions.html',
@@ -182,7 +189,8 @@ def create_submission():
 
 
 @ui.route(path('delete'), methods=["GET", "POST"])
-@auth.decorators.scoped(auth.scopes.DELETE_SUBMISSION, authorizer=is_owner)
+@auth.decorators.scoped(auth.scopes.DELETE_SUBMISSION, authorizer=is_owner,
+                        unauthorized=redirect_to_login)
 def delete_submission(submission_id: int):
     """Delete, or roll a submission back to the last announced state."""
     return handle(controllers.delete.delete,
@@ -191,7 +199,8 @@ def delete_submission(submission_id: int):
 
 
 @ui.route(path('cancel/<string:request_id>'), methods=["GET", "POST"])
-@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION, authorizer=is_owner)
+@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION, authorizer=is_owner,
+                        unauthorized=redirect_to_login)
 def cancel_request(submission_id: int, request_id: str):
     """Cancel a pending request."""
     return handle(controllers.delete.cancel_request,
@@ -200,7 +209,8 @@ def cancel_request(submission_id: int, request_id: str):
 
 
 @ui.route(path('replace'), methods=["POST"])
-@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION, authorizer=is_owner)
+@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION, authorizer=is_owner,
+                        unauthorized=redirect_to_login)
 def create_replacement(submission_id: int):
     """Create a replacement submission."""
     return handle(controllers.create.replace, 'submit/replace.html',
@@ -208,81 +218,83 @@ def create_replacement(submission_id: int):
 
 
 @ui.route(path(), methods=["GET"])
-@auth.decorators.scoped(auth.scopes.VIEW_SUBMISSION, authorizer=is_owner)
+@auth.decorators.scoped(auth.scopes.VIEW_SUBMISSION, authorizer=is_owner,
+                        unauthorized=redirect_to_login)
 def submission_status(submission_id: int) -> Response:
     """Display the current state of the submission."""
     return handle(controllers.submission_status, 'submit/status.html',
                   'Submission status', submission_id)
 
 
-# TODO: remove me!!
-@ui.route(path('announce'), methods=["GET"])
-@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION, authorizer=is_owner)
-def announce(submission_id: int) -> Response:
-    """WARNING WARNING WARNING this is for testing purposes only."""
-    util.announce_submission(submission_id)
-    target = url_for('ui.submission_status', submission_id=submission_id)
-    return Response(response={}, status=status.SEE_OTHER,
-                    headers={'Location': target})
-
-
-# TODO: remove me!!
-@ui.route(path('/place_on_hold'), methods=["GET"])
-@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION, authorizer=is_owner)
-def place_on_hold(submission_id: int) -> Response:
-    """WARNING WARNING WARNING this is for testing purposes only."""
-    util.place_on_hold(submission_id)
-    target = url_for('ui.submission_status', submission_id=submission_id)
-    return Response(response={}, status=status.SEE_OTHER,
-                    headers={'Location': target})
-
-
-# TODO: remove me!!
-@ui.route(path('apply_cross'), methods=["GET"])
-@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION, authorizer=is_owner)
-def apply_cross(submission_id: int) -> Response:
-    """WARNING WARNING WARNING this is for testing purposes only."""
-    util.apply_cross(submission_id)
-    target = url_for('ui.submission_status', submission_id=submission_id)
-    return Response(response={}, status=status.SEE_OTHER,
-                    headers={'Location': target})
-
-
-# TODO: remove me!!
-@ui.route(path('reject_cross'), methods=["GET"])
-@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION, authorizer=is_owner)
-def reject_cross(submission_id: int) -> Response:
-    """WARNING WARNING WARNING this is for testing purposes only."""
-    util.reject_cross(submission_id)
-    target = url_for('ui.submission_status', submission_id=submission_id)
-    return Response(response={}, status=status.SEE_OTHER,
-                    headers={'Location': target})
-
-
-# TODO: remove me!!
-@ui.route(path('apply_withdrawal'), methods=["GET"])
-@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION, authorizer=is_owner)
-def apply_withdrawal(submission_id: int) -> Response:
-    """WARNING WARNING WARNING this is for testing purposes only."""
-    util.apply_withdrawal(submission_id)
-    target = url_for('ui.submission_status', submission_id=submission_id)
-    return Response(response={}, status=status.SEE_OTHER,
-                    headers={'Location': target})
-
-
-# TODO: remove me!!
-@ui.route(path('reject_withdrawal'), methods=["GET"])
-@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION, authorizer=is_owner)
-def reject_withdrawal(submission_id: int) -> Response:
-    """WARNING WARNING WARNING this is for testing purposes only."""
-    util.reject_withdrawal(submission_id)
-    target = url_for('ui.submission_status', submission_id=submission_id)
-    return Response(response={}, status=status.SEE_OTHER,
-                    headers={'Location': target})
+# # TODO: remove me!!
+# @ui.route(path('announce'), methods=["GET"])
+# @auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION, authorizer=is_owner)
+# def announce(submission_id: int) -> Response:
+#     """WARNING WARNING WARNING this is for testing purposes only."""
+#     util.announce_submission(submission_id)
+#     target = url_for('ui.submission_status', submission_id=submission_id)
+#     return Response(response={}, status=status.SEE_OTHER,
+#                     headers={'Location': target})
+#
+#
+# # TODO: remove me!!
+# @ui.route(path('/place_on_hold'), methods=["GET"])
+# @auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION, authorizer=is_owner)
+# def place_on_hold(submission_id: int) -> Response:
+#     """WARNING WARNING WARNING this is for testing purposes only."""
+#     util.place_on_hold(submission_id)
+#     target = url_for('ui.submission_status', submission_id=submission_id)
+#     return Response(response={}, status=status.SEE_OTHER,
+#                     headers={'Location': target})
+#
+#
+# # TODO: remove me!!
+# @ui.route(path('apply_cross'), methods=["GET"])
+# @auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION, authorizer=is_owner)
+# def apply_cross(submission_id: int) -> Response:
+#     """WARNING WARNING WARNING this is for testing purposes only."""
+#     util.apply_cross(submission_id)
+#     target = url_for('ui.submission_status', submission_id=submission_id)
+#     return Response(response={}, status=status.SEE_OTHER,
+#                     headers={'Location': target})
+#
+#
+# # TODO: remove me!!
+# @ui.route(path('reject_cross'), methods=["GET"])
+# @auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION, authorizer=is_owner)
+# def reject_cross(submission_id: int) -> Response:
+#     """WARNING WARNING WARNING this is for testing purposes only."""
+#     util.reject_cross(submission_id)
+#     target = url_for('ui.submission_status', submission_id=submission_id)
+#     return Response(response={}, status=status.SEE_OTHER,
+#                     headers={'Location': target})
+#
+#
+# # TODO: remove me!!
+# @ui.route(path('apply_withdrawal'), methods=["GET"])
+# @auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION, authorizer=is_owner)
+# def apply_withdrawal(submission_id: int) -> Response:
+#     """WARNING WARNING WARNING this is for testing purposes only."""
+#     util.apply_withdrawal(submission_id)
+#     target = url_for('ui.submission_status', submission_id=submission_id)
+#     return Response(response={}, status=status.SEE_OTHER,
+#                     headers={'Location': target})
+#
+#
+# # TODO: remove me!!
+# @ui.route(path('reject_withdrawal'), methods=["GET"])
+# @auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION, authorizer=is_owner)
+# def reject_withdrawal(submission_id: int) -> Response:
+#     """WARNING WARNING WARNING this is for testing purposes only."""
+#     util.reject_withdrawal(submission_id)
+#     target = url_for('ui.submission_status', submission_id=submission_id)
+#     return Response(response={}, status=status.SEE_OTHER,
+#                     headers={'Location': target})
 
 
 @workflow_route(workflow.VerifyUser)
-@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION, authorizer=is_owner)
+@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION, authorizer=is_owner,
+                        unauthorized=redirect_to_login)
 @flow_control(workflow.VerifyUser)
 def verify(submission_id: Optional[int] = None) -> Response:
     """Render the submit start page."""
@@ -291,7 +303,8 @@ def verify(submission_id: Optional[int] = None) -> Response:
 
 
 @workflow_route(workflow.Authorship)
-@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION, authorizer=is_owner)
+@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION, authorizer=is_owner,
+                        unauthorized=redirect_to_login)
 @flow_control(workflow.Authorship)
 def authorship(submission_id: int) -> Response:
     """Render step 2, authorship."""
@@ -300,7 +313,8 @@ def authorship(submission_id: int) -> Response:
 
 
 @workflow_route(workflow.License)
-@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION, authorizer=is_owner)
+@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION, authorizer=is_owner,
+                        unauthorized=redirect_to_login)
 @flow_control(workflow.License)
 def license(submission_id: int) -> Response:
     """Render step 3, select license."""
@@ -309,7 +323,8 @@ def license(submission_id: int) -> Response:
 
 
 @workflow_route(workflow.Policy)
-@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION, authorizer=is_owner)
+@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION, authorizer=is_owner,
+                        unauthorized=redirect_to_login)
 @flow_control(workflow.Policy)
 def policy(submission_id: int) -> Response:
     """Render step 4, policy agreement."""
@@ -318,7 +333,8 @@ def policy(submission_id: int) -> Response:
 
 
 @workflow_route(workflow.Classification)
-@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION, authorizer=is_owner)
+@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION, authorizer=is_owner,
+                        unauthorized=redirect_to_login)
 @flow_control(workflow.Classification)
 def classification(submission_id: int) -> Response:
     """Render step 5, choose classification."""
@@ -328,7 +344,8 @@ def classification(submission_id: int) -> Response:
 
 
 @workflow_route(workflow.CrossList)
-@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION, authorizer=is_owner)
+@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION, authorizer=is_owner,
+                        unauthorized=redirect_to_login)
 @flow_control(workflow.CrossList)
 def cross_list(submission_id: int) -> Response:
     """Render step 6, secondary classes."""
@@ -338,7 +355,8 @@ def cross_list(submission_id: int) -> Response:
 
 
 @workflow_route(workflow.FileUpload)
-@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION, authorizer=is_owner)
+@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION, authorizer=is_owner,
+                        unauthorized=redirect_to_login)
 @flow_control(workflow.FileUpload)
 def file_upload(submission_id: int) -> Response:
     """Render step 7, file upload."""
@@ -348,7 +366,8 @@ def file_upload(submission_id: int) -> Response:
 
 
 @ui.route(path('file_delete'), methods=["GET", "POST"])
-@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION, authorizer=is_owner)
+@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION, authorizer=is_owner,
+                        unauthorized=redirect_to_login)
 @flow_control(workflow.FileUpload)
 def file_delete(submission_id: int) -> Response:
     """Provide the file deletion endpoint, part of the upload step."""
@@ -358,7 +377,8 @@ def file_delete(submission_id: int) -> Response:
 
 
 @ui.route(path('file_delete_all'), methods=["GET", "POST"])
-@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION, authorizer=is_owner)
+@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION, authorizer=is_owner,
+                        unauthorized=redirect_to_login)
 @flow_control(workflow.FileUpload)
 def file_delete_all(submission_id: int) -> Response:
     """Provide endpoint to delete all files, part of the upload step."""
@@ -369,7 +389,8 @@ def file_delete_all(submission_id: int) -> Response:
 
 
 @workflow_route(workflow.Process)
-@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION, authorizer=is_owner)
+@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION, authorizer=is_owner,
+                        unauthorized=redirect_to_login)
 @flow_control(workflow.Process)
 def file_process(submission_id: int) -> Response:
     """Render step 8, file processing."""
@@ -379,7 +400,8 @@ def file_process(submission_id: int) -> Response:
 
 
 @ui.route(path('preview.pdf'), methods=["GET"])
-@auth.decorators.scoped(auth.scopes.VIEW_SUBMISSION, authorizer=is_owner)
+@auth.decorators.scoped(auth.scopes.VIEW_SUBMISSION, authorizer=is_owner,
+                        unauthorized=redirect_to_login)
 def file_preview(submission_id: int) -> Response:
     data, code, headers = controllers.file_preview(
         MultiDict(request.args.items(multi=True)),
@@ -391,7 +413,8 @@ def file_preview(submission_id: int) -> Response:
 
 
 @ui.route(path('compilation_log'), methods=["GET"])
-@auth.decorators.scoped(auth.scopes.VIEW_SUBMISSION, authorizer=is_owner)
+@auth.decorators.scoped(auth.scopes.VIEW_SUBMISSION, authorizer=is_owner,
+                        unauthorized=redirect_to_login)
 def compilation_log(submission_id: int) -> Response:
     data, code, headers = controllers.compilation_log(
         MultiDict(request.args.items(multi=True)),
@@ -403,7 +426,8 @@ def compilation_log(submission_id: int) -> Response:
 
 
 @workflow_route(workflow.Metadata)
-@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION, authorizer=is_owner)
+@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION, authorizer=is_owner,
+                        unauthorized=redirect_to_login)
 @flow_control(workflow.Metadata)
 def add_metadata(submission_id: int) -> Response:
     """Render step 9, metadata."""
@@ -412,7 +436,8 @@ def add_metadata(submission_id: int) -> Response:
 
 
 @workflow_route(workflow.OptionalMetadata)
-@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION, authorizer=is_owner)
+@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION, authorizer=is_owner,
+                        unauthorized=redirect_to_login)
 @flow_control(workflow.OptionalMetadata)
 def add_optional_metadata(submission_id: int) -> Response:
     """Render step 9, metadata."""
@@ -422,7 +447,8 @@ def add_optional_metadata(submission_id: int) -> Response:
 
 
 @workflow_route(workflow.FinalPreview)
-@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION, authorizer=is_owner)
+@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION, authorizer=is_owner,
+                        unauthorized=redirect_to_login)
 @flow_control(workflow.FinalPreview)
 def final_preview(submission_id: int) -> Response:
     """Render step 10, preview."""
@@ -431,7 +457,8 @@ def final_preview(submission_id: int) -> Response:
 
 
 @workflow_route(workflow.Confirm, methods=["GET"])
-@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION, authorizer=is_owner)
+@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION, authorizer=is_owner,
+                        unauthorized=redirect_to_login)
 @flow_control(workflow.Confirm)
 def confirmation(submission_id: int) -> Response:
     """Render the final confirmation page."""
@@ -441,7 +468,8 @@ def confirmation(submission_id: int) -> Response:
 
 
 @ui.route(path('jref'), methods=["GET", "POST"])
-@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION, authorizer=is_owner)
+@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION, authorizer=is_owner,
+                        unauthorized=redirect_to_login)
 def jref(submission_id: Optional[int] = None) -> Response:
     """Render the JREF submission page."""
     return handle(controllers.jref.jref, 'submit/jref.html',
@@ -449,7 +477,8 @@ def jref(submission_id: Optional[int] = None) -> Response:
 
 
 @ui.route(path('withdraw'), methods=["GET", "POST"])
-@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION, authorizer=is_owner)
+@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION, authorizer=is_owner,
+                        unauthorized=redirect_to_login)
 def withdraw(submission_id: Optional[int] = None) -> Response:
     """Render the withdrawal request page."""
     return handle(controllers.withdraw.request_withdrawal,
@@ -457,7 +486,8 @@ def withdraw(submission_id: Optional[int] = None) -> Response:
 
 
 @ui.route(path('request_cross'), methods=["GET", "POST"])
-@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION, authorizer=is_owner)
+@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION, authorizer=is_owner,
+                        unauthorized=redirect_to_login)
 def request_cross(submission_id: Optional[int] = None) -> Response:
     """Render the cross-list request page."""
     return handle(controllers.cross.request_cross,

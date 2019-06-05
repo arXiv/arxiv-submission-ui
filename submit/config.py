@@ -203,7 +203,8 @@ BASE_SERVER = environ.get('BASE_SERVER', 'arxiv.org')
 
 URLS = [
     ("help_license", "/help/license", BASE_SERVER),
-    ("help_third_party_submission", "/help/third_party_submission", BASE_SERVER),
+    ("help_third_party_submission", "/help/third_party_submission",
+     BASE_SERVER),
     ("help_cross", "/help/cross", BASE_SERVER),
     ("help_submit", "/help/submit", BASE_SERVER),
     ("help_ancillary_files", "/help/ancillary_files", BASE_SERVER),
@@ -226,7 +227,8 @@ URLS = [
     ("help_email", "/help/email-protection", BASE_SERVER),
     ("help_author", "/help/prep#author", BASE_SERVER),
     ("help_mistakes", "/help/faq/mistakes", BASE_SERVER),
-    ("help_texprobs", "/help/faq/texprobs", BASE_SERVER)
+    ("help_texprobs", "/help/faq/texprobs", BASE_SERVER),
+    ("login", "/user/login", BASE_SERVER)
 ]
 """
 URLs for external services, for use with :func:`flask.url_for`.

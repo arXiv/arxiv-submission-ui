@@ -195,7 +195,8 @@ class FileManager(service.HTTPIntegration):
                                data={'ancillary': ancillary}, files=files,
                                expected_code=[status.CREATED,
                                               status.OK],
-                               timeout=30)
+                               timeout=30,
+                               allow_2xx_redirects=False)
         return self._parse_upload_status(data)
 
     def delete_all(self, upload_id: str, token: str) -> None:

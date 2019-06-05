@@ -134,7 +134,8 @@ class FileManager(service.HTTPIntegration):
         data, _, _ = self.json('post', '/', token, files=files,
                                expected_code=[status.CREATED,
                                               status.OK],
-                               timeout=30)
+                               timeout=30,
+                               allow_2xx_redirects=False)
         return self._parse_upload_status(data)
 
     def get_upload_status(self, upload_id: int, token: str) -> Upload:

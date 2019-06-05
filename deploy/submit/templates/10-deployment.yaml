@@ -59,7 +59,7 @@ spec:
             port: 8000
 
         readinessProbe:
-          initialDelaySeconds: 120
+          initialDelaySeconds: 30
           periodSeconds: 30
           httpGet:
             path: "{{ .Values.ingress.path }}/status"

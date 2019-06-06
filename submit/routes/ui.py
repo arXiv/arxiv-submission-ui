@@ -188,6 +188,16 @@ def create_submission():
                   'Create a new submission')
 
 
+@ui.route(path('unsubmit'), methods=["GET", "POST"])
+@auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION, authorizer=is_owner,
+                        unauthorized=redirect_to_login)
+def unsubmit_submission(submission_id: int):
+    """Unsubmit (unfinalize) a submission."""
+    return handle(controllers.unsubmit.unsubmit,
+                  'submit/confirm_unsubmit.html',
+                  'Unsubmit submission', submission_id)
+
+
 @ui.route(path('delete'), methods=["GET", "POST"])
 @auth.decorators.scoped(auth.scopes.DELETE_SUBMISSION, authorizer=is_owner,
                         unauthorized=redirect_to_login)

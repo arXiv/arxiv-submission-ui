@@ -69,7 +69,7 @@
               <td>{{ submission.created|timesince }}</td>
               <td>
                 {% if submission.status == submission.SUBMITTED and not submission.has_active_requests %}
-                  <a class="button is-link is-outlined is-small is-short">
+                  <a class="button is-link is-outlined is-small is-short" href="{{ url_for('ui.unsubmit_submission', submission_id=submission.submission_id) }}">
                   <span class="icon"><i class="fa fa-undo"></i> </span>
                   <span>Unsubmit</span></a>
                 {% else %}

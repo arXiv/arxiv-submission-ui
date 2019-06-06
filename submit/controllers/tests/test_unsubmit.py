@@ -2,10 +2,9 @@
 
 from unittest import TestCase, mock
 from werkzeug import MultiDict
-from werkzeug.exceptions import InternalServerError, BadRequest
+from werkzeug.exceptions import BadRequest
 from wtforms import Form
 from http import HTTPStatus as status
-import arxiv.submission as events
 from submit.controllers import unsubmit
 
 from pytz import timezone
@@ -82,7 +81,8 @@ class TestUnsubmit(TestCase):
     @mock.patch('arxiv.base.alerts.flash_success')
     @mock.patch(f'{unsubmit.__name__}.save')
     @mock.patch('arxiv.submission.load')
-    def test_post_request_with_data(self, mock_load, mock_save, mock_flash_success, mock_url_for):
+    def test_post_request_with_data(self, mock_load, mock_save,
+                                    mock_flash_success, mock_url_for):
         """POST request with `confirmed` set."""
         # Event store does not complain; returns object with `submission_id`.
         submission_id = 2
@@ -95,8 +95,7 @@ class TestUnsubmit(TestCase):
         mock_flash_success.return_value = None
         mock_url_for.return_value = 'https://foo.bar.com/yes'
 
-        form_data = MultiDict()
-        form_data['confirmed'] = True
+        form_data = MultiDict({'confirmed': True})
         _, code, _ = unsubmit.unsubmit('POST', form_data, self.session,
                                        submission_id)
         self.assertEqual(code, status.SEE_OTHER, "Returns redirect")

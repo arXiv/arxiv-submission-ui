@@ -1,0 +1,32 @@
+{% extends "submit/base.html" %}
+
+{% block title -%}Unsubmit This Submission{%- endblock title %}
+
+{% block within_content %}
+<form method="POST" action="{{ url_for('ui.unsubmit_submission', submission_id=submission_id) }}">
+  {{ form.csrf_token }}
+  <div class="columns">
+    <div class="column is-half is-offset-one-quarter">
+    <article class="message is-primary breathe-vertical">
+      <div class="message-header">
+        <p>Unsubmit This Submission</p>
+      </div>
+      <div class="message-body">
+        <p>
+            {#- TODO: include next announcement time as part of message. -#}
+            Unsubmitting will remove your article from the announcement
+            queue and prevent your article from being published. Are you sure
+            you want to unsubmit?
+        </p>
+        {{ form.csrf_token }}
+        <input type="hidden" name="confirmed", value="true" />
+        <div class="buttons is-centered">
+            <button class="button is-primary" type="submit">Yes, unsubmit this submission</button>
+            <a class="button" href="{{ url_for('ui.create_submission') }}">Cancel</a>
+        </div>
+      </div>
+    </article>
+    </div>
+  </div>
+</form>
+{% endblock within_content %}

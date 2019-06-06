@@ -193,7 +193,9 @@ def create_submission():
                         unauthorized=redirect_to_login)
 def unsubmit_submission(submission_id: int):
     """Unsubmit (unfinalize) a submission."""
-    pass
+    return handle(controllers.unsubmit.unsubmit,
+                  'submit/confirm_unsubmit.html',
+                  'Unsubmit submission', submission_id)
 
 
 @ui.route(path('delete'), methods=["GET", "POST"])

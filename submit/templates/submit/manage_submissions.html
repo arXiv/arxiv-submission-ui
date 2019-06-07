@@ -1,5 +1,7 @@
 {% extends "submit/base.html" %}
 
+{% block extra_head %}<link rel="stylesheet" href="{{ url_for('static', filename='css/manage_submissions.css')}}" />{% endblock %}
+
 {% block title_preamble %}{% endblock %}
 {% block title %}Manage Submissions{% endblock %}
 
@@ -49,25 +51,27 @@
   <div class="box">
     {% if user_submissions|selectattr('is_active')|list|length > 0 %}
         <table class="table is-fullwidth is-hoverable">
-          <tr>
-            <th scope="col">Status</th>
-            <th scope="col">Identifier</th>
-            <th scope="col">Title</th>
-            <th scope="col">Created</th>
-            <th scope="col">Actions</th>
-          </tr>
+          <thead>
+            <tr>
+              <th scope="col">Status</th>
+              <th scope="col">Identifier</th>
+              <th scope="col">Title</th>
+              <th scope="col">Created</th>
+              <th scope="col">Actions</th>
+            </tr>
+        </thead>
         {% for submission in user_submissions %}
           {% if not submission.is_announced %}
             <tr>
-              <td>{{ submission.status }}</td>
-              <td>submit/{{ submission.submission_id }}</td>
-              <td>{% if submission.metadata.title %}
+              <td class="user-submission">{{ submission.status }}</td>
+              <td class="user-submission">submit/{{ submission.submission_id }}</td>
+              <td class="user-submission">{% if submission.metadata.title %}
                   {{ submission.metadata.title }}
                   {% else %}
                   Submission {{ submission.submission_id }}
                   {% endif %}</td>
-              <td>{{ submission.created|timesince }}</td>
-              <td>
+              <td class="user-submission">{{ submission.created|timesince }}</td>
+              <td class="user-submission">
                 {% if submission.status == submission.SUBMITTED and not submission.has_active_requests %}
                   <a class="button is-link is-outlined is-small is-short" href="{{ url_for('ui.unsubmit_submission', submission_id=submission.submission_id) }}">
                   <span class="icon"><i class="fa fa-undo"></i> </span>
@@ -98,19 +102,21 @@
   <div class="box">
     {% if user_submissions|selectattr('is_announced')|list|length > 0 %}
     <table class="table is-fullwidth is-hoverable">
-      <tr>
-        <th scope="col">Identifier</th>
-        <th scope="col">Primary Classification</th>
-        <th scope="col">Title</th>
-        <th scope="col">Actions</th>
-      </tr>
+      <thead>
+        <tr>
+          <th scope="col">Identifier</th>
+          <th scope="col">Primary Classification</th>
+          <th scope="col">Title</th>
+          <th scope="col">Actions</th>
+        </tr>
+      </thead>
       {% for submission in user_submissions %}
         {% if submission.is_announced %}
       <tr>
-        <td>{{ submission.arxiv_id }}</td>
-        <td><span class="tag is-link">{{ submission.primary_classification.category }}</span></td>
-        <td>{{ submission.metadata.title }}</td>
-        <td>
+        <td class="user-announced">{{ submission.arxiv_id }}</td>
+        <td class="user-announced"><span class="tag is-link">{{ submission.primary_classification.category }}</span></td>
+        <td class="user-announced">{{ submission.metadata.title }}</td>
+        <td class="user-announced">
           {% if submission.has_active_requests %}
             {% for request in submission.active_user_requests %}
             <div class="tags has-addons">

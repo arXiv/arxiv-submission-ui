@@ -314,8 +314,7 @@ def file_preview(params, session: Session, submission_id: int, token: str,
         (pdf_dload,rh) = FileManager.get_file_content(submission.source_content.identifier,
                                             pdf_name, token)
         headers = {'Content-Type': 'application/pdf'}
-        raise "TODO: ARXIVNG-2217 get pdf_dload into flask response"
-        #return dl.read(), status.OK, headers
+        return io.BytesIO(pdf_dload.read()), status.OK, headers
     else:
         prod = Compiler.get_product(submission.source_content.identifier,
                                     submission.source_content.checksum, token)

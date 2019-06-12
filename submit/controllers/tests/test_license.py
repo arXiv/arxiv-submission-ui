@@ -96,7 +96,7 @@ class TestSetLicense(TestCase):
         """POST request with `license` set."""
         # Event store does not complain; returns object with `submission_id`.
         submission_id = 2
-        sub = mock.MagicMock(submission_id=submission_id, finalized=False)
+        sub = mock.MagicMock(submission_id=submission_id, is_finalized=False)
         mock_load.return_value = (sub, [])
         mock_save.return_value = (sub, [])
         # `url_for` returns a URL (unsurprisingly).
@@ -118,7 +118,7 @@ class TestSetLicense(TestCase):
     def test_save_fails(self, mock_load, mock_save, mock_url_for):
         """Event store flakes out on saving license selection."""
         submission_id = 2
-        sub = mock.MagicMock(submission_id=submission_id, finalized=False)
+        sub = mock.MagicMock(submission_id=submission_id, is_finalized=False)
         mock_load.return_value = (sub, [])
 
         # Event store does not complain; returns object with `submission_id`

@@ -3,6 +3,7 @@ from unittest import TestCase, mock
 import subprocess
 import time
 
+from flask import Flask, Config
 from werkzeug.datastructures import FileStorage
 
 from arxiv.base.globals import get_application_config
@@ -12,10 +13,12 @@ from arxiv.users.auth import scopes
 from ..filemanager import FileManager
 from ...domain import Upload, FileStatus, FileError
 
-mock_app = mock.MagicMock(config={
+mock_app = Flask('test')
+mock_app.config.update({
     'FILEMANAGER_ENDPOINT': 'http://localhost:8003/filemanager/api',
     'FILEMANAGER_VERIFY': False
 })
+FileManager.init_app(mock_app)
 
 
 class TestFileManagerIntegration(TestCase):

@@ -20,6 +20,17 @@ docker-compose build    # Builds the submission UI
 DIND_SOURCE_ROOT=/tmp/foo CONVERTER_DOCKER_IMAGE=626657773168.dkr.ecr.us-east-1.amazonaws.com/arxiv/converter:0.9 docker-compose up
 ```
 
+You may see the following errors when running ``docker-compose pull``, and you
+can ignore them:
+
+```bash
+ERROR: for mock-classifier  pull access denied for arxiv/mock-classifier, repository does not exist or may require 'docker login'
+ERROR: for submission-ui  manifest for arxiv/submission-ui:latest not found
+ERROR: for mock-vault  pull access denied for arxiv/mock-vault, repository does not exist or may require 'docker login'
+ERROR: for submission-bootstrap  manifest for arxiv/submission-ui:latest not found
+ERROR: pull access denied for arxiv/mock-vault, repository does not exist or may require 'docker login'
+```
+
 To get a fresh deployment (e.g. after significant changes to backend stuff),
 you may need to blow away the whole service group. Be sure to use the ``-v``
 flag to drop old volumes.

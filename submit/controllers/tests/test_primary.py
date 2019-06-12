@@ -52,9 +52,10 @@ class TestSetPrimaryClassification(TestCase):
     def test_get_request_with_submission(self, mock_load):
         """GET request with a submission ID."""
         submission_id = 2
-        before = mock.MagicMock(submission_id=submission_id, announced=False,
+        before = mock.MagicMock(submission_id=submission_id,
+                                is_announced=False,
                                 arxiv_id=None, submitter_is_author=False,
-                                finalized=False, version=1)
+                                is_finalized=False, version=1)
         mock_load.return_value = (before, [])
         params = MultiDict()
         data, code, _ = classification.classification('GET', params,
@@ -84,9 +85,10 @@ class TestSetPrimaryClassification(TestCase):
     def test_post_request(self, mock_load):
         """POST request with no data."""
         submission_id = 2
-        before = mock.MagicMock(submission_id=submission_id, announced=False,
+        before = mock.MagicMock(submission_id=submission_id,
+                                is_announced=False,
                                 arxiv_id=None, submitter_is_author=False,
-                                finalized=False, version=1)
+                                is_finalized=False, version=1)
         mock_load.return_value = (before, [])
         try:
             classification.classification('POST', MultiDict(), self.session,
@@ -105,14 +107,15 @@ class TestSetPrimaryClassification(TestCase):
         """POST request with `classification` set."""
         # Event store does not complain; returns object with `submission_id`.
         submission_id = 2
-        before = mock.MagicMock(submission_id=submission_id, announced=False,
+        before = mock.MagicMock(submission_id=submission_id,
+                                is_announced=False,
                                 arxiv_id=None, submitter_is_author=False,
-                                finalized=False, version=1)
+                                is_finalized=False, version=1)
         mock_clsn = mock.MagicMock(category='astro-ph.CO')
-        after = mock.MagicMock(submission_id=submission_id, announced=False,
+        after = mock.MagicMock(submission_id=submission_id, is_announced=False,
                                arxiv_id=None, submitter_is_author=False,
                                primary_classification=mock_clsn,
-                               finalized=False, version=1)
+                               is_finalized=False, version=1)
         mock_load.return_value = (before, [])
         mock_save.return_value = (after, [])
         mock_url_for.return_value = 'https://foo.bar.com/yes'
@@ -130,9 +133,10 @@ class TestSetPrimaryClassification(TestCase):
     def test_save_error(self, mock_load, mock_save, mock_url_for):
         """Event store flakes out on saving classification event."""
         submission_id = 2
-        before = mock.MagicMock(submission_id=submission_id, announced=False,
+        before = mock.MagicMock(submission_id=submission_id,
+                                is_announced=False,
                                 arxiv_id=None, submitter_is_author=False,
-                                finalized=False, version=1)
+                                is_finalized=False, version=1)
         mock_load.return_value = (before, [])
 
         # Event store does not complain; returns object with `submission_id`

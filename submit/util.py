@@ -3,17 +3,17 @@
 from typing import Optional, Tuple, List
 from datetime import datetime
 from werkzeug.exceptions import NotFound
-
-from arxiv.base.globals import get_application_global
-import arxiv.submission as events
+from retry import retry
 
 from arxiv.base import logging
+from arxiv.base.globals import get_application_global
+import arxiv.submission as events
 
 logger = logging.getLogger(__name__)
 logger.propagate = False
 
 
-# TODO: look at whether this is going to work.
+@retry(tries=3, delay=0.25, backoff=3)
 def load_submission(submission_id: Optional[int]) \
         -> Tuple[events.domain.Submission, List[events.domain.Event]]:
     """

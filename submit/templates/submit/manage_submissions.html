@@ -1,5 +1,7 @@
 {% extends "submit/base.html" %}
 
+{% block extra_head %}<link rel="stylesheet" href="{{ url_for('static', filename='css/manage_submissions.css')}}" />{% endblock %}
+
 {% block title_preamble %}{% endblock %}
 {% block title %}Manage Submissions{% endblock %}
 
@@ -11,11 +13,7 @@
         {{ form.csrf_token }}
         <button name="new" class="button is-large is-link" value="new" aria-label="Create New Submission" style="margin-bottom: 1.5rem;">Start a New Submission</button>
       </form>
-      <h3>Helpful Tips</h3>
-      <ul style="list-style: none;">
-        <li><a href="#">Pre-Submission Checklist</a></li>
-        <li><a href="#">List of Included TeX Packages</a></li>
-      </ul>
+      <h3><a href="https://arxiv.org/help#submission-and-revision">Submission Help Pages</a></h3>
     </div>
   </div>
   <div class="column">
@@ -26,8 +24,11 @@
         <div class="message is-link alpha-before" style="position: relative; margin-left: 3em;">
           <div class="message-body">
             <p class="subtitle" style="margin-left: 1.25em;">Thank you for using our new submission system!</p>
-            <p>This interface is an alpha release. If you encounter unexpected behavior or problems,
-              please <a href="{{ url_for('contact') }}">contact us</a>.</p>
+            <p>
+              This interface is an alpha release, which means that we fully expect some bugs to exist.
+              If you encounter unexpected behavior or problems, or if you have suggestions for how to improve this interface,
+              please <a href="https://github.com/arXiv/arxiv-submission-ui/issues">let us know</a>.
+            </p>
           </div>
         </div> <!-- end message -->
   </div>
@@ -46,27 +47,29 @@
   <div class="box">
     {% if user_submissions|selectattr('is_active')|list|length > 0 %}
         <table class="table is-fullwidth is-hoverable">
-          <tr>
-            <th scope="col">Status</th>
-            <th scope="col">Identifier</th>
-            <th scope="col">Title</th>
-            <th scope="col">Created</th>
-            <th scope="col">Actions</th>
-          </tr>
+          <thead>
+            <tr>
+              <th scope="col">Status</th>
+              <th scope="col">Identifier</th>
+              <th scope="col">Title</th>
+              <th scope="col">Created</th>
+              <th scope="col">Actions</th>
+            </tr>
+        </thead>
         {% for submission in user_submissions %}
           {% if not submission.is_announced %}
             <tr>
-              <td>{{ submission.status }}</td>
-              <td>submit/{{ submission.submission_id }}</td>
-              <td>{% if submission.metadata.title %}
+              <td class="user-submission">{{ submission.status }}</td>
+              <td class="user-submission">submit/{{ submission.submission_id }}</td>
+              <td class="user-submission">{% if submission.metadata.title %}
                   {{ submission.metadata.title }}
                   {% else %}
                   Submission {{ submission.submission_id }}
                   {% endif %}</td>
-              <td>{{ submission.created|timesince }}</td>
-              <td>
+              <td class="user-submission">{{ submission.created|timesince }}</td>
+              <td class="user-submission">
                 {% if submission.status == submission.SUBMITTED and not submission.has_active_requests %}
-                  <a class="button is-link is-outlined is-small is-short">
+                  <a class="button is-link is-outlined is-small is-short" href="{{ url_for('ui.unsubmit_submission', submission_id=submission.submission_id) }}">
                   <span class="icon"><i class="fa fa-undo"></i> </span>
                   <span>Unsubmit</span></a>
                 {% else %}
@@ -95,19 +98,21 @@
   <div class="box">
     {% if user_submissions|selectattr('is_announced')|list|length > 0 %}
     <table class="table is-fullwidth is-hoverable">
-      <tr>
-        <th scope="col">Identifier</th>
-        <th scope="col">Primary Classification</th>
-        <th scope="col">Title</th>
-        <th scope="col">Actions</th>
-      </tr>
+      <thead>
+        <tr>
+          <th scope="col">Identifier</th>
+          <th scope="col">Primary Classification</th>
+          <th scope="col">Title</th>
+          <th scope="col">Actions</th>
+        </tr>
+      </thead>
       {% for submission in user_submissions %}
         {% if submission.is_announced %}
       <tr>
-        <td>{{ submission.arxiv_id }}</td>
-        <td><span class="tag is-link">{{ submission.primary_classification.category }}</span></td>
-        <td>{{ submission.metadata.title }}</td>
-        <td>
+        <td class="user-announced">{{ submission.arxiv_id }}</td>
+        <td class="user-announced"><span class="tag is-link">{{ submission.primary_classification.category }}</span></td>
+        <td class="user-announced">{{ submission.metadata.title }}</td>
+        <td class="user-announced">
           {% if submission.has_active_requests %}
             {% for request in submission.active_user_requests %}
             <div class="tags has-addons">

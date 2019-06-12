@@ -144,8 +144,10 @@ def _check_status(params: MultiDict, session: Session,  submission_id: int,
         except SaveError as e:
             alerts.flash_failure(Markup(
                 'There was a problem carrying out your request. Please'
-                f' try again. {PLEASE_CONTACT_SUPPORT}'
+                f' try again. {SUPPORT}'
             ))
+            logger.error('Error while saving command %s: %s',
+                         command.event_id, e)
             raise InternalServerError('Could not save changes') from e
 
 
@@ -213,7 +215,7 @@ def compile_status(params: MultiDict, session: Session, submission_id: int,
         except SaveError:
             alerts.flash_failure(Markup(
                 'There was a problem carrying out your request. Please try'
-                f' again. {PLEASE_CONTACT_SUPPORT}'
+                f' again. {SUPPORT}'
             ))
 
     # if Compilation failure, then show errors, opportunity to restart.
@@ -261,12 +263,17 @@ def start_compilation(params: MultiDict, session: Session, submission_id: int,
     if not form.validate():
         raise BadRequest(response_data)
     try:
+        logger.debug('Start compilation for %s (identifier) %s (checksum)',
+                     submission.source_content.identifier,
+                     submission.source_content.checksum)
         stat = Compiler.compile(submission.source_content.identifier,
                                 submission.source_content.checksum, token,
                                 stamp_label, stamp_link)
     except exceptions.RequestFailed as e:
         alerts.flash_failure(f"We couldn't compile your submission. {SUPPORT}",
                              title="Compilation failed")
+        logger.error('Error while requesting compilation for %s: %s',
+                     submission_id, e)
         raise InternalServerError(response_data) from e
 
     response_data['status'] = stat

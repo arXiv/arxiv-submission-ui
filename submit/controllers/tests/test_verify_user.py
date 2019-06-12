@@ -51,7 +51,8 @@ class TestVerifyUser(TestCase):
     def test_get_request_with_submission(self, mock_load):
         """GET request with a submission ID."""
         submission_id = 2
-        before = mock.MagicMock(submission_id=submission_id, finalized=False,
+        before = mock.MagicMock(submission_id=submission_id,
+                                is_finalized=False,
                                 submitter_contact_verified=False)
         mock_load.return_value = (before, [])
         data, code, _ = verify_user.verify('GET', MultiDict(), self.session,
@@ -64,7 +65,8 @@ class TestVerifyUser(TestCase):
     def test_post_request(self, mock_load):
         """POST request with no data."""
         submission_id = 2
-        before = mock.MagicMock(submission_id=submission_id, finalized=False,
+        before = mock.MagicMock(submission_id=submission_id,
+                                is_finalized=False,
                                 submitter_contact_verified=False)
         mock_load.return_value = (before, [])
         params = MultiDict()
@@ -83,9 +85,10 @@ class TestVerifyUser(TestCase):
         """POST request with `verify_user` set."""
         # Event store does not complain; returns object with `submission_id`.
         submission_id = 2
-        before = mock.MagicMock(submission_id=submission_id, finalized=False,
+        before = mock.MagicMock(submission_id=submission_id,
+                                is_finalized=False,
                                 submitter_contact_verified=False)
-        after = mock.MagicMock(submission_id=submission_id, finalized=False,
+        after = mock.MagicMock(submission_id=submission_id, is_finalized=False,
                                submitter_contact_verified=True)
         mock_load.return_value = (before, [])
         mock_save.return_value = (after, [])
@@ -103,7 +106,8 @@ class TestVerifyUser(TestCase):
     def test_save_fails(self, mock_load, mock_save, mock_url_for):
         """Event store flakes out saving authorship verification."""
         submission_id = 2
-        before = mock.MagicMock(submission_id=submission_id, finalized=False,
+        before = mock.MagicMock(submission_id=submission_id,
+                                is_finalized=False,
                                 submitter_contact_verified=False)
         mock_load.return_value = (before, [])
 

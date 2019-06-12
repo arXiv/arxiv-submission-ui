@@ -52,8 +52,9 @@ class TestClassification(TestCase):
     def test_get_request_with_submission(self, mock_load):
         """GET request with a submission ID."""
         submission_id = 2
-        before = mock.MagicMock(submission_id=submission_id, finalized=False,
-                                announced=False, version=1, arxiv_id=None)
+        before = mock.MagicMock(submission_id=submission_id,
+                                is_finalized=False,
+                                is_announced=False, version=1, arxiv_id=None)
         mock_load.return_value = (before, [])
         data, code, _ = classification.classification('GET', MultiDict(),
                                                       self.session,
@@ -82,8 +83,9 @@ class TestClassification(TestCase):
     def test_post_request(self, mock_load):
         """POST request with no data."""
         submission_id = 2
-        before = mock.MagicMock(submission_id=submission_id, finalized=False,
-                                announced=False, version=1, arxiv_id=None)
+        before = mock.MagicMock(submission_id=submission_id,
+                                is_finalized=False,
+                                is_announced=False, version=1, arxiv_id=None)
         mock_load.return_value = (before, [])
 
         try:
@@ -101,8 +103,9 @@ class TestClassification(TestCase):
     def test_post_with_invalid_category(self, mock_load, mock_save):
         """POST request with invalid category."""
         submission_id = 2
-        before = mock.MagicMock(submission_id=submission_id, finalized=False,
-                                announced=False, version=1, arxiv_id=None)
+        before = mock.MagicMock(submission_id=submission_id,
+                                is_finalized=False,
+                                is_announced=False, version=1, arxiv_id=None)
         mock_load.return_value = (before, [])
         mock_save.return_value = (before, [])
 
@@ -123,12 +126,14 @@ class TestClassification(TestCase):
     def test_post_with_category(self, mock_load, mock_save):
         """POST request with valid category."""
         submission_id = 2
-        before = mock.MagicMock(submission_id=submission_id, finalized=False,
-                                announced=False, version=1, arxiv_id=None)
+        before = mock.MagicMock(submission_id=submission_id,
+                                is_finalized=False,
+                                is_announced=False, version=1, arxiv_id=None)
         mock_clsn = mock.MagicMock(category='astro-ph.CO')
-        after = mock.MagicMock(submission_id=submission_id, finalized=False,
+        after = mock.MagicMock(submission_id=submission_id,
+                               is_finalized=False,
                                primary_classification=mock_clsn,
-                               announced=False, version=1, arxiv_id=None)
+                               is_announced=False, version=1, arxiv_id=None)
         mock_load.return_value = (before, [])
         mock_save.return_value = (after, [])
         params = MultiDict({'category': 'astro-ph.CO'})
@@ -180,9 +185,10 @@ class TestCrossList(TestCase):
         """GET request with a submission ID."""
         submission_id = 2
         mock_clsn = mock.MagicMock(category='astro-ph.EP')
-        before = mock.MagicMock(submission_id=submission_id, finalized=False,
+        before = mock.MagicMock(submission_id=submission_id,
+                                is_finalized=False,
                                 primary_classification=mock_clsn,
-                                announced=False, version=1, arxiv_id=None)
+                                is_announced=False, version=1, arxiv_id=None)
         mock_load.return_value = (before, [])
         params = MultiDict()
         data, code, _ = classification.cross_list('GET', params, self.session,
@@ -212,9 +218,10 @@ class TestCrossList(TestCase):
         """POST request with no data."""
         submission_id = 2
         mock_clsn = mock.MagicMock(category='astro-ph.EP')
-        before = mock.MagicMock(submission_id=submission_id, finalized=False,
+        before = mock.MagicMock(submission_id=submission_id,
+                                is_finalized=False,
                                 primary_classification=mock_clsn,
-                                announced=False, version=1, arxiv_id=None)
+                                is_announced=False, version=1, arxiv_id=None)
         mock_load.return_value = (before, [])
 
         try:
@@ -233,9 +240,10 @@ class TestCrossList(TestCase):
         """POST request with invalid category."""
         submission_id = 2
         mock_clsn = mock.MagicMock(category='astro-ph.EP')
-        before = mock.MagicMock(submission_id=submission_id, finalized=False,
+        before = mock.MagicMock(submission_id=submission_id,
+                                is_finalized=False,
                                 primary_classification=mock_clsn,
-                                announced=False, version=1, arxiv_id=None)
+                                is_announced=False, version=1, arxiv_id=None)
         mock_load.return_value = (before, [])
         mock_save.return_value = (before, [])
         params = MultiDict({'category': 'astro-ph'})  # <- expired
@@ -255,14 +263,16 @@ class TestCrossList(TestCase):
         """POST request with valid category."""
         submission_id = 2
         mock_clsn = mock.MagicMock(category='astro-ph.EP')
-        before = mock.MagicMock(submission_id=submission_id, finalized=False,
+        before = mock.MagicMock(submission_id=submission_id,
+                                is_finalized=False,
                                 primary_classification=mock_clsn,
-                                announced=False, version=1, arxiv_id=None)
-        after = mock.MagicMock(submission_id=submission_id, finalized=False,
+                                is_announced=False, version=1, arxiv_id=None)
+        after = mock.MagicMock(submission_id=submission_id, is_finalized=False,
                                primary_classification=mock_clsn,
                                secondary_categories=[
                                    mock.MagicMock(category='astro-ph.CO')
-                               ], announced=False, version=1, arxiv_id=None)
+                               ],
+                               is_announced=False, version=1, arxiv_id=None)
         mock_load.return_value = (before, [])
         mock_save.return_value = (after, [])
         params = MultiDict({'category': 'astro-ph.CO'})

@@ -107,9 +107,10 @@ class TestVerifyAuthorship(TestCase):
         """POST request with `authorship` set."""
         # Event store does not complain; returns object with `submission_id`.
         submission_id = 2
-        before = mock.MagicMock(submission_id=submission_id, finalized=False,
+        before = mock.MagicMock(submission_id=submission_id,
+                                is_finalized=False,
                                 submitter_is_author=False)
-        after = mock.MagicMock(submission_id=submission_id, finalized=False)
+        after = mock.MagicMock(submission_id=submission_id, is_finalized=False)
         mock_load.return_value = (before, [])
         mock_save.return_value = (after, [])
         mock_url_for.return_value = 'https://foo.bar.com/yes'
@@ -126,7 +127,7 @@ class TestVerifyAuthorship(TestCase):
     def test_save_fails(self, mock_load, mock_save, mock_url_for):
         """Event store flakes out on saving the command."""
         submission_id = 2
-        before = mock.MagicMock(submission_id=submission_id, finalized=False,
+        before = mock.MagicMock(submission_id=submission_id, is_finalized=False,
                                 submitter_is_author=False)
         mock_load.return_value = (before, [])
 

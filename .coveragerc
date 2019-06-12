@@ -5,3 +5,5 @@ omit =
     */test*
     */app.py
     */wsgi.py
+    mock*
+    bootstrap.py

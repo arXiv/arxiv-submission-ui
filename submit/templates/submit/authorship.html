@@ -1,5 +1,10 @@
 {% extends "submit/base.html" %}
 
+{% block addl_head %}
+{{super()}}
+  <script src="{{ url_for('static', filename='js/authorship.js') }}"></script>
+{% endblock addl_head %}
+ 
 {% block title -%}Confirm Authorship{%- endblock title %}
 
 {% block within_content %}

@@ -1,4 +1,4 @@
-/* Client side affects for authorship step
+/* Client-side effects for authorship step
    Enables or disables proxy confirmation checkbox based on not-author radio button. */
 var handle_not_author = function(e){ 
   var proxy_checkbox = document.getElementById("proxy");

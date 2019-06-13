@@ -1,68 +1,21 @@
 """Custom Jinja2 filters."""
 
-from typing import List, Tuple, Optional, Union, Dict, Mapping, Callable
-from collections import OrderedDict
+from typing import List, Tuple, Callable
 from datetime import datetime, timedelta
 from pytz import UTC
 from dataclasses import asdict
 
 from arxiv import taxonomy
 from arxiv.submission.domain.process import ProcessStatus
-from arxiv.submission.domain.submission import Compilation, Submission
-#from .domain import FileStatus, Upload
-from submit.domain import FileStatus, Upload
+from arxiv.submission.domain.submission import Compilation
+from submit.controllers.upload import group_files
+from submit.domain import FileStatus
 from submit.util import tidy_filesize
-from submit.flow_control import get_workflow
 
 from .tex_filters import compilation_log_display
 
 # additions for compilation log markup
 import re
-
-NestedFileTree = Mapping[str, Union[FileStatus, 'NestedFileTree']]
-
-
-def group_files(files: List[FileStatus]) -> NestedFileTree:
-    """
-    Group a set of file status objects by directory structure.
-
-    Parameters
-    ----------
-    list
-        Elements are :class:`FileStatus` objects.
-
-    Returns
-    -------
-    :class:`OrderedDict`
-        Keys are strings. Values are either :class:`FileStatus` instances
-        (leaves) or :class:`OrderedDict` (containing more :class:`FileStatus`
-        and/or :class:`OrderedDict`, etc).
-
-    """
-    # First step is to organize by file tree.
-    tree = {}
-    for f in files:
-        parts = f.path.split('/')
-        if len(parts) == 1:
-            tree[f.name] = f
-        else:
-            subtree = tree
-            for part in parts[:-1]:
-                if part not in subtree:
-                    subtree[part] = {}
-                subtree = subtree[part]
-            subtree[parts[-1]] = f
-
-    # Reorder subtrees for nice display.
-    def _order(subtree: Union[dict, FileStatus]) -> OrderedDict:
-        if type(subtree) is FileStatus:
-            return subtree
-        _subtree = OrderedDict()
-        for key, value in sorted(subtree.items(), key=lambda o: o[0]):
-            _subtree[key] = _order(value)
-        return _subtree
-
-    return _order(tree)
 
 
 def timesince(timestamp: datetime, default: str = "just now") -> str:

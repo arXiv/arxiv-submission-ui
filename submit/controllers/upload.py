@@ -10,12 +10,15 @@ Things that still need to be done:
 
 """
 
-from typing import Tuple, Dict, Any, Optional, List
+from typing import Tuple, Dict, Any, Optional, List, Union, Mapping
 import traceback
 from werkzeug import MultiDict
 from werkzeug.exceptions import InternalServerError, BadRequest, \
     MethodNotAllowed
 from werkzeug.datastructures import FileStorage
+
+from locale import strxfrm
+from collections import OrderedDict
 
 from wtforms import BooleanField, widgets, HiddenField, FileField
 from wtforms.validators import DataRequired
@@ -34,7 +37,7 @@ from arxiv.users.domain import Session
 from .util import validate_command, user_and_client_from_session
 from ..util import load_submission, tidy_filesize
 from ..services import FileManager
-from ..domain import Upload
+from ..domain import Upload, FileStatus
 
 logger = logging.getLogger(__name__)
 
@@ -733,3 +736,66 @@ def _get_notifications(stat: Upload) -> List[Dict[str, str]]:
             'body': 'Your submission content is supported.'
         })
     return notifications
+
+
+NestedFileTree = Mapping[str, Union[FileStatus, 'NestedFileTree']]
+
+
+def group_files(files: List[FileStatus]) -> NestedFileTree:
+    """
+    Group a set of file status objects by directory structure.
+
+    Parameters
+    ----------
+    list
+        Elements are :class:`FileStatus` objects.
+
+    Returns
+    -------
+    :class:`OrderedDict`
+        Keys are strings. Values are either :class:`FileStatus` instances
+        (leaves) or :class:`OrderedDict` (containing more :class:`FileStatus`
+        and/or :class:`OrderedDict`, etc).
+
+    """
+    # First step is to organize by file tree.
+    tree = {}
+    for f in files:
+        parts = f.path.split('/')
+        if len(parts) == 1:
+            tree[f.name] = f
+        else:
+            subtree = tree
+            for part in parts[:-1]:
+                if part not in subtree:
+                    subtree[part] = {}
+                subtree = subtree[part]
+            subtree[parts[-1]] = f
+
+    # Reorder subtrees for nice display.
+    def _order(node: Union[dict, FileStatus]) -> OrderedDict:
+        if type(node) is FileStatus:
+            return node
+
+        in_subtree: dict = node
+
+        # split subtree into FileStatus and other
+        filestats = [fs for key, fs in in_subtree.items()
+                     if type(fs) is FileStatus]
+        deeper_subtrees = [(key, st) for key, st in in_subtree.items()
+                           if type(st) is not FileStatus]
+
+        # add the files at this level before any subtrees
+        ordered_subtree = OrderedDict()
+        if filestats and filestats is not None:
+            for fs in sorted(filestats, key=lambda fs: strxfrm(fs.path)):
+                ordered_subtree[fs.path] = fs
+
+        if deeper_subtrees:
+            for key, deeper in sorted(deeper_subtrees,
+                                      key=lambda tup: strxfrm(tup[0])):
+                ordered_subtree[key] = _order(deeper)
+
+        return ordered_subtree
+
+    return _order(tree)

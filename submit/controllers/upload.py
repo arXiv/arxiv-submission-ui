@@ -788,12 +788,12 @@ def group_files(files: List[FileStatus]) -> NestedFileTree:
         # add the files at this level before any subtrees
         ordered_subtree = OrderedDict()
         if filestats and filestats is not None:
-            for fs in sorted(filestats, key=lambda fs: strxfrm(fs.path)):
+            for fs in sorted(filestats, key=lambda fs: strxfrm(fs.path.casefold())):
                 ordered_subtree[fs.path] = fs
 
         if deeper_subtrees:
             for key, deeper in sorted(deeper_subtrees,
-                                      key=lambda tup: strxfrm(tup[0])):
+                                      key=lambda tup: strxfrm(tup[0].casefold())):
                 ordered_subtree[key] = _order(deeper)
 
         return ordered_subtree

@@ -215,6 +215,7 @@ URLS = [
     ("help_submit_pdf", "/help/submit_pdf", BASE_SERVER),
     ("help_submit_ps", "/help/submit_ps", BASE_SERVER),
     ("help_submit_html", "/help/submit_html", BASE_SERVER),
+    ("help_submit_sizes", "/help/sizes", BASE_SERVER),
     ("help_metadata", "/help/prep", BASE_SERVER),
     ("help_jref", "/help/jref", BASE_SERVER),
     ("help_withdraw", "/help/withdraw", BASE_SERVER),

@@ -305,8 +305,7 @@ def file_preview(params, session: Session, submission_id: int, token: str,
                  **kwargs) -> Response:
     submitter, client = user_and_client_from_session(session)
     submission, submission_events = load_submission(submission_id)
-    if (submission.source_content.source_format == SubmissionContent.Format.PDF
-        or submission.source_content.source_format == SubmissionContent.Format.PDFTEX):
+    if (submission.source_content.source_format == SubmissionContent.Format.PDF):
         subfiles = FileManager.get_upload_status(
             submission.source_content.identifier,
             token)

@@ -309,9 +309,12 @@ def file_preview(params, session: Session, submission_id: int, token: str,
         subfiles = FileManager.get_upload_status(
             submission.source_content.identifier,
             token)
-        pdf_name = next(( file.name for file in subfiles.files if file.file_type=='PDF'))
-        (pdf_dload,rh) = FileManager.get_file_content(submission.source_content.identifier,
-                                            pdf_name, token)
+        pdf_name = next((file.name
+                         for file in subfiles.files
+                         if file.file_type == 'PDF'))
+        pdf_dload, rh = \
+            FileManager.get_file_content(submission.source_content.identifier,
+                                         pdf_name, token)
         headers = {'Content-Type': 'application/pdf'}
         return io.BytesIO(pdf_dload.read()), status.OK, headers
     else:

@@ -62,6 +62,7 @@ from arxiv.submission.services.compiler import Compiler
 from arxiv.submission import ConfirmCompiledPreview
 from arxiv.submission.domain.compilation import Compilation
 from arxiv.submission.domain.submission import Compilation, SubmissionContent
+from ..services import FileManager
 from ..util import load_submission
 from .util import validate_command, user_and_client_from_session
 
@@ -301,13 +302,26 @@ def _get_log(identifier: str, checksum: str, token: str) -> dict:
 
 
 def file_preview(params, session: Session, submission_id: int, token: str,
-                 **kwargs) -> Response:
+                 **kwargs) -> Tuple[io.BytesIO, int, Dict[str, str]]:
     submitter, client = user_and_client_from_session(session)
     submission, submission_events = load_submission(submission_id)
-    prod = Compiler.get_product(submission.source_content.identifier,
-                                submission.source_content.checksum, token)
-    headers = {'Content-Type': prod.content_type}
-    return prod.stream, status.OK, headers
+    if submission.source_content.source_format == SubmissionContent.Format.PDF:
+        subfiles = FileManager.get_upload_status(
+            submission.source_content.identifier,
+            token)
+        pdf_name = next((file.name
+                         for file in subfiles.files
+                         if file.file_type == 'PDF'))
+        pdf_dload, rh = \
+            FileManager.get_file_content(submission.source_content.identifier,
+                                         pdf_name, token)
+        headers = {'Content-Type': 'application/pdf'}
+        return io.BytesIO(pdf_dload.read()), status.OK, headers
+    else:
+        prod = Compiler.get_product(submission.source_content.identifier,
+                                    submission.source_content.checksum, token)
+        headers = {'Content-Type': prod.content_type}
+        return prod.stream, status.OK, headers
 
 
 def compilation_log(params, session: Session, submission_id: int, token: str,

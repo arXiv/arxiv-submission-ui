@@ -84,6 +84,11 @@
       <p class="is-marginless help has-text-grey">
         You can upload all your files at once as a single .tar.gz or .zip file, or upload individual files as needed.
       </p>
+      {% for error in status.errors %}
+      <p class="help has-text-weight-bold is-marginless {% if error.error_type == error.Levels.ERROR %}is-danger{% else %}is-warning{% endif %}">
+        {{ error.message }}
+      </p>
+      {% endfor %}
 
       {% if status and status.files %}
       <h3>Files currently attached to this submission ({{ status.size|filesizeformat }})</h3>

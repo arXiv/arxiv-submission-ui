@@ -6,7 +6,7 @@ x-base-service:
   environment:
     SECRET_KEY: "not secure only use for development"
     FLASK_SECRET: 'what'
-    LOGLEVEL: 20
+    LOGLEVEL: 10
     SESSION_COOKIE_SECURE: 0
     DOCKER_HOST: "unix:///var/run/docker.sock"
     REDIS_ENDPOINT: "submission-ui-redis"
@@ -36,6 +36,9 @@ x-base-service:
     JWT_SECRET: "foosecret"
     CLASSIC_DATABASE_URI: "mysql+mysqldb://foouser:foopass@submission-ui-maria:3306/submission?charset=utf8mb4"
     FILE_MANAGEMENT_SQLALCHEMY_DATABASE_URI: "mysql+mysqldb://foouser:foopass@filemanager-maria:3306/uploads?charset=utf8mb4"
+    STORAGE_BACKEND: 'quarantine'
+    STORAGE_BASE_PATH: '/storage'
+    STORAGE_QUARANTINE_PATH: '/quarantine'
 
     COMPILER_ENDPOINT: "http://compiler-api:8000/"
     COMPILER_VERIFY: 0
@@ -141,7 +144,7 @@ services:
 
   filemanager:
     << : *base-service
-    image: arxiv/filemanager:f4d3f277e8870db29691f2a79bdd4904a86e39ab
+    image: arxiv/filemanager:df4d57e1
     # You can uncomment these lines to build this from a local
     # repo. You may need to update `context`.
     # build:
@@ -155,7 +158,8 @@ services:
     ports:
       - "8001:8000"
     volumes:
-      - upload-data:/data
+      - fm-base:/storage
+      - fm-quarantine:/quarantine
     depends_on:
       - mock-vault
 
@@ -175,7 +179,7 @@ services:
 
   compiler-api:
     << : *base-service
-    image: arxiv/compiler:764eaae3f1e750e2ec8adc93e7d9ba507db319f8
+    image: arxiv/compiler:78a1f0dea
     # You can uncomment these lines to build this from a local
     # repo. You may need to update `context`.
     # build:
@@ -196,7 +200,7 @@ services:
 
   compiler-worker:
     << : *base-service
-    image: arxiv/compiler:764eaae3f1e750e2ec8adc93e7d9ba507db319f8
+    image: arxiv/compiler:78a1f0dea
     # You can uncomment these lines to build this from a local
     # repo. You may need to update `context`.
     # build:
@@ -217,7 +221,7 @@ services:
 
   submission-worker:
     << : *base-service
-    image: arxiv/submission-worker:bb0a8c1c8a188674fd4453f974c7b59e56e195d9
+    image: arxiv/submission-worker:e95bad0
     container_name: arxiv-submission-worker
     volumes:
       - "${DIND_SOURCE_ROOT}:/tmp"
@@ -230,7 +234,7 @@ services:
 
   submission-agent:
     << : *base-service
-    image: arxiv/submission-agent:bb0a8c1c8a188674fd4453f974c7b59e56e195d9
+    image: arxiv/submission-agent:e95bad0
     container_name: arxiv-submission-agent
     volumes:
       - "${DIND_SOURCE_ROOT}:/tmp"
@@ -260,7 +264,7 @@ services:
 
   filemanager-bootstrap:
     << : *base-service
-    image: arxiv/filemanager:f4d3f277e8870db29691f2a79bdd4904a86e39ab
+    image: arxiv/filemanager:df4d57e1
     container_name: filemanager-bootstrap
     command: python bootstrap.py
     depends_on:
@@ -391,3 +395,5 @@ volumes:
   docker:
   docker-run:
   upload-data:
+  fm-base:
+  fm-quarantine:

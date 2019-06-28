@@ -153,6 +153,7 @@ def delete_all(method: str, params: MultiDict, session: Session,
         logger.debug('Missing auth token')
         raise BadRequest('Missing auth token')
 
+    fm = FileManager.current_session()
     submission, submission_events = load_submission(submission_id)
     upload_id = submission.source_content.identifier
     submitter, client = user_and_client_from_session(session)
@@ -172,7 +173,7 @@ def delete_all(method: str, params: MultiDict, session: Session,
             raise BadRequest(rdata)
 
         try:
-            stat = FileManager.delete_all(upload_id, token)
+            stat = fm.delete_all(upload_id, token)
         except exceptions.RequestForbidden as e:
             alerts.flash_failure(Markup(
                 'There was a problem authorizing your request. Please try'
@@ -262,6 +263,7 @@ def delete(method: str, params: MultiDict, session: Session,
         logger.debug('Missing auth token')
         raise BadRequest('Missing auth token')
 
+    fm = FileManager.current_session()
     submission, submission_events = load_submission(submission_id)
     upload_id = submission.source_content.identifier
     submitter, client = user_and_client_from_session(session)
@@ -286,7 +288,7 @@ def delete(method: str, params: MultiDict, session: Session,
         stat: Optional[Upload] = None
         try:
             file_path = form.file_path.data
-            stat = FileManager.delete_file(upload_id, file_path, token)
+            stat = fm.delete_file(upload_id, file_path, token)
             alerts.flash_success(
                 f'File <code>{form.file_path.data}</code> was deleted'
                 ' successfully', title='Deleted file successfully',
@@ -437,14 +439,17 @@ def _get_upload(params: MultiDict, session: Session, submission: Submission,
         # Nothing to show; should generate a blank-slate upload screen.
         return rdata, status.OK, {}
 
+    fm = FileManager.current_session()
+
     upload_id = submission.source_content.identifier
     status_data = alerts.get_hidden_alerts('_status')
-
+    print('status_data', status_data)
     if type(status_data) is dict and status_data['identifier'] == upload_id:
+        print('stat from hidden')
         stat = Upload.from_dict(status_data)
     else:
         try:
-            stat = FileManager.get_upload_status(upload_id, token)
+            stat = fm.get_upload_status(upload_id, token)
         except exceptions.RequestFailed as e:
             # TODO: handle specific failure cases.
             logger.debug('Failed to get upload status: %s', e)

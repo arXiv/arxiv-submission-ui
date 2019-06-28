@@ -17,6 +17,7 @@ from collections import defaultdict
 from urllib.parse import urlparse, urlunparse, urlencode
 import dateutil.parser
 import requests
+from pprint import pprint
 from requests.packages.urllib3.util.retry import Retry
 
 from arxiv.integration.api import status, service
@@ -69,19 +70,21 @@ class FileManager(service.HTTPIntegration):
     def _parse_upload_status(self, data: dict) -> Upload:
         file_errors = defaultdict(list)
         non_file_errors = []
-        for etype, filename, message in data['errors']:
-            if filename:
-                file_errors[filename].append(FileError(etype.upper(), message))
-            else:
+        filepaths = [fdata['public_filepath'] for fdata in data['files']]
+        for etype, filepath, message in data['errors']:
+            if filepath and filepath in filepaths:
+                file_errors[filepath].append(FileError(etype.upper(), message))
+            else:   # This includes messages for files that were removed.
                 non_file_errors.append(FileError(etype.upper(), message))
+        
 
         return Upload(
             started=dateutil.parser.parse(data['start_datetime']),
             completed=dateutil.parser.parse(data['completion_datetime']),
             created=dateutil.parser.parse(data['created_datetime']),
             modified=dateutil.parser.parse(data['modified_datetime']),
-            status=Upload.Status(data['upload_status']),
-            lifecycle=Upload.LifecycleStates(data['workspace_state']),
+            status=Upload.Status(data['readiness']),
+            lifecycle=Upload.LifecycleStates(data['upload_status']),
             locked=bool(data['lock_state'] == 'LOCKED'),
             identifier=data['upload_id'],
             files=[
@@ -134,7 +137,9 @@ class FileManager(service.HTTPIntegration):
         data, _, _ = self.json('post', '/', token, files=files,
                                expected_code=[status.CREATED,
                                               status.OK],
-                               timeout=30)
+                               timeout=30, allow_2xx_redirects=False)
+        print('=== POSTED NEW PACKAGE ===')
+        pprint(data)
         return self._parse_upload_status(data)
 
     def get_upload_status(self, upload_id: int, token: str) -> Upload:
@@ -157,6 +162,8 @@ class FileManager(service.HTTPIntegration):
 
         """
         data, _, _ = self.json('get', f'/{upload_id}', token)
+        print('=== GET UPLOAD STATUS ===')
+        pprint(data)
         return self._parse_upload_status(data)
 
     def add_file(self, upload_id: int, pointer: FileStorage, token: str,
@@ -192,9 +199,10 @@ class FileManager(service.HTTPIntegration):
         files = {'file': (pointer.filename, pointer, pointer.mimetype)}
         data, _, _ = self.json('post', f'/{upload_id}', token,
                                data={'ancillary': ancillary}, files=files,
-                               expected_code=[status.CREATED,
-                                              status.OK],
-                               timeout=30)
+                               expected_code=[status.CREATED, status.OK],
+                               timeout=30, allow_2xx_redirects=False)
+        print('=== POSTED FILE TO UPLOAD WORKSPACE ===')
+        pprint(data)
         return self._parse_upload_status(data)
 
     def delete_all(self, upload_id: str, token: str) -> None:

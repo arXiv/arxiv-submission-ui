@@ -71,7 +71,7 @@ class TestUpload(TestCase):
     @mock.patch(f'{upload.__name__}.alerts', mock.MagicMock())
     @mock.patch(f'{upload.__name__}.FileManager')
     @mock.patch('arxiv.submission.load')
-    def test_get_upload(self, mock_load, mock_filemanager):
+    def test_get_upload(self, mock_load, mock_Filemanager):
         """GET request for submission with an existing upload package."""
         submission_id = 2
         mock_load.return_value = (
@@ -88,6 +88,7 @@ class TestUpload(TestCase):
                 version=1
             ), []
         )
+        mock_filemanager = mock.MagicMock()
         mock_filemanager.get_upload_status.return_value = (
             Upload(
                 identifier=25,
@@ -112,6 +113,7 @@ class TestUpload(TestCase):
                 errors=[]
             )
         )
+        mock_Filemanager.current_session.return_value = mock_filemanager
         params = MultiDict({})
         files = MultiDict({})
         data, code, _ = upload.upload_files('GET', params, self.session,

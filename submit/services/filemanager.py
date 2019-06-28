@@ -138,8 +138,6 @@ class FileManager(service.HTTPIntegration):
                                expected_code=[status.CREATED,
                                               status.OK],
                                timeout=30, allow_2xx_redirects=False)
-        print('=== POSTED NEW PACKAGE ===')
-        pprint(data)
         return self._parse_upload_status(data)
 
     def get_upload_status(self, upload_id: int, token: str) -> Upload:
@@ -162,8 +160,6 @@ class FileManager(service.HTTPIntegration):
 
         """
         data, _, _ = self.json('get', f'/{upload_id}', token)
-        print('=== GET UPLOAD STATUS ===')
-        pprint(data)
         return self._parse_upload_status(data)
 
     def add_file(self, upload_id: int, pointer: FileStorage, token: str,
@@ -201,8 +197,6 @@ class FileManager(service.HTTPIntegration):
                                data={'ancillary': ancillary}, files=files,
                                expected_code=[status.CREATED, status.OK],
                                timeout=30, allow_2xx_redirects=False)
-        print('=== POSTED FILE TO UPLOAD WORKSPACE ===')
-        pprint(data)
         return self._parse_upload_status(data)
 
     def delete_all(self, upload_id: str, token: str) -> None:

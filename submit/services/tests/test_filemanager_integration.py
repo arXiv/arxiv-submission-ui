@@ -66,7 +66,7 @@ class TestFileManagerIntegration(TestCase):
                               content_type='application/tar+gz')
         data = FileManager.upload_package(pointer, self.token)
         self.assertIsInstance(data, Upload)
-        self.assertEqual(data.status, Upload.Status.READY)
+        self.assertEqual(data.status, Upload.Status.ERRORS)
         self.assertEqual(data.lifecycle, Upload.LifecycleStates.ACTIVE)
         self.assertFalse(data.locked)
 
@@ -103,7 +103,7 @@ class TestFileManagerIntegration(TestCase):
 
         status = FileManager.get_upload_status(data.identifier, self.token)
         self.assertIsInstance(status, Upload)
-        self.assertEqual(status.status, Upload.Status.READY)
+        self.assertEqual(status.status, Upload.Status.ERRORS)
         self.assertEqual(status.lifecycle, Upload.LifecycleStates.ACTIVE)
         self.assertFalse(status.locked)
 
@@ -149,8 +149,11 @@ class TestFileManagerIntegration(TestCase):
                               'data', 'test.txt')
         pointer2 = FileStorage(open(fpath2, 'rb'), filename='test.txt',
                                content_type='text/plain')
-        status = FileManager.add_file(data.identifier, pointer2, self.token)
+        fm = FileManager.current_session()
+        status = fm.add_file(data.identifier, pointer2, self.token)
+        from pprint import pprint
+        pprint(status)
         self.assertIsInstance(status, Upload)
-        self.assertEqual(status.status, Upload.Status.READY)
+        self.assertEqual(status.status, Upload.Status.ERRORS)
         self.assertEqual(status.lifecycle, Upload.LifecycleStates.ACTIVE)
         self.assertFalse(status.locked)

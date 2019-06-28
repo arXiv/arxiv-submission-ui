@@ -443,9 +443,7 @@ def _get_upload(params: MultiDict, session: Session, submission: Submission,
 
     upload_id = submission.source_content.identifier
     status_data = alerts.get_hidden_alerts('_status')
-    print('status_data', status_data)
     if type(status_data) is dict and status_data['identifier'] == upload_id:
-        print('stat from hidden')
         stat = Upload.from_dict(status_data)
     else:
         try:

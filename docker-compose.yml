@@ -6,7 +6,7 @@ x-base-service:
   environment:
     SECRET_KEY: "not secure only use for development"
     FLASK_SECRET: 'what'
-    LOGLEVEL: 10
+    LOGLEVEL: 40
     SESSION_COOKIE_SECURE: 0
     DOCKER_HOST: "unix:///var/run/docker.sock"
     REDIS_ENDPOINT: "submission-ui-redis"
@@ -144,7 +144,7 @@ services:
 
   filemanager:
     << : *base-service
-    image: arxiv/filemanager:df4d57e1
+    image: arxiv/filemanager:2704aba
     # You can uncomment these lines to build this from a local
     # repo. You may need to update `context`.
     # build:
@@ -264,7 +264,7 @@ services:
 
   filemanager-bootstrap:
     << : *base-service
-    image: arxiv/filemanager:df4d57e1
+    image: arxiv/filemanager:2704aba
     container_name: filemanager-bootstrap
     command: python bootstrap.py
     depends_on:

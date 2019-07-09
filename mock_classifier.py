@@ -3,7 +3,7 @@ from flask import Flask, jsonify
 application = Flask(__name__)
 
 
-@application.route('/classifier', methods=['POST'])
+@application.route('/classifier/', methods=['POST'])
 def classify():
     """Generate classification results."""
     return jsonify({

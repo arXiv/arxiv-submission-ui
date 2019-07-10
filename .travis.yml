@@ -11,11 +11,11 @@ python:
 script:
   - pip install pipenv
   - pipenv install --dev --skip-lock
+  - pipenv run python -m tests.run_app_tests
   - pipenv run nose2 --with-coverage
-#  - ./tests/lint.sh
-  - ./tests/docstyle.sh
 after_success:
   - coveralls
+  - ./tests/docstyle.sh
   - if [ -z "$TRAVIS_TAG" ]; then
       echo "Not a tagged commit; skipping deploy.";
     else

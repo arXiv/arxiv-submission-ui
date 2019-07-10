@@ -33,7 +33,7 @@ class TestSubmissionWorkflow(TestCase):
     def setUp(self):
         """Create an application instance."""
         self.app = create_ui_web_app()
-        os.environ['JWT_SECRET'] = self.app.config.get('JWT_SECRET')
+        os.environ['JWT_SECRET'] = str(self.app.config.get('JWT_SECRET', 'fo'))
         _, self.db = tempfile.mkstemp(suffix='.db')
         self.app.config['CLASSIC_DATABASE_URI'] = f'sqlite:///{self.db}'
         self.token = generate_token('1234', 'foo@bar.com', 'foouser',
@@ -91,6 +91,17 @@ class TestSubmissionWorkflow(TestCase):
             response.data
         )
         token = self._parse_csrf_token(response)
+        upload_id, _ = next_page.path.lstrip('/').split('/verify_user', 1)
+
+        # Make sure that the user cannot skip forward to subsequent steps.
+        response = self.client.get(f'/{upload_id}/file_upload')
+        self.assertEqual(response.status_code, status.FOUND)
+
+        response = self.client.get(f'/{upload_id}/final_preview')
+        self.assertEqual(response.status_code, status.FOUND)
+
+        response = self.client.get(f'/{upload_id}/add_optional_metadata')
+        self.assertEqual(response.status_code, status.FOUND)
 
         # Submit the verify user page.
         response = self.client.post(next_page.path,
@@ -194,7 +205,7 @@ class TestEndorsementMessaging(TestCase):
     def setUp(self):
         """Create an application instance."""
         self.app = create_ui_web_app()
-        os.environ['JWT_SECRET'] = self.app.config.get('JWT_SECRET')
+        os.environ['JWT_SECRET'] = str(self.app.config.get('JWT_SECRET', 'fo'))
         _, self.db = tempfile.mkstemp(suffix='.db')
         self.app.config['CLASSIC_DATABASE_URI'] = f'sqlite:///{self.db}'
         self.client = self.app.test_client()
@@ -376,7 +387,7 @@ class TestJREFWorkflow(TestCase):
     def setUp(self):
         """Create an application instance."""
         self.app = create_ui_web_app()
-        os.environ['JWT_SECRET'] = self.app.config.get('JWT_SECRET')
+        os.environ['JWT_SECRET'] = str(self.app.config.get('JWT_SECRET', 'fo'))
         _, self.db = tempfile.mkstemp(suffix='.db')
         self.app.config['CLASSIC_DATABASE_URI'] = f'sqlite:///{self.db}'
         self.user = User('1234', 'foo@bar.com', endorsements=['astro-ph.GA'])
@@ -507,7 +518,7 @@ class TestWithdrawalWorkflow(TestCase):
     def setUp(self):
         """Create an application instance."""
         self.app = create_ui_web_app()
-        os.environ['JWT_SECRET'] = self.app.config.get('JWT_SECRET')
+        os.environ['JWT_SECRET'] = str(self.app.config.get('JWT_SECRET', 'fo'))
         _, self.db = tempfile.mkstemp(suffix='.db')
         self.app.config['CLASSIC_DATABASE_URI'] = f'sqlite:///{self.db}'
         self.user = User('1234', 'foo@bar.com',
@@ -651,7 +662,7 @@ class TestUnsubmitWorkflow(TestCase):
     def setUp(self):
         """Create an application instance."""
         self.app = create_ui_web_app()
-        os.environ['JWT_SECRET'] = self.app.config.get('JWT_SECRET')
+        os.environ['JWT_SECRET'] = str(self.app.config.get('JWT_SECRET', 'fo'))
         _, self.db = tempfile.mkstemp(suffix='.db')
         self.app.config['CLASSIC_DATABASE_URI'] = f'sqlite:///{self.db}'
         self.user = User('1234', 'foo@bar.com', endorsements=['astro-ph.GA'])

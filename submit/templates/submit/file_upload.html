@@ -1,5 +1,10 @@
 {% extends "submit/base.html" %}
 
+{% block addl_head %}
+{{super()}}
+ <script src="{{ url_for('static', filename='js/filewidget.js') }}"></script>
+{% endblock addl_head %}
+
 {% macro display_tree(key, item, even) %}
   {% if key %}
   <li class="{% if item.errors %}is-warning{% elif item.modified and item|just_updated %}is-success{% endif %} {% if even %}even{% endif %}">
@@ -147,6 +152,8 @@
             <li>Total compressed package size limit: 6MB</li>
             <li>Total uncompressed package size limit: 18MB</li>
             <li>Individual PDF size limit: 15MB</li>
+            <li>More information about <a href="{{ url_for('help_submit_sizes') }}">submission size and exemptions to size limits</a></li>
+
           </ul>
 
 

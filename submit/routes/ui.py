@@ -419,7 +419,9 @@ def file_preview(submission_id: int) -> Response:
         submission_id,
         request.environ['token']
     )
-    return send_file(data, mimetype=headers['Content-Type'])
+    rv = send_file(data, mimetype=headers['Content-Type'], cache_timeout=0)
+    rv.set_etag(headers['ETag'])
+    return rv
 
 
 @ui.route(path('compilation_log'), methods=["GET"])
@@ -432,7 +434,9 @@ def compilation_log(submission_id: int) -> Response:
         submission_id,
         request.environ['token']
     )
-    return send_file(data, mimetype=headers['Content-Type'])
+    rv = send_file(data, mimetype=headers['Content-Type'], cache_timeout=0)
+    rv.set_etag(headers['ETag'])
+    return rv
 
 
 @workflow_route(workflow.Metadata)

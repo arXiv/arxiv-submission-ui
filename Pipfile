@@ -22,7 +22,7 @@ mimesis = "==2.1.0"
 backports-datetime-fromisoformat = "*"
 flask-session = "*"
 arxiv-vault = "==0.1.1rc15"
-arxiv-submission-core = "==0.7.1rc37"
+arxiv-submission-core = "==0.7.1rc38"
 
 [dev-packages]
 pydocstyle = "*"

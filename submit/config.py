@@ -8,6 +8,9 @@ from typing import Optional
 import warnings
 from os import environ
 
+APP_VERSION = "0.1.1-alpha"
+"""The current version of this application."""
+
 NAMESPACE = environ.get('NAMESPACE')
 """Namespace in which this service is deployed; to qualify keys for secrets."""
 

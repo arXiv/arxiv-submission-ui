@@ -6,7 +6,7 @@ x-base-service:
   environment:
     SECRET_KEY: "not secure only use for development"
     FLASK_SECRET: 'what'
-    LOGLEVEL: 40
+    LOGLEVEL: 10
     SESSION_COOKIE_SECURE: 0
     DOCKER_HOST: "unix:///var/run/docker.sock"
     REDIS_ENDPOINT: "submission-ui-redis"
@@ -46,6 +46,12 @@ x-base-service:
     PLAINTEXT_ENDPOINT: "http://plaintext-api:8000/"
     PLAINTEXT_VERIFY: 0
 
+    PREVIEW_ENDPOINT: 'http://submission-preview:8000/'
+    PREVIEW_VERIFY: 0
+
+    FILESYSTEM_ENDPOINT: 'http://filesystem:8000/'
+    FILESYSTEM_VERIFY: 0
+
     # Route e-mail to mailhog.
     EMAIL_ENABLED: 1
     SMTP_HOSTNAME: mailhog
@@ -65,7 +71,11 @@ x-base-service:
     SUBMISSION_AGENT_DATABASE_URI: "mysql+mysqldb://foouser:foopass@submission-agent-maria:3306/agent?charset=utf8mb4"
     # AGENT_DATABASE_HOST: "submission-agent-maria"
 
-    CLASSIFIER_ENDPOINT: "http://mock-classifier:8000"
+    # CLASSIFIER_ENDPOINT: "http://mock-classifier:8000"
+    CLASSIFIER_SERVICE_HOST: mock-classifier
+    CLASSIFIER_SERVICE_PORT: 8000
+    CLASSIFIER_PORT_8000_PROTO: http
+    CLASSIFIER_PATH: classifier/
     CLASSIFIER_VERIFY: 0
 
     VAULT_ENABLED: "0"
@@ -179,7 +189,7 @@ services:
 
   compiler-api:
     << : *base-service
-    image: arxiv/compiler:78a1f0dea
+    image: arxiv/compiler:30c84dd5b5381e2f2f69ed58298bd87c10bad5c8
     # You can uncomment these lines to build this from a local
     # repo. You may need to update `context`.
     # build:
@@ -200,7 +210,7 @@ services:
 
   compiler-worker:
     << : *base-service
-    image: arxiv/compiler:78a1f0dea
+    image: arxiv/compiler:30c84dd5b5381e2f2f69ed58298bd87c10bad5c8
     # You can uncomment these lines to build this from a local
     # repo. You may need to update `context`.
     # build:
@@ -221,7 +231,8 @@ services:
 
   submission-worker:
     << : *base-service
-    image: arxiv/submission-worker:e95bad0
+    image: arxiv/submission-agent:1cce312
+    command: ["celery", "worker", "-A", "agent.worker.worker_app", "--loglevel=INFO", "-E", "--concurrency=2"]
     container_name: arxiv-submission-worker
     volumes:
       - "${DIND_SOURCE_ROOT}:/tmp"
@@ -234,7 +245,7 @@ services:
 
   submission-agent:
     << : *base-service
-    image: arxiv/submission-agent:e95bad0
+    image: arxiv/submission-agent:1cce312
     container_name: arxiv-submission-agent
     volumes:
       - "${DIND_SOURCE_ROOT}:/tmp"
@@ -254,6 +265,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        BASE_VERSION: ARXIVNG-2462
     container_name: submission-bootstrap
     command: python bootstrap.py
     depends_on:
@@ -279,6 +292,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        BASE_VERSION: ARXIVNG-2462
     container_name: arxiv-submission-ui
     command: uwsgi --http-socket :8000 -M -t 3000 --buffer-size 65535 --manage-script-name --wsgi-disable-file-wrapper --processes 8 --threads 1 --async 100 --ugreen  --mount /=wsgi.py --logformat "%(addr) %(addr) - %(user_id)|%(session_id) [%(rtime)] [%(uagent)] \"%(method) %(uri) %(proto)\" %(status) %(size) %(micros) %(ttfb)"
     # command: flask run -p 8000 -h 0.0.0.0
@@ -304,8 +319,30 @@ services:
     networks:
       - arxiv-submission-ui
 
+  submission-preview:
+    image: arxiv/preview:0.0
+    container_name: preview
+    networks:
+      - arxiv-submission-ui
+    environment:
+      S3_ENDPOINT: "https://submission-localstack:4572"
+      S3_VERIFY: 0
+      NAMESPACE: "development"
+
+  legacy-filesystem:
+    image: arxiv/legacy-filesystem:ARXIVNG-2622
+    container_name: filesystem
+    networks:
+      - arxiv-submission-ui
+    volumes:
+      - legacy:/submissions
+    environment:
+      LEGACY_FILESYSTEM_ROOT: /submissions
+
+
   plaintext-worker:
-    image: arxiv/plaintext-worker:703e8644cf82c09fe99960b6775b0c677f7d1bc5
+    image: arxiv/plaintext:0.3.2
+    command: ["celery", "worker", "-A", "fulltext.worker.celery_app", "--loglevel=INFO", "-E", "--concurrency=1"]
     environment:
       REDIS_ENDPOINT: "submission-ui-redis:6379"
       AWS_ACCESS_KEY_ID: "foo"
@@ -343,8 +380,9 @@ services:
       - arxiv-submission-ui
 
   plaintext-api:
-    image: arxiv/plaintext-api:703e8644cf82c09fe99960b6775b0c677f7d1bc5
+    image: arxiv/plaintext:0.3.2
     container_name: plaintext-api
+    command: ["uwsgi", "--ini", "/opt/arxiv/uwsgi.ini"]
     environment:
       REDIS_ENDPOINT: "submission-ui-redis:6379"
       AWS_ACCESS_KEY_ID: "foo"
@@ -397,3 +435,4 @@ volumes:
   upload-data:
   fm-base:
   fm-quarantine:
+  legacy:

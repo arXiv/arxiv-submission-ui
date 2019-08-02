@@ -12,8 +12,8 @@ from wtforms import Form
 from http import HTTPStatus as status
 from arxiv.users import auth, domain
 from arxiv.submission.domain.submission import SubmissionContent
+from arxiv.submission.services import filemanager
 from submit.domain import Upload, FileStatus, FileError
-from submit.services import filemanager
 from .. import upload
 
 
@@ -69,7 +69,7 @@ class TestUpload(TestCase):
 
     @mock.patch(f'{upload.__name__}.UploadForm.Meta.csrf', False)
     @mock.patch(f'{upload.__name__}.alerts', mock.MagicMock())
-    @mock.patch(f'{upload.__name__}.FileManager')
+    @mock.patch(f'{upload.__name__}.Filemanager')
     @mock.patch('arxiv.submission.load')
     def test_get_upload(self, mock_load, mock_Filemanager):
         """GET request for submission with an existing upload package."""
@@ -129,7 +129,7 @@ class TestUpload(TestCase):
     @mock.patch(f'{upload.__name__}.UploadForm.Meta.csrf', False)
     @mock.patch(f'{upload.__name__}.alerts', mock.MagicMock())
     @mock.patch(f'{upload.__name__}.url_for', mock.MagicMock(return_value='/'))
-    @mock.patch(f'{upload.__name__}.FileManager')
+    @mock.patch(f'{upload.__name__}.Filemanager')
     @mock.patch(f'{upload.__name__}.save')
     @mock.patch(f'arxiv.submission.load')
     def test_post_upload(self, mock_load, mock_save, mock_filemanager):
@@ -218,7 +218,7 @@ class TestDelete(TestCase):
         )
 
     @mock.patch(f'{upload.__name__}.DeleteFileForm.Meta.csrf', False)
-    @mock.patch(f'{upload.__name__}.FileManager')
+    @mock.patch(f'{upload.__name__}.Filemanager')
     @mock.patch('arxiv.submission.load')
     def test_get_delete(self, mock_load, mock_filemanager):
         """GET request to delete a file."""
@@ -247,7 +247,7 @@ class TestDelete(TestCase):
 
     @mock.patch(f'{upload.__name__}.alerts', mock.MagicMock())
     @mock.patch(f'{upload.__name__}.DeleteFileForm.Meta.csrf', False)
-    @mock.patch(f'{upload.__name__}.FileManager')
+    @mock.patch(f'{upload.__name__}.Filemanager')
     @mock.patch('arxiv.submission.load')
     def test_post_delete(self, mock_load, mock_filemanager):
         """POST request to delete a file without confirmation."""
@@ -277,7 +277,7 @@ class TestDelete(TestCase):
     @mock.patch(f'{upload.__name__}.alerts', mock.MagicMock())
     @mock.patch(f'{upload.__name__}.DeleteFileForm.Meta.csrf', False)
     @mock.patch(f'{upload.__name__}.url_for')
-    @mock.patch(f'{upload.__name__}.FileManager')
+    @mock.patch(f'{upload.__name__}.Filemanager')
     @mock.patch(f'{upload.__name__}.save')
     @mock.patch('arxiv.submission.load')
     def test_post_delete_confirmed(self, mock_load, mock_save,

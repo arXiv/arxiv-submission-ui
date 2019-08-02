@@ -1,68 +1,38 @@
 """
 Controllers for process-related requests.
 
-# Domain Changes
-Submision.compilations
-
-Compilation
-task_id
-source_etag
-format
-start_time
-status
-
-# Controller
-- no history, is there a compilation that matches current source package
-
-# POST
-submit.controllers.file_process.compile
-if Compilation matching etag, short-circuit
-if no Compilation matching etag, create compilation
-
-use CSRF form from arxiv.base to render the form, include a csrf_token.
-
-
-plan of attack
------------------
-1. Update domain in submission.core
-2. Add GET functionality in controllers
-3. Add POST functionality in controller
-
-  1  update submission core domain
-  2a initial landing page
-  3a create task
-  2b get status of task
-  2c show error
-  2d show success
-  3b short-circuit if task exists
-
-2. Release updated domain in submission.core
-
+The controllers in this module leverage
+:mod:`arxiv.submission.core.process.process_source`, which provides an
+high-level API for orchestrating source processing for all supported source
+types.
 """
 
-from typing import Tuple, Dict, Any, Optional
 import io
+import re
+from http import HTTPStatus as status
+from typing import Tuple, Dict, Any, Optional
+
+
+import bleach
 from werkzeug import MultiDict
 from werkzeug.exceptions import InternalServerError, BadRequest, NotFound, \
     MethodNotAllowed
-from dataclasses import asdict
-
 from flask import url_for, Markup
 from wtforms import SelectField, widgets, HiddenField, validators
-import bleach
-import re
-from http import HTTPStatus as status
+
 from arxiv.base import logging, alerts
 from arxiv.forms import csrf
 from arxiv.users.domain import Session
 from arxiv.integration.api import exceptions
-from arxiv.submission import save, SaveError, AddProcessStatus, Submission
 
-from arxiv.submission.services.compiler import Compiler
-from arxiv.submission import ConfirmCompiledPreview
+from arxiv.submission import save, SaveError, Submission, \
+    ConfirmSourceProcessed
+from arxiv.submission.process import process_source
 from arxiv.submission.domain.compilation import Compilation
+from arxiv.submission.domain.preview import Preview
 from arxiv.submission.domain.submission import Compilation, SubmissionContent
-from ..services import FileManager
+from arxiv.submission.services import PreviewService, Compiler
+
 from ..util import load_submission
 from .util import validate_command, user_and_client_from_session
 
@@ -78,7 +48,7 @@ SUPPORT = Markup(
 
 
 def file_process(method: str, params: MultiDict, session: Session,
-                 submission_id: int, token: str, **kwargs) -> Response:
+                 submission_id: int, token: str, **kwargs: Any) -> Response:
     """
     Process the file compilation project.
 
@@ -107,8 +77,6 @@ def file_process(method: str, params: MultiDict, session: Session,
         applicable.
 
     """
-    logger.debug("%s: %s, %s, %s, %s", method, params, session, submission_id,
-                 token)
     if method == "GET":
         return compile_status(params, session, submission_id, token)
     elif method == "POST":
@@ -122,7 +90,7 @@ def file_process(method: str, params: MultiDict, session: Session,
 
 
 def _check_status(params: MultiDict, session: Session,  submission_id: int,
-                  token: str, **kwargs) -> None:
+                  token: str, **kwargs: Any) -> None:
     """
     Check for cases in which the preview already exists.
 
@@ -130,16 +98,14 @@ def _check_status(params: MultiDict, session: Session,  submission_id: int,
     requires no further compilation.
     """
     submitter, client = user_and_client_from_session(session)
-    submission, submission_events = load_submission(submission_id)
+    submission, _ = load_submission(submission_id)
 
-    if not submission.submitter_compiled_preview \
-            and not _must_process(submission):
-
+    if not submission.is_source_processed:
         form = CompilationForm(params)  # Providing CSRF protection.
         if not form.validate():
             raise BadRequest('Invalid request; please try again.')
 
-        command = ConfirmCompiledPreview(creator=submitter, client=client)
+        command = ConfirmSourceProcessed(creator=submitter, client=client)
         try:
             submission, _ = save(command, submission_id=submission_id)
         except SaveError as e:
@@ -153,7 +119,7 @@ def _check_status(params: MultiDict, session: Session,  submission_id: int,
 
 
 def compile_status(params: MultiDict, session: Session, submission_id: int,
-                   token: str, **kwargs) -> Response:
+                   token: str, **kwargs: Any) -> Response:
     """
     Returns the status of a compilation.
 
@@ -181,56 +147,45 @@ def compile_status(params: MultiDict, session: Session, submission_id: int,
 
     """
     submitter, client = user_and_client_from_session(session)
-    submission, submission_events = load_submission(submission_id)
+    submission, _ = load_submission(submission_id)
     form = CompilationForm()
     response_data = {
         'submission_id': submission_id,
         'submission': submission,
         'form': form,
         'status': None,
-        'must_process': _must_process(submission)
     }
-
-    # Not all submissions require processing.
-    if not _must_process(submission):
-        logger.debug('No processing required')
-        return response_data, status.OK, {}
-
     # Determine whether the current state of the uploaded source content has
     # been compiled.
-    source_id = submission.source_content.identifier
-    source_state = submission.source_content.checksum
+    stat: Optional[process_source.Status] = None
     try:
-        compilation = Compiler.get_status(source_id, source_state, token)
-    except exceptions.NotFound:     # Nothing to do.
-        logger.debug('No such compilation')
-        return response_data, status.OK, {}
+        stat = process_source.check(submission, submitter, client, token)
+    except process_source.NoProcessToCheck as e:
+        pass
+    except process_source.FailedToCheckStatus as e:
+        alerts.flash_failure(Markup(
+            'There was a problem carrying out your request. Please try'
+            f' again. {SUPPORT}'
+        ))
+    response_data['status'] = stat
 
-    response_data['status'] = compilation.status
-    response_data['current_compilation'] = compilation
-
-    if compilation.status is Compilation.Status.SUCCEEDED:
-        command = ConfirmCompiledPreview(creator=submitter, client=client)
+    # if Compilation failure, then show errors, opportunity to restart.
+    # if Compilation success, then show preview.
+    if stat in [process_source.SUCCEEDED, process_source.FAILED]:
         try:
-            submission, _ = save(command, submission_id=submission_id)
-        except SaveError:
+            response_data.update(
+                process_source.summarize(submission, submitter, client, token)
+            )
+        except process_source.FailedToGetResult as e:
             alerts.flash_failure(Markup(
                 'There was a problem carrying out your request. Please try'
                 f' again. {SUPPORT}'
             ))
-
-    # if Compilation failure, then show errors, opportunity to restart.
-    # if Compilation success, then show preview.
-    terminal_states = [Compilation.Status.FAILED, Compilation.Status.SUCCEEDED]
-    if compilation.status in terminal_states:
-        response_data.update(_get_log(submission.source_content.identifier,
-                                      submission.source_content.checksum,
-                                      token))
     return response_data, status.OK, {}
 
 
 def start_compilation(params: MultiDict, session: Session, submission_id: int,
-                      token: str, **kwargs) -> Response:
+                      token: str, **kwargs: Any) -> Response:
     submitter, client = user_and_client_from_session(session)
     submission, submission_events = load_submission(submission_id)
     form = CompilationForm(params)
@@ -239,38 +194,14 @@ def start_compilation(params: MultiDict, session: Session, submission_id: int,
         'submission': submission,
         'form': form,
         'status': None,
-        'must_process': _must_process(submission)
     }
-
-    # Create label and link for PS/PDF stamp/watermark.
-    #
-    # Stamp format for submission is of form [identifier category date]
-    #
-    # "arXiv:submit/<submission_id>  [<primary category>] DD MON YYYY
-    #
-    # Date segment is optional and added automatically by converter.
-    #
-    stamp_label = f'arXiv:submit/{submission_id}'
-
-    if submission.primary_classification \
-                and submission.primary_classification.category:
-        # Create stamp label string - for now we'll let converter
-        #                             add date segment to stamp label
-        primary_category = submission.primary_classification.category
-        stamp_label = stamp_label + f'  [{primary_category}]'
-
-    stamp_link = f'/{submission_id}/preview.pdf'
 
     if not form.validate():
         raise BadRequest(response_data)
+
     try:
-        logger.debug('Start compilation for %s (identifier) %s (checksum)',
-                     submission.source_content.identifier,
-                     submission.source_content.checksum)
-        stat = Compiler.compile(submission.source_content.identifier,
-                                submission.source_content.checksum, token,
-                                stamp_label, stamp_link)
-    except exceptions.RequestFailed as e:
+        stat = process_source.start(submission, submitter, client, token)
+    except process_source.FailedToStart as e:
         alerts.flash_failure(f"We couldn't compile your submission. {SUPPORT}",
                              title="Compilation failed")
         logger.error('Error while requesting compilation for %s: %s',
@@ -278,7 +209,7 @@ def start_compilation(params: MultiDict, session: Session, submission_id: int,
         raise InternalServerError(response_data) from e
 
     response_data['status'] = stat
-    if stat.status is Compilation.Status.FAILED:
+    if stat == process_source.FAILED:
         alerts.flash_failure(f"Compilation failed")
     else:
         alerts.flash_success(
@@ -291,41 +222,20 @@ def start_compilation(params: MultiDict, session: Session, submission_id: int,
     return response_data, status.SEE_OTHER, {'Location': redirect}
 
 
-def _get_log(identifier: str, checksum: str, token: str) -> dict:
-    try:
-        log = Compiler.get_log(identifier, checksum, token)
-        # Make linebreaks but escape everything else.
-        log_output = log.stream.read().decode('utf-8')
-    except exceptions.NotFound:
-        log_output = "No log available."
-    return {'log_output': log_output}
-
-
 def file_preview(params, session: Session, submission_id: int, token: str,
-                 **kwargs) -> Tuple[io.BytesIO, int, Dict[str, str]]:
+                 **kwargs: Any) -> Tuple[io.BytesIO, int, Dict[str, str]]:
     submitter, client = user_and_client_from_session(session)
     submission, submission_events = load_submission(submission_id)
-    if submission.source_content.source_format == SubmissionContent.Format.PDF:
-        subfiles = FileManager.get_upload_status(
-            submission.source_content.identifier,
-            token)
-        pdf_name = next((file.name
-                         for file in subfiles.files
-                         if file.file_type == 'PDF'))
-        pdf_dload, rh = \
-            FileManager.get_file_content(submission.source_content.identifier,
-                                         pdf_name, token)
-        headers = {'Content-Type': 'application/pdf'}
-        return io.BytesIO(pdf_dload.read()), status.OK, headers
-    else:
-        prod = Compiler.get_product(submission.source_content.identifier,
-                                    submission.source_content.checksum, token)
-        headers = {'Content-Type': prod.content_type}
-        return prod.stream, status.OK, headers
+    p = PreviewService.current_session()
+    stream, pdf_checksum = p.get(submission.source_content.identifier,
+                                 submission.source_content.checksum,
+                                 token)
+    headers = {'Content-Type': 'application/pdf'}
+    return stream, status.OK, headers
 
 
 def compilation_log(params, session: Session, submission_id: int, token: str,
-                    **kwargs) -> Response:
+                    **kwargs: Any) -> Response:
     submitter, client = user_and_client_from_session(session)
     submission, submission_events = load_submission(submission_id)
     checksum = params.get('checksum', submission.source_content.checksum)
@@ -354,8 +264,3 @@ class CompilationForm(csrf.CSRFForm):
 
     compiler = SelectField('Compiler', choices=COMPILERS,
                            default=PDFLATEX)
-
-
-def _must_process(submission: Submission) -> bool:
-    return submission.source_content.source_format \
-        is not SubmissionContent.Format.PDF

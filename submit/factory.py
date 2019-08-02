@@ -10,11 +10,10 @@ from arxiv import vault
 from arxiv.base import Base, logging
 from arxiv.users import auth
 from arxiv.base.middleware import wrap, request_logs
-from arxiv.submission.services import classic, Compiler
+from arxiv.submission.services import classic, Compiler, Filemanager
 from arxiv.submission import init_app
 
 from .routes import ui
-from .services import FileManager
 from . import filters
 
 
@@ -50,12 +49,12 @@ def create_ui_web_app() -> Flask:
     # Initialize services.
     init_app(app)
     Compiler.init_app(app)
-    FileManager.init_app(app)
+    Filemanager.init_app(app)
 
     if app.config['WAIT_FOR_SERVICES']:
         time.sleep(app.config['WAIT_ON_STARTUP'])
         with app.app_context():
-            wait_for(FileManager.current_session(),
+            wait_for(Filemanager.current_session(),
                      timeout=app.config['FILEMANAGER_STATUS_TIMEOUT'])
             wait_for(Compiler.current_session(),
                      timeout=app.config['COMPILER_STATUS_TIMEOUT'])

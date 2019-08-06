@@ -247,3 +247,9 @@ ul.progressbar
       border-width: 5px
       border-style: solid
       border-color: #0068AC transparent transparent transparent
+
+/* try to fix overflow of select boxes */      
+@media screen and (max-width: 768px) 
+  select 
+    width: 300px;
+    text-overflow: ellipsis;

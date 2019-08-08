@@ -1,19 +1,19 @@
 """Tests for :mod:`submit.controllers.upload`."""
 
-from unittest import TestCase, mock
-
-from pytz import timezone
 from datetime import timedelta, datetime
+from http import HTTPStatus as status
+from pytz import timezone
+from unittest import TestCase, mock
 
 from werkzeug import MultiDict
 from werkzeug.exceptions import BadRequest, InternalServerError
 from wtforms import Form
 
-from http import HTTPStatus as status
 from arxiv.users import auth, domain
 from arxiv.submission.domain.submission import SubmissionContent
+from arxiv.submission.domain.uploads import Upload, FileStatus, FileError
 from arxiv.submission.services import filemanager
-from submit.domain import Upload, FileStatus, FileError
+
 from .. import upload
 
 

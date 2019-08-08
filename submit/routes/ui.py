@@ -1,25 +1,24 @@
 """Provides routes for the submission user interface."""
 
-from typing import Optional, Callable, Dict, List, Union
 from http import HTTPStatus as status
+from typing import Optional, Callable, Dict, List, Union
 
-from werkzeug import MultiDict
-from werkzeug.exceptions import InternalServerError, BadRequest
 from flask import Blueprint, make_response, redirect, request, Markup, \
                   render_template, url_for, Response, g, send_file, session
+from werkzeug import MultiDict
+from werkzeug.exceptions import InternalServerError, BadRequest
 
-
-from arxiv import taxonomy
-from arxiv.users import auth
 import arxiv.submission as events
-from arxiv.submission.services.classic.exceptions import Unavailable
+from arxiv import taxonomy
 from arxiv.base import logging, alerts
+from arxiv.users import auth
+from arxiv.submission.domain import Submission
+from arxiv.submission.services.classic.exceptions import Unavailable
 
-from .. import controllers
 from .auth import is_owner
-from ..domain import workflow, Submission
+from .. import controllers, util
+from ..domain import workflow
 from ..flow_control import flow_control, get_workflow
-from .. import util
 
 logger = logging.getLogger(__name__)
 
@@ -144,7 +143,7 @@ def handle(controller: Callable, template: str, title: str,
     context = {'pagetitle': title}
     try:
         data, code, headers = controller(request.method, request_data,
-                                         request.session, submission_id,
+                                         request.auth, submission_id,
                                          **kwargs)
     except (BadRequest, InternalServerError) as e:
         logger.debug('Caught %s from controller', e)
@@ -415,11 +414,15 @@ def file_process(submission_id: int) -> Response:
 def file_preview(submission_id: int) -> Response:
     data, code, headers = controllers.file_preview(
         MultiDict(request.args.items(multi=True)),
-        request.session,
+        request.auth,
         submission_id,
         request.environ['token']
     )
-    return send_file(data, mimetype=headers['Content-Type'])
+    response = send_file(data, mimetype=headers['Content-Type'])
+    response.headers['Content-Length'] = len(data)  # type: ignore
+    response.headers['Cache-Control'] = 'no-store'
+    print(response.headers)
+    return response
 
 
 @ui.route(path('compilation_log'), methods=["GET"])
@@ -428,11 +431,13 @@ def file_preview(submission_id: int) -> Response:
 def compilation_log(submission_id: int) -> Response:
     data, code, headers = controllers.compilation_log(
         MultiDict(request.args.items(multi=True)),
-        request.session,
+        request.auth,
         submission_id,
         request.environ['token']
     )
-    return send_file(data, mimetype=headers['Content-Type'])
+    response = send_file(data, mimetype=headers['Content-Type'])
+    response.headers['Cache-Control'] = 'no-store'
+    return response
 
 
 @workflow_route(workflow.Metadata)

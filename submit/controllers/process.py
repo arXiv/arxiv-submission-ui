@@ -157,30 +157,20 @@ def compile_status(params: MultiDict, session: Session, submission_id: int,
     }
     # Determine whether the current state of the uploaded source content has
     # been compiled.
-    stat: Optional[process_source.Status] = None
+    result: Optional[process_source.CheckResult] = None
     try:
-        stat = process_source.check(submission, submitter, client, token)
+        result = process_source.check(submission, submitter, client, token)
     except process_source.NoProcessToCheck as e:
         pass
     except process_source.FailedToCheckStatus as e:
+        logger.error('Failed to check status: %s', e)
         alerts.flash_failure(Markup(
             'There was a problem carrying out your request. Please try'
             f' again. {SUPPORT}'
         ))
-    response_data['status'] = stat
-
-    # if Compilation failure, then show errors, opportunity to restart.
-    # if Compilation success, then show preview.
-    if stat in [process_source.SUCCEEDED, process_source.FAILED]:
-        try:
-            response_data.update(
-                process_source.summarize(submission, submitter, client, token)
-            )
-        except process_source.FailedToGetResult as e:
-            alerts.flash_failure(Markup(
-                'There was a problem carrying out your request. Please try'
-                f' again. {SUPPORT}'
-            ))
+    if result is not None:
+        response_data['status'] = result.status
+        response_data.update(**result.extra)
     return response_data, status.OK, {}
 
 
@@ -200,23 +190,25 @@ def start_compilation(params: MultiDict, session: Session, submission_id: int,
         raise BadRequest(response_data)
 
     try:
-        stat = process_source.start(submission, submitter, client, token)
+        result = process_source.start(submission, submitter, client, token)
     except process_source.FailedToStart as e:
-        alerts.flash_failure(f"We couldn't compile your submission. {SUPPORT}",
-                             title="Compilation failed")
+        alerts.flash_failure(f"We couldn't process your submission. {SUPPORT}",
+                             title="Processing failed")
         logger.error('Error while requesting compilation for %s: %s',
                      submission_id, e)
         raise InternalServerError(response_data) from e
 
-    response_data['status'] = stat
-    if stat == process_source.FAILED:
-        alerts.flash_failure(f"Compilation failed")
+    response_data['status'] = result.status
+    response_data.update(**result.extra)
+
+    if result.status == process_source.FAILED:
+        alerts.flash_failure(f"Processing failed")
     else:
         alerts.flash_success(
-            "We are compiling your submission. This may take a minute or two."
+            "We are processing your submission. This may take a minute or two."
             " This page will refresh automatically every 5 seconds. You can "
             " also refresh this page manually to check the current status. ",
-            title="Compilation started"
+            title="Processing started"
         )
     redirect = url_for('ui.file_process', submission_id=submission_id)
     return response_data, status.SEE_OTHER, {'Location': redirect}
@@ -224,6 +216,7 @@ def start_compilation(params: MultiDict, session: Session, submission_id: int,
 
 def file_preview(params, session: Session, submission_id: int, token: str,
                  **kwargs: Any) -> Tuple[io.BytesIO, int, Dict[str, str]]:
+    """Serve the PDF preview for a submission."""
     submitter, client = user_and_client_from_session(session)
     submission, submission_events = load_submission(submission_id)
     p = PreviewService.current_session()

@@ -1,17 +1,18 @@
 """Utilities for routes."""
 
-from typing import Optional, Callable
+from http import HTTPStatus as status
 from functools import wraps
+from typing import Optional, Callable
 
 from flask import Response, request, redirect, url_for, session
 from werkzeug.exceptions import BadRequest
 
-from http import HTTPStatus as status
 from arxiv.base import alerts, logging
 from arxiv.base.globals import get_application_global
+from arxiv.submission.domain import Submission
+
 from .domain.workflow import Stage, Workflow, SubmissionWorkflow, \
     ReplacementWorkflow
-from .domain import Submission
 from .util import load_submission
 
 logger = logging.getLogger(__name__)

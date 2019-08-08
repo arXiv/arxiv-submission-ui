@@ -1,14 +1,13 @@
 # Mock classifier
 
-FROM arxiv/base:0.15.7
+ARG BASE_VERSION=0.16.1
 
-WORKDIR /opt/arxiv
+FROM arxiv/base:${BASE_VERSION}
 
-# MySQL is needed for the arxiv-auth package.
-RUN yum install -y which mysql mysql-devel
+WORKDIR /opt/arxiv/
 
 # Add Python consumer and configuration.
-RUN pip install -U pip pipenv uwsgi
+RUN pip install -U pip pipenv uwsgi && pipenv install flask uwsgi --skip-lock && rm -rf ~/.cache/pip
 RUN pipenv install flask uwsgi
 
 ADD mock_classifier.py /opt/arxiv/

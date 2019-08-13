@@ -235,7 +235,7 @@ def compilation_log(params, session: Session, submission_id: int, token: str,
     try:
         log = Compiler.get_log(submission.source_content.identifier, checksum,
                                token)
-        headers = {'Content-Type': log.content_type}
+        headers = {'Content-Type': log.content_type, 'ETag': checksum}
         return log.stream, status.OK, headers
     except exceptions.NotFound:
         raise NotFound("No log output produced")

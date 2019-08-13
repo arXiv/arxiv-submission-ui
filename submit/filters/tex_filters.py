@@ -1,6 +1,7 @@
 """Filters for highlighting autotex log files."""
 
 import re
+import html
 
 TEX = 'tex'
 LATEX = 'latex'
@@ -90,7 +91,7 @@ def compilation_log_display(autotex_log: str, submission_id: int, compilation_st
     disable_markup = []
 
     success_last_engine = ''
-    succees_last_run = ''
+    success_last_run = ''
 
     for run in hits:
         (engine, run) = run
@@ -252,6 +253,9 @@ def compilation_log_display(autotex_log: str, submission_id: int, compilation_st
     markup_enabled = True
 
     for line in line_by_line:
+
+        # Escape any HTML contained in the log
+        line = html.escape(line)
 
         # Disable markup for TeX runs we do not want to markup
         for regex in disable_markup:

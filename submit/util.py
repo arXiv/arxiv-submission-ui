@@ -7,13 +7,14 @@ from retry import retry
 
 from arxiv.base import logging
 from arxiv.base.globals import get_application_global
+from arxiv.submission.services.classic.exceptions import Unavailable
 import arxiv.submission as events
 
 logger = logging.getLogger(__name__)
 logger.propagate = False
 
 
-@retry(tries=3, delay=0.25, backoff=3)
+@retry(tries=5, delay=0.5, backoff=3, exceptions=Unavailable)
 def load_submission(submission_id: Optional[int]) \
         -> Tuple[events.domain.Submission, List[events.domain.Event]]:
     """

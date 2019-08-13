@@ -418,11 +418,11 @@ def file_preview(submission_id: int) -> Response:
         submission_id,
         request.environ['token']
     )
-    response = send_file(data, mimetype=headers['Content-Type'])
-    response.headers['Content-Length'] = len(data)  # type: ignore
-    response.headers['Cache-Control'] = 'no-store'
-    print(response.headers)
-    return response
+    rv = send_file(data, mimetype=headers['Content-Type'], cache_timeout=0)
+    rv.set_etag(headers['ETag'])
+    rv.headers['Content-Length'] = len(data)  # type: ignore
+    rv.headers['Cache-Control'] = 'no-store'
+    return rv
 
 
 @ui.route(path('compilation_log'), methods=["GET"])
@@ -435,9 +435,10 @@ def compilation_log(submission_id: int) -> Response:
          submission_id,
         request.environ['token']
     )
-    response = send_file(data, mimetype=headers['Content-Type'])
+    rv = send_file(data, mimetype=headers['Content-Type'], cache_timeout=0)
+    rv.set_etag(headers['ETag'])
     response.headers['Cache-Control'] = 'no-store'
-    return response
+    return rv
 
 
 @workflow_route(workflow.Metadata)

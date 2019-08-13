@@ -320,7 +320,9 @@ class Workflow:
     def can_proceed_to(self, stage: Optional[BaseStage]) -> bool:
         """Determine whether the user can proceed to a stage."""
         return self.is_done(self.previous_stage(stage)) \
-            or self.previous_stage(stage).is_optional() \
+            or (self.previous_stage(stage).is_optional()
+                and all(map(self.is_done,
+                            self.iter_prior(self.previous_stage(stage))))) \
             or all(map(self.is_done, self.iter_prior(stage)))
 
     @get_instance

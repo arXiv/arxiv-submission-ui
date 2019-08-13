@@ -11,7 +11,8 @@ from wtforms import Form
 
 from arxiv.users import auth, domain
 from arxiv.submission.domain.submission import SubmissionContent
-from arxiv.submission.domain.uploads import Upload, FileStatus, FileError
+from arxiv.submission.domain.uploads import Upload, FileStatus, FileError, \
+    UploadLifecycleStates, UploadStatus
 from arxiv.submission.services import filemanager
 
 from .. import upload
@@ -98,8 +99,8 @@ class TestUpload(TestCase):
                 completed=datetime.now(),
                 created=datetime.now(),
                 modified=datetime.now(),
-                status=Upload.Status.READY,
-                lifecycle=Upload.LifecycleStates.ACTIVE,
+                status=UploadStatus.READY,
+                lifecycle=UploadLifecycleStates.ACTIVE,
                 locked=False,
                 files=[FileStatus(
                     path='',
@@ -157,8 +158,8 @@ class TestUpload(TestCase):
             completed=datetime.now(),
             created=datetime.now(),
             modified=datetime.now(),
-            status=Upload.Status.READY,
-            lifecycle=Upload.LifecycleStates.ACTIVE,
+            status=UploadStatus.READY,
+            lifecycle=UploadLifecycleStates.ACTIVE,
             locked=False,
             files=[FileStatus(
                 path='',

@@ -27,11 +27,11 @@ from wtforms.validators import DataRequired
 from arxiv.base import logging, alerts
 from arxiv.forms import csrf
 from arxiv.integration.api import exceptions
+from arxiv.submission import save, Submission, User, Client, Event
 from arxiv.submission.services import Filemanager
-from arxiv.submission.domain.uploads import Upload, FileStatus
+from arxiv.submission.domain.uploads import Upload, FileStatus, UploadStatus
 from arxiv.submission.domain.submission import SubmissionContent
-from arxiv.submission import SetUploadPackage, UpdateUploadPackage, save, \
-    Submission, User, Client, Event
+from arxiv.submission.domain.event import SetUploadPackage, UpdateUploadPackage
 from arxiv.submission.exceptions import InvalidEvent, SaveError
 from arxiv.users.domain import Session
 
@@ -507,19 +507,19 @@ def _new_upload(params: MultiDict, pointer: FileStorage, session: Session,
 
     submission = _update(form, submission, stat, submitter, client, rdata)
     converted_size = tidy_filesize(stat.size)
-    if stat.status is Upload.Status.READY:
+    if stat.status is UploadStatus.READY:
         alerts.flash_success(
             f'Unpacked {stat.file_count} files. Total submission'
             f' package size is {converted_size}',
             title='Upload successful'
         )
-    elif stat.status is Upload.Status.READY_WITH_WARNINGS:
+    elif stat.status is UploadStatus.READY_WITH_WARNINGS:
         alerts.flash_warning(
             f'Unpacked {stat.file_count} files. Total submission'
             f' package size is {converted_size}. See below for warnings.',
             title='Upload complete, with warnings'
         )
-    elif stat.status is Upload.Status.ERRORS:
+    elif stat.status is UploadStatus.ERRORS:
         alerts.flash_warning(
             f'Unpacked {stat.file_count} files. Total submission'
             f' package size is {converted_size}. See below for errors.',
@@ -608,19 +608,19 @@ def _new_file(params: MultiDict, pointer: FileStorage, session: Session,
 
     submission = _update(form, submission, stat, submitter, client, rdata)
     converted_size = tidy_filesize(stat.size)
-    if stat.status is Upload.Status.READY:
+    if stat.status is UploadStatus.READY:
         alerts.flash_success(
             f'Uploaded {pointer.filename} successfully. Total submission'
             f' package size is {converted_size}',
             title='Upload successful'
         )
-    elif stat.status is Upload.Status.READY_WITH_WARNINGS:
+    elif stat.status is UploadStatus.READY_WITH_WARNINGS:
         alerts.flash_warning(
             f'Uploaded {pointer.filename} successfully. Total submission'
             f' package size is {converted_size}. See below for warnings.',
             title='Upload complete, with warnings'
         )
-    elif stat.status is Upload.Status.ERRORS:
+    elif stat.status is UploadStatus.ERRORS:
         alerts.flash_warning(
             f'Uploaded {pointer.filename} successfully. Total submission'
             f' package size is {converted_size}. See below for errors.',
@@ -689,7 +689,7 @@ def _get_notifications(stat: Upload) -> List[Dict[str, str]]:
     notifications = []
     if not stat.files:   # Nothing in the upload workspace.
         return notifications
-    if stat.status is Upload.Status.ERRORS:
+    if stat.status is UploadStatus.ERRORS:
         notifications.append({
             'title': 'Unresolved errors',
             'severity': 'danger',
@@ -697,7 +697,7 @@ def _get_notifications(stat: Upload) -> List[Dict[str, str]]:
                     ' files. Please correct the errors below before'
                     ' proceeding.'
         })
-    elif stat.status is Upload.Status.READY_WITH_WARNINGS:
+    elif stat.status is UploadStatus.READY_WITH_WARNINGS:
         notifications.append({
             'title': 'Warnings',
             'severity': 'warning',

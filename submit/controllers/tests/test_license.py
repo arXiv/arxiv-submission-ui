@@ -1,17 +1,19 @@
 """Tests for :mod:`submit.controllers.license`."""
 
+from datetime import timedelta, datetime
+from http import HTTPStatus as status
 from unittest import TestCase, mock
+
+from pytz import timezone
 from werkzeug import MultiDict
 from werkzeug.exceptions import InternalServerError, NotFound, BadRequest
 from wtforms import Form
-from http import HTTPStatus as status
+
 import arxiv.submission as events
-from submit.controllers import license
-
-
-from pytz import timezone
-from datetime import timedelta, datetime
+from arxiv.submission.domain.event import SetLicense
 from arxiv.users import auth, domain
+
+from submit.controllers import license
 
 
 class TestSetLicense(TestCase):
@@ -123,7 +125,7 @@ class TestSetLicense(TestCase):
 
         # Event store does not complain; returns object with `submission_id`
         def raise_on_verify(*ev, **kwargs):
-            if type(ev[0]) is events.SetLicense:
+            if type(ev[0]) is SetLicense:
                 raise events.SaveError('the sky is falling')
             ident = kwargs.get('submission_id', 2)
             return (mock.MagicMock(submission_id=ident), [])

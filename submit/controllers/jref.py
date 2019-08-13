@@ -1,21 +1,21 @@
 """Controller for JREF submissions."""
 
+from http import HTTPStatus as status
 from typing import Tuple, Dict, Any, Optional, List
 
+from flask import url_for, Markup
 from werkzeug import MultiDict
 from werkzeug.exceptions import InternalServerError, NotFound, BadRequest
-
-from flask import url_for, Markup
 from wtforms.fields import TextField, TextAreaField, Field, BooleanField
 from wtforms.validators import InputRequired, ValidationError, optional, \
     DataRequired
 
-from http import HTTPStatus as status
 from arxiv.base import logging, alerts
 from arxiv.forms import csrf
 from arxiv.users.domain import Session
-from arxiv.submission import save, Event, SetDOI, SetJournalReference, \
-    SetReportNumber, User, Client, Submission
+from arxiv.submission import save, Event, User, Client, Submission
+from arxiv.submission.domain.event import SetDOI, SetJournalReference, \
+    SetReportNumber
 from arxiv.submission.exceptions import SaveError
 
 from ..util import load_submission

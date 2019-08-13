@@ -1,5 +1,6 @@
 """Provides controllers used to delete/roll back a submission."""
 
+from http import HTTPStatus as status
 from typing import Optional
 
 from flask import url_for
@@ -7,9 +8,9 @@ from wtforms import BooleanField, validators
 from werkzeug import MultiDict
 from werkzeug.exceptions import BadRequest, InternalServerError, NotFound
 
-from http import HTTPStatus as status
 from arxiv.base import logging, alerts
-from arxiv.submission import Rollback, save, CancelRequest
+from arxiv.submission import save
+from arxiv.submission.domain.event import Rollback, CancelRequest
 from arxiv.submission.domain import WithdrawalRequest, \
     CrossListClassificationRequest, UserRequest
 from arxiv.forms import csrf

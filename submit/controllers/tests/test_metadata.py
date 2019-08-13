@@ -1,16 +1,21 @@
 """Tests for :mod:`submit.controllers.metadata`."""
 
+from datetime import timedelta, datetime
+from http import HTTPStatus as status
 from unittest import TestCase, mock
+
+from pytz import timezone
 from werkzeug import MultiDict
 from werkzeug.exceptions import InternalServerError, BadRequest
 from wtforms import Form
-from http import HTTPStatus as status
-from submit.controllers import metadata
-import arxiv.submission as events
 
-from pytz import timezone
-from datetime import timedelta, datetime
+import arxiv.submission as events
+from arxiv.submission.domain.event import SetTitle, SetAbstract, SetAuthors, \
+    SetReportNumber, SetMSCClassification, SetACMClassification, SetDOI, \
+    SetJournalReference
 from arxiv.users import auth, domain
+
+from submit.controllers import metadata
 
 
 class TestOptional(TestCase):
@@ -124,14 +129,14 @@ class TestOptional(TestCase):
                                                 submission_id)
         self.assertEqual(code, status.OK, "Returns 200 OK")
         event_types = [type(ev) for ev in mock_save.call_args[0]]
-        self.assertIn(events.SetDOI, event_types, "Sets submission DOI")
-        self.assertIn(events.SetJournalReference, event_types,
+        self.assertIn(SetDOI, event_types, "Sets submission DOI")
+        self.assertIn(SetJournalReference, event_types,
                       "Sets journal references")
-        self.assertIn(events.SetReportNumber, event_types,
+        self.assertIn(SetReportNumber, event_types,
                       "Sets report number")
-        self.assertIn(events.SetACMClassification, event_types,
+        self.assertIn(SetACMClassification, event_types,
                       "Sets ACM classification")
-        self.assertIn(events.SetMSCClassification, event_types,
+        self.assertIn(SetMSCClassification, event_types,
                       "Sets MSC classification")
 
     @mock.patch(f'{metadata.__name__}.OptionalMetadataForm.Meta.csrf', False)
@@ -197,8 +202,8 @@ class TestOptional(TestCase):
         self.assertEqual(mock_save.call_count, 1, "Events are generated")
 
         event_types = [type(ev) for ev in mock_save.call_args[0]]
-        self.assertIn(events.SetReportNumber, event_types, "Sets report_num")
-        self.assertIn(events.SetMSCClassification, event_types, "Sets msc")
+        self.assertIn(SetReportNumber, event_types, "Sets report_num")
+        self.assertIn(SetMSCClassification, event_types, "Sets msc")
         self.assertEqual(len(event_types), 2, "Only two events are generated")
 
 
@@ -289,9 +294,9 @@ class TestMetadata(TestCase):
         self.assertEqual(code, status.OK, "Returns 200 OK")
 
         event_types = [type(ev) for ev in mock_save.call_args[0]]
-        self.assertIn(events.SetTitle, event_types, "Sets submission title")
-        self.assertIn(events.SetAbstract, event_types, "Sets abstract")
-        self.assertIn(events.SetAuthors, event_types, "Sets authors")
+        self.assertIn(SetTitle, event_types, "Sets submission title")
+        self.assertIn(SetAbstract, event_types, "Sets abstract")
+        self.assertIn(SetAuthors, event_types, "Sets authors")
 
     @mock.patch(f'{metadata.__name__}.CoreMetadataForm.Meta.csrf', False)
     @mock.patch(f'{metadata.__name__}.save')
@@ -346,7 +351,7 @@ class TestMetadata(TestCase):
                                        submission_id)
         self.assertEqual(code, status.OK, "Returns 200 OK")
         self.assertEqual(mock_save.call_count, 1, "One event is generated")
-        self.assertIsInstance(mock_save.call_args[0][0], events.SetTitle,
+        self.assertIsInstance(mock_save.call_args[0][0], SetTitle,
                               "SetTitle is generated")
 
     @mock.patch(f'{metadata.__name__}.CoreMetadataForm.Meta.csrf', False)

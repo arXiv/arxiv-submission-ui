@@ -432,7 +432,7 @@ def compilation_log(submission_id: int) -> Response:
     data, code, headers = controllers.compilation_log(
         MultiDict(request.args.items(multi=True)),
         request.auth,
-        submission_id,
+         submission_id,
         request.environ['token']
     )
     response = send_file(data, mimetype=headers['Content-Type'])

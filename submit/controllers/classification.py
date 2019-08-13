@@ -18,7 +18,7 @@ from arxiv.submission.domain import Submission
 from arxiv.submission import save
 from arxiv.submission.exceptions import InvalidEvent, SaveError
 from arxiv.users.domain import Session
-from arxiv.submission import RemoveSecondaryClassification, \
+from arxiv.submission.domain.event import RemoveSecondaryClassification, \
     AddSecondaryClassification, SetPrimaryClassification
 
 from .util import validate_command, OptGroupSelectField, \

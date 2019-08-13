@@ -3,20 +3,20 @@ Controller for policy action.
 
 Creates an event of type `core.events.event.ConfirmPolicy`
 """
-
+from http import HTTPStatus as status
 from typing import Tuple, Dict, Any
 
+from flask import url_for
 from werkzeug import MultiDict
 from werkzeug.exceptions import InternalServerError, BadRequest
-from flask import url_for
 from wtforms import BooleanField
 from wtforms.validators import InputRequired
 
-from http import HTTPStatus as status
 from arxiv.forms import csrf
 from arxiv.base import logging
 from arxiv.users.domain import Session
-from arxiv.submission import save, SaveError, ConfirmPolicy
+from arxiv.submission import save, SaveError
+from arxiv.submission.domain.event import ConfirmPolicy
 
 from ..util import load_submission
 from .util import validate_command, user_and_client_from_session

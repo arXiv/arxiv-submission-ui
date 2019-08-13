@@ -1,16 +1,19 @@
 """Tests for :mod:`submit.controllers.authorship`."""
 
+from datetime import timedelta, datetime
+from http import HTTPStatus as status
 from unittest import TestCase, mock
+
+from pytz import timezone
 from werkzeug import MultiDict
 from werkzeug.exceptions import InternalServerError, NotFound, BadRequest
 from wtforms import Form
-from http import HTTPStatus as status
-import arxiv.submission as events
-from submit.controllers import authorship
 
-from pytz import timezone
-from datetime import timedelta, datetime
+import arxiv.submission as events
+from arxiv.submission.domain.event import ConfirmAuthorship
 from arxiv.users import auth, domain
+
+from submit.controllers import authorship
 
 
 class TestVerifyAuthorship(TestCase):
@@ -132,7 +135,7 @@ class TestVerifyAuthorship(TestCase):
         mock_load.return_value = (before, [])
 
         def raise_on_verify(*ev, **kwargs):
-            if type(ev[0]) is events.ConfirmAuthorship:
+            if type(ev[0]) is ConfirmAuthorship:
                 raise events.SaveError('The world is ending')
             submission_id = kwargs.get('submission_id', 2)
             return (mock.MagicMock(submission_id=submission_id), [])

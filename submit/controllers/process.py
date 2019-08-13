@@ -25,10 +25,10 @@ from arxiv.forms import csrf
 from arxiv.users.domain import Session
 from arxiv.integration.api import exceptions
 
-from arxiv.submission import save, SaveError, Submission, \
-    ConfirmSourceProcessed
+from arxiv.submission import save, SaveError, Submission
 from arxiv.submission.process import process_source
 from arxiv.submission.domain.compilation import Compilation
+from arxiv.submission.domain.event import ConfirmSourceProcessed
 from arxiv.submission.domain.preview import Preview
 from arxiv.submission.domain.submission import Compilation, SubmissionContent
 from arxiv.submission.services import PreviewService, Compiler

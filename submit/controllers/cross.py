@@ -1,24 +1,24 @@
 """Controller for cross-list requests."""
 
+from http import HTTPStatus as status
 from typing import Tuple, Dict, Any, Optional, List
 
+from flask import url_for, Markup
 from werkzeug import MultiDict
 from werkzeug.exceptions import InternalServerError, NotFound, BadRequest
-
-from flask import url_for, Markup
 from wtforms import Form, widgets
 from wtforms.fields import Field, BooleanField, HiddenField
 from wtforms.validators import InputRequired, ValidationError, optional, \
     DataRequired
 
-from http import HTTPStatus as status
-from arxiv.taxonomy import CATEGORIES_ACTIVE as CATEGORIES
-from arxiv.taxonomy import ARCHIVES_ACTIVE as ARCHIVES
 from arxiv.base import logging, alerts
 from arxiv.forms import csrf
-from arxiv.users.domain import Session
-from arxiv.submission import save, RequestCrossList, Submission
+from arxiv.submission import save, Submission
+from arxiv.submission.domain.event import RequestCrossList
 from arxiv.submission.exceptions import SaveError
+from arxiv.taxonomy import CATEGORIES_ACTIVE as CATEGORIES
+from arxiv.taxonomy import ARCHIVES_ACTIVE as ARCHIVES
+from arxiv.users.domain import Session
 
 from ..util import load_submission
 from .util import user_and_client_from_session, OptGroupSelectField, \

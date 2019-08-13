@@ -1,23 +1,18 @@
 # arXiv submission UI
 
-FROM arxiv/base:latest
+ARG BASE_VERSION=0.16.1
+
+FROM arxiv/base:${BASE_VERSION}
 
 WORKDIR /opt/arxiv/
 
-RUN yum install -y which mariadb-devel sqlite
-ADD Pipfile Pipfile.lock /opt/arxiv/
-RUN pip install -U pip pipenv
-ENV LC_ALL en_US.utf-8
-ENV LANG en_US.utf-8
-
-RUN pipenv install
+COPY Pipfile Pipfile.lock /opt/arxiv/
+RUN pipenv install && rm -rf ~/.cache/pip
 
 ENV PATH "/opt/arxiv:${PATH}"
 
-ADD wsgi.py uwsgi.ini app.py bootstrap.py /opt/arxiv/
-ADD submit/ /opt/arxiv/submit/
-
-ENV APPLICATION_ROOT "/"
+COPY wsgi.py uwsgi.ini app.py bootstrap.py /opt/arxiv/
+COPY submit/ /opt/arxiv/submit/
 
 EXPOSE 8000
 

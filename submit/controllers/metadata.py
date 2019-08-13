@@ -11,9 +11,10 @@ from http import HTTPStatus as status
 from arxiv.forms import csrf
 from arxiv.base import logging
 from arxiv.users.domain import Session
-from arxiv.submission import save, SetTitle, SetAuthors, SetAbstract, \
+from arxiv.submission import save, SaveError, Submission, User, Client, Event
+from arxiv.submission.domain.event import SetTitle, SetAuthors, SetAbstract, \
     SetACMClassification, SetMSCClassification, SetComments, SetReportNumber, \
-    SetJournalReference, SetDOI, SaveError, Submission, User, Client, Event
+    SetJournalReference, SetDOI
 
 from ..util import load_submission
 from .util import validate_command, FieldMixin, user_and_client_from_session

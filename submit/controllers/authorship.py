@@ -4,21 +4,21 @@ Controller for authorship action.
 Creates an event of type `core.events.event.ConfirmAuthorship`
 """
 
+from http import HTTPStatus as status
 from typing import Tuple, Dict, Any, Optional
 
+from flask import url_for
 from werkzeug import MultiDict
 from werkzeug.exceptions import InternalServerError, NotFound, BadRequest
-
-from flask import url_for
 from wtforms import BooleanField, RadioField
 from wtforms.validators import InputRequired, ValidationError, optional
 
-from http import HTTPStatus as status
 from arxiv.base import logging
 from arxiv.forms import csrf
 from arxiv.users.domain import Session
+from arxiv.submission import save
 from arxiv.submission.domain import Submission
-from arxiv.submission import save, ConfirmAuthorship
+from arxiv.submission.domain.event import ConfirmAuthorship
 from arxiv.submission.exceptions import InvalidEvent, SaveError
 
 from ..util import load_submission

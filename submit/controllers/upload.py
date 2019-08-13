@@ -10,34 +10,34 @@ Things that still need to be done:
 
 """
 
-from typing import Tuple, Dict, Any, Optional, List, Union, Mapping
 import traceback
+from collections import OrderedDict
+from http import HTTPStatus as status
+from locale import strxfrm
+from typing import Tuple, Dict, Any, Optional, List, Union, Mapping
+
+from flask import url_for, Markup
 from werkzeug import MultiDict
+from werkzeug.datastructures import FileStorage
 from werkzeug.exceptions import InternalServerError, BadRequest, \
     MethodNotAllowed
-from werkzeug.datastructures import FileStorage
-
-from locale import strxfrm
-from collections import OrderedDict
-
 from wtforms import BooleanField, widgets, HiddenField, FileField
 from wtforms.validators import DataRequired
-from flask import url_for, Markup
 
-from http import HTTPStatus as status
-from arxiv.integration.api import exceptions
 from arxiv.base import logging, alerts
 from arxiv.forms import csrf
+from arxiv.integration.api import exceptions
+from arxiv.submission import save, Submission, User, Client, Event
+from arxiv.submission.services import Filemanager
+from arxiv.submission.domain.uploads import Upload, FileStatus, UploadStatus
 from arxiv.submission.domain.submission import SubmissionContent
-from arxiv.submission import SetUploadPackage, UpdateUploadPackage, save, \
-    Submission, User, Client, UnConfirmCompiledPreview
+from arxiv.submission.domain.event import SetUploadPackage, UpdateUploadPackage
 from arxiv.submission.exceptions import InvalidEvent, SaveError
 from arxiv.users.domain import Session
 
 from .util import validate_command, user_and_client_from_session
 from ..util import load_submission, tidy_filesize
-from ..services import FileManager
-from ..domain import Upload, FileStatus
+
 
 logger = logging.getLogger(__name__)
 
@@ -153,6 +153,7 @@ def delete_all(method: str, params: MultiDict, session: Session,
         logger.debug('Missing auth token')
         raise BadRequest('Missing auth token')
 
+    fm = Filemanager.current_session()
     submission, submission_events = load_submission(submission_id)
     upload_id = submission.source_content.identifier
     submitter, client = user_and_client_from_session(session)
@@ -172,7 +173,7 @@ def delete_all(method: str, params: MultiDict, session: Session,
             raise BadRequest(rdata)
 
         try:
-            stat = FileManager.delete_all(upload_id, token)
+            stat = fm.delete_all(upload_id, token)
         except exceptions.RequestForbidden as e:
             alerts.flash_failure(Markup(
                 'There was a problem authorizing your request. Please try'
@@ -196,15 +197,12 @@ def delete_all(method: str, params: MultiDict, session: Session,
                                       checksum=stat.checksum,
                                       uncompressed_size=stat.size,
                                       source_format=stat.source_format)
-        commands = [command]
-        if submission.submitter_compiled_preview:
-            commands.append(UnConfirmCompiledPreview(creator=submitter))
         if not validate_command(form, command, submission):
             logger.debug('Command validation failed')
             raise BadRequest(rdata)
 
         try:
-            submission, _ = save(*commands, submission_id=submission_id)
+            submission, _ = save(command, submission_id=submission_id)
         except SaveError:
             alerts.flash_failure(Markup(
                 'There was a problem carrying out your request. Please try'
@@ -262,6 +260,7 @@ def delete(method: str, params: MultiDict, session: Session,
         logger.debug('Missing auth token')
         raise BadRequest('Missing auth token')
 
+    fm = Filemanager.current_session()
     submission, submission_events = load_submission(submission_id)
     upload_id = submission.source_content.identifier
     submitter, client = user_and_client_from_session(session)
@@ -286,7 +285,7 @@ def delete(method: str, params: MultiDict, session: Session,
         stat: Optional[Upload] = None
         try:
             file_path = form.file_path.data
-            stat = FileManager.delete_file(upload_id, file_path, token)
+            stat = fm.delete_file(upload_id, file_path, token)
             alerts.flash_success(
                 f'File <code>{form.file_path.data}</code> was deleted'
                 ' successfully', title='Deleted file successfully',
@@ -316,11 +315,8 @@ def delete(method: str, params: MultiDict, session: Session,
             if not validate_command(form, command, submission):
                 logger.debug('Command validation failed')
                 raise BadRequest(rdata)
-            commands = [command]
-            if submission.submitter_compiled_preview:
-                commands.append(UnConfirmCompiledPreview(creator=submitter))
             try:
-                submission, _ = save(*commands, submission_id=submission_id)
+                submission, _ = save(command, submission_id=submission_id)
             except SaveError:
                 alerts.flash_failure(Markup(
                     'There was a problem carrying out your request. Please try'
@@ -373,16 +369,13 @@ def _update(form: UploadForm, submission: Submission, stat: Upload,
     """
     existing_upload = getattr(submission.source_content, 'identifier', None)
 
-    commands = []
+    command: Event
     if existing_upload == stat.identifier:
         command = UpdateUploadPackage(creator=submitter, client=client,
                                       checksum=stat.checksum,
                                       uncompressed_size=stat.size,
                                       compressed_size=stat.compressed_size,
                                       source_format=stat.source_format)
-        commands.append(command)
-        if submission.submitter_compiled_preview:
-            commands.append(UnConfirmCompiledPreview(creator=submitter))
     else:
         command = SetUploadPackage(creator=submitter, client=client,
                                    identifier=stat.identifier,
@@ -390,14 +383,13 @@ def _update(form: UploadForm, submission: Submission, stat: Upload,
                                    compressed_size=stat.compressed_size,
                                    uncompressed_size=stat.size,
                                    source_format=stat.source_format)
-        commands.append(command)
 
     if not validate_command(form, command, submission):
         logger.debug('Command validation failed')
         raise BadRequest(rdata)
 
     try:
-        submission, _ = save(*commands, submission_id=submission.submission_id)
+        submission, _ = save(command, submission_id=submission.submission_id)
     except SaveError:
         alerts.flash_failure(Markup(
             'There was a problem carrying out your request. Please try'
@@ -437,14 +429,15 @@ def _get_upload(params: MultiDict, session: Session, submission: Submission,
         # Nothing to show; should generate a blank-slate upload screen.
         return rdata, status.OK, {}
 
+    fm = Filemanager.current_session()
+
     upload_id = submission.source_content.identifier
     status_data = alerts.get_hidden_alerts('_status')
-
     if type(status_data) is dict and status_data['identifier'] == upload_id:
         stat = Upload.from_dict(status_data)
     else:
         try:
-            stat = FileManager.get_upload_status(upload_id, token)
+            stat = fm.get_upload_status(upload_id, token)
         except exceptions.RequestFailed as e:
             # TODO: handle specific failure cases.
             logger.debug('Failed to get upload status: %s', e)
@@ -489,7 +482,7 @@ def _new_upload(params: MultiDict, pointer: FileStorage, session: Session,
 
     """
     submitter, client = user_and_client_from_session(session)
-    fm = FileManager.current_session()
+    fm = Filemanager.current_session()
 
     # Using a form object provides some extra assurance that this is a legit
     # request; provides CSRF goodies.
@@ -514,19 +507,19 @@ def _new_upload(params: MultiDict, pointer: FileStorage, session: Session,
 
     submission = _update(form, submission, stat, submitter, client, rdata)
     converted_size = tidy_filesize(stat.size)
-    if stat.status is Upload.Status.READY:
+    if stat.status is UploadStatus.READY:
         alerts.flash_success(
             f'Unpacked {stat.file_count} files. Total submission'
             f' package size is {converted_size}',
             title='Upload successful'
         )
-    elif stat.status is Upload.Status.READY_WITH_WARNINGS:
+    elif stat.status is UploadStatus.READY_WITH_WARNINGS:
         alerts.flash_warning(
             f'Unpacked {stat.file_count} files. Total submission'
             f' package size is {converted_size}. See below for warnings.',
             title='Upload complete, with warnings'
         )
-    elif stat.status is Upload.Status.ERRORS:
+    elif stat.status is UploadStatus.ERRORS:
         alerts.flash_warning(
             f'Unpacked {stat.file_count} files. Total submission'
             f' package size is {converted_size}. See below for errors.',
@@ -571,7 +564,7 @@ def _new_file(params: MultiDict, pointer: FileStorage, session: Session,
 
     """
     submitter, client = user_and_client_from_session(session)
-    fm = FileManager.current_session()
+    fm = Filemanager.current_session()
     upload_id = submission.source_content.identifier
 
     # Using a form object provides some extra assurance that this is a legit
@@ -615,19 +608,19 @@ def _new_file(params: MultiDict, pointer: FileStorage, session: Session,
 
     submission = _update(form, submission, stat, submitter, client, rdata)
     converted_size = tidy_filesize(stat.size)
-    if stat.status is Upload.Status.READY:
+    if stat.status is UploadStatus.READY:
         alerts.flash_success(
             f'Uploaded {pointer.filename} successfully. Total submission'
             f' package size is {converted_size}',
             title='Upload successful'
         )
-    elif stat.status is Upload.Status.READY_WITH_WARNINGS:
+    elif stat.status is UploadStatus.READY_WITH_WARNINGS:
         alerts.flash_warning(
             f'Uploaded {pointer.filename} successfully. Total submission'
             f' package size is {converted_size}. See below for warnings.',
             title='Upload complete, with warnings'
         )
-    elif stat.status is Upload.Status.ERRORS:
+    elif stat.status is UploadStatus.ERRORS:
         alerts.flash_warning(
             f'Uploaded {pointer.filename} successfully. Total submission'
             f' package size is {converted_size}. See below for errors.',
@@ -696,7 +689,7 @@ def _get_notifications(stat: Upload) -> List[Dict[str, str]]:
     notifications = []
     if not stat.files:   # Nothing in the upload workspace.
         return notifications
-    if stat.status is Upload.Status.ERRORS:
+    if stat.status is UploadStatus.ERRORS:
         notifications.append({
             'title': 'Unresolved errors',
             'severity': 'danger',
@@ -704,7 +697,7 @@ def _get_notifications(stat: Upload) -> List[Dict[str, str]]:
                     ' files. Please correct the errors below before'
                     ' proceeding.'
         })
-    elif stat.status is Upload.Status.READY_WITH_WARNINGS:
+    elif stat.status is UploadStatus.READY_WITH_WARNINGS:
         notifications.append({
             'title': 'Warnings',
             'severity': 'warning',

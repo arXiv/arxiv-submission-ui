@@ -3,7 +3,7 @@
 {% block title -%}Process Files{%- endblock title %}
 
 {% block extra_head %}
-  {% if status and status.value == "in_progress" %}
+  {% if status and status == "in_progress" %}
   <meta http-equiv="refresh" content="5;url={{ url_for('ui.file_process', submission_id=submission_id) }}" />
   {% endif %}
 {% endblock extra_head %}
@@ -12,10 +12,9 @@
 <form method="POST" action="{{ url_for('ui.file_process', submission_id=submission_id) }}">
   {{ form.csrf_token }}
 
-{% if must_process %}
 <div class="columns">
   <div class="column is-one-third-desktop is-one-half-tablet">
-    {% if not status %}
+    {% if not status or status == "not_started" %}
     <div class="field is-grouped">
       <div class="control">
         <!-- Selecting a preferred compiler is not supported in v0.1
@@ -24,14 +23,14 @@
           {{ form.compiler(**{"aria-labelledby": "compiler"})|safe }}
         </div> -->
 
-        <button class="button is-link" type="submit" value="process" {% if status == "failed" %}disabled=true{% endif %}>Process submission files</button>
+        <button class="button is-link" type="submit" value="process" {% if status == "in_progress" %}disabled=true{% endif %}>Process submission files</button>
       </div>
     </div>
     {% endif %}
 
-    {% if status %}
-      {% if status.value == "in_progress" %}
-      <div id="status-message" data-status="{{ status.value }}" class="message is-warning">
+    {% if status and status != "not_started" %}
+      {% if status == "in_progress" %}
+      <div id="status-message" data-status="{{ status }}" class="message is-warning">
         <div class="message-header">
           <p><span class="icon"><i class="fa fa-tasks"></i></span>Processing Underway</p></div>
         <div class="message-body">
@@ -43,8 +42,8 @@
         </div>
       </div>
 
-      {% elif status.value == "failed" %}
-      <div id="status-message" data-status="{{ status.value }}" class="message is-danger">
+      {% elif status == "failed" %}
+      <div id="status-message" data-status="{{ status }}" class="message is-danger">
         <div class="message-header">
           <p><span class="icon"><i class="fa fa-exclamation-triangle"></i></span>Processing Failed</p></div>
         <div class="message-body">
@@ -61,8 +60,8 @@
         </div>
       </div>
 
-      {% elif status.value == "completed" and warnings %}
-      <div id="status-message" data-status="{{ status.value }}" class="message is-warning">
+      {% elif status == "succeeded" and warnings %}
+      <div id="status-message" data-status="{{ status }}" class="message is-warning">
         <div class="message-header">
           <p><span class="icon"><i class="fa fa-exclamation-triangle"></i></span>Completed With Warnings</p>
         </div>
@@ -81,8 +80,8 @@
         </div>
       </div>
 
-      {% elif status.value == "completed" %}
-      <div id="status-message" data-status="{{ status.value }}" class="message is-success">
+      {% elif status == "succeeded" %}
+      <div id="status-message" data-status="{{ status }}" class="message is-success">
         <div class="message-header">
           <p><span class="icon"><i class="fa fa-check-circle"></i></span>Processing Successful</p></div>
         <div class="message-body">
@@ -98,12 +97,26 @@
         </div>
       </div>
       {% endif %}
+      <div class="message">
+        <div class="message-body">
+            <p class="has-text-centered">
+                          <!-- Selecting a preferred compiler is not supported in v0.1
+                          <label class="label" id="compiler">Compiler: <span class="icon has-text-link"><i class="fa fa-question-circle"></i></span></label>
+                          <div class="select">
+                            {{ form.compiler(**{"aria-labelledby": "compiler"})|safe }}
+                          </div> -->
+
+                <button class="button is-link" type="submit" value="process" {% if status == "in_progress" %}disabled=true{% endif %}>Reprocess</button>
+            </p>
+        </div>
+      </div>
+
     {% endif %}
 
   </div>
 
   <div class="column is-two-thirds-desktop is-one-half-tablet">
-    {% if not status %}
+    {% if not status or status == "not_started" %}
     <div class="message is-info">
       <div class="message-body">
         <p><span class="icon has-text-link"><i class="fa fa-info-circle"></i></span>
@@ -139,7 +152,20 @@
       </div>
       <!-- TODO: don't hard-code this. -->
       <div style="max-height: 50vh; height: 50vh; overflow-y: scroll; color: black; max-width: 100%;">
-        <pre><code class="article">{{ log_output | compilation_log_display(submission.submission_id, status.value) | safe }}</code></pre>
+        <pre><code class="article">{{ log_output | compilation_log_display(submission.submission_id, status) | safe }}</code></pre>
+      </div>
+      <hr />
+      <div class="is-size-7">
+        <p><strong>Key</strong></p>
+        <code><span class="tex-fatal">Severe warnings/errors.</span></code><br/>
+        <code><span class="tex-danger">Warnings deemed important</span></code><br/>
+        <code><span class="tex-warning">General warnings/errors from packages.</span></code><br/>
+        <code><span class="tex-ignore">Warnings/Errors deemed unimportant.</span></code> Example: undefined references in first TeX run.<br/>
+        <code><span class="tex-success">Indicates positive event, does not guarantee overall success</span></code><br/>
+        <code><span class="tex-info">Informational markup</span></code><br/>
+        <code><span class="tex-help">References to arXiv help pages or other documentation.</span></code><br/>
+        <code><span class="tex-suggestion">Recommended solution based on previous experience.</span></code><br/>
+
       </div>
       <!-- Log parsing is not supported in v0.1
       {% if errors %}
@@ -171,18 +197,6 @@
     {% endif %}
   </div>
 </div>
-{% else %}
-<div class="columns">
-  <div class="column is-one-third-desktop">
-    <div id="status-message" data-status="completed" class="message is-success">
-      <div class="message-body">
-        <p class="has-text-weight-bold"><span class="icon"><i class="fa fa-check-circle"></i></span>PDF Processing Completed</p>
-        <p>Before you submit, be sure to check your PDF carefully.</p>
-      </div>
-    </div>
-  </div>
-</div>
-{% endif %}
 
 {{ submit_macros.submit_nav(submission_id) }}
 </form>

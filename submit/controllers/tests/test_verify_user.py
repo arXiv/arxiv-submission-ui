@@ -6,6 +6,7 @@ from werkzeug.exceptions import InternalServerError, BadRequest
 from wtforms import Form
 from http import HTTPStatus as status
 import arxiv.submission as events
+from arxiv.submission.domain.event import ConfirmContactInformation
 from submit.controllers import verify_user
 
 from pytz import timezone
@@ -113,7 +114,7 @@ class TestVerifyUser(TestCase):
 
         # Event store does not complain; returns object with `submission_id`
         def raise_on_verify(*ev, **kwargs):
-            if type(ev[0]) is events.ConfirmContactInformation:
+            if type(ev[0]) is ConfirmContactInformation:
                 raise events.SaveError('not today')
             ident = kwargs.get('submission_id', 2)
             return (mock.MagicMock(submission_id=ident,

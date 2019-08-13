@@ -38,7 +38,7 @@
     {% endif %}
     {% if item.errors %}
         {% for error in item.errors %}
-        <p class="help has-text-weight-bold is-marginless {% if error.error_type == error.Levels.ERROR %}is-danger{% else %}is-warning{% endif %}">
+        <p class="help has-text-weight-bold is-marginless {% if error.error_type == FileErrorLevels.ERROR %}is-danger{% else %}is-warning{% endif %}">
           {{ error.message }}
         </p>
         {% endfor %}
@@ -84,6 +84,13 @@
       <p class="is-marginless help has-text-grey">
         You can upload all your files at once as a single .tar.gz or .zip file, or upload individual files as needed.
       </p>
+      {% if status and status.errors %}
+        {% for error in status.errors %}
+        <p class="help has-text-weight-bold is-marginless {% if error.error_type == FileErrorLevels.ERROR %}is-danger{% else %}is-warning{% endif %}">
+          {{ error.message }}
+        </p>
+        {% endfor %}
+      {% endif %}
 
       {% if status and status.files %}
       <h3>Files currently attached to this submission ({{ status.size|filesizeformat }})</h3>

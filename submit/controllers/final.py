@@ -14,7 +14,8 @@ from http import HTTPStatus as status
 from arxiv.forms import csrf
 from arxiv.base import logging
 from arxiv.users.domain import Session
-from arxiv.submission import save, FinalizeSubmission
+from arxiv.submission import save
+from arxiv.submission.domain.event import FinalizeSubmission
 from arxiv.submission.exceptions import SaveError
 from ..util import load_submission
 from .util import validate_command, user_and_client_from_session

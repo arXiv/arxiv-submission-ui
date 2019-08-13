@@ -1,15 +1,18 @@
 """Provide the controller used to unsubmit/unfinalize a submission."""
 
+from http import HTTPStatus as status
+
 from flask import url_for
 from wtforms import BooleanField, validators
 from werkzeug import MultiDict
 from werkzeug.exceptions import BadRequest, InternalServerError
 
-from http import HTTPStatus as status
 from arxiv.base import alerts
-from arxiv.submission import UnFinalizeSubmission, save
 from arxiv.forms import csrf
+from arxiv.submission import save
+from arxiv.submission.domain.event import UnFinalizeSubmission
 from arxiv.users.domain import Session
+
 from .util import Response, user_and_client_from_session, validate_command
 from ..util import load_submission
 

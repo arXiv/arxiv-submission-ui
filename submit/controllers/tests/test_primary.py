@@ -1,15 +1,18 @@
 """Tests for :mod:`submit.controllers.classification`."""
 
+from datetime import timedelta, datetime
+from http import HTTPStatus as status
 from unittest import TestCase, mock
+
+from pytz import timezone
 from werkzeug import MultiDict
 from werkzeug.exceptions import InternalServerError, NotFound, BadRequest
 from wtforms import Form
-from http import HTTPStatus as status
+
 import arxiv.submission as events
+from arxiv.submission.domain.event import SetPrimaryClassification
 from submit.controllers import classification
 
-from pytz import timezone
-from datetime import timedelta, datetime
 from arxiv.users import auth, domain
 
 
@@ -141,7 +144,7 @@ class TestSetPrimaryClassification(TestCase):
 
         # Event store does not complain; returns object with `submission_id`
         def raise_on_set(*ev, **kwargs):
-            if type(ev[0]) is events.SetPrimaryClassification:
+            if type(ev[0]) is SetPrimaryClassification:
                 raise events.SaveError('never get back')
             ident = kwargs.get('submission_id', 2)
             return (mock.MagicMock(submission_id=ident), [])

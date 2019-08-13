@@ -166,7 +166,7 @@ class Process(BaseStage):
     @staticmethod
     def is_complete(submission: Submission) -> bool:
         """Determine whether the submitter has compiled their upload."""
-        return submission.submitter_compiled_preview
+        return submission.is_source_processed
 
 
 

@@ -6,7 +6,7 @@ x-base-service:
   environment:
     SECRET_KEY: "not secure only use for development"
     FLASK_SECRET: 'what'
-    LOGLEVEL: 20
+    LOGLEVEL: 50
     SESSION_COOKIE_SECURE: 0
     DOCKER_HOST: "unix:///var/run/docker.sock"
     REDIS_ENDPOINT: "submission-ui-redis"
@@ -19,51 +19,9 @@ x-base-service:
     AWS_SECRET_ACCESS_KEY: "${AWS_SECRET_ACCESS_KEY}"
     AWS_ACCESS_KEY_ID: "${AWS_ACCESS_KEY_ID}"
 
-    # Compiler config.
-    CONVERTER_DOCKER_IMAGE: "${CONVERTER_DOCKER_IMAGE}"
-    CONVERTER_IMAGE_PULL: 0
-    DIND_SOURCE_ROOT: "${DIND_SOURCE_ROOT}"
-    AWS_S3_REGION_NAME: "us-east-1"
-    S3_ENDPOINT: "https://submission-localstack:4572"
-    S3_VERIFY: 0
-
-    FILEMANAGER_ENDPOINT: "http://arxiv-filemanager:8000/filemanager/api"
-    FILEMANAGER_CONTENT_PATH: "/{source_id}/content"
-
     UPLOAD_BASE_DIRECTORY: "/data"
 
     VERBOSE_COMPILE: 1
-    JWT_SECRET: "foosecret"
-    CLASSIC_DATABASE_URI: "mysql+mysqldb://foouser:foopass@submission-ui-maria:3306/submission?charset=utf8mb4"
-    FILE_MANAGEMENT_SQLALCHEMY_DATABASE_URI: "mysql+mysqldb://foouser:foopass@filemanager-maria:3306/uploads?charset=utf8mb4"
-
-    COMPILER_ENDPOINT: "http://compiler-api:8000/"
-    COMPILER_VERIFY: 0
-
-    PLAINTEXT_ENDPOINT: "http://plaintext-api:8000/"
-    PLAINTEXT_VERIFY: 0
-
-    # Route e-mail to mailhog.
-    EMAIL_ENABLED: 1
-    SMTP_HOSTNAME: mailhog
-    SMTP_PORT: 1025
-    SMTP_SSL: 0
-    SMTP_USERNAME: ""
-    SMTP_PASSWORD: ""
-
-    # Kinesis events.
-    KINESIS_STREAM: "SubmissionEvents"
-    KINESIS_VERIFY: 0
-    KINESIS_ENDPOINT: "https://submission-localstack:4568"
-    KINESIS_START_TYPE: "TRIM_HORIZON"
-
-    # Async config for the submission agent.
-    SUBMISSION_AGENT_BROKER_URL: "redis://submission-ui-redis:6379/0"
-    SUBMISSION_AGENT_DATABASE_URI: "mysql+mysqldb://foouser:foopass@submission-agent-maria:3306/agent?charset=utf8mb4"
-    # AGENT_DATABASE_HOST: "submission-agent-maria"
-
-    CLASSIFIER_ENDPOINT: "http://mock-classifier:8000"
-    CLASSIFIER_VERIFY: 0
 
     VAULT_ENABLED: "0"
     NAMESPACE: "production"
@@ -73,6 +31,402 @@ x-base-service:
     VAULT_SCHEME: "http"
 
 services:
+
+  filemanager:
+    image: arxiv/filemanager:d313506
+    # You can uncomment these lines to build this from a local
+    # repo. You may need to update `context`.
+    # build:
+    #   context: ../arxiv-filemanager
+    #   dockerfile: Dockerfile
+    environment:
+      JWT_SECRET: "foosecret"
+      LOGLEVEL: 50
+      CLASSIC_DATABASE_URI: "mysql+mysqldb://foouser:foopass@submission-ui-maria:3306/submission?charset=utf8mb4"
+      FILE_MANAGEMENT_SQLALCHEMY_DATABASE_URI: "mysql+mysqldb://foouser:foopass@filemanager-maria:3306/uploads?charset=utf8mb4"
+      STORAGE_BACKEND: 'quarantine'
+      STORAGE_BASE_PATH: '/storage'
+      STORAGE_QUARANTINE_PATH: '/quarantine'
+      VAULT_ENABLED: "0"
+    container_name: arxiv-filemanager
+    command: /bin/bash -c "python bootstrap.py && uwsgi --ini /opt/arxiv/uwsgi.ini"
+    # volumes:
+    #   - ./../arxiv-filemanager/filemanager/:/opt/arxiv/filemanager/
+    networks:
+      - arxiv-submission-ui
+    ports:
+      - "8001:8000"
+    volumes:
+      - fm-base:/storage
+      - fm-quarantine:/quarantine
+    depends_on:
+      - filemanager-maria
+    healthcheck:
+      test: curl --fail -s http://localhost:8000/filemanager/api/status || exit 1
+      interval: 20s
+      timeout: 10s
+      retries: 3
+
+  compiler-api:
+    image: arxiv/compiler:63942bd
+    # You can uncomment these lines to build this from a local
+    # repo. You may need to update `context`.
+    # build:
+    #    context: ../arxiv-compiler
+    #    dockerfile: Dockerfile
+    container_name: arxiv-compiler-api
+    # command: pipenv run flask run -h 0.0.0.0 -p 8100
+    # volumes:
+    #   - ./../arxiv-compiler/compiler/:/opt/arxiv/compiler/
+    environment:
+      LOGLEVEL: 10
+      JWT_SECRET: foosecret
+      REDIS_ENDPOINT: "submission-ui-redis"
+      CONVERTER_DOCKER_IMAGE: "626657773168.dkr.ecr.us-east-1.amazonaws.com/arxiv/converter:0.9"
+      CONVERTER_IMAGE_PULL: 0
+      DIND_SOURCE_ROOT: "${DIND_SOURCE_ROOT}"
+      AWS_S3_REGION_NAME: "us-east-1"
+      AWS_SECRET_ACCESS_KEY: "${AWS_SECRET_ACCESS_KEY}"
+      AWS_ACCESS_KEY_ID: "${AWS_ACCESS_KEY_ID}"
+      S3_ENDPOINT: "https://submission-localstack:4572"
+      S3_VERIFY: 0
+      # Pulls source from the filemanager service.
+      FILEMANAGER_ENDPOINT: "http://arxiv-filemanager:8000/filemanager/api"
+      FILEMANAGER_CONTENT_PATH: "/{source_id}/content"
+      # Don't use Vault.
+      VAULT_ENABLED: "0"
+      NAMESPACE: "development"
+      # Wait for upstream services to be available on startup.
+      WAIT_FOR_SERVICES: 1
+      WAIT_ON_STARTUP: 5
+      WAIT_FOR_WORKER: 1
+      VERBOSE_COMPILE: 1
+    ports:
+      - 8100:8000
+    depends_on:
+      - submission-localstack
+      - compiler-worker
+      - submission-ui-redis
+    networks:
+      - arxiv-submission-ui
+    healthcheck:
+      test: curl --fail -s http://localhost:8000/status || exit 1
+      interval: 20s
+      timeout: 10s
+      retries: 3
+
+  compiler-worker:
+    image: arxiv/compiler:63942bd
+    # You can uncomment these lines to build this from a local
+    # repo. You may need to update `context`.
+    # build:
+    #    context: ../arxiv-compiler
+    #    dockerfile: Dockerfile
+    environment:
+      LOGLEVEL: 10
+      JWT_SECRET: foosecret
+      NAMESPACE: "development"
+      REDIS_ENDPOINT: "submission-ui-redis"
+      CONVERTER_DOCKER_IMAGE: "626657773168.dkr.ecr.us-east-1.amazonaws.com/arxiv/converter:0.9"
+      CONVERTER_IMAGE_PULL: 0
+      DIND_SOURCE_ROOT: "${DIND_SOURCE_ROOT}"
+      AWS_S3_REGION_NAME: "us-east-1"
+      AWS_SECRET_ACCESS_KEY: "${AWS_SECRET_ACCESS_KEY}"
+      AWS_ACCESS_KEY_ID: "${AWS_ACCESS_KEY_ID}"
+      S3_ENDPOINT: "https://submission-localstack:4572"
+      S3_VERIFY: 0
+      # Pulls source from the filemanager service.
+      FILEMANAGER_ENDPOINT: "http://arxiv-filemanager:8000/filemanager/api"
+      FILEMANAGER_CONTENT_PATH: "/{source_id}/content"
+      WAIT_FOR_SERVICES: 1
+      WAIT_ON_STARTUP: 5
+      VERBOSE_COMPILE: 1
+    container_name: arxiv-compiler-worker
+    command: celery worker -A compiler.worker.celery_app --loglevel=INFO -E --concurrency=2
+    # volumes:
+    #   - ./../arxiv-compiler/compiler/:/opt/arxiv/compiler/
+    volumes:
+      - "${DIND_SOURCE_ROOT}:/tmp"
+      - /var/run/docker.sock:/var/run/docker.sock
+    depends_on:
+      - submission-localstack
+      - submission-ui-redis
+    networks:
+      - arxiv-submission-ui
+
+  submission-worker:
+    image: arxiv/submission-agent:2c83801
+    command: "/bin/bash -c 'python -m agent.bootstrap && celery worker -A agent.worker.worker_app --loglevel=INFO -E --concurrency=2'"
+    container_name: arxiv-submission-worker
+    environment:
+      VAULT_ENABLED: "0"
+      NAMESPACE: "development"
+      LOGLEVEL: 40
+      JWT_SECRET: foosecret
+      WAIT_FOR_SERVICES: 1
+      WAIT_ON_STARTUP: 5
+      REDIS_ENDPOINT: "submission-ui-redis"
+      FILEMANAGER_ENDPOINT: "http://arxiv-filemanager:8000/filemanager/api"
+      FILEMANAGER_CONTENT_PATH: "/{source_id}/content"
+      COMPILER_ENDPOINT: "http://compiler-api:8000/"
+      COMPILER_VERIFY: 0
+      PLAINTEXT_ENDPOINT: "http://plaintext-api:8000/"
+      PLAINTEXT_VERIFY: 0
+      PREVIEW_ENDPOINT: 'http://submission-preview:8000/'
+      PREVIEW_VERIFY: 0
+      FILESYSTEM_ENDPOINT: 'http://filesystem:8000/'
+      FILESYSTEM_VERIFY: 0
+      # CLASSIFIER_ENDPOINT: "http://mock-classifier:8000"
+      CLASSIFIER_SERVICE_HOST: mock-classifier
+      CLASSIFIER_SERVICE_PORT: 8000
+      CLASSIFIER_PORT_8000_PROTO: http
+      CLASSIFIER_PATH: classifier/
+      CLASSIFIER_VERIFY: 0
+      # Kinesis events.
+      KINESIS_STREAM: "SubmissionEvents"
+      KINESIS_VERIFY: 0
+      KINESIS_ENDPOINT: "https://submission-localstack:4568"
+      KINESIS_START_TYPE: "TRIM_HORIZON"
+      # Async config for the submission agent.
+      SUBMISSION_AGENT_BROKER_URL: "redis://submission-ui-redis:6379/0"
+      SUBMISSION_AGENT_DATABASE_URI: "mysql+mysqldb://foouser:foopass@submission-agent-maria:3306/agent?charset=utf8mb4"
+      # AGENT_DATABASE_HOST: "submission-agent-maria"
+      # Route e-mail to mailhog.
+      EMAIL_ENABLED: 1
+      SMTP_HOSTNAME: mailhog
+      SMTP_PORT: 1025
+      SMTP_SSL: 0
+      SMTP_USERNAME: ""
+      SMTP_PASSWORD: ""
+    volumes:
+      - "${DIND_SOURCE_ROOT}:/tmp"
+      - /var/run/docker.sock:/var/run/docker.sock
+    depends_on:
+      - submission-ui-redis
+      - submission-agent-maria
+      - submission-localstack
+      - plaintext-api
+      - mock-classifier
+    networks:
+      - arxiv-submission-ui
+
+  submission-agent:
+    image: arxiv/submission-agent:2c83801
+    container_name: arxiv-submission-agent
+    command: "/bin/bash -c 'python -m agent.bootstrap && python -m agent.consumer'"
+    environment:
+      VAULT_ENABLED: "0"
+      NAMESPACE: "development"
+      LOGLEVEL: 50
+      JWT_SECRET: foosecret
+
+      WAIT_FOR_SERVICES: 1
+      WAIT_ON_STARTUP: 5
+
+      REDIS_ENDPOINT: "submission-ui-redis"
+
+      FILEMANAGER_ENDPOINT: "http://arxiv-filemanager:8000/filemanager/api"
+      FILEMANAGER_CONTENT_PATH: "/{source_id}/content"
+
+      COMPILER_ENDPOINT: "http://compiler-api:8000/"
+      COMPILER_VERIFY: 0
+
+      PLAINTEXT_ENDPOINT: "http://plaintext-api:8000/"
+      PLAINTEXT_VERIFY: 0
+
+      PREVIEW_ENDPOINT: 'http://submission-preview:8000/'
+      PREVIEW_VERIFY: 0
+
+      FILESYSTEM_ENDPOINT: 'http://filesystem:8000/'
+      FILESYSTEM_VERIFY: 0
+
+      # Kinesis events.
+      KINESIS_STREAM: "SubmissionEvents"
+      KINESIS_VERIFY: 0
+      KINESIS_ENDPOINT: "https://submission-localstack:4568"
+      KINESIS_START_TYPE: "TRIM_HORIZON"
+
+      # Async config for the submission agent.
+      SUBMISSION_AGENT_BROKER_URL: "redis://submission-ui-redis:6379/0"
+      SUBMISSION_AGENT_DATABASE_URI: "mysql+mysqldb://foouser:foopass@submission-agent-maria:3306/agent?charset=utf8mb4"
+      # AGENT_DATABASE_HOST: "submission-agent-maria"
+
+      # Route e-mail to mailhog.
+      EMAIL_ENABLED: 1
+      SMTP_HOSTNAME: mailhog
+      SMTP_PORT: 1025
+      SMTP_SSL: 0
+      SMTP_USERNAME: ""
+      SMTP_PASSWORD: ""
+    volumes:
+      - "${DIND_SOURCE_ROOT}:/tmp"
+      - /var/run/docker.sock:/var/run/docker.sock
+    depends_on:
+      - submission-ui-redis
+      - submission-agent-maria
+      - submission-localstack
+      - submission-worker
+    networks:
+      - arxiv-submission-ui
+
+  submission-ui:
+    image: arxiv/submission-ui
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        BASE_VERSION: 0.16.1
+    container_name: arxiv-submission-ui
+    environment:
+      VAULT_ENABLED: "0"
+      NAMESPACE: "development"
+      LOGLEVEL: 10
+      JWT_SECRET: foosecret
+      SESSION_COOKIE_SECURE: 0
+      CLASSIC_DATABASE_URI: "mysql+mysqldb://foouser:foopass@submission-ui-maria:3306/submission?charset=utf8mb4"
+      WAIT_FOR_SERVICES: 1
+      WAIT_ON_STARTUP: 5
+      FILEMANAGER_ENDPOINT: "http://arxiv-filemanager:8000/filemanager/api"
+      FILEMANAGER_CONTENT_PATH: "/{source_id}/content"
+      COMPILER_ENDPOINT: "http://compiler-api:8000/"
+      COMPILER_VERIFY: 0
+      PREVIEW_ENDPOINT: 'http://submission-preview:8000/'
+      PREVIEW_VERIFY: 0
+      # Kinesis events.
+      KINESIS_STREAM: "SubmissionEvents"
+      KINESIS_VERIFY: 0
+      KINESIS_ENDPOINT: "https://submission-localstack:4568"
+      KINESIS_START_TYPE: "TRIM_HORIZON"
+    command: /bin/bash -c 'python bootstrap.py && uwsgi --http-socket :8000 -M -t 3000 --buffer-size 65535 --manage-script-name --wsgi-disable-file-wrapper --processes 8 --threads 1 --async 100 --ugreen  --mount /=wsgi.py --logformat "%(addr) %(addr) - %(user_id)|%(session_id) [%(rtime)] [%(uagent)] \"%(method) %(uri) %(proto)\" %(status) %(size) %(micros) %(ttfb)"'
+    # command: flask run -p 8000 -h 0.0.0.0
+    # volumes:
+    #   - ./submit/:/opt/arxiv/submit/
+    ports:
+      - 8000:8000
+    depends_on:
+      - submission-localstack
+      - compiler-api
+      - filemanager
+    networks:
+      - arxiv-submission-ui
+    healthcheck:
+      test: curl --fail -s http://localhost:8000/status || exit 1
+      interval: 20s
+      timeout: 10s
+      retries: 3
+
+  submission-preview:
+    image: arxiv/preview:4c4e282
+    container_name: preview
+    networks:
+      - arxiv-submission-ui
+    environment:
+      S3_ENDPOINT: "https://submission-localstack:4572"
+      S3_VERIFY: 0
+      NAMESPACE: "development"
+      LOGLEVEL: 10
+      JWT_SECRET: foosecret
+    ports:
+      - "9001:8000"
+    depends_on:
+      - submission-localstack
+    healthcheck:
+      test: curl --fail -s http://localhost:8000/status || exit 1
+      interval: 20s
+      timeout: 10s
+      retries: 3
+
+  legacy-filesystem:
+    image: arxiv/legacy-filesystem:8c46780
+    container_name: filesystem
+    networks:
+      - arxiv-submission-ui
+    volumes:
+      - legacy:/submissions
+    environment:
+      LEGACY_FILESYSTEM_ROOT: /submissions
+      LOGLEVEL: 50
+      JWT_SECRET: foosecret
+    ports:
+      - "9002:8000"
+    healthcheck:
+      test: curl --fail -s http://localhost:8000/status || exit 1
+      interval: 20s
+      timeout: 10s
+      retries: 3
+
+
+  plaintext-worker:
+    image: arxiv/plaintext:57ca616
+    container_name: plaintext-worker
+    command: ["celery", "worker", "-A", "fulltext.worker.celery_app", "--loglevel=INFO", "-E", "--concurrency=1"]
+    environment:
+      REDIS_ENDPOINT: "submission-ui-redis:6379"
+      AWS_ACCESS_KEY_ID: "foo"
+      AWS_SECRET_ACCESS_KEY: "bar"
+      # KINESIS_VERIFY: ""
+      # KINESIS_ENDPOINT: "plaintext-test-redis:4568"
+      LOGLEVEL: 50
+
+      PREVIEW_ENDPOINT: 'http://submission-preview:8000/'
+      PREVIEW_VERIFY: 0
+
+      CANONICAL_AWAIT: 0
+
+      DOCKER_HOST: "unix:///var/run/docker.sock"
+      VAULT_ENABLED: "0"
+      NAMESPACE: "development"
+      KUBE_TOKEN: "fookubetoken"
+      WAIT_FOR_SERVICES: 1
+      WAIT_ON_STARTUP: 5
+
+    volumes:
+      # - docker:/var/lib/docker
+      # - docker-run:/var/run
+      - pdfs:/pdfs
+      - data:/data
+      - /var/run/docker.sock:/var/run/docker.sock
+    depends_on:
+      - submission-ui-redis
+    networks:
+      - arxiv-submission-ui
+
+  plaintext-api:
+    image: arxiv/plaintext:57ca616
+    container_name: plaintext-api
+    command: ["uwsgi", "--ini", "/opt/arxiv/uwsgi.ini"]
+    environment:
+      VAULT_ENABLED: "0"
+      LOGLEVEL: 50
+      JWT_SECRET: foosecret
+      REDIS_ENDPOINT: "submission-ui-redis:6379"
+      AWS_ACCESS_KEY_ID: "foo"
+      AWS_SECRET_ACCESS_KEY: "bar"
+      # KINESIS_VERIFY: ""
+      # KINESIS_ENDPOINT: "plaintext-test-redis:4568"
+
+      PREVIEW_ENDPOINT: 'http://submission-preview:8000/'
+      PREVIEW_VERIFY: 0
+
+      CANONICAL_AWAIT: 0
+
+      NAMESPACE: "development"
+      KUBE_TOKEN: "fookubetoken"
+      WAIT_FOR_SERVICES: 1
+      WAIT_ON_STARTUP: 5
+    volumes:
+      - data:/data
+    depends_on:
+      - submission-ui-redis
+      - plaintext-worker
+    networks:
+      - arxiv-submission-ui
+    healthcheck:
+      test: curl --fail -s http://localhost:8000/status || exit 1
+      interval: 20s
+      timeout: 10s
+      retries: 3
+
   mailhog:
     image: mailhog/mailhog
     container_name: mailhog
@@ -122,8 +476,8 @@ services:
       MYSQL_ROOT_PASSWORD: foorootpassword
       MYSQL_DATABASE: agent
     command: ["mysqld", "--character-set-server=utf8mb4", "--collation-server=utf8mb4_unicode_ci"]
-    # logging:
-    #   driver: none
+    logging:
+      driver: none
 
   filemanager-maria:
     image: mariadb:10.3
@@ -139,25 +493,19 @@ services:
     logging:
       driver: none
 
-  filemanager:
-    << : *base-service
-    image: arxiv/filemanager:f4d3f277e8870db29691f2a79bdd4904a86e39ab
-    # You can uncomment these lines to build this from a local
-    # repo. You may need to update `context`.
-    # build:
-    #   context: ../arxiv-filemanager
-    #   dockerfile: Dockerfile
-    container_name: arxiv-filemanager
-    # volumes:
-    #   - ./../arxiv-filemanager/filemanager/:/opt/arxiv/filemanager/
+  mock-classifier:
+    image: arxiv/mock-classifier
+    build:
+      context: .
+      dockerfile: Dockerfile-mock-classifier
+    container_name: mock-classifier
     networks:
       - arxiv-submission-ui
-    ports:
-      - "8001:8000"
-    volumes:
-      - upload-data:/data
-    depends_on:
-      - mock-vault
+    healthcheck:
+      test: curl --fail -s http://localhost:8000/status || exit 1
+      interval: 20s
+      timeout: 10s
+      retries: 3
 
   submission-localstack:
     image: atlassianlabs/localstack
@@ -173,215 +521,6 @@ services:
     logging:
       driver: none
 
-  compiler-api:
-    << : *base-service
-    image: arxiv/compiler:764eaae3f1e750e2ec8adc93e7d9ba507db319f8
-    # You can uncomment these lines to build this from a local
-    # repo. You may need to update `context`.
-    # build:
-    #    context: ../arxiv-compiler
-    #    dockerfile: Dockerfile
-    container_name: arxiv-compiler-api
-    # command: pipenv run flask run -h 0.0.0.0 -p 8100
-    # volumes:
-    #   - ./../arxiv-compiler/compiler/:/opt/arxiv/compiler/
-    ports:
-      - 8100:8000
-    depends_on:
-      - submission-localstack
-      - compiler-worker
-      - mock-vault
-    networks:
-      - arxiv-submission-ui
-
-  compiler-worker:
-    << : *base-service
-    image: arxiv/compiler:764eaae3f1e750e2ec8adc93e7d9ba507db319f8
-    # You can uncomment these lines to build this from a local
-    # repo. You may need to update `context`.
-    # build:
-    #    context: ../arxiv-compiler
-    #    dockerfile: Dockerfile
-    container_name: arxiv-compiler-worker
-    command: /opt/arxiv/start_worker.sh -A compiler.worker.celery_app --loglevel=INFO -E --concurrency=2
-    # volumes:
-    #   - ./../arxiv-compiler/compiler/:/opt/arxiv/compiler/
-    volumes:
-      - "${DIND_SOURCE_ROOT}:/tmp"
-      - /var/run/docker.sock:/var/run/docker.sock
-    depends_on:
-      - submission-localstack
-      - mock-vault
-    networks:
-      - arxiv-submission-ui
-
-  submission-worker:
-    << : *base-service
-    image: arxiv/submission-worker:bb0a8c1c8a188674fd4453f974c7b59e56e195d9
-    container_name: arxiv-submission-worker
-    volumes:
-      - "${DIND_SOURCE_ROOT}:/tmp"
-      - /var/run/docker.sock:/var/run/docker.sock
-    depends_on:
-      - submission-ui-redis
-      - mock-vault
-    networks:
-      - arxiv-submission-ui
-
-  submission-agent:
-    << : *base-service
-    image: arxiv/submission-agent:bb0a8c1c8a188674fd4453f974c7b59e56e195d9
-    container_name: arxiv-submission-agent
-    volumes:
-      - "${DIND_SOURCE_ROOT}:/tmp"
-      - /var/run/docker.sock:/var/run/docker.sock
-    depends_on:
-      - submission-ui-redis
-      - submission-agent-maria
-      - submission-localstack
-      - mock-vault
-    networks:
-      - arxiv-submission-ui
-
-  # This just runs once at the beginning to set up the database, then exits 0.
-  submission-bootstrap:
-    << : *base-service
-    image: arxiv/submission-ui
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: submission-bootstrap
-    command: python bootstrap.py
-    depends_on:
-      - submission-localstack
-      - mock-vault
-    networks:
-      - arxiv-submission-ui
-
-  filemanager-bootstrap:
-    << : *base-service
-    image: arxiv/filemanager:f4d3f277e8870db29691f2a79bdd4904a86e39ab
-    container_name: filemanager-bootstrap
-    command: python bootstrap.py
-    depends_on:
-      - submission-localstack
-      - mock-vault
-    networks:
-      - arxiv-submission-ui
-
-  submission-ui:
-    << : *base-service
-    image: arxiv/submission-ui
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: arxiv-submission-ui
-    command: uwsgi --http-socket :8000 -M -t 3000 --buffer-size 65535 --manage-script-name --wsgi-disable-file-wrapper --processes 8 --threads 1 --async 100 --ugreen  --mount /=wsgi.py --logformat "%(addr) %(addr) - %(user_id)|%(session_id) [%(rtime)] [%(uagent)] \"%(method) %(uri) %(proto)\" %(status) %(size) %(micros) %(ttfb)"
-    # command: flask run -p 8000 -h 0.0.0.0
-    # volumes:
-    #   - ./submit/:/opt/arxiv/submit/
-    ports:
-      - 8000:8000
-    depends_on:
-      - submission-localstack
-      - submission-bootstrap
-      - compiler-api
-      - filemanager
-      - mock-vault
-    networks:
-      - arxiv-submission-ui
-
-  mock-classifier:
-    image: arxiv/mock-classifier
-    build:
-      context: .
-      dockerfile: Dockerfile-mock-classifier
-    container_name: mock-classifier
-    networks:
-      - arxiv-submission-ui
-
-  plaintext-worker:
-    image: arxiv/plaintext-worker:703e8644cf82c09fe99960b6775b0c677f7d1bc5
-    environment:
-      REDIS_ENDPOINT: "submission-ui-redis:6379"
-      AWS_ACCESS_KEY_ID: "foo"
-      AWS_SECRET_ACCESS_KEY: "bar"
-      # KINESIS_VERIFY: ""
-      # KINESIS_ENDPOINT: "plaintext-test-redis:4568"
-      LOGLEVEL: 20
-      COMPILER_ENDPOINT: "http://compiler-api:8000/"
-      COMPILER_VERIFY: 0
-      DOCKER_HOST: "unix:///var/run/docker.sock"
-
-      VAULT_ENABLED: "0"
-      NAMESPACE: "production"
-      KUBE_TOKEN: "fookubetoken"
-      VAULT_HOST: "mock-vault"
-      VAULT_PORT: "8200"
-      VAULT_ROLE: "plaintext"
-      VAULT_CREDENTIAL: "foocredential"
-      VAULT_SCHEME: "http"
-
-      WAIT_FOR_SERVICES: 1
-      WAIT_ON_STARTUP: 5
-
-    volumes:
-      # - docker:/var/lib/docker
-      # - docker-run:/var/run
-      - pdfs:/pdfs
-      - data:/data
-      - /var/run/docker.sock:/var/run/docker.sock
-    depends_on:
-      - submission-ui-redis
-      - mock-vault
-
-    networks:
-      - arxiv-submission-ui
-
-  plaintext-api:
-    image: arxiv/plaintext-api:703e8644cf82c09fe99960b6775b0c677f7d1bc5
-    container_name: plaintext-api
-    environment:
-      REDIS_ENDPOINT: "submission-ui-redis:6379"
-      AWS_ACCESS_KEY_ID: "foo"
-      AWS_SECRET_ACCESS_KEY: "bar"
-      # KINESIS_VERIFY: ""
-      # KINESIS_ENDPOINT: "plaintext-test-redis:4568"
-      LOGLEVEL: 20
-      JWT_SECRET: foosecret
-      COMPILER_ENDPOINT: "http://compiler-api:8000/"
-      COMPILER_VERIFY: 0
-      VAULT_ENABLED: "0"
-      NAMESPACE: "production"
-      KUBE_TOKEN: "fookubetoken"
-      VAULT_HOST: "mock-vault"
-      VAULT_PORT: "8200"
-      VAULT_ROLE: "plaintext"
-      VAULT_CREDENTIAL: "foocredential"
-      VAULT_SCHEME: "http"
-
-      WAIT_FOR_SERVICES: 1
-      WAIT_ON_STARTUP: 5
-    volumes:
-      - data:/data
-    depends_on:
-      - submission-ui-redis
-      - mock-vault
-    networks:
-      - arxiv-submission-ui
-
-  mock-vault:
-    image: arxiv/mock-vault
-    build:
-      context: .
-      dockerfile: Dockerfile-mock-vault
-    container_name: mock-vault
-    environment:
-      JWT_SECRET: foosecret
-    networks:
-      - arxiv-submission-ui
-
-
 networks:
   arxiv-submission-ui:
 
@@ -391,3 +530,6 @@ volumes:
   docker:
   docker-run:
   upload-data:
+  fm-base:
+  fm-quarantine:
+  legacy:

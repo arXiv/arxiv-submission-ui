@@ -1,16 +1,18 @@
 """Tests for :mod:`submit.controllers.policy`."""
 
+from datetime import timedelta, datetime
+from http import HTTPStatus as status
 from unittest import TestCase, mock
+
+from pytz import timezone
 from werkzeug import MultiDict
 from werkzeug.exceptions import InternalServerError, NotFound, BadRequest
 from wtforms import Form
-from http import HTTPStatus as status
-import arxiv.submission as events
-from submit.controllers import policy
 
-from pytz import timezone
-from datetime import timedelta, datetime
+import arxiv.submission as events
+from arxiv.submission.domain.event import ConfirmPolicy
 from arxiv.users import auth, domain
+from submit.controllers import policy
 
 
 class TestConfirmPolicy(TestCase):
@@ -143,7 +145,7 @@ class TestConfirmPolicy(TestCase):
 
         # Event store does not complain; returns object with `submission_id`
         def raise_on_policy(*ev, **kwargs):
-            if type(ev[0]) is events.ConfirmPolicy:
+            if type(ev[0]) is ConfirmPolicy:
                 raise events.SaveError('the end of the world as we know it')
             ident = kwargs.get('submission_id', 2)
             return (mock.MagicMock(submission_id=ident), [])

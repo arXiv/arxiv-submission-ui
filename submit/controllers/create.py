@@ -1,4 +1,6 @@
 """Controller for creating a new submission."""
+
+from http import HTTPStatus as status
 from typing import Optional, Tuple, Dict, Any
 
 from werkzeug import MultiDict
@@ -7,15 +9,17 @@ from werkzeug.exceptions import InternalServerError, BadRequest, \
 from flask import url_for
 from retry import retry
 
-from http import HTTPStatus as status
 from arxiv.forms import csrf
 from arxiv.base import logging
 from arxiv.users.domain import Session, User
 
+from arxiv.submission import save
 from arxiv.submission.domain import Submission
-from arxiv.submission import save, CreateSubmission, CreateSubmissionVersion
+from arxiv.submission.domain.event import CreateSubmission, \
+    CreateSubmissionVersion
 from arxiv.submission.exceptions import InvalidEvent, SaveError
 from arxiv.submission.core import load_submissions_for_user
+
 from .util import Response, user_and_client_from_session, validate_command
 from ..util import load_submission
 

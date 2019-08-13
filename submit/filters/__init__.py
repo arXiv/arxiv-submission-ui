@@ -8,8 +8,9 @@ from dataclasses import asdict
 from arxiv import taxonomy
 from arxiv.submission.domain.process import ProcessStatus
 from arxiv.submission.domain.submission import Compilation
+from arxiv.submission.domain.uploads import FileStatus
+
 from submit.controllers.upload import group_files
-from submit.domain import FileStatus
 from submit.util import tidy_filesize
 
 from .tex_filters import compilation_log_display

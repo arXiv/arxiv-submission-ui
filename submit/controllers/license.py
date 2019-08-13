@@ -4,20 +4,21 @@ Controller for license action.
 Creates an event of type `core.events.event.SetLicense`
 """
 
+from http import HTTPStatus as status
 from typing import Tuple, Dict, Any
 
+from flask import url_for
 from werkzeug import MultiDict
 from werkzeug.exceptions import InternalServerError, BadRequest
-from flask import url_for
 from wtforms.fields import RadioField
 from wtforms.validators import InputRequired
 
-from http import HTTPStatus as status
 from arxiv.forms import csrf
 from arxiv.base import logging
 from arxiv.license import LICENSES
 from arxiv.users.domain import Session
-from arxiv.submission import save, InvalidEvent, SaveError, SetLicense
+from arxiv.submission import save, InvalidEvent, SaveError
+from arxiv.submission.domain.event import SetLicense
 from ..util import load_submission
 from .util import validate_command, user_and_client_from_session
 

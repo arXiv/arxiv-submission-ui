@@ -1,20 +1,20 @@
 """Controller for withdrawal requests."""
 
+from http import HTTPStatus as status
 from typing import Tuple, Dict, Any, Optional
 
+from flask import url_for, Markup
 from werkzeug import MultiDict
 from werkzeug.exceptions import InternalServerError, NotFound, BadRequest
-
-from flask import url_for, Markup
 from wtforms.fields import TextField, TextAreaField, Field, BooleanField
 from wtforms.validators import InputRequired, ValidationError, optional, \
     DataRequired
 
-from http import HTTPStatus as status
 from arxiv.base import logging, alerts
 from arxiv.forms import csrf
 from arxiv.users.domain import Session
-from arxiv.submission import save, SaveError, RequestWithdrawal
+from arxiv.submission import save, SaveError
+from arxiv.submission.domain.event import RequestWithdrawal
 
 from ..util import load_submission
 from .util import FieldMixin, user_and_client_from_session, validate_command

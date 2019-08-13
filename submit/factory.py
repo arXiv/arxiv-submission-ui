@@ -11,6 +11,7 @@ from arxiv.base import Base, logging
 from arxiv.users import auth
 from arxiv.base.middleware import wrap, request_logs
 from arxiv.submission.services import classic, Compiler, Filemanager
+from arxiv.submission.domain.uploads import FileErrorLevels
 from arxiv.submission import init_app
 
 from .routes import ui
@@ -59,6 +60,8 @@ def create_ui_web_app() -> Flask:
             wait_for(Compiler.current_session(),
                      timeout=app.config['COMPILER_STATUS_TIMEOUT'])
         logger.info('All upstream services are available; ready to start')
+
+    app.jinja_env.globals['FileErrorLevels'] = FileErrorLevels
 
     return app
 

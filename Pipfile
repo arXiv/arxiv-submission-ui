@@ -23,10 +23,10 @@ backports-datetime-fromisoformat = "*"
 flask-session = "*"
 arxiv-vault = "==0.1.1rc15"
 arxiv-submission-core = "==0.7.2rc12"
+mypy = "==0.720"
 
 [dev-packages]
 pydocstyle = "*"
-mypy = "==0.670"
 mimesis = "*"
 coveralls = "*"
 coverage = "*"

@@ -221,11 +221,6 @@ ul.progressbar {
       border-style: solid;
       border-color: #0068AC transparent transparent transparent; }
 
-/* try to fix overflow of select boxes */
-@media screen and (max-width: 768px) {
-  select {
-    width: 300px;
-    text-overflow: ellipsis; } }
 /* Formats the autotex log ouput.
  *
  * Ideally this would also have white-space: nowrap; but it doesnt play nice
@@ -244,6 +239,8 @@ ul.progressbar {
   font-size: 9pt;
   padding: 4px; }
 
+/* This forces the content to stay in bounds. This also fixes the overflow
+ * of selects (without breaking the mini-search bar). */
 .container {
   width: 100%; }
 

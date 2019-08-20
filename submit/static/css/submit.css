@@ -1,3 +1,4 @@
+@charset "UTF-8";
 .section {
   /* move this to base as $section-padding */
   padding: 1em 0; }
@@ -15,20 +16,20 @@
   margin-top: 2.5rem; }
 
 .form-margin {
-  margin: .4em 0; }
+  margin: 0.4em 0; }
 
 .content h1.title {
   margin-bottom: 2.5rem; }
 
 .texlive-summary article {
-  padding: .8rem; }
+  padding: 0.8rem; }
   .texlive-summary article:not(:last-child) {
-    margin-bottom: .5em;
+    margin-bottom: 0.5em;
     border-bottom-width: 1px;
     border-bottom-style: dotted; }
 
 .alpha-before::before {
-  content: '\03b1';
+  content: "α";
   color: rgba(204, 204, 204, 0.5);
   font-size: 10em;
   position: absolute;
@@ -38,7 +39,7 @@
   font-family: serif; }
 
 .beta-before::before {
-  content: '\03b2';
+  content: "β";
   color: rgba(204, 204, 204, 0.5);
   font-size: 10em;
   position: absolute;
@@ -52,29 +53,29 @@
   margin-bottom: 1.25em; }
 
 .label:not(:last-child) {
-  margin-bottom: .25em; }
+  margin-bottom: 0.25em; }
 
 .buttons .button:not(:last-child) {
-  margin-right: .75rem; }
+  margin-right: 0.75rem; }
 
 /* tightens up user data display on verify user page */
 .user-info {
   margin-bottom: 1rem; }
   .user-info .field {
-    margin-bottom: .5rem; }
+    margin-bottom: 0.5rem; }
     .user-info .field .field-label {
       flex-grow: 2; }
 
 .control .radio {
-  margin-bottom: .25em; }
+  margin-bottom: 0.25em; }
 
 /* Classes for zebra striping and nested directory display */
 ol.file-tree {
   margin: 0 0 1rem 0; }
   ol.file-tree li {
     margin-top: 0;
-    padding-top: .15em;
-    padding-bottom: .15em;
+    padding-top: 0.15em;
+    padding-bottom: 0.15em;
     background-color: white; }
     ol.file-tree li.even {
       background-color: #E8E8E8; }
@@ -150,7 +151,7 @@ ul.progressbar {
       color: #222;
       line-height: 2em; }
       ul.progressbar > li > a:before {
-        content: '';
+        content: "";
         display: block;
         position: relative;
         margin: 0 auto 4px;
@@ -165,9 +166,9 @@ ul.progressbar {
         ul.progressbar > li > a:hover:before {
           border-width: 6px;
           transform: scale(1.6);
-          box-shadow: 0px 0px 1px .5px #999; }
+          box-shadow: 0px 0px 1px 0.5px #999; }
     ul.progressbar > li:after {
-      content: '';
+      content: "";
       height: 16px;
       width: 100%;
       background-color: #ccc;
@@ -209,7 +210,7 @@ ul.progressbar {
     bottom: 125%;
     left: 50%;
     margin-left: -80px;
-    font-size: .8rem; }
+    font-size: 0.8rem; }
     .help-bubble .bubble-text:after {
       content: " ";
       position: absolute;
@@ -225,5 +226,29 @@ ul.progressbar {
   select {
     width: 300px;
     text-overflow: ellipsis; } }
+/* Formats the autotex log ouput.
+ *
+ * Ideally this would also have white-space: nowrap; but it doesnt play nice
+ * with flex. Unfortunately, the widely accepted solution
+ * (https://css-tricks.com/flexbox-truncated-text/) is not working here. */
+.log-output {
+  max-height: 50vh;
+  height: 50vh;
+  color: black;
+  overflow-y: scroll;
+  overflow-x: scroll;
+  max-height: 100%;
+  max-width: 100%;
+  background-color: whitesmoke;
+  font-family: "Courier New", Courier, monospace;
+  font-size: 9pt;
+  padding: 4px; }
+
+.container {
+  width: 100%; }
+
+/* See https://github.com/jgthms/bulma/issues/1417 */
+.level-is-shrinkable {
+  flex-shrink: 1; }
 
 /*# sourceMappingURL=submit.css.map */

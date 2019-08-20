@@ -248,8 +248,34 @@ ul.progressbar
       border-style: solid
       border-color: #0068AC transparent transparent transparent
 
-/* try to fix overflow of select boxes */      
-@media screen and (max-width: 768px) 
-  select 
-    width: 300px;
-    text-overflow: ellipsis;
+/* try to fix overflow of select boxes */
+@media screen and (max-width: 768px)
+  select
+    width: 300px
+    text-overflow: ellipsis
+
+
+/* Formats the autotex log ouput.
+
+   Ideally this would also have white-space: nowrap; but it doesnt play nice
+   with flex. Unfortunately, the widely accepted solution
+   (https://css-tricks.com/flexbox-truncated-text/) is not working here. */
+.log-output
+  max-height: 50vh
+  height: 50vh
+  color: black
+  overflow-y: scroll
+  overflow-x: scroll
+  max-height: 100%
+  max-width: 100%
+  background-color: whitesmoke
+  font-family: 'Courier New', Courier, monospace
+  font-size: 9pt
+  padding: 4px
+
+.container
+  width: 100%
+
+/* See https://github.com/jgthms/bulma/issues/1417 */
+.level-is-shrinkable
+  flex-shrink: 1

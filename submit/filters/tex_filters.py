@@ -18,7 +18,8 @@ DISABLE_HPDFLATEX = r'(\~+\sRunning hpdflatex.*\s\~+)'
 RUN_ORDER = ['last', 'first', 'second', 'third', 'fourth']
 
 
-def compilation_log_display(autotex_log: str, submission_id: int, compilation_status: str) -> str:
+def compilation_log_display(autotex_log: str, submission_id: int,
+                            compilation_status: str) -> str:
     """
     Highlight interesting features in autotex log.
 

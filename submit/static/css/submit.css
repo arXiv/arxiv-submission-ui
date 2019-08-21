@@ -1,10 +1,22 @@
 @charset "UTF-8";
+/* Cuts down on unnecessary whitespace at top. Consider move to base. */
+main {
+  padding: 1rem 1.5rem; }
+
 .section {
   /* move this to base as $section-padding */
   padding: 1em 0; }
 
 .button.is-short {
   height: 1.75em; }
+
+/* Allows text in a button to wrap responsively. */
+.button-is-wrappable {
+  height: 100%;
+  white-space: normal; }
+
+.button-feedback {
+  vertical-align: baseline; }
 
 .content h2.replacement {
   margin-top: -2rem;
@@ -20,6 +32,14 @@
 
 .content h1.title {
   margin-bottom: 2.5rem; }
+
+h2.title-submit {
+  margin-bottom: 0em;
+  margin-top: 0.25em; }
+
+h1.title.title-submit {
+  margin-top: 0em;
+  margin-bottom: 0.5em; }
 
 .texlive-summary article {
   padding: 0.8rem; }
@@ -139,7 +159,7 @@ ol.file-tree {
 ul.progressbar {
   width: 100%;
   display: flex;
-  margin: 0 0 2.5em 0; }
+  margin: 0 0 1.5em 0; }
   ul.progressbar > li {
     text-align: center;
     list-style: none;
@@ -239,13 +259,29 @@ ul.progressbar {
   font-size: 9pt;
   padding: 4px; }
 
+/* See https://github.com/jgthms/bulma/issues/1417 */
+.level-is-shrinkable {
+  flex-shrink: 1; }
+
+/* Prevent the links under the mini search bar from wrapping. */
+.mini-search .help {
+  width: 200%; }
+
 /* This forces the content to stay in bounds. This also fixes the overflow
  * of selects (without breaking the mini-search bar). */
 .container {
   width: 100%; }
 
-/* See https://github.com/jgthms/bulma/issues/1417 */
-.level-is-shrinkable {
-  flex-shrink: 1; }
+columns {
+  max-width: 100%; }
+
+column {
+  max-width: 100%; }
+
+.field {
+  max-width: 100%; }
+
+.control {
+  max-width: 80%; }
 
 /*# sourceMappingURL=submit.css.map */

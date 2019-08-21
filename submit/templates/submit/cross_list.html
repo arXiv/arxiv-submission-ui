@@ -49,7 +49,7 @@
       <label class="label" id="crosslist" style="margin-top: 1em">Add a cross-list category
       <a href="{{ url_for('help_cross') }}" class="help-bubble"><i class="fa fa-question-circle is-info"></i><div class="bubble-text">Cross-list suggestions indicate areas of overlapping interest for the submission.</div></a></label>
       <div class="field has-addons" style="margin-bottom: 3em">
-        <div class="control">
+        <div class="control control-cross-list">
           <div class="select">
           {% if field.errors %}
             {{ field(class="is-danger")|safe }}

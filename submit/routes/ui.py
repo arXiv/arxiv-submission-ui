@@ -6,7 +6,8 @@ from typing import Optional, Callable, Dict, List, Union
 from flask import Blueprint, make_response, redirect, request, Markup, \
                   render_template, url_for, Response, g, send_file, session
 from werkzeug import MultiDict
-from werkzeug.exceptions import InternalServerError, BadRequest
+from werkzeug.exceptions import InternalServerError, BadRequest, \
+    ServiceUnavailable
 
 import arxiv.submission as events
 from arxiv import taxonomy
@@ -60,7 +61,7 @@ def load_submission() -> None:
         request.submission, request.events = \
             util.load_submission(submission_id)
     except Unavailable as e:
-        raise InternalServerError('Could not connect to database') from e
+        raise ServiceUnavailable('Could not connect to database') from e
 
 
 @ui.context_processor
@@ -153,7 +154,7 @@ def handle(controller: Callable, template: str, title: str,
         add_immediate_alert(context, alerts.FAILURE, message)
         return make_response(render_template(template, **context), e.code)
     except Unavailable as e:
-        raise InternalServerError('Could not connect to database') from e
+        raise ServiceUnavailable('Could not connect to database') from e
     context.update(data)
 
     if code < 300:

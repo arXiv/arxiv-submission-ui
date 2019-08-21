@@ -7,23 +7,24 @@
 
 {% block within_content %}
 <section class="columns is-marginless section">
-  <div class="column is-narrow">
-    <div class="box" style="padding: 2rem;">
-      <form class="form" method="POST" action="{{ url_for('ui.create_submission') }}">
-        {{ form.csrf_token }}
-        <button name="new" class="button is-large is-link" value="new" aria-label="Create New Submission" style="margin-bottom: 1.5rem;">Start a New Submission</button>
-      </form>
-      <h3><a href="https://arxiv.org/help#submission-and-revision">Submission Help Pages</a></h3>
+  <div class="column is-one-third-tablet is-one-third-desktop">
+    <div class="box has-text-centered box-new-submission">
+          <form class="form" method="POST" action="{{ url_for('ui.create_submission') }}">
+            {{ form.csrf_token }}
+            <button name="new" class="button button-is-wrappable button-create-submission is-large is-link" value="new" aria-label="Create New Submission">Start a New Submission</button>
+          </form>
+          <h3><a href="https://arxiv.org/help#submission-and-revision">Submission Help Pages</a></h3>
+
     </div>
   </div>
-  <div class="column">
+  <div class="column is-two-thirds-tablet is-two-thirds-desktop">
       <p class="has-text-right help">
         <a href="#">Submission 0.1.4 released 2019-05-04 </a>
-        <button class="button is-small" id="feedback-button" style="vertical-align: baseline;">Feedback?</button>
+        <button class="button button-feedback is-small" id="feedback-button">Feedback?</button>
       </p>
-        <div class="message is-link alpha-before" style="position: relative; margin-left: 3em;">
+        <div class="message is-link alpha-before">
           <div class="message-body">
-            <p class="subtitle" style="margin-left: 1.25em;">Thank you for using our new submission system!</p>
+            <p class="subtitle subtitle-intro">Thank you for using our new submission system!</p>
             <p>
               This interface is an alpha release, which means that we fully expect some bugs to exist.
               If you encounter unexpected behavior or problems, or if you have suggestions for how to improve this interface,
@@ -117,7 +118,7 @@
             {% for request in submission.active_user_requests %}
             <div class="tags has-addons">
               <span class="tag is-warning">{{ request.NAME }} {{ request.status }}</span>
-              <a href="{{ url_for('ui.cancel_request', submission_id=submission.submission_id, request_id=request.request_id) }}" class="tag button is-link is-small is-outlined" style="border: 0px; text-decoration: none;">
+              <a href="{{ url_for('ui.cancel_request', submission_id=submission.submission_id, request_id=request.request_id) }}" class="tag button button-delete-submission is-link is-small is-outlined">
                   <span class="icon">
                     <i class="fa fa-trash" aria-label="Delete"><span class="sr-only">Delete this submission</span></i>
                   </span>

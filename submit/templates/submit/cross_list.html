@@ -3,44 +3,53 @@
 {% block title -%}Choose Cross-List Classifications (Optional){%- endblock title %}
 
 {% block within_content %}
-<div class="message is-link is-inline-block submit-nav">
-  <div class="message-header"><p class="is-size-6 is-white has-text-weight-semibold">Selected Categories</p></div>
-  <div class="message-body">
-    <p class="has-text-weight-bold" style="margin-bottom: .5em">
-      <span class="tag is-link">{{ primary.id }}</span> {{ primary.name }}
-      <a class="button is-outlined is-link is-small" style="border: 0" title="Change primary category" href="{{ url_for('ui.classification', submission_id=submission_id)}}">
-        <span class="icon"><i class="fa fa-pencil"><span class="sr-only">Edit primary classification</span></i>
-      </a>
-    </p>
+<div class="columns">
+  <div class="column is-full-mobile is-half-tablet">
+    <div class="message is-link is-inline-block submit-nav" style="width: 100%;">
+      <div class="message-header">
+        <p class="is-size-6 is-white has-text-weight-semibold">Selected Categories</p>
+      </div>
+      <div class="message-body">
+        <p class="has-text-weight-bold" style="margin-bottom: .5em">
+          <span class="tag is-link">{{ primary.id }}</span> {{ primary.name }}
+          <a class="button is-outlined is-link is-small" style="border: 0" title="Change primary category" href="{{ url_for('ui.classification', submission_id=submission_id)}}">
+            <span class="icon">
+              <i class="fa fa-pencil">
+                <span class="sr-only">Edit primary classification</span>
+              </i>
+            </span>
+          </a>
+        </p>
 
-    {% for category, subform in formset.items() %}
+        {% for category, subform in formset.items() %}
 
-    <form method="POST" class="form form-margin" action="{{ url_for('ui.cross_list', submission_id=submission_id) }}">
-      {{ form.csrf_token }}
-      <p>
-        {{ subform.operation }}
-        {{ subform.category()|safe }}
-          <span class="tag" style="border: 1px solid #999;">{{ subform.category.data }}</span> <span>{{ category|get_category_name }}</span>
-        <button class="button is-outlined is-link is-small" style="border: 0" title="Remove category">
-          <span class="icon"><i class="fa fa-trash"><span class="sr-only">Remove category</span></i>
-        </button>
-      </p>
-    </form>
-    {% endfor %}
+        <form method="POST" class="form form-margin control" action="{{ url_for('ui.cross_list', submission_id=submission_id) }}">
+          {{ form.csrf_token }}
+          <p>
+            {{ subform.operation }}
+            {{ subform.category()|safe }}
+              <span class="tag" style="border: 1px solid #999;">{{ subform.category.data }}</span> <span>{{ category|get_category_name }}</span>
+            <button class="button is-outlined is-link is-small" style="border: 0" title="Remove category">
+              <span class="icon"><i class="fa fa-trash"><span class="sr-only">Remove category</span></i>
+            </button>
+          </p>
+        </form>
+        {% endfor %}
 
+      </div>
+    </div>
   </div>
 </div>
-
 <form method="POST" action="{{ url_for('ui.cross_list', submission_id=submission_id) }}">
   {{ form.csrf_token }}
   {{ form.operation }}
   <div class="columns">
-    <div class="column">
+      <div class="column is-full-mobile is-half-tablet">
       {% with field = form.category %}
-      <label class="label" id="crosslist" style="margin-top: 3em">Add a cross-list category
+      <label class="label" id="crosslist" style="margin-top: 1em">Add a cross-list category
       <a href="{{ url_for('help_cross') }}" class="help-bubble"><i class="fa fa-question-circle is-info"></i><div class="bubble-text">Cross-list suggestions indicate areas of overlapping interest for the submission.</div></a></label>
       <div class="field has-addons" style="margin-bottom: 3em">
-        <div class="control">
+        <div class="control control-cross-list">
           <div class="select">
           {% if field.errors %}
             {{ field(class="is-danger")|safe }}

@@ -1,10 +1,10 @@
 {% macro submit_nav(submission_id) %}
 
   <div class="buttons submit-nav" role="navigation">
-      <a href="{{ url_for('ui.delete_submission', submission_id=submission_id) }}" name="cancel" class="button has-text-grey is-light is-outlined" style="border:0" value="cancel" aria-label="Cancel submission" title="Cancel submission"><span class="icon"><i class="fa fa-trash fa-lg"></i></a>
-      <button name="action" class="button" value="previous" aria-label="Go back one step">Go Back</button>
-      <button name="action" type="submit" class="button" value="save_exit" aria-label="Save and Exit">Save and Exit</button>
-      <button name="action" class="button is-link" value="next" aria-label="Save and continue">Save and Continue</button>
+      <a href="{{ url_for('ui.delete_submission', submission_id=submission_id) }}" name="cancel" class="button has-text-grey is-light is-outlined is-size-6 is-size-7-mobile " style="border:0" value="cancel" aria-label="Cancel submission" title="Cancel submission"><span class="icon"><i class="fa fa-trash fa-lg"></i></a>
+      <button name="action" class="button is-size-6 is-size-7-mobile value="previous" aria-label="Go back one step">Go Back</button>
+      <button name="action" type="submit" class="button is-size-6 is-size-7-mobile" value="save_exit" aria-label="Save and Exit">Save & Exit</button>
+      <button name="action" class="button is-link is-size-6 is-size-7-mobile" value="next" aria-label="Save and continue">Save & Continue</button>
   </div>
 
 {% endmacro %}

@@ -223,7 +223,7 @@ def file_preview(params, session: Session, submission_id: int, token: str,
     stream, pdf_checksum = p.get(submission.source_content.identifier,
                                  submission.source_content.checksum,
                                  token)
-    headers = {'Content-Type': 'application/pdf'}
+    headers = {'Content-Type': 'application/pdf', 'ETag': pdf_checksum}
     return stream, status.OK, headers
 
 

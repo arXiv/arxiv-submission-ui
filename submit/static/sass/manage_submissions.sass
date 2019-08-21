@@ -1,10 +1,12 @@
 //colors
 $color_celeste_approx: #ccc
 
-@media only screen and(max-width: 760px),(min-device-width: 768px) and(max-device-width: 1024px)
+@media only screen and (max-width: 320px)
   .box
     padding: unset
+    padding-bottom: 0.75em
 
+@media only screen and(max-width: 760px),(min-device-width: 768px) and(max-device-width: 1024px)
   table
     display: block
 
@@ -86,3 +88,25 @@ $color_celeste_approx: #ccc
 
     th
       padding-left: 30%
+
+
+.box-new-submission
+  padding: 2rem important
+
+.button-create-submission
+  margin-bottom: 1.5rem
+
+.button-delete-submission
+  border: 0px
+  text-decoration: none
+
+
+/* Welcome message -- "alpha" box */
+
+/* This is the subtitle text in the "alpha" box. */
+.subtitle-intro
+  margin-left: 1.25em
+
+.alpha-before
+  position: relative
+  margin-left: 2em

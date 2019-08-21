@@ -33,7 +33,7 @@ x-base-service:
 services:
 
   filemanager:
-    image: arxiv/filemanager:751c758
+    image: arxiv/filemanager:8846087
     # You can uncomment these lines to build this from a local
     # repo. You may need to update `context`.
     # build:

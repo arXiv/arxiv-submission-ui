@@ -95,14 +95,25 @@ $ cd arxiv-submission-ui
 $ # Check out branch you are evaluating and be sure to pull recent changes
 $ git pull
 $ pipenv install --dev
-$ ENABLE_ASYNC=1 ENABLE_CALLBACKS=1 \
->   JWT_SECRET=foosecret \
->   COMPILER_ENDPOINT=http://localhost:8100/ \
->   FILEMANAGER_ENDPOINT=http://localhost:8001/filemanager/api \
->   SUBMISSION_BROKER_URL=redis://localhost:6380 \
->   CLASSIC_DATABASE_URI="mysql+mysqldb://foouser:foopass@127.0.0.1:3307/submission?charset=utf8mb4" \
->   LOGLEVEL=10 FLASK_APP=app.py FLASK_DEBUG=1 \
->   pipenv run flask run
+$ export VAULT_ENABLED="0"
+$ export NAMESPACE="development"
+$ export LOGLEVEL=10
+$ export JWT_SECRET=foosecret
+$ export SESSION_COOKIE_SECURE=0
+$ export CLASSIC_DATABASE_URI="mysql+mysqldb://foouser:foopass@127.0.0.1:3307/submission?charset=utf8mb4"
+$ export WAIT_FOR_SERVICES=0
+$ export WAIT_ON_STARTUP=0
+$ export FILEMANAGER_ENDPOINT="http://localhost:8001/filemanager/api"
+$ export FILEMANAGER_CONTENT_PATH="/{source_id}/content"
+$ export COMPILER_ENDPOINT="http://localhost:8100/"
+$ export COMPILER_VERIFY=0
+$ export PREVIEW_ENDPOINT='http://localhost:9001/'
+$ export PREVIEW_VERIFY=0
+$ export KINESIS_STREAM="SubmissionEvents"
+$ export KINESIS_VERIFY=0
+$ export KINESIS_ENDPOINT="https://localhost:4568"
+$ export KINESIS_START_TYPE="TRIM_HORIZON"
+$ FLASK_APP=app.py FLASK_DEBUG=1 pipenv run flask run
 ```
 
 And access it at http://localhost:5000.

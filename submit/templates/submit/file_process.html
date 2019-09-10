@@ -116,7 +116,7 @@
 
     {% if status and log_output %}
       <div class="is-size-7">
-        <p><strong>Key</strong></p>
+        <p><strong>Highlighting Key</strong></p>
         <code><span class="tex-fatal">Severe warnings/errors</span></code><br/>
         <code><span class="tex-danger">Important warnings</span></code><br/>
         <code><span class="tex-warning">General warnings/errors from packages</span></code><br/>
@@ -159,6 +159,24 @@
       <div class="level">
         <div class="level-left level-is-shrinkable">
           <h3>TeXLive Compiler Summary</h3>
+        </div>
+        <div>
+          <div class="help-bubble">
+            <i class="fa fa-question-circle is-info"> Highlighting Key</i>
+            <div class="bubble-text">
+              <div class="is-size-10">
+                <p><strong>Highlighting Key</strong></p>
+                <code><span class="tex-fatal">Severe warnings/errors</span></code><br/>
+                <code><span class="tex-danger">Important warnings</span></code><br/>
+                <code><span class="tex-warning">General warnings/errors from packages</span></code><br/>
+                <code><span class="tex-ignore">Unimportant warnings/errors</span></code><br/>
+                <code><span class="tex-success">Positive event</span></code><br/>
+                <code><span class="tex-info">Informational markup</span></code><br/>
+                <code><span class="tex-help">References to help documentation</span></code><br/>
+                <code><span class="tex-suggestion">Recommended solution</span></code><br/>
+              </div>
+            </div>
+          </div>
         </div>
         <div class="level-right">
           <a class="button" href="{{ url_for('ui.compilation_log', submission_id=submission_id) }}" target="_blank">

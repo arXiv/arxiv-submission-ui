@@ -19,7 +19,7 @@ from arxiv.license import LICENSES
 from arxiv.users.domain import Session
 from arxiv.submission import save, InvalidEvent, SaveError
 from arxiv.submission.domain.event import SetLicense
-from ..util import load_submission
+from ...util import load_submission
 from .util import validate_command, user_and_client_from_session
 
 

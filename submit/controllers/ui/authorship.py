@@ -21,7 +21,7 @@ from arxiv.submission.domain import Submission
 from arxiv.submission.domain.event import ConfirmAuthorship
 from arxiv.submission.exceptions import InvalidEvent, SaveError
 
-from ..util import load_submission
+from ...util import load_submission
 from .util import user_and_client_from_session, validate_command
 
 # from arxiv-submission-core.events.event import ConfirmContactInformation

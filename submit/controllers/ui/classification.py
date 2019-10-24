@@ -23,7 +23,7 @@ from arxiv.submission.domain.event import RemoveSecondaryClassification, \
 
 from .util import validate_command, OptGroupSelectField, \
     user_and_client_from_session
-from ..util import load_submission
+from ...util import load_submission
 
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 

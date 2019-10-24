@@ -16,7 +16,7 @@ from arxiv.submission.domain.event import SetTitle, SetAuthors, SetAbstract, \
     SetACMClassification, SetMSCClassification, SetComments, SetReportNumber, \
     SetJournalReference, SetDOI
 
-from ..util import load_submission
+from ...util import load_submission
 from .util import validate_command, FieldMixin, user_and_client_from_session
 
 logger = logging.getLogger(__name__)  # pylint: disable=C0103

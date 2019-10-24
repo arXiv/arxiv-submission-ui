@@ -16,7 +16,7 @@ from arxiv.users.domain import Session
 from arxiv.submission import save, SaveError
 from arxiv.submission.domain.event import RequestWithdrawal
 
-from ..util import load_submission
+from ...util import load_submission
 from .util import FieldMixin, user_and_client_from_session, validate_command
 
 logger = logging.getLogger(__name__)  # pylint: disable=C0103

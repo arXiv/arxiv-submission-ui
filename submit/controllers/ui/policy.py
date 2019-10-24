@@ -18,7 +18,7 @@ from arxiv.users.domain import Session
 from arxiv.submission import save, SaveError
 from arxiv.submission.domain.event import ConfirmPolicy
 
-from ..util import load_submission
+from ...util import load_submission
 from .util import validate_command, user_and_client_from_session
 
 logger = logging.getLogger(__name__)  # pylint: disable=C0103

@@ -1,7 +1,7 @@
 """Defines submission stages and workflows supported by this UI."""
 
 from typing import Iterable, MutableMapping, NamedTuple, Optional, Dict, \
-    Union, Callable
+    Union, Callable, List, Iterator
 from functools import wraps
 from arxiv.submission.domain import Submission
 from arxiv.submission.domain.submission import SubmissionContent
@@ -36,12 +36,12 @@ class BaseStage(metaclass=Stage):
         self.required = required
         self.must_see = must_see
 
-    def is_optional(self):
+    def is_optional(self) -> bool:
         """Inverse of :attr:`.required`."""
-        return not self.required
+        return bool(not self.required)
 
     @property
-    def type(self):
+    def type(self) -> Stage:
         """Convenience method for getting type; to support use in templates."""
         return type(self)
 
@@ -51,7 +51,7 @@ def stage_from_endpoint(endpoint: str) -> Stage:
     for stage in BaseStage.__subclasses__():
         if stage.endpoint == endpoint:
             return stage
-    raise ValueError('No stage for endpoint: %s', endpoint)
+    raise ValueError(f'No stage for endpoint: {endpoint}')
 
 
 class VerifyUser(BaseStage):
@@ -166,7 +166,7 @@ class Process(BaseStage):
     @staticmethod
     def is_complete(submission: Submission) -> bool:
         """Determine whether the submitter has compiled their upload."""
-        return submission.is_source_processed
+        return bool(submission.is_source_processed)
 
 
 
@@ -215,7 +215,7 @@ class FinalPreview(BaseStage):
     @staticmethod
     def is_complete(submission: Submission) -> bool:
         """Determine whether the submission is finalized."""
-        return submission.is_finalized
+        return bool(submission.is_finalized)
 
 
 class Confirm(BaseStage):
@@ -244,9 +244,8 @@ def get_instance(func: Callable) -> Callable:
 
 class Workflow:
 
-    ORDER = []
-    REQUIRED = []
-    CONFIRMATION = None
+    ORDER: List[BaseStage] = []
+    CONFIRMATION: Optional[Stage] = None
 
     def __init__(self, submission: Submission, seen: MutableMapping) -> None:
         """
@@ -267,12 +266,12 @@ class Workflow:
         self._key = f'{submission.submission_id}::{self.__class__.__name__}'
         self._order = [type(stage) for stage in self.ORDER]
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[BaseStage]:
         """Iterate over stages in this workflow."""
         for stage in self.ORDER:
             yield stage
 
-    def iter_prior(self, stage: Stage) -> Iterable[Stage]:
+    def iter_prior(self, stage: Stage) -> Iterable[BaseStage]:
         """Iterate over stages in this workflow up to a particular stage."""
         for prior_stage in self:
             if prior_stage == stage:
@@ -282,18 +281,20 @@ class Workflow:
     @property
     def complete(self) -> bool:
         """Determine whether this workflow is complete."""
-        return self.submission.is_finalized
+        return bool(self.submission.is_finalized)
 
     @property
-    def current_stage(self):
+    def current_stage(self) -> Optional[BaseStage]:
         """Get the first stage in the workflow that is not done."""
         for stage in self:
             if not self.is_done(stage):
                 return stage
+        return None
 
     @property
     def confirmation(self) -> Stage:
         """Get the confirmation :class:`.Stage` for this workflow."""
+        assert self.CONFIRMATION is not None
         return self.CONFIRMATION
 
     @get_instance

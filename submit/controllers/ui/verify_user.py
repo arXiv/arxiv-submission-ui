@@ -18,7 +18,7 @@ from arxiv.users.domain import Session
 from arxiv.submission import save, SaveError
 from arxiv.submission.domain.event import ConfirmContactInformation
 
-from ..util import load_submission
+from ...util import load_submission
 from .util import validate_command, user_and_client_from_session
 
 

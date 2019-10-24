@@ -16,7 +16,7 @@ from arxiv.submission.domain import WithdrawalRequest, \
 from arxiv.forms import csrf
 from arxiv.users.domain import Session
 from .util import Response, user_and_client_from_session, validate_command
-from ..util import load_submission
+from ...util import load_submission
 
 
 class DeleteForm(csrf.CSRFForm):

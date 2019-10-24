@@ -36,7 +36,7 @@ from arxiv.submission.exceptions import InvalidEvent, SaveError
 from arxiv.users.domain import Session
 
 from .util import validate_command, user_and_client_from_session
-from ..util import load_submission, tidy_filesize
+from ...util import load_submission, tidy_filesize
 
 
 logger = logging.getLogger(__name__)

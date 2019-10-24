@@ -20,7 +20,7 @@ from arxiv.taxonomy import CATEGORIES_ACTIVE as CATEGORIES
 from arxiv.taxonomy import ARCHIVES_ACTIVE as ARCHIVES
 from arxiv.users.domain import Session
 
-from ..util import load_submission
+from ...util import load_submission
 from .util import user_and_client_from_session, OptGroupSelectField, \
     validate_command
 

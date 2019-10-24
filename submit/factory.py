@@ -14,7 +14,7 @@ from arxiv.submission.services import classic, Compiler, Filemanager
 from arxiv.submission.domain.uploads import FileErrorLevels
 from arxiv.submission import init_app
 
-from .routes import ui
+from .routes import UI
 from . import filters
 
 

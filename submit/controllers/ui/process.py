@@ -33,7 +33,7 @@ from arxiv.submission.domain.preview import Preview
 from arxiv.submission.domain.submission import Compilation, SubmissionContent
 from arxiv.submission.services import PreviewService, Compiler
 
-from ..util import load_submission
+from ...util import load_submission
 from .util import validate_command, user_and_client_from_session
 
 logger = logging.getLogger(__name__)

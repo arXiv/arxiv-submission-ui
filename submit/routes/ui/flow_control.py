@@ -2,22 +2,26 @@
 
 from http import HTTPStatus as status
 from functools import wraps
-from typing import Optional, Callable
+from typing import Optional, Callable, Union
 
-from flask import Response, request, redirect, url_for, session
+from flask import request, redirect, url_for, session
+from flask import Response as FResponse
+from werkzeug import Response as WResponse
 from werkzeug.exceptions import BadRequest
 
 from arxiv.base import alerts, logging
 from arxiv.base.globals import get_application_global
 from arxiv.submission.domain import Submission
 
-from .domain.workflow import Stage, Workflow, SubmissionWorkflow, \
-    ReplacementWorkflow
-from .util import load_submission
+from .workflow import Stage, Workflow, SubmissionWorkflow, \
+    ReplacementWorkflow, BaseStage
+from ...util import load_submission
 
 logger = logging.getLogger(__name__)
 
 EXIT = 'ui.create_submission'
+
+Response = Union[FResponse, WResponse]
 
 
 def get_workflow(submission: Optional[Submission]) -> Workflow:
@@ -26,22 +30,22 @@ def get_workflow(submission: Optional[Submission]) -> Workflow:
     return SubmissionWorkflow(submission, session)
 
 
-def to_stage(workflow: Workflow, stage: Stage, ident: str) -> Response:
+def to_stage(_: Workflow, stage: BaseStage, ident: str) -> Response:
     if stage is None:
         return redirect(url_for('ui.create_submission'), code=status.SEE_OTHER)
     loc = url_for(f'ui.{stage.endpoint}', submission_id=ident)
     return redirect(loc, code=status.SEE_OTHER)
 
 
-def to_previous(workflow: Workflow, stage: Stage, ident: str) -> Response:
+def to_previous(workflow: Workflow, stage: BaseStage, ident: str) -> Response:
     return to_stage(workflow, workflow.previous_stage(stage), ident)
 
 
-def to_next(workflow: Workflow, stage: Stage, ident: str) -> Response:
+def to_next(workflow: Workflow, stage: BaseStage, ident: str) -> Response:
     return to_stage(workflow, workflow.next_stage(stage), ident)
 
 
-def to_current(workflow: Workflow, stage: Stage, ident: str,
+def to_current(workflow: Workflow, _: BaseStage, ident: str,
                flash: bool = True) -> Response:
     next_stage = workflow.current_stage
     if flash:

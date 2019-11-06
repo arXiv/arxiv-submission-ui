@@ -27,12 +27,12 @@ To do this,
 5. Click "Copy permissions from existing user", select radio button for "arxiv-ecr-test", Click on the bottom "Next: tags"
 6. Click on bottom "next: review", click on bottom "create user", Click "Download.csv"
 
-7. Install awscli, on linux you can do "pip install awscli" or "pipenv install awscli" or look up how to do this on your OS.
+7. Install awscli, on linux you can do "pip install awscli" or "pipenv install awscli" or look up how to do this on your OS. [Instructions for CLI install from AWS](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-install.html)
 
-8. On the command line run `aws configure` and enter the AWS access key ID, AWS secret access key and region when prompted.
+8. On the command line run `aws configure` and enter the AWS access key ID, AWS secret access key and us-east-1 for region when prompted. Format can be 'json' 'text' or 'table' and is your preference.
 
 To test if you have access to ECR run:
-`aws ecr list-images --repository-name arxiv`
+`aws ecr list-images --repository-name arxiv/converter`
 You should get a response of no error and a list of docker images.
 
 ### Quick start commands

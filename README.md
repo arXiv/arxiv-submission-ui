@@ -8,9 +8,34 @@ The Submission UI requires the File Management service.
 
 ## Quick start
 
-Submission involves several back-end services, an async worker process, and
-the UI application itself. The easiest way to spin up all of this stuff
-with correct wiring is to use the provided docker-compose configuration.
+Submission involves several back-end services, worker processes and
+the UI application itself. The easiest way to spin up all of this
+stuff with correct wiring is to use the provided docker-compose
+configuration.
+
+### AWS Credentials
+First, you will need credentials to AWS ECR to get the converter docker
+image. You should only need to do this once. If it seems your quick
+start is not running the compiler it is probably because it cannot
+access this docker image on AWS ECR.
+
+To do this, 
+1. log on to Cornell's AWS single sign-on http://signin.aws.cucloud.net
+2. On the AWS console, got to IAM
+3. Click "users: on the left, click the button "Add user"
+4. Add a name like YOURNETID-dev, click "Programmatic access", click "next: permissions"
+5. Click "Copy permissions from existing user", select radio button for "arxiv-ecr-test", Click on the bottom "Next: tags"
+6. Click on bottom "next: review", click on bottom "create user", Click "Download.csv"
+
+7. Install awscli, on linux you can do "pip install awscli" or "pipenv install awscli" or look up how to do this on your OS.
+
+8. On the command line run `aws configure` and enter the AWS access key ID, AWS secret access key and region when prompted.
+
+To test if you have access to ECR run:
+`aws ecr list-images --repository-name arxiv`
+You should get a response of no error and a list of docker images.
+
+### Quick start commands
 
 ```bash
 cd /path/to/arxiv-submission-ui
@@ -20,8 +45,8 @@ docker-compose build    # Builds the submission UI
 DIND_SOURCE_ROOT=/tmp/foo CONVERTER_DOCKER_IMAGE=626657773168.dkr.ecr.us-east-1.amazonaws.com/arxiv/converter:0.9 docker-compose up
 ```
 
-You may see the following errors when running ``docker-compose pull``, and you
-can ignore them:
+You may see the following errors when running ``docker-compose pull``,
+and you can ignore them:
 
 ```bash
 ERROR: for mock-classifier  pull access denied for arxiv/mock-classifier, repository does not exist or may require 'docker login'
@@ -31,18 +56,10 @@ ERROR: for submission-bootstrap  manifest for arxiv/submission-ui:latest not fou
 ERROR: pull access denied for arxiv/mock-vault, repository does not exist or may require 'docker login'
 ```
 
-To get a fresh deployment (e.g. after significant changes to backend stuff),
-you may need to blow away the whole service group. Be sure to use the ``-v``
-flag to drop old volumes.
-
-```bash
-docker-compose rm -v
-```
-
-
-Note! This will start a whole bunch of stuff. Fairly late in the process, a
-bootstrap process will run and generate a bunch of users who are authorized to
-submit things. It will look something like this:
+The `DIND_SOURCE_ROOT...docker-compose up` command will start a whole
+bunch of stuff. Fairly late in the process, a bootstrap process will
+run and generate a bunch of users who are authorized to submit
+things. It will look something like this:
 
 ```
 submission-bootstrap     | 1 picoline2058@gmail.com eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzZXNzaW9uX2lkIjoiYWQyY2UxNmUtMjQwNi00NjgwLWI2NWItMDE3NGYyNDA0MzhlIiwic3RhcnRfdGltZSI6IjIwMTktMDItMTNUMTI6MjM6MzQuMjE2NzcxLTA1OjAwIiwidXNlciI6eyJ1c2VybmFtZSI6InBpY29saW5lMjA1OEBnbWFpbC5jb20iLCJlbWFpbCI6InBpY29saW5lMjA1OEBnbWFpbC5jb20iLCJ1c2VyX2lkIjoxLCJuYW1lIjp7ImZvcmVuYW1lIjoiTWF1cmEiLCJzdXJuYW1lIjoiWmFyZW1iYSIsInN1ZmZpeCI6IlBhbiJ9LCJwcm9maWxlIjp7ImFmZmlsaWF0aW9uIjoiQ29ybmVsbCBVbml2ZXJzaXR5IiwiY291bnRyeSI6InVzIiwicmFuayI6Mywic3VibWlzc2lvbl9ncm91cHMiOlsiZ3JwX3BoeXNpY3MiXSwiZGVmYXVsdF9jYXRlZ29yeSI6ImFzdHJvLXBoLkdBIiwiaG9tZXBhZ2VfdXJsIjoiIiwicmVtZW1iZXJfbWUiOnRydWV9LCJ2ZXJpZmllZCI6ZmFsc2V9LCJjbGllbnQiOm51bGwsImVuZF90aW1lIjoiMjAxOS0wMi0xM1QyMjoyMzozNC4yMTY3NzEtMDU6MDAiLCJhdXRob3JpemF0aW9ucyI6eyJjbGFzc2ljIjowLCJlbmRvcnNlbWVudHMiOlsiKi4qIl0sInNjb3BlcyI6WyJwdWJsaWM6cmVhZCIsInN1Ym1pc3Npb246Y3JlYXRlIiwic3VibWlzc2lvbjp1cGRhdGUiLCJzdWJtaXNzaW9uOnJlYWQiLCJ1cGxvYWQ6cmVhZCIsInVwbG9hZDp1cGRhdGUiLCJ1cGxvYWQ6ZGVsZXRlIiwidXBsb2FkOnJlYWRfbG9ncyJdfSwiaXBfYWRkcmVzcyI6bnVsbCwicmVtb3RlX2hvc3QiOm51bGwsIm5vbmNlIjpudWxsfQ.iNOiCGVIZi5iipElLRyUlnx9uucdK7aytjkvr87FTvI
@@ -73,6 +90,16 @@ arxiv-submission-agent    | application 29/May/2019:15:20:24 +0000 - __main__ - 
 You should be able to access the UI at http://localhost:8000. If you don't
 get a response right away, the UI is probably still waiting for something
 to come up.
+
+### Rerunning the quick start
+
+To get a fresh deployment (e.g. after significant changes to backend
+stuff), you may need to blow away the whole service group. Be sure to
+use the ``-v`` flag to drop old volumes.
+
+```bash
+docker-compose rm -v
+```
 
 ## Running the UI locally
 

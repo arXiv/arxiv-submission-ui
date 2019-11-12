@@ -3,7 +3,9 @@
 from unittest import TestCase, mock
 from datetime import datetime
 from arxiv.submission.domain import Submission, User
-from .. import domain
+# Commenting out for now - there is nothing that runs below - everything
+# is commented out - dlf2
+#from .. import domain
 
 
 # class TestSubmissionStage(TestCase):

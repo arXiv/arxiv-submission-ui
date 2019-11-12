@@ -39,8 +39,7 @@ from arxiv.users.auth import scopes
 from arxiv.users.domain import Category
 from http import HTTPStatus as status
 
-from submit.domain import workflow
-
+import submit.routes.ui.workflow as workflow
 
 class GetStageFailed(RuntimeError):
     """Failed to get a stage."""

@@ -32,8 +32,7 @@ def create_ui_web_app() -> Flask:
 
     Base(app)
     auth.Auth(app)
-    app.register_blueprint(ui.ui)
-
+    app.register_blueprint(UI)
     middleware = [request_logs.ClassicLogsMiddleware,
                   auth.middleware.AuthMiddleware]
     if app.config['VAULT_ENABLED']:

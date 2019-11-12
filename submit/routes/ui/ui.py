@@ -1,7 +1,7 @@
 """Provides routes for the submission user interface."""
 
 from http import HTTPStatus as status
-from typing import Optional, Callable, Dict, List, Union
+from typing import Optional, Callable, Dict, List, Union, Any
 
 from flask import Blueprint, make_response, redirect, request, Markup, \
                   render_template, url_for, g, send_file, session
@@ -21,7 +21,13 @@ from arxiv.submission.services.classic.exceptions import Unavailable
 from ..auth import is_owner
 from ... import util
 from ...controllers import ui
-from ...domain import workflow
+#from ...domain import workflow
+from .workflow import Authorship, BaseStage, Classification, Confirm, \
+    CrossList, FileUpload, FinalPreview, License, Metadata, OptionalMetadata, Policy, \
+    Process, ReplacementWorkflow, Stage, SubmissionWorkflow, VerifyUser, \
+    Workflow, stage_from_endpoint
+
+
 from .flow_control import flow_control, get_workflow
 
 logger = logging.getLogger(__name__)
@@ -43,7 +49,7 @@ def path(endpoint: Optional[str] = None) -> str:
     return '/<int:submission_id>'
 
 
-def workflow_route(stage: workflow.Stage, methods=["GET", "POST"]) -> Callable:
+def workflow_route(stage: Stage, methods=["GET", "POST"]) -> Callable:
     """Register a UI route for a workflow stage."""
     def deco(func: Callable) -> Callable:
         kwargs = {'endpoint': stage.endpoint, 'methods': methods}
@@ -70,16 +76,16 @@ def load_submission() -> None:
 
 
 @UI.context_processor
-def inject_stage() -> Dict[str, Optional[workflow.Stage]]:
+def inject_stage() -> Dict[str, Optional[Stage]]:
     """Inject the current stage into the template rendering context."""
     if request.url_rule is None:
         return {}
     endpoint = request.url_rule.endpoint
     if '.' in endpoint:
         _, endpoint = endpoint.split('.', 1)
-    stage: Optional[workflow.Stage]
+    stage: Optional[Stage]
     try:
-        stage = workflow.stage_from_endpoint(endpoint)
+        stage = stage_from_endpoint(endpoint)
     except ValueError:
         stage = None
 
@@ -94,7 +100,7 @@ def inject_stage() -> Dict[str, Optional[workflow.Stage]]:
 
 
 @UI.context_processor
-def inject_workflow() -> Dict[str, Optional[workflow.Workflow]]:
+def inject_workflow() -> Dict[str, Optional[Workflow]]:
     """Inject the current workflow into the template rendering context."""
     if hasattr(request, 'submission'):
         return {'workflow': get_workflow(request.submission)}
@@ -315,50 +321,50 @@ def submission_status(submission_id: int) -> Response:
 #                     headers={'Location': target})
 
 
-@workflow_route(workflow.VerifyUser)
+@workflow_route(VerifyUser)
 @auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION, authorizer=is_owner,
                         unauthorized=redirect_to_login)
-@flow_control(workflow.VerifyUser)
+@flow_control(VerifyUser)
 def verify(submission_id: Optional[int] = None) -> Response:
     """Render the submit start page."""
     return handle(ui.verify_user.verify, 'submit/verify_user.html',
                   'Verify User Information', submission_id)
 
 
-@workflow_route(workflow.Authorship)
+@workflow_route(Authorship)
 @auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION, authorizer=is_owner,
                         unauthorized=redirect_to_login)
-@flow_control(workflow.Authorship)
+@flow_control(Authorship)
 def authorship(submission_id: int) -> Response:
     """Render step 2, authorship."""
     return handle(ui.authorship.authorship, 'submit/authorship.html',
                   'Confirm Authorship', submission_id)
 
 
-@workflow_route(workflow.License)
+@workflow_route(License)
 @auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION, authorizer=is_owner,
                         unauthorized=redirect_to_login)
-@flow_control(workflow.License)
+@flow_control(License)
 def license(submission_id: int) -> Response:
     """Render step 3, select license."""
     return handle(ui.license.license, 'submit/license.html',
                   'Select a License', submission_id)
 
 
-@workflow_route(workflow.Policy)
+@workflow_route(Policy)
 @auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION, authorizer=is_owner,
                         unauthorized=redirect_to_login)
-@flow_control(workflow.Policy)
+@flow_control(Policy)
 def policy(submission_id: int) -> Response:
     """Render step 4, policy agreement."""
     return handle(ui.policy.policy, 'submit/policy.html',
                   'Acknowledge Policy Statement', submission_id)
 
 
-@workflow_route(workflow.Classification)
+@workflow_route(Classification)
 @auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION, authorizer=is_owner,
                         unauthorized=redirect_to_login)
-@flow_control(workflow.Classification)
+@flow_control(Classification)
 def classification(submission_id: int) -> Response:
     """Render step 5, choose classification."""
     return handle(ui.classification.classification,
@@ -366,10 +372,10 @@ def classification(submission_id: int) -> Response:
                   'Choose a Primary Classification', submission_id)
 
 
-@workflow_route(workflow.CrossList)
+@workflow_route(CrossList)
 @auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION, authorizer=is_owner,
                         unauthorized=redirect_to_login)
-@flow_control(workflow.CrossList)
+@flow_control(CrossList)
 def cross_list(submission_id: int) -> Response:
     """Render step 6, secondary classes."""
     return handle(ui.classification.cross_list,
@@ -377,10 +383,10 @@ def cross_list(submission_id: int) -> Response:
                   'Choose Cross-List Classifications', submission_id)
 
 
-@workflow_route(workflow.FileUpload)
+@workflow_route(FileUpload)
 @auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION, authorizer=is_owner,
                         unauthorized=redirect_to_login)
-@flow_control(workflow.FileUpload)
+@flow_control(FileUpload)
 def file_upload(submission_id: int) -> Response:
     """Render step 7, file upload."""
     return handle(ui.upload_files, 'submit/file_upload.html',
@@ -391,7 +397,7 @@ def file_upload(submission_id: int) -> Response:
 @UI.route(path('file_delete'), methods=["GET", "POST"])
 @auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION, authorizer=is_owner,
                         unauthorized=redirect_to_login)
-@flow_control(workflow.FileUpload)
+@flow_control(FileUpload)
 def file_delete(submission_id: int) -> Response:
     """Provide the file deletion endpoint, part of the upload step."""
     return handle(ui.delete_file, 'submit/confirm_delete.html',
@@ -402,7 +408,7 @@ def file_delete(submission_id: int) -> Response:
 @UI.route(path('file_delete_all'), methods=["GET", "POST"])
 @auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION, authorizer=is_owner,
                         unauthorized=redirect_to_login)
-@flow_control(workflow.FileUpload)
+@flow_control(FileUpload)
 def file_delete_all(submission_id: int) -> Response:
     """Provide endpoint to delete all files, part of the upload step."""
     return handle(ui.delete_all_files,
@@ -411,10 +417,10 @@ def file_delete_all(submission_id: int) -> Response:
                   token=request.environ['token'])
 
 
-@workflow_route(workflow.Process)
+@workflow_route(Process)
 @auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION, authorizer=is_owner,
                         unauthorized=redirect_to_login)
-@flow_control(workflow.Process)
+@flow_control(Process)
 def file_process(submission_id: int) -> Response:
     """Render step 8, file processing."""
     return handle(ui.process.file_process, 'submit/file_process.html',
@@ -455,20 +461,20 @@ def compilation_log(submission_id: int) -> Response:
     return rv
 
 
-@workflow_route(workflow.Metadata)
+@workflow_route(Metadata)
 @auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION, authorizer=is_owner,
                         unauthorized=redirect_to_login)
-@flow_control(workflow.Metadata)
+@flow_control(Metadata)
 def add_metadata(submission_id: int) -> Response:
     """Render step 9, metadata."""
     return handle(ui.metadata.metadata, 'submit/add_metadata.html',
                   'Add or Edit Metadata', submission_id)
 
 
-@workflow_route(workflow.OptionalMetadata)
+@workflow_route(OptionalMetadata)
 @auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION, authorizer=is_owner,
                         unauthorized=redirect_to_login)
-@flow_control(workflow.OptionalMetadata)
+@flow_control(OptionalMetadata)
 def add_optional_metadata(submission_id: int) -> Response:
     """Render step 9, metadata."""
     return handle(ui.metadata.optional,
@@ -476,20 +482,20 @@ def add_optional_metadata(submission_id: int) -> Response:
                   'Add or Edit Metadata', submission_id)
 
 
-@workflow_route(workflow.FinalPreview)
+@workflow_route(FinalPreview)
 @auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION, authorizer=is_owner,
                         unauthorized=redirect_to_login)
-@flow_control(workflow.FinalPreview)
+@flow_control(FinalPreview)
 def final_preview(submission_id: int) -> Response:
     """Render step 10, preview."""
     return handle(ui.final.finalize, 'submit/final_preview.html',
                   'Preview and Approve', submission_id)
 
 
-@workflow_route(workflow.Confirm, methods=["GET"])
+@workflow_route(Confirm, methods=["GET"])
 @auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION, authorizer=is_owner,
                         unauthorized=redirect_to_login)
-@flow_control(workflow.Confirm)
+@flow_control(Confirm)
 def confirmation(submission_id: int) -> Response:
     """Render the final confirmation page."""
     return handle(ui.final.confirm, "submit/confirm_submit.html", 'Submission Confirmed', submission_id)

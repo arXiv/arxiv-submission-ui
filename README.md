@@ -14,7 +14,7 @@ with correct wiring is to use the provided docker-compose configuration.
 
 One of the back-end services we run is 'localstack' which is a fully functional
 local AWS stack. While this local AWS stack implementation doesn't actually
-check credentials you must have the environment variable set for the service
+check credentials you must have the environment variables set for the service
 to work properly.
 
 You may set these to your real AWS credentials or simply set them to arbitrary

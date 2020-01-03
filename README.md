@@ -37,6 +37,19 @@ You should get a response of no error and a list of docker images.
 
 ### Quick start commands
 
+One of the back-end services we run is 'localstack' which is a fully functional
+local AWS stack. While this local AWS stack implementation doesn't actually
+check credentials you must have the environment variables set for the service
+to work properly.
+
+You may set these to your real AWS credentials or simply set them to arbitrary
+dummy values.
+
+```bash
+export AWS_ACCESS_KEY_ID=fookey
+export AWS_SECRET_ACCESS_KEY=foosecretkey
+```
+
 ```bash
 cd /path/to/arxiv-submission-ui
 mkdir /tmp/foo          # Compiler service will use this.

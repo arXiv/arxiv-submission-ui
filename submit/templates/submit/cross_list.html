@@ -12,12 +12,9 @@
       <div class="message-body">
         <p class="has-text-weight-bold" style="margin-bottom: .5em">
           <span class="tag is-link">{{ primary.id }}</span> {{ primary.name }}
-          <a class="button is-outlined is-link is-small" style="border: 0" title="Change primary category" href="{{ url_for('ui.classification', submission_id=submission_id)}}">
-            <span class="icon">
-              <i class="fa fa-pencil">
-                <span class="sr-only">Edit primary classification</span>
-              </i>
-            </span>
+          <a style="border: 0" title="Change primary category" href="{{ url_for('ui.classification', submission_id=submission_id)}}">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" class="icon filter-blue" role="presentation"><path d="M497.9 142.1l-46.1 46.1c-4.7 4.7-12.3 4.7-17 0l-111-111c-4.7-4.7-4.7-12.3 0-17l46.1-46.1c18.7-18.7 49.1-18.7 67.9 0l60.1 60.1c18.8 18.7 18.8 49.1 0 67.9zM284.2 99.8L21.6 362.4.4 483.9c-2.9 16.4 11.4 30.6 27.8 27.8l121.5-21.3 262.6-262.6c4.7-4.7 4.7-12.3 0-17l-111-111c-4.8-4.7-12.4-4.7-17.1 0zM124.1 339.9c-5.5-5.5-5.5-14.3 0-19.8l154-154c5.5-5.5 14.3-5.5 19.8 0s5.5 14.3 0 19.8l-154 154c-5.5 5.5-14.3 5.5-19.8 0zM88 424h48v36.3l-64.5 11.3-31.1-31.1L51.7 376H88v48z"/></svg>
+            <span class="sr-only">Edit primary classification</span>
           </a>
         </p>
 
@@ -28,9 +25,10 @@
           <p>
             {{ subform.operation }}
             {{ subform.category()|safe }}
-              <span class="tag" style="border: 1px solid #999;">{{ subform.category.data }}</span> <span>{{ category|get_category_name }}</span>
-            <button class="button is-outlined is-link is-small" style="border: 0" title="Remove category">
-              <span class="icon"><i class="fa fa-trash"><span class="sr-only">Remove category</span></i>
+            <span class="tag" style="border: 1px solid #999;">{{ subform.category.data }}</span> <span>{{ category|get_category_name }}</span>
+            <button class="button is-link" style="border: 0;background:transparent;" title="Remove category">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512" class="icon filter-blue" role="presentation"><path d="M32 464a48 48 0 0 0 48 48h288a48 48 0 0 0 48-48V128H32zm272-256a16 16 0 0 1 32 0v224a16 16 0 0 1-32 0zm-96 0a16 16 0 0 1 32 0v224a16 16 0 0 1-32 0zm-96 0a16 16 0 0 1 32 0v224a16 16 0 0 1-32 0zM432 32H312l-9.4-18.7A24 24 0 0 0 281.1 0H166.8a23.72 23.72 0 0 0-21.4 13.3L136 32H16A16 16 0 0 0 0 48v32a16 16 0 0 0 16 16h416a16 16 0 0 0 16-16V48a16 16 0 0 0-16-16z"/></svg>
+              <span class="sr-only">Remove category</span>
             </button>
           </p>
         </form>
@@ -46,8 +44,13 @@
   <div class="columns">
       <div class="column is-full-mobile is-half-tablet">
       {% with field = form.category %}
-      <label class="label" id="crosslist" style="margin-top: 1em">Add a cross-list category
-      <a href="{{ url_for('help_cross') }}" class="help-bubble"><i class="fa fa-question-circle is-info"></i><div class="bubble-text">Cross-list suggestions indicate areas of overlapping interest for the submission.</div></a></label>
+      <label class="label" id="crosslist" for="category" style="margin-top: 1em">Add a cross-list category
+        <a href="{{ url_for('help_cross') }}" class="help-bubble">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" class="icon filter-blue" role="presentation"><path d="M504 256c0 136.997-111.043 248-248 248S8 392.997 8 256C8 119.083 119.043 8 256 8s248 111.083 248 248zM262.655 90c-54.497 0-89.255 22.957-116.549 63.758-3.536 5.286-2.353 12.415 2.715 16.258l34.699 26.31c5.205 3.947 12.621 3.008 16.665-2.122 17.864-22.658 30.113-35.797 57.303-35.797 20.429 0 45.698 13.148 45.698 32.958 0 14.976-12.363 22.667-32.534 33.976C247.128 238.528 216 254.941 216 296v4c0 6.627 5.373 12 12 12h56c6.627 0 12-5.373 12-12v-1.333c0-28.462 83.186-29.647 83.186-106.667 0-58.002-60.165-102-116.531-102zM256 338c-25.365 0-46 20.635-46 46 0 25.364 20.635 46 46 46s46-20.636 46-46c0-25.365-20.635-46-46-46z"/></svg>
+          <span class="sr-only">Learn more about cross-list suggestions</span>
+          <div class="bubble-text">Cross-list suggestions indicate areas of overlapping interest for the submission.</div>
+        </a>
+      </label>
       <div class="field has-addons" style="margin-bottom: 3em">
         <div class="control control-cross-list">
           <div class="select">

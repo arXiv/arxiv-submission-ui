@@ -21,9 +21,9 @@ from arxiv.users.domain import Session
 from arxiv.submission.domain.event import RemoveSecondaryClassification, \
     AddSecondaryClassification, SetPrimaryClassification
 
-from .util import validate_command, OptGroupSelectField, \
+from submit.controllers.ui.util import validate_command, OptGroupSelectField, \
     user_and_client_from_session
-from ...util import load_submission
+from submit.util import load_submission
 
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 

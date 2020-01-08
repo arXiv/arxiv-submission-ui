@@ -11,7 +11,7 @@ from wtforms import Form
 
 import arxiv.submission as events
 from arxiv.submission.domain.event import SetPrimaryClassification
-from submit.controllers import classification
+from submit.controllers.ui.new import classification
 
 from arxiv.users import auth, domain
 
@@ -103,7 +103,7 @@ class TestSetPrimaryClassification(TestCase):
 
     @mock.patch(f'{classification.__name__}.ClassificationForm.Meta.csrf',
                 False)
-    @mock.patch('submit.controllers.util.url_for')
+    @mock.patch('submit.controllers.ui.util.url_for')
     @mock.patch(f'{classification.__name__}.save')
     @mock.patch('arxiv.submission.load')
     def test_post_request_with_data(self, mock_load, mock_save, mock_url_for):
@@ -130,7 +130,7 @@ class TestSetPrimaryClassification(TestCase):
 
     @mock.patch(f'{classification.__name__}.ClassificationForm.Meta.csrf',
                 False)
-    @mock.patch('submit.controllers.util.url_for')
+    @mock.patch('submit.controllers.ui.util.url_for')
     @mock.patch(f'{classification.__name__}.save')
     @mock.patch('arxiv.submission.load')
     def test_save_error(self, mock_load, mock_save, mock_url_for):

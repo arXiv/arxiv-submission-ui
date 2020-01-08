@@ -7,7 +7,7 @@ from wtforms import Form
 from http import HTTPStatus as status
 import arxiv.submission as events
 from arxiv.submission.domain.event import ConfirmContactInformation
-from submit.controllers import verify_user
+from submit.controllers.ui.new import verify_user
 
 from pytz import timezone
 from datetime import timedelta, datetime
@@ -79,7 +79,7 @@ class TestVerifyUser(TestCase):
             self.assertIsInstance(data['form'], Form, "Data includes a form")
 
     @mock.patch(f'{verify_user.__name__}.VerifyUserForm.Meta.csrf', False)
-    @mock.patch('submit.controllers.util.url_for')
+    @mock.patch('submit.controllers.ui.util.url_for')
     @mock.patch(f'{verify_user.__name__}.save')
     @mock.patch('arxiv.submission.load')
     def test_post_request_with_data(self, mock_load, mock_save, mock_url_for):
@@ -101,7 +101,7 @@ class TestVerifyUser(TestCase):
         self.assertEqual(code, status.SEE_OTHER, "Returns redirect")
 
     @mock.patch(f'{verify_user.__name__}.VerifyUserForm.Meta.csrf', False)
-    @mock.patch('submit.controllers.util.url_for')
+    @mock.patch('submit.controllers.ui.util.url_for')
     @mock.patch(f'{verify_user.__name__}.save')
     @mock.patch('arxiv.submission.load')
     def test_save_fails(self, mock_load, mock_save, mock_url_for):

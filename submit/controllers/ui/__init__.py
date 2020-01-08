@@ -7,15 +7,18 @@ from werkzeug import MultiDict
 from http import HTTPStatus as status
 from arxiv.users.domain import Session
 
-from .process import file_process, file_preview, compilation_log
-from .upload import upload_files
-from .upload import delete as delete_file
-from .upload import delete_all as delete_all_files
+from .new.process import file_process, file_preview, compilation_log
+from .new.upload import upload_files
+from .new.upload import delete as delete_file
+from .new.upload import delete_all as delete_all_files
 
+from .new import create, verify_user, authorship, license, policy, final,\
+    classification, metadata, unsubmit
 
-from ...util import load_submission
-from . import create, verify_user, authorship, license, policy, final, \
-    classification, metadata, util, jref, withdraw, delete, cross, unsubmit
+from . import  util, jref, withdraw, delete, cross
+
+from submit.util import load_submission
+
 from .util import Response
 
 __all__ = ('verify_user', 'authorship', 'license', 'policy', 'classification',

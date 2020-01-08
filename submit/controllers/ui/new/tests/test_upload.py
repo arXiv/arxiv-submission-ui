@@ -15,7 +15,7 @@ from arxiv.submission.domain.uploads import Upload, FileStatus, FileError, \
     UploadLifecycleStates, UploadStatus
 from arxiv.submission.services import filemanager
 
-from .. import upload
+from submit.controllers.ui.new import upload
 
 
 class TestUpload(TestCase):

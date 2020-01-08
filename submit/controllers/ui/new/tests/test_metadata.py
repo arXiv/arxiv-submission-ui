@@ -15,7 +15,7 @@ from arxiv.submission.domain.event import SetTitle, SetAbstract, SetAuthors, \
     SetJournalReference
 from arxiv.users import auth, domain
 
-from submit.controllers import metadata
+from submit.controllers.ui.new import metadata
 
 
 class TestOptional(TestCase):

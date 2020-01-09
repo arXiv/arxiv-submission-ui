@@ -20,8 +20,8 @@ from arxiv.submission.domain.event import CreateSubmission, \
 from arxiv.submission.exceptions import InvalidEvent, SaveError
 from arxiv.submission.core import load_submissions_for_user
 
-from .util import Response, user_and_client_from_session, validate_command
-from ...util import load_submission
+from submit.controllers.ui.util import Response, user_and_client_from_session, validate_command
+from submit.util import load_submission
 
 logger = logging.getLogger(__name__)    # pylint: disable=C0103
 

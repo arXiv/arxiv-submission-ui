@@ -1,52 +1,65 @@
 @charset "UTF-8";
 /* Cuts down on unnecessary whitespace at top. Consider move to base. */
 main {
-  padding: 1rem 1.5rem; }
+  padding: 1rem 1.5rem;
+}
 
 .section {
   /* move this to base as $section-padding */
-  padding: 1em 0; }
+  padding: 1em 0;
+}
 
 .button.is-short {
-  height: 1.75em; }
+  height: 1.75em;
+}
 
 /* Allows text in a button to wrap responsively. */
 .button-is-wrappable {
   height: 100%;
-  white-space: normal; }
+  white-space: normal;
+}
 
 .button-feedback {
-  vertical-align: baseline; }
+  vertical-align: baseline;
+}
 
 .content h2.replacement {
   margin-top: -2rem;
   margin-bottom: 2rem;
   font-style: italic;
-  font-weight: 400; }
+  font-weight: 400;
+}
 
 .submit-nav {
-  margin-top: 2.5rem; }
+  margin-top: 2.5rem;
+}
 
 .form-margin {
-  margin: 0.4em 0; }
+  margin: 0.4em 0;
+}
 
 .content h1.title {
-  margin-bottom: 2.5rem; }
+  margin-bottom: 2.5rem;
+}
 
 h2.title-submit {
   margin-bottom: 0em;
-  margin-top: 0.25em; }
+  margin-top: 0.25em;
+}
 
 h1.title.title-submit {
   margin-top: 0em;
-  margin-bottom: 0.5em; }
+  margin-bottom: 0.5em;
+}
 
 .texlive-summary article {
-  padding: 0.8rem; }
-  .texlive-summary article:not(:last-child) {
-    margin-bottom: 0.5em;
-    border-bottom-width: 1px;
-    border-bottom-style: dotted; }
+  padding: 0.8rem;
+}
+.texlive-summary article:not(:last-child) {
+  margin-bottom: 0.5em;
+  border-bottom-width: 1px;
+  border-bottom-style: dotted;
+}
 
 .alpha-before::before {
   content: "α";
@@ -56,7 +69,8 @@ h1.title.title-submit {
   top: -0.4em;
   left: -0.25em;
   line-height: 1;
-  font-family: serif; }
+  font-family: serif;
+}
 
 .beta-before::before {
   content: "β";
@@ -66,180 +80,223 @@ h1.title.title-submit {
   top: -0.4em;
   left: -0.25em;
   line-height: 1;
-  font-family: serif; }
+  font-family: serif;
+}
 
 /* overrides for this form only? may move to base */
 .field:not(:last-child) {
-  margin-bottom: 1.25em; }
+  margin-bottom: 1.25em;
+}
 
 .label:not(:last-child) {
-  margin-bottom: 0.25em; }
+  margin-bottom: 0.25em;
+}
 
 .buttons .button:not(:last-child) {
-  margin-right: 0.75rem; }
+  margin-right: 0.75rem;
+}
 
 /* tightens up user data display on verify user page */
 .user-info {
-  margin-bottom: 1rem; }
-  .user-info .field {
-    margin-bottom: 0.5rem; }
-    .user-info .field .field-label {
-      flex-grow: 2; }
+  margin-bottom: 1rem;
+}
+.user-info .field {
+  margin-bottom: 0.5rem;
+}
+.user-info .field .field-label {
+  flex-grow: 2;
+}
 
 .control .radio {
-  margin-bottom: 0.25em; }
+  margin-bottom: 0.25em;
+}
 
 /* Classes for zebra striping and nested directory display */
 ol.file-tree {
-  margin: 0 0 1rem 0; }
-  ol.file-tree li {
-    margin-top: 0;
-    padding-top: 0.15em;
-    padding-bottom: 0.15em;
-    background-color: white; }
-    ol.file-tree li.even {
-      background-color: #E8E8E8; }
-  ol.file-tree .columns {
-    margin: 0; }
-  ol.file-tree .column {
-    padding: 0; }
-    ol.file-tree .column .columns {
-      margin: 0; }
-  ol.file-tree > li ol {
-    border-left: 2px solid #CCC;
-    margin: 0 0 0 1rem; }
-    ol.file-tree > li ol li {
-      padding-left: 1em; }
-      ol.file-tree > li ol li:first-child {
-        margin-top: 0; }
+  margin: 0 0 1rem 0;
+}
+ol.file-tree li {
+  margin-top: 0;
+  padding-top: 0.15em;
+  padding-bottom: 0.15em;
+  padding-left: 0.25em;
+  padding-right: 0.25em;
+  background-color: white;
+}
+ol.file-tree li.even {
+  background-color: #E8E8E8;
+}
+ol.file-tree .columns {
+  margin: 0;
+}
+ol.file-tree .column {
+  padding: 0;
+}
+ol.file-tree .column .columns {
+  margin: 0;
+}
+ol.file-tree > li ol {
+  border-left: 2px solid #CCC;
+  margin: 0 0 0 1rem;
+}
+ol.file-tree > li ol li {
+  padding-left: 1em;
+}
+ol.file-tree > li ol li:first-child {
+  margin-top: 0;
+}
 
 /* For highlighting TeX logs */
 .tex-help {
   background-color: rgba(28, 97, 246, 0.4);
   /* background-color: rgba(152, 35, 255, 0.40) */
   color: #082031;
-  padding: 0 0.2em; }
+  padding: 0 0.2em;
+}
 
 .tex-suggestion {
   background-color: rgba(255, 245, 35, 0.6);
   color: #082031;
-  padding: 0 0.2em; }
+  padding: 0 0.2em;
+}
 
 .tex-info {
   background-color: rgba(0, 104, 173, 0.15);
   color: #082031;
-  padding: 0 0.2em; }
+  padding: 0 0.2em;
+}
 
 .tex-success {
   background-color: rgba(60, 181, 33, 0.15);
   color: #092c01;
-  padding: 0 0.2em; }
+  padding: 0 0.2em;
+}
 
 .tex-ignore {
   background-color: rgba(183, 183, 183, 0.3);
   color: #092c01;
-  padding: 0 0.2em; }
+  padding: 0 0.2em;
+}
 
 .tex-warning {
   background-color: rgba(214, 118, 0, 0.4);
   color: #211608;
-  padding: 0 0.2em; }
+  padding: 0 0.2em;
+}
 
 .tex-danger {
   background-color: rgba(204, 3, 0, 0.3);
   color: #340f0e;
-  padding: 0 0.2em; }
+  padding: 0 0.2em;
+}
 
 .tex-fatal {
   background-color: #cd0200;
   color: white;
-  padding: 0 0.2em; }
+  padding: 0 0.2em;
+}
 
 /* Classes for responsive bubble-style progress bar */
 ul.progressbar {
   width: 100%;
   display: flex;
-  margin: 0 0 1.5em 0; }
-  ul.progressbar > li {
-    text-align: center;
-    list-style: none;
-    position: relative;
-    margin-top: 1em;
-    width: 100%; }
-    ul.progressbar > li > a {
-      display: block;
-      color: #222;
-      line-height: 2em; }
-      ul.progressbar > li > a:before {
-        content: "";
-        display: block;
-        position: relative;
-        margin: 0 auto 4px;
-        background-color: #FFF;
-        width: 16px;
-        height: 16px;
-        text-align: center;
-        border: 5px solid #ccc;
-        border-radius: 50%; }
-      ul.progressbar > li > a:hover {
-        border-bottom: 1px solid transparent; }
-        ul.progressbar > li > a:hover:before {
-          border-width: 6px;
-          transform: scale(1.6);
-          box-shadow: 0px 0px 1px 0.5px #999; }
-    ul.progressbar > li:after {
-      content: "";
-      height: 16px;
-      width: 100%;
-      background-color: #ccc;
-      position: absolute;
-      top: 0;
-      right: 50%;
-      z-index: -1; }
-    ul.progressbar > li:first-child:after {
-      display: none; }
-    ul.progressbar > li.is-active > a:before {
-      background-color: #FFF;
-      border-color: #0068ac;
-      border-width: 2px;
-      transform: scale(1.6); }
-    ul.progressbar > li.is-complete:after {
-      background-color: #0068ac; }
-    ul.progressbar > li.is-complete > a:before {
-      background-color: #FFF;
-      border-color: #0068ac; }
+  margin: 0 0 1.5em 0;
+}
+ul.progressbar > li {
+  text-align: center;
+  list-style: none;
+  position: relative;
+  margin-top: 1em;
+  width: 100%;
+}
+ul.progressbar > li > a {
+  display: block;
+  color: #222;
+  line-height: 2em;
+}
+ul.progressbar > li > a:before {
+  content: "";
+  display: block;
+  position: relative;
+  margin: 0 auto 4px;
+  background-color: #FFF;
+  width: 16px;
+  height: 16px;
+  text-align: center;
+  border: 5px solid #ccc;
+  border-radius: 50%;
+}
+ul.progressbar > li > a:hover {
+  border-bottom: 1px solid transparent;
+}
+ul.progressbar > li > a:hover:before {
+  border-width: 6px;
+  transform: scale(1.6);
+  box-shadow: 0px 0px 1px 0.5px #999;
+}
+ul.progressbar > li:after {
+  content: "";
+  height: 16px;
+  width: 100%;
+  background-color: #ccc;
+  position: absolute;
+  top: 0;
+  right: 50%;
+  z-index: -1;
+}
+ul.progressbar > li:first-child:after {
+  display: none;
+}
+ul.progressbar > li.is-active > a:before {
+  background-color: #FFF;
+  border-color: #0068ac;
+  border-width: 2px;
+  transform: scale(1.6);
+}
+ul.progressbar > li.is-complete:after {
+  background-color: #0068ac;
+}
+ul.progressbar > li.is-complete > a:before {
+  background-color: #FFF;
+  border-color: #0068ac;
+}
 
 /* info and help bubbles */
 .help-bubble {
   position: relative;
-  display: inline-block; }
-  .help-bubble:hover .bubble-text {
-    visibility: visible; }
-  .help-bubble:focus .bubble-text {
-    visibility: visible; }
-  .help-bubble .bubble-text {
-    position: absolute;
-    visibility: hidden;
-    width: 160px;
-    background-color: #F5FAFE;
-    border: 1px solid #0068AC;
-    color: #0068AC;
-    text-align: center;
-    padding: 5px;
-    border-radius: 4px;
-    bottom: 125%;
-    left: 50%;
-    margin-left: -80px;
-    font-size: 0.8rem; }
-    .help-bubble .bubble-text:after {
-      content: " ";
-      position: absolute;
-      top: 100%;
-      left: 50%;
-      margin-left: -5px;
-      border-width: 5px;
-      border-style: solid;
-      border-color: #0068AC transparent transparent transparent; }
+  display: inline-block;
+}
+.help-bubble:hover .bubble-text {
+  visibility: visible;
+}
+.help-bubble:focus .bubble-text {
+  visibility: visible;
+}
+.help-bubble .bubble-text {
+  position: absolute;
+  visibility: hidden;
+  width: 160px;
+  background-color: #F5FAFE;
+  border: 1px solid #0068AC;
+  color: #0068AC;
+  text-align: center;
+  padding: 5px;
+  border-radius: 4px;
+  bottom: 125%;
+  left: 50%;
+  margin-left: -80px;
+  font-size: 0.8rem;
+}
+.help-bubble .bubble-text:after {
+  content: " ";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  margin-left: -5px;
+  border-width: 5px;
+  border-style: solid;
+  border-color: #0068AC transparent transparent transparent;
+}
 
 /* Formats the autotex log ouput.
  *
@@ -257,31 +314,39 @@ ul.progressbar {
   background-color: whitesmoke;
   font-family: "Courier New", Courier, monospace;
   font-size: 9pt;
-  padding: 4px; }
+  padding: 4px;
+}
 
 /* See https://github.com/jgthms/bulma/issues/1417 */
 .level-is-shrinkable {
-  flex-shrink: 1; }
+  flex-shrink: 1;
+}
 
 /* Prevent the links under the mini search bar from wrapping. */
 .mini-search .help {
-  width: 200%; }
+  width: 200%;
+}
 
 /* This forces the content to stay in bounds. This also fixes the overflow
  * of selects (without breaking the mini-search bar). */
 .container {
-  width: 100%; }
+  width: 100%;
+}
 
 columns {
-  max-width: 100%; }
+  max-width: 100%;
+}
 
 column {
-  max-width: 100%; }
+  max-width: 100%;
+}
 
 .field {
-  max-width: 100%; }
+  max-width: 100%;
+}
 
 .control-cross-list {
-  max-width: 80%; }
+  max-width: 80%;
+}
 
 /*# sourceMappingURL=submit.css.map */

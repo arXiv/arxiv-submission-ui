@@ -12,7 +12,7 @@
   {# Sometimes we need to show an alert immediately, without a redirect. #}
   {% block immediate_alerts %}
     {% if immediate_alerts -%}
-        <div class="notifications" role="alert">
+        <div class="notifications" role="alert" aria-atomic="true">
           {% for category, message in immediate_alerts -%}
             <div class="notification is-{{ category }}">
               {% if message.dismissable %}<button class="delete notification-dismiss"></button>{% endif %}
@@ -26,8 +26,8 @@
 
 {% if submission_id and workflow %}
   {{ submit_macros.progress_bar(submission_id, workflow, this_stage) }}
-{% endif %}
   <h2 class="title-submit">{% block title_preamble %}{% if submission and submission.version > 1 %}Submit a Replacement{% else %}Submit an Article{% endif %}{% endblock %}</h2>
+{% endif %}
   <h1 class="title title-submit">{% block title %}{% endblock title %}</h1>
   {% if submission and submission.version > 1 %}
     {# TODO: change this when we have better semantics on Submission domain class (e.g. last announced version) #}

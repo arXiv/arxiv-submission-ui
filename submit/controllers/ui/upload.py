@@ -21,7 +21,7 @@ from werkzeug import MultiDict
 from werkzeug.datastructures import FileStorage
 from werkzeug.exceptions import InternalServerError, BadRequest, \
     MethodNotAllowed
-from wtforms import BooleanField, widgets, HiddenField, FileField
+from wtforms import BooleanField, HiddenField, FileField
 from wtforms.validators import DataRequired
 
 from arxiv.base import logging, alerts
@@ -330,7 +330,8 @@ def delete(method: str, params: MultiDict, session: Session,
 class UploadForm(csrf.CSRFForm):
     """Form for uploading files."""
 
-    file = FileField('Choose a file...', validators=[DataRequired()])
+    file = FileField('Choose a file...',
+                     validators=[DataRequired()])
     ancillary = BooleanField('Ancillary')
 
 
@@ -577,11 +578,7 @@ def _new_file(params: MultiDict, pointer: FileStorage, session: Session,
         logger.error('Invalid upload form: %s', form.errors)
 
         alerts.flash_failure("Something went wrong. Please try again.",
-                             title="Whoops")
-        # redirect = url_for('ui.file_upload',
-        #                    submission_id=submission.submission_id)
-        # return {}, status.SEE_OTHER, {'Location': redirect}
-        logger.debug('Invalid form data')
+                             title="Error")
         raise BadRequest(rdata)
     ancillary: bool = form.ancillary.data
 

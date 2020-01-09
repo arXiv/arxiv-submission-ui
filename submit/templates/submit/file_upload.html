@@ -51,6 +51,7 @@
 {% block title -%}Upload Files{%- endblock title %}
 
 {% block within_content %}
+
 <form class="form" action="{{ url_for('ui.file_upload', submission_id=submission_id) }}" method="POST" enctype="multipart/form-data">
   <div class="columns">
     <div class="column is-two-thirds-desktop is-three-quarters-tablet">
@@ -73,7 +74,8 @@
             {{ form.ancillary }} Ancillary <a class="icon has-text-link help-bubble" href="{{ url_for('help_ancillary_files') }}"><i class="fa fa-info-circle"></i><div class="bubble-text">Ancillary files will be placed in an /anc directory automatically.</div></a>
         </div>
         <div class="control">
-          <button type="submit" class="button is-link">Upload</button>
+          <button id="file-submit" type="submit" class="button is-link" disabled>Upload</button>
+
         </div>
       </div>
       {% if form.file.errors %}

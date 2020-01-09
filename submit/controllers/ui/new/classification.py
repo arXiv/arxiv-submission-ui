@@ -190,7 +190,6 @@ def cross_list(method: str, params: MultiDict, session: Session,
         action = params.get('action')
         if not action:
             if not form.validate():
-                logger.debug('Failed to validate form')
                 raise BadRequest(response_data)
 
             if form.operation.data == form.REMOVE:
@@ -200,7 +199,6 @@ def cross_list(method: str, params: MultiDict, session: Session,
             command = command_type(category=form.category.data,
                                    creator=submitter, client=client)
             if not validate_command(form, command, submission, 'category'):
-                logger.debug('Failed to validate command')
                 raise BadRequest(response_data)
 
             try:

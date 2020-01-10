@@ -577,8 +577,9 @@ def _new_file(params: MultiDict, pointer: FileStorage, session: Session,
     if not form.validate():
         logger.error('Invalid upload form: %s', form.errors)
 
-        alerts.flash_failure("Something went wrong. Please try again.",
-                             title="Error")
+        alerts.flash_failure(
+            "No file was uploaded; please try again.",
+            title="Something went wrong")
 
         loc = url_for('ui.file_upload', submission_id=submission.submission_id)
         return {}, status.SEE_OTHER, {'Location': loc}

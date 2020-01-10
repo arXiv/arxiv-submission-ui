@@ -1,10 +1,11 @@
 {% macro submit_nav(submission_id) %}
   <div class="buttons submit-nav" role="navigation" aria-label="Submission form controls">
-      <a href="{{ url_for('ui.delete_submission', submission_id=submission_id) }}" name="cancel" class="button is-outlined is-size-6 is-size-7-mobile " style="border:0" value="cancel">
+      <!-- <a href="{{ url_for('ui.delete_submission', submission_id=submission_id) }}" name="cancel" class="button is-outlined is-size-6 is-size-7-mobile " style="border:0" value="cancel">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512" class="icon filter-blue" role="presentation"><title>Cancel Submission</title><path d="M32 464a48 48 0 0 0 48 48h288a48 48 0 0 0 48-48V128H32zm272-256a16 16 0 0 1 32 0v224a16 16 0 0 1-32 0zm-96 0a16 16 0 0 1 32 0v224a16 16 0 0 1-32 0zm-96 0a16 16 0 0 1 32 0v224a16 16 0 0 1-32 0zM432 32H312l-9.4-18.7A24 24 0 0 0 281.1 0H166.8a23.72 23.72 0 0 0-21.4 13.3L136 32H16A16 16 0 0 0 0 48v32a16 16 0 0 0 16 16h416a16 16 0 0 0 16-16V48a16 16 0 0 0-16-16z"/></svg>
         <span class="is-sr-only">Cancel Submission</span>
-      </a>
-      <button name="action" class="button is-size-6 is-size-7-mobile value="previous" aria-label="Go back one step">Go Back</button>
+      </a> -->
+      <a href="#" class="button is-size-6 is-size-7-mobile" value="previous" aria-label="Manage Submissions">Manage Submissions</a>
+      <button name="action" class="button is-size-6 is-size-7-mobile" value="previous" aria-label="Go back one step">Go Back</button>
       <button name="action" type="submit" class="button is-size-6 is-size-7-mobile" value="save_exit" aria-label="Save and Exit">Save & Exit</button>
       <button name="action" class="button is-link is-size-6 is-size-7-mobile" value="next" aria-label="Save and continue">Save & Continue</button>
   </div>
@@ -17,6 +18,9 @@
       {% for stage in workflow %}
       <li class="{% if workflow.is_done(stage) or this_stage == stage.type %}is-complete{% endif %} {% if this_stage == stage.type %}is-active{% endif %}">
         <a class="is-size-7" title="{{ stage.title }}" href="{% if submission_id %}{{ url_for('ui.' + stage.endpoint, submission_id=submission_id) }}{% endif %}">
+          {% if workflow.is_done(stage) or this_stage == stage.type %}
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512" class="icon filter-grey" role="presentation"><path d="M400 480H48c-26.51 0-48-21.49-48-48V80c0-26.51 21.49-48 48-48h352c26.51 0 48 21.49 48 48v352c0 26.51-21.49 48-48 48zm-204.686-98.059l184-184c6.248-6.248 6.248-16.379 0-22.627l-22.627-22.627c-6.248-6.248-16.379-6.249-22.628 0L184 302.745l-70.059-70.059c-6.248-6.248-16.379-6.248-22.628 0l-22.627 22.627c-6.248 6.248-6.248 16.379 0 22.627l104 104c6.249 6.25 16.379 6.25 22.628.001z"/></svg>
+          {% endif %}
           {{ stage.display }}
         </a>
       </li>

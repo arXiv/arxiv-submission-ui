@@ -10,11 +10,11 @@
 {% block content %}
   {% if submission_id and workflow %}
     {{ submit_macros.progress_bar(submission_id, workflow, this_stage) }}
-    <h2 class="title-submit">{% block title_preamble %}{% if submission and submission.version > 1 %}Submit a Replacement{% else %}Submit an Article{% endif %}{% endblock %}</h2>
+    <h2 class="title-submit">{% block title_preamble %}{% if submission and submission.version > 1 %}Replace{% else %}Submit{% endif %}{% endblock %}</h2>
   {% endif %}
 
   <h1 class="title title-submit">{% block title %}{% endblock title %}</h1>
-  
+
   {# Sometimes we need to show an alert immediately, without a redirect. #}
   {% block immediate_alerts %}
     {% if immediate_alerts -%}

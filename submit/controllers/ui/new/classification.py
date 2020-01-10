@@ -79,10 +79,13 @@ class ClassificationForm(csrf.CSRFForm):
         formset = {}
         if hasattr(submission, 'secondary_classification') and \
                 submission.secondary_classification:
-            for secondary in submission.secondary_classification:
+            for ix, secondary in enumerate(submission.secondary_classification):
                 this_category = str(secondary.category)
                 subform = cls(operation=cls.REMOVE, category=this_category)
                 subform.category.widget = widgets.HiddenInput()
+                subform.category.id = f"{ix}_category"
+                subform.operation.id = f"{ix}_operation"
+                subform.csrf_token.id = f"{ix}_csrf_token"
                 formset[secondary.category] = subform
         return formset
 
@@ -98,7 +101,7 @@ class PrimaryClassificationForm(ClassificationForm):
 
 def classification(method: str, params: MultiDict, session: Session,
                    submission_id: int, **kwargs) -> Response:
-    """Handle primary classification requests."""
+    """Handle primary classification requests for a new submission."""
     submitter, client = user_and_client_from_session(session)
     submission, submission_events = load_submission(submission_id)
 
@@ -147,7 +150,7 @@ def classification(method: str, params: MultiDict, session: Session,
 
 def cross_list(method: str, params: MultiDict, session: Session,
                submission_id: int, **kwargs) -> Response:
-
+    """Handle secondary classification requests for a new submision."""
     submitter, client = user_and_client_from_session(session)
     submission, submission_events = load_submission(submission_id)
 

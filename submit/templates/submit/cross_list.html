@@ -21,7 +21,7 @@
         {% for category, subform in formset.items() %}
 
         <form method="POST" class="form form-margin control" action="{{ url_for('ui.cross_list', submission_id=submission_id) }}">
-          {{ form.csrf_token }}
+          {{ subform.csrf_token }}
           <p>
             {{ subform.operation }}
             {{ subform.category()|safe }}

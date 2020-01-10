@@ -27,6 +27,9 @@ main
 .submit-nav
   margin-top: 2.5rem
 
+  button:last-of-type
+    margin-left: auto
+
 .form-margin
   margin: .4em 0
 
@@ -35,15 +38,16 @@ main
 
 nav.submit-pagination
   display: block
-  float: right
-  width: 80%
+  /*float: right*/
+  width: 100%
 
 h2.title-submit
   margin-bottom: 0em
-  margin-top: 0.25em
+  margin-top: 0.25em !important
   display: block
   float: left
-  width: 20%
+  width: 10%
+  display: none
 
 h1.title.title-submit
   margin-top: 0em
@@ -174,15 +178,103 @@ ol.file-tree
   color: rgba(255,255,255,1)
   padding: 0 0.2em
 
-/* Classes for responsive bubble-style progress bar */
 
+/* Classes for responsive progress bar */
+.progressbar,
+.progressbar li a
+  display: flex
+  flex-wrap: wrap
+  justify-content: center
+  align-items: center
+  margin: 0
+
+.progressbar
+  li
+    background-color: rgba(0, 0, 0, .15)
+    list-style: none
+    padding: 0
+    margin: .5px
+    transition: background-color 0.3s
+    border: 0
+    color: whitesmoke
+    flex-grow: 1
+
+  li:hover
+    background-color: rgba(0, 0, 0, .25)
+    border: 0
+
+  @media screen and (max-width: 1200px)
+    li
+      width: calc(100% * (1/6) - 10px - 1px)
+
+  li a
+    font-weight: 300
+    text-decoration: none
+    color: #666666
+    padding-top: .5em
+    padding-bottom: .5em
+    padding-left: 1.25em
+    padding-right: 1.25em
+    transition: color 0.3s
+
+  li a:hover
+    text-decoration: none
+    border-bottom: 0px
+
+  li:not([class*="is-active"]) a:hover,
+  li:not([class*="is-active"]) a:focus,
+  li:not([class*="is-active"]) a:active
+    color: black
+
+  li.is-active,
+  li.is-complete.is-active
+    background-color: #515151
+
+  li.is-active a
+    color: white
+    font-weight: 600
+    cursor: default
+    pointer-events: none
+    /*padding-right: calc(1.25em - 15px)*/
+
+  li.is-active::after
+    content: ""
+    height: 0px
+    width: 0px
+    border: 8px solid transparent
+    border-left-color: #515151
+    margin-left: -8px
+    z-index: 2
+    float: right
+    margin-right: -15px
+    margin-top: -22px
+
+  li:last-child.is-active a::after
+      content: none !important
+
+  li.is-complete
+    background-color: rgba(0, 0, 0, .45)
+
+  li.is-complete a
+    color: white
+
+  li.is-active a .icon
+    display: none
+    
+  li.is-complete a .icon
+    height: 1rem
+    width: 1rem
+    fill: grey
+    margin: 0 3px 0 0
+
+/* Classes for responsive bubble-style progress bar */
 $bubblesize: 16px
 $barsize: 16px
 $dotcolor: #FFF
 $complete: #0068ac
 $incomplete: #ccc
 
-ul.progressbar
+ul.progressbar-OLD
   width: 100%
   display: flex
   margin: 0 0 1.5em 0

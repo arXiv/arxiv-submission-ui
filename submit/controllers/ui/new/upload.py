@@ -32,11 +32,12 @@ from arxiv.submission.services import Filemanager
 from arxiv.submission.domain.uploads import Upload, FileStatus, UploadStatus
 from arxiv.submission.domain.submission import SubmissionContent
 from arxiv.submission.domain.event import SetUploadPackage, UpdateUploadPackage
-from arxiv.submission.exceptions import InvalidEvent, SaveError
+from arxiv.submission.exceptions import SaveError
 from arxiv.users.domain import Session
 
-from .util import validate_command, user_and_client_from_session
-from ...util import load_submission, tidy_filesize
+from submit.controllers.ui.util import validate_command, \
+    user_and_client_from_session
+from submit.util import load_submission, tidy_filesize
 
 
 logger = logging.getLogger(__name__)
@@ -782,12 +783,14 @@ def group_files(files: List[FileStatus]) -> NestedFileTree:
         # add the files at this level before any subtrees
         ordered_subtree = OrderedDict()
         if filestats and filestats is not None:
-            for fs in sorted(filestats, key=lambda fs: strxfrm(fs.path.casefold())):
+            for fs in sorted(filestats,
+                             key=lambda fs: strxfrm(fs.path.casefold())):
                 ordered_subtree[fs.path] = fs
 
         if deeper_subtrees:
             for key, deeper in sorted(deeper_subtrees,
-                                      key=lambda tup: strxfrm(tup[0].casefold())):
+                                      key=lambda tup: strxfrm(
+                                          tup[0].casefold())):
                 ordered_subtree[key] = _order(deeper)
 
         return ordered_subtree

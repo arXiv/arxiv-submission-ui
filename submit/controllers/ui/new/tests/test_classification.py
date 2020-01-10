@@ -6,7 +6,7 @@ from werkzeug.exceptions import InternalServerError, NotFound, BadRequest
 from wtforms import Form
 from http import HTTPStatus as status
 import arxiv.submission as events
-from submit.controllers import classification
+from submit.controllers.ui.new import classification
 
 from pytz import timezone
 from datetime import timedelta, datetime

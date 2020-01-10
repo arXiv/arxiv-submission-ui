@@ -13,7 +13,7 @@ import arxiv.submission as events
 from arxiv.submission.domain.event import SetLicense
 from arxiv.users import auth, domain
 
-from submit.controllers import license
+from submit.controllers.ui.new import license
 
 
 class TestSetLicense(TestCase):
@@ -91,7 +91,7 @@ class TestSetLicense(TestCase):
             self.assertIsInstance(data['form'], Form, "Data includes a form")
 
     @mock.patch(f'{license.__name__}.LicenseForm.Meta.csrf', False)
-    @mock.patch('submit.controllers.util.url_for')
+    @mock.patch('submit.controllers.ui.util.url_for')
     @mock.patch(f'{license.__name__}.save')
     @mock.patch('arxiv.submission.load')
     def test_post_request_with_data(self, mock_load, mock_save, mock_url_for):
@@ -114,7 +114,7 @@ class TestSetLicense(TestCase):
         self.assertEqual(code, status.SEE_OTHER, "Returns redirect")
 
     @mock.patch(f'{license.__name__}.LicenseForm.Meta.csrf', False)
-    @mock.patch('submit.controllers.util.url_for')
+    @mock.patch('submit.controllers.ui.util.url_for')
     @mock.patch(f'{license.__name__}.save')
     @mock.patch('arxiv.submission.load')
     def test_save_fails(self, mock_load, mock_save, mock_url_for):

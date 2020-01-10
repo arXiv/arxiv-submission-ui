@@ -20,7 +20,7 @@ from arxiv.submission.services.classic.exceptions import Unavailable
 
 from ..auth import is_owner
 from ... import util
-from ...controllers import ui
+from submit.controllers import ui
 #from ...domain import workflow
 from .workflow import Authorship, BaseStage, Classification, Confirm, \
     CrossList, FileUpload, FinalPreview, License, Metadata, OptionalMetadata, Policy, \
@@ -194,7 +194,7 @@ def service_status():
                         unauthorized=redirect_to_login)
 def manage_submissions():
     """Display the submission management dashboard."""
-    return handle(ui.create.create, 'submit/manage_submissions.html',
+    return handle(ui.new.create.create, 'submit/manage_submissions.html',
                   'Manage submissions')
 
 
@@ -212,7 +212,7 @@ def create_submission():
                         unauthorized=redirect_to_login)
 def unsubmit_submission(submission_id: int):
     """Unsubmit (unfinalize) a submission."""
-    return handle(ui.unsubmit.unsubmit,
+    return handle(ui.new.unsubmit.unsubmit,
                   'submit/confirm_unsubmit.html',
                   'Unsubmit submission', submission_id)
 
@@ -242,7 +242,7 @@ def cancel_request(submission_id: int, request_id: str):
                         unauthorized=redirect_to_login)
 def create_replacement(submission_id: int):
     """Create a replacement submission."""
-    return handle(ui.create.replace, 'submit/replace.html',
+    return handle(ui.new.create.replace, 'submit/replace.html',
                   'Create a new version (replacement)', submission_id)
 
 
@@ -327,7 +327,7 @@ def submission_status(submission_id: int) -> Response:
 @flow_control(VerifyUser)
 def verify(submission_id: Optional[int] = None) -> Response:
     """Render the submit start page."""
-    return handle(ui.verify_user.verify, 'submit/verify_user.html',
+    return handle(ui.new.verify_user.verify, 'submit/verify_user.html',
                   'Verify User Information', submission_id)
 
 
@@ -337,7 +337,7 @@ def verify(submission_id: Optional[int] = None) -> Response:
 @flow_control(Authorship)
 def authorship(submission_id: int) -> Response:
     """Render step 2, authorship."""
-    return handle(ui.authorship.authorship, 'submit/authorship.html',
+    return handle(ui.new.authorship.authorship, 'submit/authorship.html',
                   'Confirm Authorship', submission_id)
 
 
@@ -347,7 +347,7 @@ def authorship(submission_id: int) -> Response:
 @flow_control(License)
 def license(submission_id: int) -> Response:
     """Render step 3, select license."""
-    return handle(ui.license.license, 'submit/license.html',
+    return handle(ui.new.license.license, 'submit/license.html',
                   'Select a License', submission_id)
 
 
@@ -357,7 +357,7 @@ def license(submission_id: int) -> Response:
 @flow_control(Policy)
 def policy(submission_id: int) -> Response:
     """Render step 4, policy agreement."""
-    return handle(ui.policy.policy, 'submit/policy.html',
+    return handle(ui.new.policy.policy, 'submit/policy.html',
                   'Acknowledge Policy Statement', submission_id)
 
 
@@ -367,7 +367,7 @@ def policy(submission_id: int) -> Response:
 @flow_control(Classification)
 def classification(submission_id: int) -> Response:
     """Render step 5, choose classification."""
-    return handle(ui.classification.classification,
+    return handle(ui.new.classification.classification,
                   'submit/classification.html',
                   'Choose a Primary Classification', submission_id)
 
@@ -378,7 +378,7 @@ def classification(submission_id: int) -> Response:
 @flow_control(CrossList)
 def cross_list(submission_id: int) -> Response:
     """Render step 6, secondary classes."""
-    return handle(ui.classification.cross_list,
+    return handle(ui.new.classification.cross_list,
                   'submit/cross_list.html',
                   'Choose Cross-List Classifications', submission_id)
 
@@ -389,7 +389,7 @@ def cross_list(submission_id: int) -> Response:
 @flow_control(FileUpload)
 def file_upload(submission_id: int) -> Response:
     """Render step 7, file upload."""
-    return handle(ui.upload_files, 'submit/file_upload.html',
+    return handle(ui.new.upload.upload_files, 'submit/file_upload.html',
                   'Upload Files', submission_id, files=request.files,
                   token=request.environ['token'])
 
@@ -423,7 +423,7 @@ def file_delete_all(submission_id: int) -> Response:
 @flow_control(Process)
 def file_process(submission_id: int) -> Response:
     """Render step 8, file processing."""
-    return handle(ui.process.file_process, 'submit/file_process.html',
+    return handle(ui.new.process.file_process, 'submit/file_process.html',
                   'Process Files', submission_id, get_params=True,
                   token=request.environ['token'])
 
@@ -432,7 +432,7 @@ def file_process(submission_id: int) -> Response:
 @auth.decorators.scoped(auth.scopes.VIEW_SUBMISSION, authorizer=is_owner,
                         unauthorized=redirect_to_login)
 def file_preview(submission_id: int) -> Response:
-    data, code, headers = ui.file_preview(
+    data, code, headers = ui.new.process.file_preview(
         MultiDict(request.args.items(multi=True)),
         request.auth,
         submission_id,
@@ -449,10 +449,10 @@ def file_preview(submission_id: int) -> Response:
 @auth.decorators.scoped(auth.scopes.VIEW_SUBMISSION, authorizer=is_owner,
                         unauthorized=redirect_to_login)
 def compilation_log(submission_id: int) -> Response:
-    data, code, headers = ui.compilation_log(
+    data, code, headers = ui.new.process.compilation_log(
         MultiDict(request.args.items(multi=True)),
         request.auth,
-         submission_id,
+        submission_id,
         request.environ['token']
     )
     rv = send_file(data, mimetype=headers['Content-Type'], cache_timeout=0)
@@ -467,7 +467,7 @@ def compilation_log(submission_id: int) -> Response:
 @flow_control(Metadata)
 def add_metadata(submission_id: int) -> Response:
     """Render step 9, metadata."""
-    return handle(ui.metadata.metadata, 'submit/add_metadata.html',
+    return handle(ui.new.metadata.metadata, 'submit/add_metadata.html',
                   'Add or Edit Metadata', submission_id)
 
 
@@ -477,7 +477,7 @@ def add_metadata(submission_id: int) -> Response:
 @flow_control(OptionalMetadata)
 def add_optional_metadata(submission_id: int) -> Response:
     """Render step 9, metadata."""
-    return handle(ui.metadata.optional,
+    return handle(ui.new.metadata.optional,
                   'submit/add_optional_metadata.html',
                   'Add or Edit Metadata', submission_id)
 
@@ -488,7 +488,7 @@ def add_optional_metadata(submission_id: int) -> Response:
 @flow_control(FinalPreview)
 def final_preview(submission_id: int) -> Response:
     """Render step 10, preview."""
-    return handle(ui.final.finalize, 'submit/final_preview.html',
+    return handle(ui.new.final.finalize, 'submit/final_preview.html',
                   'Preview and Approve', submission_id)
 
 
@@ -498,7 +498,9 @@ def final_preview(submission_id: int) -> Response:
 @flow_control(Confirm)
 def confirmation(submission_id: int) -> Response:
     """Render the final confirmation page."""
-    return handle(ui.final.confirm, "submit/confirm_submit.html", 'Submission Confirmed', submission_id)
+    return handle(ui.new.final.confirm, "submit/confirm_submit.html",
+                  'Submission Confirmed',
+                  submission_id)
 
 # Other workflows.
 

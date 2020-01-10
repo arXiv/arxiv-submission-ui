@@ -6,7 +6,7 @@ from werkzeug.exceptions import InternalServerError, NotFound
 from wtforms import Form
 from http import HTTPStatus as status
 import arxiv.submission as events
-from submit.controllers import jref
+from submit.controllers.ui import jref
 
 from pytz import timezone
 from datetime import timedelta, datetime

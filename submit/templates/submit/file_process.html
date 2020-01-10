@@ -33,7 +33,11 @@
       {% if status == "in_progress" %}
       <div id="status-message" data-status="{{ status }}" class="message is-warning">
         <div class="message-header">
-          <p><span class="icon"><i class="fa fa-tasks"></i></span>Processing Underway</p></div>
+          <p>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" class="icon filter-orange" role="presentation"><path d="M139.61 35.5a12 12 0 0 0-17 0L58.93 98.81l-22.7-22.12a12 12 0 0 0-17 0L3.53 92.41a12 12 0 0 0 0 17l47.59 47.4a12.78 12.78 0 0 0 17.61 0l15.59-15.62L156.52 69a12.09 12.09 0 0 0 .09-17zm0 159.19a12 12 0 0 0-17 0l-63.68 63.72-22.7-22.1a12 12 0 0 0-17 0L3.53 252a12 12 0 0 0 0 17L51 316.5a12.77 12.77 0 0 0 17.6 0l15.7-15.69 72.2-72.22a12 12 0 0 0 .09-16.9zM64 368c-26.49 0-48.59 21.5-48.59 48S37.53 464 64 464a48 48 0 0 0 0-96zm432 16H208a16 16 0 0 0-16 16v32a16 16 0 0 0 16 16h288a16 16 0 0 0 16-16v-32a16 16 0 0 0-16-16zm0-320H208a16 16 0 0 0-16 16v32a16 16 0 0 0 16 16h288a16 16 0 0 0 16-16V80a16 16 0 0 0-16-16zm0 160H208a16 16 0 0 0-16 16v32a16 16 0 0 0 16 16h288a16 16 0 0 0 16-16v-32a16 16 0 0 0-16-16z"/></svg>
+            Processing Underway
+          </p>
+        </div>
         <div class="message-body">
           <p>
             We are currently processing your submission. This may take up to a minute or two.
@@ -46,7 +50,11 @@
       {% elif status == "failed" %}
       <div id="status-message" data-status="{{ status }}" class="message is-danger">
         <div class="message-header">
-          <p><span class="icon"><i class="fa fa-exclamation-triangle"></i></span>Processing Failed</p></div>
+          <p>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512" class="icon filter-red" role="presentation"><path d="M569.517 440.013C587.975 472.007 564.806 512 527.94 512H48.054c-36.937 0-59.999-40.055-41.577-71.987L246.423 23.985c18.467-32.009 64.72-31.951 83.154 0l239.94 416.028zM288 354c-25.405 0-46 20.595-46 46s20.595 46 46 46 46-20.595 46-46-20.595-46-46-46zm-43.673-165.346l7.418 136c.347 6.364 5.609 11.346 11.982 11.346h48.546c6.373 0 11.635-4.982 11.982-11.346l7.418-136c.375-6.874-5.098-12.654-11.982-12.654h-63.383c-6.884 0-12.356 5.78-11.981 12.654z"/></svg>
+            Processing Failed
+          </p>
+        </div>
         <div class="message-body">
           <p>What to do next:</p>
           <ul>
@@ -64,7 +72,10 @@
       {% elif status == "succeeded" and warnings %}
       <div id="status-message" data-status="{{ status }}" class="message is-warning">
         <div class="message-header">
-          <p><span class="icon"><i class="fa fa-exclamation-triangle"></i></span>Completed With Warnings</p>
+          <p>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512" class="icon filter-white" role="presentation"><path d="M569.517 440.013C587.975 472.007 564.806 512 527.94 512H48.054c-36.937 0-59.999-40.055-41.577-71.987L246.423 23.985c18.467-32.009 64.72-31.951 83.154 0l239.94 416.028zM288 354c-25.405 0-46 20.595-46 46s20.595 46 46 46 46-20.595 46-46-20.595-46-46-46zm-43.673-165.346l7.418 136c.347 6.364 5.609 11.346 11.982 11.346h48.546c6.373 0 11.635-4.982 11.982-11.346l7.418-136c.375-6.874-5.098-12.654-11.982-12.654h-63.383c-6.884 0-12.356 5.78-11.981 12.654z"/></svg>
+            Completed With Warnings
+          </p>
         </div>
         <div class="message-body">
           <p>Warnings may cause your submission to display incorrectly or be delayed in announcement.</p>
@@ -74,7 +85,8 @@
           </ul>
           <p class="has-text-centered">
             <a class="button is-link" href="{{ url_for('ui.file_preview', submission_id=submission_id) }}" target="_blank" title="PDF preview opens in a new tab">
-              <span>View PDF</span> <span class="icon"><i class="fa fa-external-link"></i></span>
+              <span>View PDF</span>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" class="icon filter-white"><path d="M432,320H400a16,16,0,0,0-16,16V448H64V128H208a16,16,0,0,0,16-16V80a16,16,0,0,0-16-16H48A48,48,0,0,0,0,112V464a48,48,0,0,0,48,48H400a48,48,0,0,0,48-48V336A16,16,0,0,0,432,320ZM488,0h-128c-21.37,0-32.05,25.91-17,41l35.73,35.73L135,320.37a24,24,0,0,0,0,34L157.67,377a24,24,0,0,0,34,0L435.28,133.32,471,169c15,15,41,4.5,41-17V24A24,24,0,0,0,488,0Z"/></svg>
             </a>
           </p>
           <p class="has-text-centered"><a class="button" href="{{ url_for('help_texprobs') }}">Help: TeX Rendering Problems</a></p>
@@ -84,7 +96,11 @@
       {% elif status == "succeeded" %}
       <div id="status-message" data-status="{{ status }}" class="message is-success">
         <div class="message-header">
-          <p><span class="icon"><i class="fa fa-check-circle"></i></span>Processing Successful</p></div>
+          <p>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" class="icon filter-white" role="presentation"><path d="M504 256c0 136.967-111.033 248-248 248S8 392.967 8 256 119.033 8 256 8s248 111.033 248 248zM227.314 387.314l184-184c6.248-6.248 6.248-16.379 0-22.627l-22.627-22.627c-6.248-6.249-16.379-6.249-22.628 0L216 308.118l-70.059-70.059c-6.248-6.248-16.379-6.248-22.628 0l-22.627 22.627c-6.248 6.248-6.248 16.379 0 22.627l104 104c6.249 6.249 16.379 6.249 22.628.001z"/></svg>
+            Processing Successful
+          </p>
+        </div>
         <div class="message-body">
           <p class="has-text-weight-bold">Be sure to check the compiled preview carefully for any undesired artifacts or errors.</p>
           <p>Reference numbers and captions are important to check.</p>
@@ -92,7 +108,8 @@
 
           <p class="has-text-centered">
             <a class="button is-link" href="{{ url_for('ui.file_preview', submission_id=submission_id) }}" target="_blank" title="PDF preview opens in a new tab">
-              <span>View PDF</span> <span class="icon"><i class="fa fa-external-link"></i></span>
+              <span>View PDF</span>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" class="icon filter-white"><path d="M432,320H400a16,16,0,0,0-16,16V448H64V128H208a16,16,0,0,0,16-16V80a16,16,0,0,0-16-16H48A48,48,0,0,0,0,112V464a48,48,0,0,0,48,48H400a48,48,0,0,0,48-48V336A16,16,0,0,0,432,320ZM488,0h-128c-21.37,0-32.05,25.91-17,41l35.73,35.73L135,320.37a24,24,0,0,0,0,34L157.67,377a24,24,0,0,0,34,0L435.28,133.32,471,169c15,15,41,4.5,41-17V24A24,24,0,0,0,488,0Z"/></svg>
             </a>
           </p>
         </div>
@@ -135,10 +152,11 @@
     {% if not status or status == "not_started" %}
     <div class="message is-info">
       <div class="message-body">
-        <p><span class="icon has-text-link"><i class="fa fa-info-circle"></i></span>
-        This step runs all files through a series of automatic checks.<br />
-         Additionally, TeX and LaTeX source packages will be compiled into a PDF.<br />
-         <a href="{{ url_for('help_texlive') }}">View information about our compiler and included packages</a>.
+        <p>
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" class="icon filter-blue"><path d="M256 8C119.043 8 8 119.083 8 256c0 136.997 111.043 248 248 248s248-111.003 248-248C504 119.083 392.957 8 256 8zm0 110c23.196 0 42 18.804 42 42s-18.804 42-42 42-42-18.804-42-42 18.804-42 42-42zm56 254c0 6.627-5.373 12-12 12h-88c-6.627 0-12-5.373-12-12v-24c0-6.627 5.373-12 12-12h12v-64h-12c-6.627 0-12-5.373-12-12v-24c0-6.627 5.373-12 12-12h64c6.627 0 12 5.373 12 12v100h12c6.627 0 12 5.373 12 12v24z"/></svg>
+          This step runs all files through a series of automatic checks.<br />
+          Additionally, TeX and LaTeX source packages will be compiled into a PDF.<br />
+          <a href="{{ url_for('help_texlive') }}">View information about our compiler and included packages</a>.
         </p>
       </div>
     </div>
@@ -162,7 +180,10 @@
         </div>
         <div>
           <div class="help-bubble">
-            <i class="fa fa-question-circle is-info"> Highlighting Key</i>
+            <button>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" class="icon filter-blue" role="presentation"><path d="M256 8C119.043 8 8 119.083 8 256c0 136.997 111.043 248 248 248s248-111.003 248-248C504 119.083 392.957 8 256 8zm0 110c23.196 0 42 18.804 42 42s-18.804 42-42 42-42-18.804-42-42 18.804-42 42-42zm56 254c0 6.627-5.373 12-12 12h-88c-6.627 0-12-5.373-12-12v-24c0-6.627 5.373-12 12-12h12v-64h-12c-6.627 0-12-5.373-12-12v-24c0-6.627 5.373-12 12-12h64c6.627 0 12 5.373 12 12v100h12c6.627 0 12 5.373 12 12v24z"/></svg>
+              Highlighting Key
+            </button>
             <div class="bubble-text">
               <div class="is-size-10">
                 <p><strong>Highlighting Key</strong></p>
@@ -180,7 +201,8 @@
         </div>
         <div class="level-right">
           <a class="button" href="{{ url_for('ui.compilation_log', submission_id=submission_id) }}" target="_blank">
-            <span>View raw log</span> <span class="icon"><i class="fa fa-external-link"></i></span>
+            <span>View raw log</span>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" class="icon" role="presentation"><path d="M432,320H400a16,16,0,0,0-16,16V448H64V128H208a16,16,0,0,0,16-16V80a16,16,0,0,0-16-16H48A48,48,0,0,0,0,112V464a48,48,0,0,0,48,48H400a48,48,0,0,0,48-48V336A16,16,0,0,0,432,320ZM488,0h-128c-21.37,0-32.05,25.91-17,41l35.73,35.73L135,320.37a24,24,0,0,0,0,34L157.67,377a24,24,0,0,0,34,0L435.28,133.32,471,169c15,15,41,4.5,41-17V24A24,24,0,0,0,488,0Z"/></svg>
           </a>
         </div>
       </div>

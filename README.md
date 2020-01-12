@@ -62,14 +62,12 @@ overwrite of the default configuration file.
 
 Make sure you have your AWS settings configured properly before proceeding (see above).
 
-```
-
 ```bash
 cd /path/to/arxiv-submission-ui
 mkdir /tmp/foo          # Compiler service will use this.
 docker-compose -f docker-compose-mock-compiler.yml pull     # Pulls in images that you might not have already.
 docker-compose -f docker-compose-mock-compiler.yml build    # Builds the submission UI
-DIND_SOURCE_ROOT=/tmp/foo docker-compose  -f docker-compose-mock-compiler.yml up
+DIND_SOURCE_ROOT=/tmp/foo docker-compose -f docker-compose-mock-compiler.yml up
 ```
 
 You may see the following errors when running ``docker-compose -f docker-compose-mock-compiler.yml pull``,
@@ -105,7 +103,7 @@ When using the mock-compiler service you will get the same PDF and compilation l
 The idea behind the mock compiler service is to let you work through the entire submission process workflow
 without the hassle of installing the compiler service.
 
-## Quick start using full arXiv Compiler service (with compilation)
+## Quick start using full arXiv Compiler service (with actual TeX compilation)
 
 ### AWS Credentials
 First, you will need credentials to AWS ECR to get the converter docker
@@ -152,7 +150,7 @@ ERROR: for submission-bootstrap  manifest for arxiv/submission-ui:latest not fou
 ERROR: pull access denied for arxiv/mock-vault, repository does not exist or may require 'docker login'
 ```
 
-## What to expect during startup (hint: lots of logs messages from the various micro services)
+## What to expect during startup (hint: lots of logs messages from the various microservices)
 
 The `DIND_SOURCE_ROOT...docker-compose up` command will start a whole
 bunch of stuff. Fairly late in the process, a bootstrap process will

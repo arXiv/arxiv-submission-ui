@@ -1,0 +1,19 @@
+# Mock compiler
+
+ARG BASE_VERSION=0.16.1
+
+FROM arxiv/base:${BASE_VERSION}
+
+WORKDIR /opt/arxiv/
+
+# Add Python consumer and configuration.
+RUN pip install -U pip pipenv uwsgi && pipenv install flask uwsgi --skip-lock && rm -rf ~/.cache/pip
+RUN pipenv install flask uwsgi
+
+ADD mock-services/mock_compiler.py /opt/arxiv/
+
+# Add compilation pdf/log data files
+ADD mock-services/data/compiler /opt/arxiv/data
+
+ENTRYPOINT ["pipenv", "run"]
+CMD ["uwsgi", "--http-socket", ":8000", "-M", "-t", "3000", "--manage-script-name", "--processes", "8", "--threads", "1", "--mount", "/=mock_compiler.py"]

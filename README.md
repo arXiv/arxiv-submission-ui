@@ -4,14 +4,15 @@ This is the primary interface for arXiv users to submit e-prints to arXiv.
 It is comprised of a Flask application built around the [submission core
 events](https://github.com/cul-it/arxiv-submission-core) package.
 
-The Submission UI requires the File Management service and Compiler service
-(when uploading an article compiled from TeX sources).
+The Submission UI requires the File Management service and optionally requires
+the Compiler service when working with articles that must be compiled from TeX
+sources. The Compiler service is not required when working with PDF-only submissions.
 
-The Compiler service image currently includes the complete set of all arXiv TeX
+The Compiler service's converter image currently includes the complete set of all arXiv TeX
 trees used by arXiv over the years. This image is rather large (17G) and takes
 more effort to download and install so we supply a mock compiler service for cases
 where you are not focused on the compilation aspects of the 'process' step within the
-submission process workflow.
+submission workflow.
 
 ## Overview of Quick start options - full TeX compilation or mock compilation
 
@@ -28,7 +29,22 @@ How to chose the option that's right for you: If you are not concerned with TeX
 compilation, or you have limited disk space, you will want the mock compiler option.
 If you are concerned with evaluating TeX compilation output and/or the submission
 'process' step under normal operating conditions you will want to install the
-actual Compiler service image.
+actual Compiler service's converter image.
+
+## Setup required for both mock and full compilation options - AWS settings
+
+One of the back-end services we run is 'localstack' which is a fully functional
+local AWS stack. While this local AWS stack implementation doesn't actually
+check credentials you must have the environment variables set for the service
+to work properly.
+
+You may set these to your real AWS credentials or simply set them to arbitrary
+dummy values.
+
+```bash
+export AWS_ACCESS_KEY_ID=fookey
+export AWS_SECRET_ACCESS_KEY=foosecretkey
+```
 
 ## Quick start using mock compiler service
 
@@ -42,9 +58,10 @@ Another option is to replace the 'docker-compose.yml' with the 'docker-compose-m
 in the event you do not want to bother with adding the '-f' argument. Be careful not to commit this
 overwrite of the default configuration file.
 
-```bash
-export AWS_ACCESS_KEY_ID=fookey
-export AWS_SECRET_ACCESS_KEY=foosecretkey
+### Quick start commands (mock compiler)
+
+Make sure you have your AWS settings configured properly before proceeding (see above).
+
 ```
 
 ```bash
@@ -55,7 +72,7 @@ docker-compose -f docker-compose-mock-compiler.yml build    # Builds the submiss
 DIND_SOURCE_ROOT=/tmp/foo docker-compose  -f docker-compose-mock-compiler.yml up
 ```
 
-You may see the following errors when running ``docker-compose pull``,
+You may see the following errors when running ``docker-compose -f docker-compose-mock-compiler.yml pull``,
 and you can ignore them:
 
 ```bash
@@ -79,7 +96,7 @@ In the event you do not want to install the compiler yet want to see what a spec
 product looks like you may grab the PDF and compilation log from the production arXiv system and
 install these files as data for the mock compiler service.
 
-The PDF and log returned by the mock compiler service are stored in the mock-services/data/compiler
+The PDF and log returned by the mock compiler service are stored in the 'mock-services/data/compiler'
 directory.
 
 Simply install your new data files, rebuild the mock compiler service, and bring up the submission-ui.
@@ -88,7 +105,7 @@ When using the mock-compiler service you will get the same PDF and compilation l
 The idea behind the mock compiler service is to let you work through the entire submission process workflow
 without the hassle of installing the compiler service.
 
-## Quick start using arXiv Compiler service
+## Quick start using full arXiv Compiler service (with compilation)
 
 ### AWS Credentials
 First, you will need credentials to AWS ECR to get the converter docker
@@ -112,20 +129,9 @@ To test if you have access to ECR run:
 `aws ecr list-images --repository-name arxiv/converter`
 You should get a response of no error and a list of docker images.
 
-### Quick start commands
+### Quick start commands (full compiler)
 
-One of the back-end services we run is 'localstack' which is a fully functional
-local AWS stack. While this local AWS stack implementation doesn't actually
-check credentials you must have the environment variables set for the service
-to work properly.
-
-You may set these to your real AWS credentials or simply set them to arbitrary
-dummy values.
-
-```bash
-export AWS_ACCESS_KEY_ID=fookey
-export AWS_SECRET_ACCESS_KEY=foosecretkey
-```
+Make sure you have your AWS settings configured properly before proceeding (see above).
 
 ```bash
 cd /path/to/arxiv-submission-ui

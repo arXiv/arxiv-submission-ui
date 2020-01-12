@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>arXiv user login</title>
+<link rel="stylesheet" type="text/css" media="screen" href="/stylesheets/arXivCat.css" />
+
+<link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
+
+</head>
+<body>
+
+
+
+<div id="header">
+<h1><a href="/">arXiv.org</a></h1>
+</div>
+<div id="content">
+
+      <!-- Display status and error messages -->
+                        
+
+<h1>Log in to arXiv.org</h1>
+
+ <h2>If you've never logged onto arXiv.org:</h2>
+ <form action="/user/register">
+ <input type="submit" name="submit" value="Register for the first time" />
+ </form>
+   <p>Registration is required to submit or update papers.</p> 
+
+
+
+<form name="user-login" action="https://arxiv.org/user/login" method="post">
+
+<h2>If you're already registered:</h2>
+
+<input type="hidden" name="dest" value="https%3A%2F%2Farxiv.org%2Fuser" />
+Enter your <b>username or e-mail address</b>,<br />
+<input name="username" type="text" size="28" maxlength="64" /><br />
+and <b>password.</b>
+<br />
+<input type="password" name="password" size="28" maxlength="128" />
+
+(Forgot your password?
+<a href="/user/lost_password">Try this</a>.)
+
+<br />
+&nbsp;<br />
+<input type="checkbox" name="remember" value="1" />
+Have my browser remember who I am (<a href="/user/about_perm_cookie">explain</a>)
+<br />&nbsp;<br />
+<input type="submit" name="submit-login" value="Login" />
+
+</form>
+
+<br />
+
+</div>
+
+<footer> 
+  <div class="columns" role="navigation" aria-label="Secondary" style="margin: -0.75em -0.75em 0.75em -0.75em"> 
+    <div class="column"> 
+      <ul style="list-style: none; line-height: 2;"> 
+        <li><a href="https://arxiv.org/about">About</a></li> 
+        <li><a href="https://arxiv.org/about/people/leadership_team">Leadership Team</a></li> 
+        <li><a href="https://blogs.cornell.edu/arxiv">Blog</a></li> 
+      </ul> 
+    </div> 
+    <div class="column"> 
+      <ul style="list-style: none; line-height: 2;"> 
+        <li><span class="icon"><i class="fa fa-envelope"></i></span><a href="https://arxiv.org/help/contact"> Contact</a></li> 
+        <li><span class="icon"><i class="fa fa-twitter"></i></span><a href="https://twitter.com/arxiv"> Follow us on Twitter</a></li> 
+        <li><span class="icon"><i class="fa fa-rss"></i></span><a href="https://arxiv.org/help/subscribe"> Subscribe</a></li> 
+      </ul> 
+    </div> 
+    <div class="column"> 
+      <ul style="list-style: none; line-height: 2;"> 
+        <li><a href="https://arxiv.org/help">Help</a></li> 
+        <li><a href="https://arxiv.org/submit">Submit</a></li> 
+        <li><a href="https://arxiv.org/help/policies/privacy_policy">Privacy Policy</a></li>
+      </ul> 
+    </div> 
+  </div> 
+  
+  <div class="columns" style="border-top: 1px solid #979797; margin: -0.75em;"> 
+    <div class="column"> 
+      <p class="help">arXiv&#174; is a registered trademark of Cornell University.</p> 
+    </div> 
+    <div class="column"> 
+      <p class="help">If you have a disability and are having trouble accessing information on this website or need materials in an alternate format, 
+      contact <a href="mailto:web-accessibility\@cornell.edu">web-accessibility\@cornell.edu</a> for assistance.</p> 
+    </div> 
+  </div> 
+</footer>
+
+</body>
+</html>

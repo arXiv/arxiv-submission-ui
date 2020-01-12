@@ -26,11 +26,12 @@ base_url = '/<string:source_id>/<string:checksum>/<string:output_format>'
 # Placeholder routines for retrieving various compiler generated files
 
 def __get_autotex_log() -> str:
-    log_file_path = '/opt/arxiv/data/autotex.log'
+    # .log files are ignored in .gitignore thus not naming log 'autotex.log'
+    log_file_path = '/opt/arxiv/data/compilation_log'
     return log_file_path
 
 def __get_generated_pdf() -> str:
-    pdf_file_path = '/opt/arxiv/data/mock.pdf'
+    pdf_file_path = '/opt/arxiv/data/preview.pdf'
     return pdf_file_path
 
 

@@ -1,3 +1,54 @@
+/* temporary styles copied from base accessibility branch. Can delete from here once arxiv-base is updated */
+/*icon styles*/
+svg.icon
+  height: 1em !important
+  width: 1em !important
+  top: .125em
+  position: relative
+
+.icon.filter-white
+  fill: #FFFFFF
+.icon.filter-black
+  fill: #000000
+.icon.filter-grey
+  fill: #f5f5f5
+.icon.filter-blue
+  fill: #0068ac
+.icon.filter-dark_blue
+  fill: #00558d
+.icon.filter-red
+  fill: #b31b1b
+.icon.filter-red-alert
+  fill: #cd0200
+.icon.filter-orange
+  fill: #d47500
+.icon.filter-yellow
+  fill: #f7d012
+.icon.filter-green
+  fill: #3cb521
+
+a
+  .icon
+    transition: fill 0.3s ease
+
+a:hover
+  .icon.filter-grey
+    fill: #000000
+
+  .icon.filter-black,
+  .icon.filter-grey,
+  .icon.filter-blue,
+  .icon.filter-dark-blue,
+  .icon.filter-red,
+  .icon.filter-red-alert,
+  .icon.filter-orange,
+  .icon.filter-yellow,
+  .icon.filter-green
+    fill: #f5f5f5
+/*END temporary styles from base*/
+
+
+
 /* Cuts down on unnecessary whitespace at top. Consider move to base. */
 main
   padding: 1rem 1.5rem
@@ -18,44 +69,48 @@ main
 .button-feedback
   vertical-align: baseline
 
-.content h2.replacement
-  margin-top: -2rem
-  margin-bottom: 2rem
-  font-style: italic
-  font-weight: 400
-
 .submit-nav
-  margin-top: 2.5rem
-
-  button:last-of-type
-    margin-left: auto
+  margin-top: 1.75rem
+  justify-content: flex-end
 
 .form-margin
   margin: .4em 0
 
-.content h1.title
-  margin-bottom: 2.5rem
-
-.content h1.title span.preamble
-  color: grey
+.notifications
+  margin-bottom: 1em
 
 nav.submit-pagination
   display: block
   /*float: right*/
   width: 100%
 
-h2.title-submit
-  margin-bottom: 0em
-  margin-top: 0.25em !important
-  display: block
-  float: left
-  width: 10%
-  display: none
+h2
+  .title-submit
+    margin-bottom: 0em
+    margin-top: 0.25em !important
+    display: block
+    float: left
+    width: 10%
+    display: none
 
-h1.title.title-submit
-  margin-top: 0em
-  margin-bottom: 0.5em
-  clear: both
+  .replacement
+    margin-top: -2rem
+    margin-bottom: 2rem
+    font-style: italic
+    font-weight: 400
+
+h1
+  .title.title-submit
+    margin-top: .5em
+    margin-bottom: 0.5em
+    clear: both
+
+  .preamble
+    color: grey
+
+  @media screen and (max-width: 768px)
+    .title.title-submit
+      margin-top: 0
 
 .texlive-summary article
   padding: .8rem
@@ -87,15 +142,26 @@ h1.title.title-submit
     font-family: serif
 
 /* overrides for this form only? may move to base */
-
 .field:not(:last-child)
   margin-bottom: 1.25em
 
 .label:not(:last-child)
   margin-bottom: .25em
 
+.is-horizontal
+  border-bottom: 1px solid whitesmoke
+.is-horizontal:last-of-type
+  border-bottom: 0px
+
 .buttons .button:not(:last-child)
   margin-right: .75rem
+
+.content-container, .action-container
+  border: 1px solid #cccccc
+  padding: 1em
+  margin: 0 !important
+.content-container
+  border-bottom: 0px
 
 /* tightens up user data display on verify user page */
 .user-info
@@ -104,12 +170,13 @@ h1.title.title-submit
     margin-bottom: .5rem
     .field-label
       flex-grow: 2
+    span.field-note
+      font-style: italic
 
 .control .radio
   margin-bottom: .25em
 
 /* Classes for zebra striping and nested directory display */
-
 $stripe-color: #E8E8E8
 $directory-color: #CCC
 
@@ -185,7 +252,7 @@ ol.file-tree
 /* Classes for condensed, responsive progress bar */
 $complete: #0068ac
 $active: #ccc
-$incomplete: #fff
+$incomplete: #666666
 
 .progressbar,
 .progressbar li a

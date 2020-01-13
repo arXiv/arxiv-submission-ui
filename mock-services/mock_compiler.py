@@ -38,24 +38,23 @@ application = Flask(__name__)
 status_directory = '/opt/arxiv/data/'
 
 def compilation_request_file_path(source_id: str) -> str:
-    """Get the path to compilation request state file"""
+    """Get the path to compilation request state file."""
     return f"{status_directory}{source_id}_compile_request"
 
 def in_compilation_request(source_id: str) -> bool:
-    """Active Compilation"""
+    """Flag active compilation state."""
     return bool(os.path.exists(compilation_request_file_path(source_id)))
 
 def completed_status_file_path(source_id: str) -> str:
-    """Get the path to completed state file"""
+    """Get the path to completed state file."""
     return f"{status_directory}{source_id}_completed"
 
 def in_progress_status_file_path(source_id: str) -> str:
-    """Get the path to in_progress state file"""
+    """Get the path to in_progress state file."""
     return f"{status_directory}{source_id}_in_progress"
 
 def get_compilation_status(source_id: str) -> str:
-    """Fake compilation status"""
-
+    """Get compilation status."""
     if in_compilation_request(source_id) \
             and os.path.exists(completed_status_file_path(source_id)):
         clear_compilation_status(source_id)
@@ -73,26 +72,22 @@ def get_compilation_status(source_id: str) -> str:
     return None
 
 def set_in_compilation(source_id: str) -> str:
-    """Set that we are in compile mode"""
-
+    """Set that we are in compilation mode."""
     # Make note that we've already answered a status request
     open(compilation_request_file_path(source_id), 'a').close()
 
 def set_in_progress_compilation_status(source_id: str) -> str:
-    """Fake compilation requested"""
-
+    """Note fake compilation requested."""
     # Make note that we've already answered a status request
     open(in_progress_status_file_path(source_id), 'a').close()
 
 def set_completed_compilation_status(source_id: str) -> str:
-    """Fake compilation requested"""
-
+    """Set compilation status to 'completed'."""
     # Make note that we've already answered a status request
     open(completed_status_file_path(source_id), 'a').close()
 
 def clear_compilation_status(source_id: str) -> str:
     """Clear out the status every time a compile request is made."""
-
     if os.path.exists(in_progress_status_file_path(source_id)):
         os.remove(in_progress_status_file_path(source_id))
 
@@ -159,7 +154,6 @@ def compile() -> Response:
 @application.route(base_url, methods=['GET'])
 def get_status(source_id: str, checksum: str, output_format: str) -> Response:
     """Get the mock status of a compilation task."""
-
     # Only call this once as state may change each time you check status
     compilation_status = get_compilation_status(source_id)
 
@@ -189,7 +183,6 @@ def get_status(source_id: str, checksum: str, output_format: str) -> Response:
 @application.route(f'{base_url}/log', methods=['GET'])
 def get_log(source_id: str, checksum: str, output_format: str) -> Response:
     """Get a mock compilation log."""
-
     logger.info("get log: %s/%s/%s", source_id, checksum, output_format)
 
     log_file_path = __get_autotex_log()
@@ -213,7 +206,6 @@ def get_log(source_id: str, checksum: str, output_format: str) -> Response:
 @application.route(f'{base_url}/product', methods=['GET'])
 def get_product(source_id: str, checksum: str, output_format: str) -> Response:
     """Get a mock compilation product."""
-
     logger.info("get product: %s/%s/%s", source_id, checksum, output_format)
 
     pdf_file_path = __get_generated_pdf()

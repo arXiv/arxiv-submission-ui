@@ -16,9 +16,88 @@ Response = Union[FlaskResponse, WkzResponse]
 application = Flask(__name__)
 
 
-# @application.route('/status', methods=['GET'])
-# def get_status():
-#     return 'ok'
+# Fake compilation status changes [completed, in_progress, failed]
+#
+# The submission UI process page gets a little confused when the compilation
+# status is already 'completed' when you advance to the process page.
+#
+# The status needs to start as None or Not Found when we hit process page.
+#
+# Once we initiate compilation we will return 'in_process' the first
+# time get_status. This gives you the 'Processing Underway' process page view.
+#
+# Subsequent requests, like after the UI waits five seconds, will return
+# the 'completed' status. This results in the "Processing Successful" view.
+#
+# We won't worry about the 'failed' state for now.
+#
+# Dictionary key will be source_id and value will be status value.
+
+status_directory = '/opt/arxiv/data/'
+
+def compilation_request_file_path(source_id: str) -> str:
+    """Get the path to compilation request state file"""
+    return f"{status_directory}{source_id}_compile_request"
+
+def in_compilation_request(source_id: str) -> bool:
+    """Active Compilation"""
+    if os.path.exists(compilation_request_file_path(source_id)):
+        return True
+    else:
+        return False
+
+def completed_status_file_path(source_id: str) -> str:
+    """Get the path to completed state file"""
+    return f"{status_directory}{source_id}_completed"
+
+def in_progress_status_file_path(source_id: str) -> str:
+    """Get the path to in_progress state file"""
+    return f"{status_directory}{source_id}_in_progress"
+
+def get_compilation_status(source_id: str) -> str:
+    """Fake compilation status"""
+
+    if in_compilation_request(source_id) and os.path.exists(completed_status_file_path(source_id)):
+        clear_compilation_status(source_id)
+        return 'completed'
+    elif in_compilation_request(source_id) and os.path.exists(in_progress_status_file_path(source_id)):
+        set_completed_compilation_status(source_id)
+        return 'in_progress'
+    else:
+        if in_compilation_request(source_id):
+            set_in_progress_compilation_status(source_id)
+            return 'in_progress'
+        return None
+
+def set_in_compilation(source_id: str) -> str:
+    """Set that we are in compile mode"""
+
+    # Make note that we've already answered a status request
+    open(compilation_request_file_path(source_id), 'a').close()
+
+def set_in_progress_compilation_status(source_id: str) -> str:
+    """Fake compilation requested"""
+
+    # Make note that we've already answered a status request
+    open(in_progress_status_file_path(source_id), 'a').close()
+
+def set_completed_compilation_status(source_id: str) -> str:
+    """Fake compilation requested"""
+
+    # Make note that we've already answered a status request
+    open(completed_status_file_path(source_id), 'a').close()
+
+def clear_compilation_status(source_id: str) -> str:
+    """Clear out the status every time a compile request is made."""
+
+    if os.path.exists(in_progress_status_file_path(source_id)):
+        os.remove(in_progress_status_file_path(source_id))
+
+    if os.path.exists(completed_status_file_path(source_id)):
+        os.remove(completed_status_file_path(source_id))
+
+    if os.path.exists(compilation_request_file_path(source_id)):
+        os.remove(compilation_request_file_path(source_id))
 
 
 base_url = '/<string:source_id>/<string:checksum>/<string:output_format>'
@@ -61,8 +140,9 @@ def compile() -> Response:
     data = 'initiating compilation'
     response: Response = jsonify(data)
     response.status_code = status.OK
-    # response.headers.extend(headers.items())  # type: ignore
-    #return response
+
+    # Set the fake status
+    set_in_compilation(source_id)
 
     code = status.ACCEPTED
     """Redirect to the status endpoint."""
@@ -76,17 +156,29 @@ def compile() -> Response:
 def get_status(source_id: str, checksum: str, output_format: str) -> Response:
     """Get the mock status of a compilation task."""
     #data = f'compilation status information: {source_id} : checksum: {checksum} fmt: {output_format}'
-    data = {"checksum":f"{checksum}",
-            "description":"Success!",
-            "output_format":f"{output_format}",
-            "owner":"1",
-            "reason":None,
-            "size_bytes":281064,
-            "source_id":f"{source_id}",
-            "status":"completed",
-            "task_id":"1/XsMmoyHtfX8PgFLptd8AcA==/pdf"}
-    response: Response = jsonify(data)
-    response.status_code = status.OK
+
+    # Only call this once as state may change each time you check status
+    compilation_status = get_compilation_status(source_id)
+
+    #if compilation_status(source_id) == None:
+    if compilation_status == None:
+        data = {"reason": "No such compilation task"}
+        response: Response = jsonify(data)
+        response.status_code = status.NOT_FOUND
+    else:
+        data = {"checksum": f"{checksum}",
+                "description": "Success!",
+                "output_format": f"{output_format}",
+                "owner": "1",
+                "reason": None,
+                "size_bytes": 281064,
+                "source_id": f"{source_id}",
+                "status": compilation_status,
+                "task_id": "1/XsMmoyHtfX8PgFLptd8AcA==/pdf"
+            }
+        response: Response = jsonify(data)
+        response.status_code = status.OK
+
     # response.headers.extend(headers.items())    # type: ignore
     return response
 

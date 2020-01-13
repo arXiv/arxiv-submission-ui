@@ -22,16 +22,17 @@
   {# Sometimes we need to show an alert immediately, without a redirect. #}
   {% block immediate_alerts %}
     {% if immediate_alerts -%}
-        <div class="notifications" role="alert" aria-atomic="true">
-          {% for category, message in immediate_alerts -%}
-            <div class="notification is-{{ category }}">
-              {% if message.dismissable %}<button class="delete notification-dismiss"></button>{% endif %}
-              {% if message.title %}<h2 class="is-size-5 is-marginless">{{ message.title }}</h2>{%- endif %}
-              <p>{{ message.message }}</p>
-            </div>
-          {%- endfor %}
-        </div>
-      {%- endif %}
+      <div class="notifications" role="alert" aria-atomic="true">
+        {% for category, message in immediate_alerts -%}
+          <div class="notification is-{{ category }}">
+            {% if message.dismissable %}<button class="delete notification-dismiss"></button>{% endif %}
+            {% if message.title %}<h2 class="is-size-5 is-marginless">{{ message.title }}</h2>{%- endif %}
+            <p>{{ message.message }}</p>
+          </div>
+        {%- endfor %}
+      </div>
+    {%- endif %}
+    {% block more_notifications %}{% endblock more_notifications %}
   {% endblock %}
 
 

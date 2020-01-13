@@ -36,6 +36,9 @@ main
 .content h1.title
   margin-bottom: 2.5rem
 
+.content h1.title span.preamble
+  color: grey
+
 nav.submit-pagination
   display: block
   /*float: right*/
@@ -179,7 +182,11 @@ ol.file-tree
   padding: 0 0.2em
 
 
-/* Classes for responsive progress bar */
+/* Classes for condensed, responsive progress bar */
+$complete: #0068ac
+$active: #ccc
+$incomplete: #fff
+
 .progressbar,
 .progressbar li a
   display: flex
@@ -203,18 +210,14 @@ ol.file-tree
     background-color: rgba(0, 0, 0, .25)
     border: 0
 
-  @media screen and (max-width: 1200px)
-    li
-      width: calc(100% * (1/6) - 10px - 1px)
-
   li a
     font-weight: 300
     text-decoration: none
     color: #666666
-    padding-top: .5em
-    padding-bottom: .5em
-    padding-left: 1.25em
-    padding-right: 1.25em
+    padding-top: .25em
+    padding-bottom: .25em
+    padding-left: 1em
+    padding-right: 1em
     transition: color 0.3s
 
   li a:hover
@@ -260,82 +263,17 @@ ol.file-tree
 
   li.is-active a .icon
     display: none
-    
+
   li.is-complete a .icon
     height: 1rem
     width: 1rem
     fill: grey
     margin: 0 3px 0 0
 
-/* Classes for responsive bubble-style progress bar */
-$bubblesize: 16px
-$barsize: 16px
-$dotcolor: #FFF
-$complete: #0068ac
-$incomplete: #ccc
-
-ul.progressbar-OLD
-  width: 100%
-  display: flex
-  margin: 0 0 1.5em 0
-  > li
-    text-align: center
-    list-style: none
-    position: relative
-    margin-top: 1em
-    width: 100%
-    > a
-      display: block
-      color: #222
-      line-height: 2em
-      &:before
-        content: ''
-        display: block
-        position: relative
-        margin: 0 auto 4px
-        background-color: $dotcolor
-        width: $bubblesize
-        height: $bubblesize
-        text-align: center
-        border: 5px solid $incomplete
-        border-radius: 50%
-      &:hover
-        border-bottom: 1px solid transparent
-        &:before
-          border-width: 6px
-          $background-color: $incomplete
-          transform: scale(1.6)
-          box-shadow: 0px 0px 1px .5px #999
-
-    &:after
-      content: ''
-      height: $barsize
-      width: 100%
-      background-color: $incomplete
-      position: absolute
-      top: 0
-      right: 50%
-      z-index: -1
-
-    &:first-child
-      &:after
-        display: none
-
-    &.is-active
-      > a
-        &:before
-          background-color: $dotcolor
-          border-color: $complete
-          border-width: 2px
-          transform: scale(1.6)
-
-    &.is-complete
-      &:after
-        background-color: $complete
-      > a
-        &:before
-          background-color: $dotcolor
-          border-color: $complete
+  /*controls number of links per row when screen is too narrow for just one row*/
+  @media screen and (max-width: 1100px)
+    li
+      width: calc(100% * (1/6) - 10px - 1px)
 
 /* info and help bubbles */
 .help-bubble

@@ -45,6 +45,10 @@ main {
   margin-bottom: 2.5rem;
 }
 
+.content h1.title span.preamble {
+  color: grey;
+}
+
 nav.submit-pagination {
   display: block;
   /*float: right*/

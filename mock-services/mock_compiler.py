@@ -1,17 +1,19 @@
 """Mock endpoint for compiler service."""
 
 import os
-from flask import Flask, jsonify
-from typing import Callable, Union
+import logging
 from http import HTTPStatus as status
-from flask import Blueprint, redirect, request, send_file
-from flask import Response as FlaskResponse
+from typing import Callable, Union
 from werkzeug.wrappers import Response as WkzResponse
+from flask import Flask, jsonify
+#from flask import Response as FlaskResponse
+from flask import Blueprint, redirect, request, send_file
 from flask import Response as FlaskResponse
 from flask import url_for
 
 Response = Union[FlaskResponse, WkzResponse]
 
+logger = logging.getLogger(__name__)
 
 application = Flask(__name__)
 
@@ -41,10 +43,7 @@ def compilation_request_file_path(source_id: str) -> str:
 
 def in_compilation_request(source_id: str) -> bool:
     """Active Compilation"""
-    if os.path.exists(compilation_request_file_path(source_id)):
-        return True
-    else:
-        return False
+    return bool(os.path.exists(compilation_request_file_path(source_id)))
 
 def completed_status_file_path(source_id: str) -> str:
     """Get the path to completed state file"""
@@ -57,17 +56,21 @@ def in_progress_status_file_path(source_id: str) -> str:
 def get_compilation_status(source_id: str) -> str:
     """Fake compilation status"""
 
-    if in_compilation_request(source_id) and os.path.exists(completed_status_file_path(source_id)):
+    if in_compilation_request(source_id) \
+            and os.path.exists(completed_status_file_path(source_id)):
         clear_compilation_status(source_id)
         return 'completed'
-    elif in_compilation_request(source_id) and os.path.exists(in_progress_status_file_path(source_id)):
+
+    if in_compilation_request(source_id) \
+            and os.path.exists(in_progress_status_file_path(source_id)):
         set_completed_compilation_status(source_id)
         return 'in_progress'
-    else:
-        if in_compilation_request(source_id):
-            set_in_progress_compilation_status(source_id)
-            return 'in_progress'
-        return None
+
+    if in_compilation_request(source_id):
+        set_in_progress_compilation_status(source_id)
+        return 'in_progress'
+
+    return None
 
 def set_in_compilation(source_id: str) -> str:
     """Set that we are in compile mode"""
@@ -145,7 +148,8 @@ def compile() -> Response:
     set_in_compilation(source_id)
 
     code = status.ACCEPTED
-    """Redirect to the status endpoint."""
+
+    #Redirect to the status endpoint.
     location = url_for('get_status', source_id=source_id,
                        checksum=checksum, output_format=output_format)
 
@@ -155,13 +159,12 @@ def compile() -> Response:
 @application.route(base_url, methods=['GET'])
 def get_status(source_id: str, checksum: str, output_format: str) -> Response:
     """Get the mock status of a compilation task."""
-    #data = f'compilation status information: {source_id} : checksum: {checksum} fmt: {output_format}'
 
     # Only call this once as state may change each time you check status
     compilation_status = get_compilation_status(source_id)
 
-    #if compilation_status(source_id) == None:
-    if compilation_status == None:
+    # if compilation_status(source_id) == None:
+    if compilation_status is None:
         data = {"reason": "No such compilation task"}
         response: Response = jsonify(data)
         response.status_code = status.NOT_FOUND
@@ -175,7 +178,7 @@ def get_status(source_id: str, checksum: str, output_format: str) -> Response:
                 "source_id": f"{source_id}",
                 "status": compilation_status,
                 "task_id": "1/XsMmoyHtfX8PgFLptd8AcA==/pdf"
-            }
+                }
         response: Response = jsonify(data)
         response.status_code = status.OK
 
@@ -186,14 +189,9 @@ def get_status(source_id: str, checksum: str, output_format: str) -> Response:
 @application.route(f'{base_url}/log', methods=['GET'])
 def get_log(source_id: str, checksum: str, output_format: str) -> Response:
     """Get a mock compilation log."""
-    """
-    resp = controllers.get_log(source_id, checksum, output_format,
-                               authorizer(scopes.READ_COMPILE))
-    data, status_code, headers = resp
-    response: Response = send_file(data['stream'],
-                                   mimetype=data['content_type'],
-                                   attachment_filename=data['filename'])
-    """
+
+    logger.info("get log: %s/%s/%s", source_id, checksum, output_format)
+
     log_file_path = __get_autotex_log()
     log_file_name = os.path.basename(log_file_path)
 
@@ -215,15 +213,9 @@ def get_log(source_id: str, checksum: str, output_format: str) -> Response:
 @application.route(f'{base_url}/product', methods=['GET'])
 def get_product(source_id: str, checksum: str, output_format: str) -> Response:
     """Get a mock compilation product."""
-    """
-    data, code, head = controllers.get_product(source_id, checksum,
-                                               output_format,
-                                               authorizer(scopes.READ_COMPILE))
-    response: Response = send_file(data['stream'],
-                                   mimetype=data['content_type'],
-                                   attachment_filename=data['filename'])
-    response.set_etag(head.get('ETag'))
-    """
+
+    logger.info("get product: %s/%s/%s", source_id, checksum, output_format)
+
     pdf_file_path = __get_generated_pdf()
     pdf_file_name = os.path.basename(pdf_file_path)
 

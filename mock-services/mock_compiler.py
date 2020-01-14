@@ -53,7 +53,7 @@ def in_progress_status_file_path(source_id: str) -> str:
     """Get the path to in_progress state file."""
     return f"{status_directory}{source_id}_in_progress"
 
-def get_compilation_status(source_id: str) -> str:
+def get_compilation_status(source_id: str) -> Union[str,None]:
     """Get compilation status."""
     if in_compilation_request(source_id) \
             and os.path.exists(completed_status_file_path(source_id)):
@@ -71,22 +71,22 @@ def get_compilation_status(source_id: str) -> str:
 
     return None
 
-def set_in_compilation(source_id: str) -> str:
+def set_in_compilation(source_id: str) -> None:
     """Set that we are in compilation mode."""
     # Make note that we've already answered a status request
     open(compilation_request_file_path(source_id), 'a').close()
 
-def set_in_progress_compilation_status(source_id: str) -> str:
+def set_in_progress_compilation_status(source_id: str) -> None:
     """Note fake compilation requested."""
     # Make note that we've already answered a status request
     open(in_progress_status_file_path(source_id), 'a').close()
 
-def set_completed_compilation_status(source_id: str) -> str:
+def set_completed_compilation_status(source_id: str) -> None:
     """Set compilation status to 'completed'."""
     # Make note that we've already answered a status request
     open(completed_status_file_path(source_id), 'a').close()
 
-def clear_compilation_status(source_id: str) -> str:
+def clear_compilation_status(source_id: str) -> None:
     """Clear out the status every time a compile request is made."""
     if os.path.exists(in_progress_status_file_path(source_id)):
         os.remove(in_progress_status_file_path(source_id))

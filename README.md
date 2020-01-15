@@ -60,7 +60,11 @@ overwrite of the default configuration file.
 
 ### Quick start commands (mock compiler)
 
-Make sure you have your AWS settings configured properly before proceeding (see above).
+Make sure you have your AWS settings configured properly before proceeding ([see above](#aws-credentials)).
+
+docker-compose note: When you are running with an alternate config (-f <config>) you will want to add
+the '-f <config>' argument to all docker-compose commands since this configuration file defines the set of services
+it is operating on.
 
 ```bash
 cd /path/to/arxiv-submission-ui
@@ -129,7 +133,7 @@ You should get a response of no error and a list of docker images.
 
 ### Quick start commands (full compiler)
 
-Make sure you have your AWS settings configured properly before proceeding (see above).
+Make sure you have your AWS settings configured properly before proceeding ([see above](#aws-credentials)).
 
 ```bash
 cd /path/to/arxiv-submission-ui

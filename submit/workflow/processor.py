@@ -28,14 +28,14 @@ class WorkflowProcessor:
         """Determine whether the user can proceed to a stage."""
 
         #Not sure why I have to pass self explicitly
-        previous_stage = self.workflow.previous_stage(self.workflow, stage)
+        previous_stage = self.workflow.previous_stage(stage)
 
         # TODO this might not be correct
         return self.is_done(previous_stage) \
             or (not previous_stage.required
                 and all(map(self.is_done,
-                            self.workflow.iter_prior(self.workflow, previous_stage)))) \
-            or all(map(self.is_done, self.workflow.iter_prior(self.workflow, stage)))
+                            self.workflow.iter_prior(previous_stage)))) \
+            or all(map(self.is_done, self.workflow.iter_prior(stage)))
 
     def current_stage(self) -> Optional[Stage]:
         """Get the first stage in the workflow that is not done."""
@@ -53,7 +53,7 @@ class WorkflowProcessor:
     def _seen_key(self, stage: Stage) -> str:
         return f"{self.workflow.__class__.__name__}---" +\
             "{self.workflow.name}---" +\
-            f"{stage.__class__.__name__}---{stage.Label}---"
+            f"{stage.__class__.__name__}---{stage.label}---"
 
     def mark_seen(self, stage: Optional[Stage]) -> None:
         """Mark a stage as seen by the user."""

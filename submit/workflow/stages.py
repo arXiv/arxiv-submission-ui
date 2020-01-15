@@ -17,8 +17,8 @@ class Stage:
     label: str
     title: str
     display: str
-    requested: bool
     must_see: bool
+    required: bool
     completed: List[SubmissionCheck]
 
     def __init__(self, required: bool = True, must_see: bool = False) -> None:
@@ -45,7 +45,7 @@ class VerifyUser(Stage):
     label = 'verify your personal information'
     title = 'Verify user info'
     display = 'Verify User'
-    completed = [conditions.contact_verified]
+    completed = [conditions.is_contact_verified]
 
 
 class Authorship(Stage):
@@ -55,7 +55,7 @@ class Authorship(Stage):
     label = 'confirm authorship'
     title = "Confirm authorship"
     display = "Authorship"
-    completed = [conditions.authorship_indicated]
+    completed = [conditions.is_authorship_indicated]
 
 
 class License(Stage):
@@ -75,7 +75,7 @@ class Policy(Stage):
     label = 'accept arXiv submission policies'
     title = "Acknowledge policy"
     display = "Policy"
-    completed = [conditions.policy_accepted]
+    completed = [conditions.is_policy_accepted]
 
 
 class Classification(Stage):
@@ -117,7 +117,7 @@ class Process(Stage):
     title = "File process"
     display = "Process Files"
     """We need to re-process every time the source is updated."""
-    completed = [conditions.source_processed]
+    completed = [conditions.is_source_processed]
 
 
 class Metadata(Stage):
@@ -127,7 +127,7 @@ class Metadata(Stage):
     label = 'add required metadata'
     title = "Add metadata"
     display = "Metadata"
-    completed = [conditions.metadata_complete]
+    completed = [conditions.is_metadata_complete]
 
 
 class OptionalMetadata(Stage):
@@ -137,7 +137,7 @@ class OptionalMetadata(Stage):
     label = 'add optional metadata'
     title = "Add optional metadata"
     display = "Opt. Metadata"
-    completed = [conditions.opt_metadata_complete]
+    completed = [conditions.is_opt_metadata_complete]
 
 
 class FinalPreview(Stage):

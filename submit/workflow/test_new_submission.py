@@ -150,8 +150,8 @@ class TestNewSubmissionWorkflow(TestCase):
         self.assertTrue(nswfps.can_proceed_to(
             nswfps.workflow[Classification]))
         self.assertTrue(nswfps.can_proceed_to(nswfps.workflow[CrossList]))
-        self.assertTrue(nswfps.can_proceed_to(nswfps.workflow[FileUpload]))
-
+        
+        self.assertFalse(nswfps.can_proceed_to(nswfps.workflow[FileUpload]))
         self.assertFalse(nswfps.can_proceed_to(nswfps.workflow[Process]))
         self.assertFalse(nswfps.can_proceed_to(nswfps.workflow[Metadata]))
         self.assertFalse(nswfps.can_proceed_to(
@@ -235,8 +235,7 @@ class TestNewSubmissionWorkflow(TestCase):
         self.assertTrue(nswfps.can_proceed_to(
             nswfps.workflow[OptionalMetadata]))
 
-#FAILS:    
-#        self.assertFalse(nswfps.can_proceed_to(nswfps.workflow[FinalPreview]))
+        self.assertFalse(nswfps.can_proceed_to(nswfps.workflow[FinalPreview]))
         self.assertFalse(nswfps.can_proceed_to(nswfps.workflow[Confirm]))
 
         self.assertEqual(nswfps.current_stage(), nswfps.workflow[OptionalMetadata])

@@ -31,15 +31,7 @@ class WorkflowProcessor:
 
     def can_proceed_to(self, stage: Optional[Stage]) -> bool:
         """Determine whether the user can proceed to a stage."""
-
-        previous_stage = self.workflow.previous_stage(stage)
-
-        # TODO this might not be correct
-        return self.is_done(previous_stage) \
-            or (not previous_stage.required
-                and all(map(self.is_done,
-                            self.workflow.iter_prior(previous_stage)))) \
-            or all(map(self.is_done, self.workflow.iter_prior(stage)))
+        return all(map(self.is_done, self.workflow.iter_prior(stage)))
 
     def current_stage(self) -> Optional[Stage]:
         """Get the first stage in the workflow that is not done."""
@@ -74,6 +66,7 @@ class WorkflowProcessor:
         # TODO older logic:
         # return ((self.is_complete(stage) or not stage.required)
         #         and (self.is_seen(stage) or not stage.must_see))
-        # More efficent:
+        # More efficent:        
         return ((not stage.required or stage.is_complete(self.submission))
-                and (not stage.must_see or self.is_seen(stage)))
+                and
+                (not stage.must_see or self.is_seen(stage)))

@@ -1,16 +1,17 @@
 """Defines submission stages and workflows supported by this UI."""
 
-from typing import Iterable, Optional, Callable, List, Iterator
+from typing import Iterable, Optional, Callable, List, Iterator, Union
 
 from arxiv.submission.domain import Submission
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from . import stages
 from .stages import Stage
 
 
+@dataclass
 class WorkflowDefinition:
-    order: List[Stage] = []
+    order: List[Stage] = field(default_factory=list)
 
     # TODO do we have workflows that don't have confirmations?
     confirmation: Optional[Stage] = None
@@ -56,10 +57,45 @@ class WorkflowDefinition:
                 return stage
             raise ValueError(f'No stage for endpoint: {endpoint}')
 
+    def __getitem__(self, query):
+        return self.get_stage(query)
 
-class SubmissionWorkflow(WorkflowDefinition):
-    """Workflow for new submissions."""
-    order = [
+    def get_stage(self, query: Union[type, Stage, str, int]) -> Optional[Stage]:
+        """Get the stage object from this workflow for Class, class name,
+        stage label, endpoint or index in order """
+        if query is None:
+            return None
+        if isinstance(query, type):
+            if issubclass(query, Stage):
+                stages = [st for st in self.order if issubclass(
+                    st.__class__, query)]
+                if len(stages) > 0:
+                    return stages[0]
+                else:
+                    return None
+            else:
+                raise ValueError("Cannot call get_stage with non-Stage class")
+        if isinstance(query, int):
+            if query >= len(self.order) or query < 0:
+                return None
+            else:
+                return self.order[query]
+        if query in self.order:
+            return self[self.order.index(query)]
+        if isinstance(query, str):
+            # it could be classname, stage label or stage endpoint
+            for stage in self.order:
+                if(stage.label == query
+                        or stage.__class__.__name__ == query
+                        or stage.endpoint == query):
+                    return stage
+            return None
+        raise ValueError("query should be Stage class or class name or "
+                         f"endpoint or lable str or int. Not {type(query)}")
+
+
+SubmissionWorkflow = WorkflowDefinition(
+    [
         stages.VerifyUser(),
         stages.Authorship(),
         stages.License(),
@@ -72,16 +108,14 @@ class SubmissionWorkflow(WorkflowDefinition):
         stages.OptionalMetadata(required=False, must_see=True),
         stages.FinalPreview(),
         stages.Confirm()
-    ]
+    ],
+    # Kind of odd that this is different instance than last in the list
+    stages.Confirm()
+)
+"""Workflow for new submissions."""
 
-    #Kind of odd that this is different instance than last in the list
-    confirmation = stages.Confirm()
-
-
-class ReplacementWorkflow(WorkflowDefinition):
-    """Workflow for replacements."""
-
-    order = [
+ReplacementWorkflow=WorkflowDefinition(
+    [
         stages.VerifyUser(must_see=True),
         stages.Authorship(must_see=True),
         stages.License(must_see=True),
@@ -92,6 +126,10 @@ class ReplacementWorkflow(WorkflowDefinition):
         stages.OptionalMetadata(required=False, must_see=True),
         stages.FinalPreview(must_see=True),
         stages.Confirm(must_see=True)
-    ]
-    confirmation = stages.Confirm()
+    ],
+    stages.Confirm()
+    )
+"""Workflow for replacements."""
+
+
 

@@ -1,6 +1,6 @@
 from arxiv.submission.domain import Submission
 
-def contact_verified(submission: Submission) -> bool:
+def is_contact_verified(submission: Submission) -> bool:
     """Determine whether the submitter has verified their information."""
     return submission.submitter_contact_verified is True
 

@@ -13,7 +13,7 @@ class WorkflowProcessor:
     submission: Submission
     seen: Dict[str, bool] = field(default_factory=dict)
 
-    def complete(self) -> bool:
+    def is_complete(self) -> bool:
         """Determine whether this workflow is complete."""
         return bool(self.submission.is_finalized)
 
@@ -44,12 +44,6 @@ class WorkflowProcessor:
                 return stage
         return None
 
-    def is_complete(self, stage: Optional[Stage]) -> bool:
-        """Determine whether or not a stage is complete."""
-        if stage is None:
-            return True
-        return stage.is_complete(self.submission)
-
     def _seen_key(self, stage: Stage) -> str:
         return f"{self.workflow.__class__.__name__}---" +\
             "{self.workflow.name}---" +\
@@ -78,5 +72,5 @@ class WorkflowProcessor:
         # return ((self.is_complete(stage) or not stage.required)
         #         and (self.is_seen(stage) or not stage.must_see))
         # More efficent:
-        return ((not stage.required or self.is_complete(stage))
+        return ((not stage.required or stage.is_complete(self.submission))
                 and (not stage.must_see or self.is_seen(stage)))

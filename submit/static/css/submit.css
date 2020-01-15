@@ -64,7 +64,7 @@ a:hover .icon.filter-red-alert,
 a:hover .icon.filter-orange,
 a:hover .icon.filter-yellow,
 a:hover .icon.filter-green {
-  fill: #f5f5f5;
+  fill: #cecece;
 }
 
 /*END temporary styles from base*/
@@ -103,6 +103,32 @@ main {
 
 .notifications {
   margin-bottom: 1em;
+}
+
+.policy-scroll {
+  margin: 0;
+  padding: 1em;
+  max-height: 400px;
+  overflow-y: scroll;
+}
+.policy-scroll p, .policy-scroll h2, .policy-scroll h3, .policy-scroll ol li, .policy-scroll ul li {
+  color: grey;
+}
+@media screen and (max-width: 400px) {
+  .policy-scroll {
+    max-height: 250px;
+  }
+}
+
+.policy-scroll::-webkit-scrollbar {
+  -webkit-appearance: none;
+  width: 7px;
+}
+
+.policy-scroll::-webkit-scrollbar-thumb {
+  border-radius: 4px;
+  background-color: rgba(0, 0, 0, 0.5);
+  -webkit-box-shadow: 0 0 1px rgba(255, 255, 255, 0.5);
 }
 
 nav.submit-pagination {
@@ -202,6 +228,28 @@ h1 .preamble {
   border-bottom: 0px;
 }
 
+/* category styles on cross-list page */
+.category-list .action-container {
+  padding: 0;
+}
+.category-list form {
+  margin: 0;
+}
+.category-list form li {
+  margin: 0;
+  padding-top: 0.25em;
+  padding-bottom: 0.25em;
+  display: flex;
+}
+.category-list form li button {
+  padding-top: 0 !important;
+  margin: 0;
+  height: 1em;
+}
+.category-list form li span.category-name-label {
+  flex-grow: 1;
+}
+
 /* tightens up user data display on verify user page */
 .user-info {
   margin-bottom: 1rem;
@@ -223,6 +271,7 @@ h1 .preamble {
 /* Classes for zebra striping and nested directory display */
 ol.file-tree {
   margin: 0 0 1rem 0;
+  list-style-type: none;
 }
 ol.file-tree li {
   margin-top: 0;
@@ -233,6 +282,9 @@ ol.file-tree li {
   background-color: white;
 }
 ol.file-tree li.even {
+  background-color: #E8E8E8;
+}
+ol.file-tree form:nth-of-type(odd) li {
   background-color: #E8E8E8;
 }
 ol.file-tree .columns {
@@ -371,8 +423,8 @@ ol.file-tree > li ol li:first-child {
   margin-left: -8px;
   z-index: 2;
   float: right;
-  margin-right: -15px;
-  margin-top: -22px;
+  margin-right: -13px;
+  margin-top: -20px;
 }
 .progressbar li:last-child.is-active a::after {
   content: none !important;

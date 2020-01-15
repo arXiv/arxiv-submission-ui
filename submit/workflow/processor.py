@@ -9,6 +9,11 @@ from . import WorkflowDefinition, Stage
 
 @dataclass
 class WorkflowProcessor:
+    """Class to handle a submission moving through a WorkflowDefinition.
+
+    The seen methods is_seen and mark_seen are handled with a Dict. This class
+    doesn't handle loading or saving that data.
+    """
     workflow: WorkflowDefinition
     submission: Submission
     seen: Dict[str, bool] = field(default_factory=dict)
@@ -27,7 +32,6 @@ class WorkflowProcessor:
     def can_proceed_to(self, stage: Optional[Stage]) -> bool:
         """Determine whether the user can proceed to a stage."""
 
-        #Not sure why I have to pass self explicitly
         previous_stage = self.workflow.previous_stage(stage)
 
         # TODO this might not be correct
@@ -45,8 +49,7 @@ class WorkflowProcessor:
         return None
 
     def _seen_key(self, stage: Stage) -> str:
-        return f"{self.workflow.__class__.__name__}---" +\
-            "{self.workflow.name}---" +\
+        return f"{self.workflow.name}---" +\
             f"{stage.__class__.__name__}---{stage.label}---"
 
     def mark_seen(self, stage: Optional[Stage]) -> None:

@@ -11,6 +11,7 @@ from .stages import Stage
 
 @dataclass
 class WorkflowDefinition:
+    name: str
     order: List[Stage] = field(default_factory=list)
 
     # TODO do we have workflows that don't have confirmations?
@@ -32,6 +33,7 @@ class WorkflowDefinition:
         """Determine whether this workflow is complete."""
         return bool(self.submission.is_finalized)
 
+    # I wonder if we should move next_stage and previous_stage to WorkflowProcessor?
     def next_stage(self, stage: Optional[Stage]) -> Optional[Stage]:
         """Get the next stage."""
         if stage is None:
@@ -95,41 +97,38 @@ class WorkflowDefinition:
 
 
 SubmissionWorkflow = WorkflowDefinition(
-    [
-        stages.VerifyUser(),
-        stages.Authorship(),
-        stages.License(),
-        stages.Policy(),
-        stages.Classification(),
-        stages.CrossList(required=False, must_see=True),
-        stages.FileUpload(),
-        stages.Process(),
-        stages.Metadata(),
-        stages.OptionalMetadata(required=False, must_see=True),
-        stages.FinalPreview(),
-        stages.Confirm()
-    ],
+    'SubmissionWorkflow',
+    [stages.VerifyUser(),
+     stages.Authorship(),
+     stages.License(),
+     stages.Policy(),
+     stages.Classification(),
+     stages.CrossList(required=False, must_see=True),
+     stages.FileUpload(),
+     stages.Process(),
+     stages.Metadata(),
+     stages.OptionalMetadata(required=False, must_see=True),
+     stages.FinalPreview(),
+     stages.Confirm()
+     ],
     # Kind of odd that this is different instance than last in the list
     stages.Confirm()
 )
 """Workflow for new submissions."""
 
-ReplacementWorkflow=WorkflowDefinition(
-    [
-        stages.VerifyUser(must_see=True),
-        stages.Authorship(must_see=True),
-        stages.License(must_see=True),
-        stages.Policy(must_see=True),
-        stages.FileUpload(must_see=True),
-        stages.Process(must_see=True),
-        stages.Metadata(must_see=True),
-        stages.OptionalMetadata(required=False, must_see=True),
-        stages.FinalPreview(must_see=True),
-        stages.Confirm(must_see=True)
-    ],
+ReplacementWorkflow = WorkflowDefinition(
+    'ReplacementWorkflow',
+    [stages.VerifyUser(must_see=True),
+     stages.Authorship(must_see=True),
+     stages.License(must_see=True),
+     stages.Policy(must_see=True),
+     stages.FileUpload(must_see=True),
+     stages.Process(must_see=True),
+     stages.Metadata(must_see=True),
+     stages.OptionalMetadata(required=False, must_see=True),
+     stages.FinalPreview(must_see=True),
+     stages.Confirm(must_see=True)
+     ],
     stages.Confirm()
-    )
+)
 """Workflow for replacements."""
-
-
-

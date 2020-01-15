@@ -1,4 +1,4 @@
-from arxiv.submission.domain import Submission
+from arxiv.submission.domain import Submission, SubmissionContent
 
 
 def is_contact_verified(submission: Submission) -> bool:

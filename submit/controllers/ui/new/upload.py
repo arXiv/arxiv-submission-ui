@@ -331,7 +331,8 @@ def delete(method: str, params: MultiDict, session: Session,
 class UploadForm(csrf.CSRFForm):
     """Form for uploading files."""
 
-    file = FileField('Choose a file...', validators=[DataRequired()])
+    file = FileField('Choose a file...',
+                     validators=[DataRequired()])
     ancillary = BooleanField('Ancillary')
 
 
@@ -577,26 +578,26 @@ def _new_file(params: MultiDict, pointer: FileStorage, session: Session,
     if not form.validate():
         logger.error('Invalid upload form: %s', form.errors)
 
-        alerts.flash_failure("Something went wrong. Please try again.",
-                             title="Whoops")
-        # redirect = url_for('ui.file_upload',
-        #                    submission_id=submission.submission_id)
-        # return {}, status.SEE_OTHER, {'Location': redirect}
-        logger.debug('Invalid form data')
-        raise BadRequest(rdata)
+        alerts.flash_failure(
+            "No file was uploaded; please try again.",
+            title="Something went wrong")
+
+        loc = url_for('ui.file_upload', submission_id=submission.submission_id)
+        return {}, status.SEE_OTHER, {'Location': loc}
+
     ancillary: bool = form.ancillary.data
 
     try:
         stat = fm.add_file(upload_id, pointer, token, ancillary=ancillary)
-    except exceptions.RequestFailed as e:
+    except exceptions.RequestFailed as ex:
         try:
-            e_data = e.response.json()
+            ex_data = ex.response.json()
         except Exception:
-            e_data = None
-        if e_data is not None and 'reason' in e_data:
+            ex_data = None
+        if ex_data is not None and 'reason' in ex_data:
             alerts.flash_failure(Markup(
                 'There was a problem carrying out your request:'
-                f' {e_data["reason"]}. {PLEASE_CONTACT_SUPPORT}'
+                f' {ex_data["reason"]}. {PLEASE_CONTACT_SUPPORT}'
             ))
             raise BadRequest(rdata)
         alerts.flash_failure(Markup(
@@ -605,7 +606,7 @@ def _new_file(params: MultiDict, pointer: FileStorage, session: Session,
         ))
         logger.debug('Failed to add file: %s', )
         logger.error(traceback.format_exc())
-        raise InternalServerError(rdata) from e
+        raise InternalServerError(rdata) from ex
 
     submission = _update(form, submission, stat, submitter, client, rdata)
     converted_size = tidy_filesize(stat.size)

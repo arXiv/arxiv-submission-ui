@@ -13,9 +13,9 @@ from .new.upload import delete as delete_file
 from .new.upload import delete_all as delete_all_files
 
 from .new import create, verify_user, authorship, license, policy, final,\
-    classification, metadata, unsubmit
+    classification, metadata, unsubmit, process
 
-from . import  util, jref, withdraw, delete, cross
+from . import util, jref, withdraw, delete, cross
 
 from submit.util import load_submission
 
@@ -37,3 +37,14 @@ def submission_status(method: str, params: MultiDict, session: Session,
         'events': submission_events
     }
     return response_data, status.OK, {}
+
+
+def submission_edit(method: str, params: MultiDict, session: Session,
+                    submission_id: int) -> Response:
+    """Cause flow_control to go to the current_stage of the Submission."""
+    response_data = {
+        'form': {
+            'action': 'NEXT'
+        }
+    }
+    return response_data, status.SEE_OTHER, {}

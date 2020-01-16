@@ -58,8 +58,9 @@ def create(method: str, params: MultiDict, session: Session, *args,
             logger.error('Could not save command: %s', e)
             raise InternalServerError(response_data) from e
 
-        loc = url_for('ui.verify_user', submission_id=submission.submission_id)
-        return {}, status.SEE_OTHER, {'Location': loc}
+        # loc = url_for('ui.verify_user', submission_id=submission.submission_id)
+        # return {}, status.SEE_OTHER, {'Location': loc}
+        return response_data, status.SEE_OTHER, {}
     return response_data, status.OK, {}
 
 

@@ -29,6 +29,10 @@ class WorkflowProcessor:
                 return stage
         return None
 
+    def next_stage(self, stage: Optional[Stage]) -> Optional[Stage]:
+        """Get the stage after the one in the parameter."""
+        return self.workflow.next_stage(stage)
+    
     def can_proceed_to(self, stage: Optional[Stage]) -> bool:
         """Determine whether the user can proceed to a stage."""
         return all(map(self.is_done, self.workflow.iter_prior(stage)))

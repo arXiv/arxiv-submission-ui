@@ -4,14 +4,110 @@ This is the primary interface for arXiv users to submit e-prints to arXiv.
 It is comprised of a Flask application built around the [submission core
 events](https://github.com/cul-it/arxiv-submission-core) package.
 
-The Submission UI requires the File Management service.
+The Submission UI requires the File Management service and optionally requires
+the Compiler service when working with articles that must be compiled from TeX
+sources. The Compiler service is not required when working with PDF-only submissions.
 
-## Quick start
+The Compiler service's converter image currently includes the complete set of all arXiv TeX
+trees used by arXiv over the years. This image is rather large (17G) and takes
+more effort to download and install so we supply a mock compiler service for cases
+where you are not focused on the compilation aspects of the 'process' step within the
+submission workflow.
+
+## Overview of Quick start options - full TeX compilation or mock compilation
 
 Submission involves several back-end services, worker processes and
 the UI application itself. The easiest way to spin up all of this
 stuff with correct wiring is to use the provided docker-compose
 configuration.
+
+The default docker-compose configuration requires the fully-functional Compiler
+service converter image. To bypass installation of this compiler image use the mock compiler
+configuration option.
+
+How to chose the option that's right for you: If you are not concerned with TeX
+compilation, or you have limited disk space, you will want the mock compiler option.
+If you are concerned with evaluating TeX compilation output and/or the submission
+'process' step under normal operating conditions you will want to install the
+actual Compiler service's converter image.
+
+## Setup required for both mock and full compilation options - AWS settings
+
+One of the back-end services we run is 'localstack' which is a fully functional
+local AWS stack. While this local AWS stack implementation doesn't actually
+check credentials you must have the environment variables set for the service
+to work properly.
+
+You may set these to your real AWS credentials or simply set them to arbitrary
+dummy values.
+
+```bash
+export AWS_ACCESS_KEY_ID=fookey
+export AWS_SECRET_ACCESS_KEY=foosecretkey
+```
+
+## Quick start using mock compiler service
+
+The mock compiler service simulates responses from the compilation service. The primary
+deliverables of the compiler service are the PDF and logs generated from compiling the submission's
+TeX source. The mock compiler service simply returns a fixed PDF and compilation log.
+
+Use the 'docker-compose-mock-compiler.yml' configuration file to enable the mock compiler
+service. You will need to add the '-f <config file>' argument to all docker-compose commands.
+Another option is to replace the 'docker-compose.yml' with the 'docker-compose-mock-compiler.yml'
+in the event you do not want to bother with adding the '-f' argument. Be careful not to commit this
+overwrite of the default configuration file.
+
+### Quick start commands (mock compiler)
+
+Make sure you have your AWS settings configured properly before proceeding ([see above](#aws-credentials)).
+
+docker-compose note: When you are running with an alternate config (-f <config>) you will want to add
+the '-f <config>' argument to all docker-compose commands since this configuration file defines the set of services
+it is operating on.
+
+```bash
+cd /path/to/arxiv-submission-ui
+mkdir /tmp/foo          # Compiler service will use this.
+docker-compose -f docker-compose-mock-compiler.yml pull     # Pulls in images that you might not have already.
+docker-compose -f docker-compose-mock-compiler.yml build    # Builds the submission UI
+DIND_SOURCE_ROOT=/tmp/foo docker-compose -f docker-compose-mock-compiler.yml up
+```
+
+You may see the following errors when running ``docker-compose -f docker-compose-mock-compiler.yml pull``,
+and you can ignore them:
+
+```bash
+ERROR: for submission-ui  manifest for arxiv/submission-ui:latest not found: manifest unknown: manifest unknown
+
+ERROR: for mock-compiler-api  pull access denied for arxiv/mock-compiler, repository does not exist or may require
+'docker login': denied: requested access to the resource is denied
+
+ERROR: for mock-classifier  pull access denied for arxiv/mock-classifier, repository does not exist or may require
+'docker login': denied: requested access to the resource is denied
+ERROR: pull access denied for arxiv/mock-classifier, repository does not exist or may require
+'docker login': denied: requested access to the resource is denied
+```
+
+From this point on (after issuing docker-compose up command) the output is similar for both the mock and full
+compiler options. You may skip ahead to the section on what to expect during startup.
+
+### Using your own PDF and compilation log.
+
+In the event you do not want to install the compiler yet want to see what a specific compilation
+product looks like you may grab the PDF and compilation log from the production arXiv system and
+install these files as data for the mock compiler service.
+
+The PDF and log returned by the mock compiler service are stored in the 'mock-services/data/compiler'
+directory.
+
+Simply install your new data files, rebuild the mock compiler service, and bring up the submission-ui.
+
+When using the mock-compiler service you will get the same PDF and compilation log for every submission.
+The idea behind the mock compiler service is to let you work through the entire submission process workflow
+without the hassle of installing the compiler service.
+
+## Quick start using full arXiv Compiler service (with actual TeX compilation)
 
 ### AWS Credentials
 First, you will need credentials to AWS ECR to get the converter docker
@@ -35,20 +131,9 @@ To test if you have access to ECR run:
 `aws ecr list-images --repository-name arxiv/converter`
 You should get a response of no error and a list of docker images.
 
-### Quick start commands
+### Quick start commands (full compiler)
 
-One of the back-end services we run is 'localstack' which is a fully functional
-local AWS stack. While this local AWS stack implementation doesn't actually
-check credentials you must have the environment variables set for the service
-to work properly.
-
-You may set these to your real AWS credentials or simply set them to arbitrary
-dummy values.
-
-```bash
-export AWS_ACCESS_KEY_ID=fookey
-export AWS_SECRET_ACCESS_KEY=foosecretkey
-```
+Make sure you have your AWS settings configured properly before proceeding ([see above](#aws-credentials)).
 
 ```bash
 cd /path/to/arxiv-submission-ui
@@ -68,6 +153,8 @@ ERROR: for mock-vault  pull access denied for arxiv/mock-vault, repository does 
 ERROR: for submission-bootstrap  manifest for arxiv/submission-ui:latest not found
 ERROR: pull access denied for arxiv/mock-vault, repository does not exist or may require 'docker login'
 ```
+
+## What to expect during startup (hint: lots of logs messages from the various microservices)
 
 The `DIND_SOURCE_ROOT...docker-compose up` command will start a whole
 bunch of stuff. Fairly late in the process, a bootstrap process will
@@ -112,6 +199,12 @@ use the ``-v`` flag to drop old volumes.
 
 ```bash
 docker-compose rm -v
+```
+
+Add the '-f' flag when using the mock compiler service:
+
+```bash
+docker-compose -f docker-compose-mock-compiler.yml rm -v
 ```
 
 ## Running the UI locally

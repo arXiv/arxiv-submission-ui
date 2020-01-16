@@ -1,0 +1,485 @@
+[verbose]: Using directory '1-1' for processing.
+[verbose]: Setting unix time to current time: 1578869447
+[verbose]: *** Using TeX Live 2016 ***
+[verbose]: Set working directory to: .../auto_gen_ps/1-1
+[verbose]: Using source archive: 1.tar.gz
+[verbose]: Copied file '1.tar.gz' into working directory.
+[verbose]: Extracting files from archive: 1.tar
+[verbose]: TeX/AutoTeX.pm: admin_timeout = 
+[verbose]: nostamp: will not stamp PostScript
+[verbose]:  <00README.XXX>	 is of type 'override'.
+[verbose]:  <gtart_a.cls>	 is of type 'TeX auxiliary'.
+[verbose]:  <main_a.bbl>	 is of type 'TeX auxiliary'.
+[verbose]:  <main_a.tex>	 is of type 'PDFLATEX'.
+[verbose]:  ~~~~~~~~~~~ Processing file 'main_a.tex'
+[verbose]: PATH2: '/texlive/2016/bin/arch:/bin' converted to '/opt_arxiv/arXivTeX/texlive/2016/bin/arch:/opt_arxiv/arXivTeX/bin'
+[verbose]: TEXMFCNF is unset.
+[verbose]:  ~~~~~~~~~~~ Running hpdflatex for the first time ~~~~~~~~
+[verbose]: Running: (export HOME=/tmp  PATH=/opt_arxiv/arXivTeX/texlive/2016/bin/arch:/opt_arxiv/arXivTeX/bin; cd /opt_arxiv/arXivTeX/chroot/auto_gen_ps/1-1 && pdflatex  'main_a.tex' < /dev/null) 2>&1 (NO CHROOT)
+[verbose]: Executing-A: '(export HOME=/tmp  PATH=/opt_arxiv/arXivTeX/texlive/2016/bin/arch:/opt_arxiv/arXivTeX/bin; cd /opt_arxiv/arXivTeX/chroot/auto_gen_ps/1-1 && pdflatex  'main_a.tex' < /dev/null) 2>&1'
+[verbose]: This is pdfTeX, Version 3.14159265-2.6-1.40.17 (TeX Live 2016) (preloaded format=pdflatex)
+ restricted \write18 enabled.
+entering extended mode
+(./main_a.tex
+LaTeX2e <2016/03/31> patch level 3
+Babel <3.9r> and hyphenation patterns for 83 language(s) loaded.
+(./gtart_a.cls
+(/opt_arxiv/arXivTeX/texlive/2016/texmf-dist/tex/latex/base/article.cls
+Document Class: article 2014/09/29 v1.4h Standard LaTeX document class
+(/opt_arxiv/arXivTeX/texlive/2016/texmf-dist/tex/latex/base/size11.clo))
+(/opt_arxiv/arXivTeX/texlive/2016/texmf-dist/tex/latex/amscls/amsthm.sty)
+(/opt_arxiv/arXivTeX/texlive/2016/texmf-dist/tex/latex/amsfonts/amssymb.sty
+(/opt_arxiv/arXivTeX/texlive/2016/texmf-dist/tex/latex/amsfonts/amsfonts.sty))
+(/opt_arxiv/arXivTeX/texlive/2016/texmf-dist/tex/latex/amsmath/amsmath.sty
+For additional information on amsmath, use the `?' option.
+(/opt_arxiv/arXivTeX/texlive/2016/texmf-dist/tex/latex/amsmath/amstext.sty
+(/opt_arxiv/arXivTeX/texlive/2016/texmf-dist/tex/latex/amsmath/amsgen.sty))
+(/opt_arxiv/arXivTeX/texlive/2016/texmf-dist/tex/latex/amsmath/amsbsy.sty)
+(/opt_arxiv/arXivTeX/texlive/2016/texmf-dist/tex/latex/amsmath/amsopn.sty))
+(/opt_arxiv/arXivTeX/texlive/2016/texmf-dist/tex/latex/microtype/microtype.sty
+(/opt_arxiv/arXivTeX/texlive/2016/texmf-dist/tex/latex/graphics/keyval.sty)
+(/opt_arxiv/arXivTeX/texlive/2016/texmf-dist/tex/latex/microtype/microtype-pdft
+ex.def)
+(/opt_arxiv/arXivTeX/texlive/2016/texmf-dist/tex/latex/microtype/microtype.cfg)
+) (/opt_arxiv/arXivTeX/texlive/2016/texmf-dist/tex/latex/hyperref/hyperref.sty
+(/opt_arxiv/arXivTeX/texlive/2016/texmf-dist/tex/generic/oberdiek/hobsub-hyperr
+ef.sty
+(/opt_arxiv/arXivTeX/texlive/2016/texmf-dist/tex/generic/oberdiek/hobsub-generi
+c.sty))
+(/opt_arxiv/arXivTeX/texlive/2016/texmf-dist/tex/generic/ifxetex/ifxetex.sty)
+(/opt_arxiv/arXivTeX/texlive/2016/texmf-dist/tex/latex/oberdiek/auxhook.sty)
+(/opt_arxiv/arXivTeX/texlive/2016/texmf-dist/tex/latex/oberdiek/kvoptions.sty)
+(/opt_arxiv/arXivTeX/texlive/2016/texmf-dist/tex/latex/hyperref/pd1enc.def)
+(/opt_arxiv/arXivTeX/texlive/2016/texmf-config/tex/latex/latexconfig/hyperref.c
+fg) (/opt_arxiv/arXivTeX/texlive/2016/texmf-dist/tex/latex/url/url.sty))
+
+Package hyperref Message: Driver (autodetected): hpdftex.
+
+(/opt_arxiv/arXivTeX/texlive/2016/texmf-dist/tex/latex/hyperref/hpdftex.def
+(/opt_arxiv/arXivTeX/texlive/2016/texmf-dist/tex/latex/oberdiek/rerunfilecheck.
+sty))
+
+Package hyperref Warning: Option `bookmarks' has already been used,
+(hyperref)                setting the option has no effect on input line 197.
+
+
+Package hyperref Warning: Option `pagecolor' is not available anymore.
+
+)
+
+! LaTeX Error: Option clash for package hyperref.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.68 \def
+         \cnewtheorem#1[#2]#3{\newtheorem{#1}{#3}[section]
+? 
+! Emergency stop.
+ ...                                              
+                                                  
+l.68 \def
+         \cnewtheorem#1[#2]#3{\newtheorem{#1}{#3}[section]
+!  ==> Fatal error occurred, no output PDF file produced!
+Transcript written on main_a.log.
+
+[verbose]: pdflatex 'main_a.tex' failed.
+[verbose]: PATH2: '/texlive/2016/bin/arch:/bin' converted to '/opt_arxiv/arXivTeX/texlive/2016/bin/arch:/opt_arxiv/arXivTeX/bin'
+[verbose]: TEXMFCNF is unset.
+[verbose]:  ~~~~~~~~~~~ Running pdflatex for the first time ~~~~~~~~
+[verbose]: Running: (export HOME=/tmp  PATH=/opt_arxiv/arXivTeX/texlive/2016/bin/arch:/opt_arxiv/arXivTeX/bin; cd /opt_arxiv/arXivTeX/chroot/auto_gen_ps/1-1 && pdflatex  'main_a.tex' < /dev/null) 2>&1 (NO CHROOT)
+[verbose]: Executing-A: '(export HOME=/tmp  PATH=/opt_arxiv/arXivTeX/texlive/2016/bin/arch:/opt_arxiv/arXivTeX/bin; cd /opt_arxiv/arXivTeX/chroot/auto_gen_ps/1-1 && pdflatex  'main_a.tex' < /dev/null) 2>&1'
+[verbose]: This is pdfTeX, Version 3.14159265-2.6-1.40.17 (TeX Live 2016) (preloaded format=pdflatex)
+ restricted \write18 enabled.
+entering extended mode
+(./main_a.tex
+LaTeX2e <2016/03/31> patch level 3
+Babel <3.9r> and hyphenation patterns for 83 language(s) loaded.
+(./gtart_a.cls
+(/opt_arxiv/arXivTeX/texlive/2016/texmf-dist/tex/latex/base/article.cls
+Document Class: article 2014/09/29 v1.4h Standard LaTeX document class
+(/opt_arxiv/arXivTeX/texlive/2016/texmf-dist/tex/latex/base/size11.clo))
+(/opt_arxiv/arXivTeX/texlive/2016/texmf-dist/tex/latex/amscls/amsthm.sty)
+(/opt_arxiv/arXivTeX/texlive/2016/texmf-dist/tex/latex/amsfonts/amssymb.sty
+(/opt_arxiv/arXivTeX/texlive/2016/texmf-dist/tex/latex/amsfonts/amsfonts.sty))
+(/opt_arxiv/arXivTeX/texlive/2016/texmf-dist/tex/latex/amsmath/amsmath.sty
+For additional information on amsmath, use the `?' option.
+(/opt_arxiv/arXivTeX/texlive/2016/texmf-dist/tex/latex/amsmath/amstext.sty
+(/opt_arxiv/arXivTeX/texlive/2016/texmf-dist/tex/latex/amsmath/amsgen.sty))
+(/opt_arxiv/arXivTeX/texlive/2016/texmf-dist/tex/latex/amsmath/amsbsy.sty)
+(/opt_arxiv/arXivTeX/texlive/2016/texmf-dist/tex/latex/amsmath/amsopn.sty))
+(/opt_arxiv/arXivTeX/texlive/2016/texmf-dist/tex/latex/microtype/microtype.sty
+(/opt_arxiv/arXivTeX/texlive/2016/texmf-dist/tex/latex/graphics/keyval.sty)
+(/opt_arxiv/arXivTeX/texlive/2016/texmf-dist/tex/latex/microtype/microtype-pdft
+ex.def)
+(/opt_arxiv/arXivTeX/texlive/2016/texmf-dist/tex/latex/microtype/microtype.cfg)
+) (/opt_arxiv/arXivTeX/texlive/2016/texmf-dist/tex/latex/hyperref/hyperref.sty
+(/opt_arxiv/arXivTeX/texlive/2016/texmf-dist/tex/generic/oberdiek/hobsub-hyperr
+ef.sty
+(/opt_arxiv/arXivTeX/texlive/2016/texmf-dist/tex/generic/oberdiek/hobsub-generi
+c.sty))
+(/opt_arxiv/arXivTeX/texlive/2016/texmf-dist/tex/generic/ifxetex/ifxetex.sty)
+(/opt_arxiv/arXivTeX/texlive/2016/texmf-dist/tex/latex/oberdiek/auxhook.sty)
+(/opt_arxiv/arXivTeX/texlive/2016/texmf-dist/tex/latex/oberdiek/kvoptions.sty)
+(/opt_arxiv/arXivTeX/texlive/2016/texmf-dist/tex/latex/hyperref/pd1enc.def)
+(/opt_arxiv/arXivTeX/texlive/2016/texmf-config/tex/latex/latexconfig/hyperref.c
+fg) (/opt_arxiv/arXivTeX/texlive/2016/texmf-dist/tex/latex/url/url.sty))
+
+Package hyperref Message: Driver (autodetected): hpdftex.
+
+(/opt_arxiv/arXivTeX/texlive/2016/texmf-dist/tex/latex/hyperref/hpdftex.def
+(/opt_arxiv/arXivTeX/texlive/2016/texmf-dist/tex/latex/oberdiek/rerunfilecheck.
+sty))
+
+Package hyperref Warning: Option `bookmarks' has already been used,
+(hyperref)                setting the option has no effect on input line 197.
+
+
+Package hyperref Warning: Option `pagecolor' is not available anymore.
+
+)
+No file main_a.aux.
+(/opt_arxiv/arXivTeX/texlive/2016/texmf-dist/tex/latex/microtype/mt-ptm.cfg)
+(/opt_arxiv/arXivTeX/texlive/2016/texmf-dist/tex/latex/graphics/color.sty
+(/opt_arxiv/arXivTeX/texlive/2016/texmf-dist/tex/latex/graphics-cfg/color.cfg)
+(/opt_arxiv/arXivTeX/texlive/2016/texmf-dist/tex/latex/graphics-def/pdftex.def
+(/opt_arxiv/arXivTeX/texlive/2016/texmf-dist/tex/context/base/mkii/supp-pdf.mki
+i
+[Loading MPS to PDF converter (version 2006.09.02).]
+))) (/opt_arxiv/arXivTeX/texlive/2016/texmf-dist/tex/latex/hyperref/nameref.sty
+
+(/opt_arxiv/arXivTeX/texlive/2016/texmf-dist/tex/generic/oberdiek/gettitlestrin
+g.sty)) (/opt_arxiv/arXivTeX/texlive/2016/texmf-dist/tex/latex/amsfonts/umsa.fd
+) (/opt_arxiv/arXivTeX/texlive/2016/texmf-dist/tex/latex/microtype/mt-msa.cfg)
+(/opt_arxiv/arXivTeX/texlive/2016/texmf-dist/tex/latex/amsfonts/umsb.fd)
+(/opt_arxiv/arXivTeX/texlive/2016/texmf-dist/tex/latex/microtype/mt-msb.cfg)
+(/opt_arxiv/arXivTeX/texlive/2016/texmf-dist/tex/latex/microtype/mt-cmr.cfg)
+
+LaTeX Warning: Citation `GH' on page 1319 undefined on input line 162.
+
+
+LaTeX Warning: Citation `BE' on page 1319 undefined on input line 162.
+
+
+Overfull \hbox (1.5pt too wide) has occurred while \output is active
+[] 
+[1319{/opt_arxiv/arXivTeX/texlive/2016/texmf-var/fonts/map/pdftex/updmap/pdftex
+.map}]
+
+LaTeX Warning: Reference `thm:so' on page 1320 undefined on input line 195.
+
+
+LaTeX Warning: Reference `thm:nempty' on page 1320 undefined on input line 195.
+
+
+
+LaTeX Warning: Reference `thm:one' on page 1320 undefined on input line 201.
+
+
+LaTeX Warning: Citation `GH' on page 1320 undefined on input line 214.
+
+
+LaTeX Warning: Citation `BE' on page 1320 undefined on input line 217.
+
+[1320] [1321] [1322] [1323]
+(/opt_arxiv/arXivTeX/texlive/2016/texmf-dist/tex/latex/amsfonts/ueuf.fd)
+(/opt_arxiv/arXivTeX/texlive/2016/texmf-dist/tex/latex/microtype/mt-euf.cfg)
+[1324]
+
+LaTeX Warning: Reference `eqn:fx' on page 1325 undefined on input line 454.
+
+[1325] [1326]
+
+LaTeX Warning: Reference `lem:equ' on page 1327 undefined on input line 547.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
+(hyperref)                removing `math shift' on input line 553.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
+(hyperref)                removing `subscript' on input line 553.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
+(hyperref)                removing `math shift' on input line 553.
+
+[1327]
+
+LaTeX Warning: Reference `lem:fin' on page 1328 undefined on input line 619.
+
+
+LaTeX Warning: Reference `thm:hau' on page 1328 undefined on input line 628.
+
+[1328]
+
+LaTeX Warning: Reference `it1' on page 1329 undefined on input line 635.
+
+
+LaTeX Warning: Reference `it2' on page 1329 undefined on input line 638.
+
+[1329]
+
+LaTeX Warning: Reference `thm:so' on page 1330 undefined on input line 690.
+
+
+LaTeX Warning: Citation `GH' on page 1330 undefined on input line 695.
+
+[1330] [1331]
+
+LaTeX Warning: Reference `lem:aff' on page 1332 undefined on input line 787.
+
+[1332]
+
+LaTeX Warning: Reference `lem:equ' on page 1333 undefined on input line 800.
+
+
+LaTeX Warning: Reference `lem:fin' on page 1333 undefined on input line 802.
+
+[1333]
+
+LaTeX Warning: Reference `lem:op' on page 1334 undefined on input line 848.
+
+[1334]
+
+LaTeX Warning: Reference `lem:jeq' on page 1335 undefined on input line 896.
+
+
+LaTeX Warning: Reference `lem:equ' on page 1335 undefined on input line 896.
+
+
+LaTeX Warning: Reference `prop:ind' on page 1335 undefined on input line 924.
+
+[1335]
+
+LaTeX Warning: Reference `prop:ind' on page 1336 undefined on input line 965.
+
+
+LaTeX Warning: Citation `GM' on page 1336 undefined on input line 989.
+
+[1336]
+
+LaTeX Warning: Citation `GA' on page 1337 undefined on input line 996.
+
+
+LaTeX Warning: Citation `TU' on page 1337 undefined on input line 996.
+
+
+LaTeX Warning: Citation `HI' on page 1337 undefined on input line 996.
+
+
+LaTeX Warning: Citation `CJ' on page 1337 undefined on input line 996.
+
+
+LaTeX Warning: Citation `CJ' on page 1337 undefined on input line 996.
+
+
+LaTeX Warning: Citation `GA' on page 1337 undefined on input line 996.
+
+
+LaTeX Warning: Citation `TU' on page 1337 undefined on input line 996.
+
+
+LaTeX Warning: Reference `lem:equ' on page 1337 undefined on input line 1006.
+
+
+LaTeX Warning: Reference `cor:int' on page 1337 undefined on input line 1020.
+
+
+LaTeX Warning: Reference `prop:ind' on page 1337 undefined on input line 1049.
+
+[1337]
+
+LaTeX Warning: Reference `thm:gab' on page 1338 undefined on input line 1089.
+
+
+LaTeX Warning: Reference `prop:red' on page 1338 undefined on input line 1089.
+
+
+LaTeX Warning: Reference `cor:fix' on page 1338 undefined on input line 1092.
+
+[1338]
+
+LaTeX Warning: Reference `cor:tran' on page 1339 undefined on input line 1113.
+
+
+LaTeX Warning: Reference `lem:aff' on page 1339 undefined on input line 1118.
+
+[1339]
+
+LaTeX Warning: Reference `prop:dir' on page 1340 undefined on input line 1220.
+
+[1340]
+
+LaTeX Warning: Reference `cor:trans' on page 1341 undefined on input line 1249.
+
+
+
+LaTeX Warning: Reference `prop:dir' on page 1341 undefined on input line 1257.
+
+
+LaTeX Warning: Reference `cor:trans' on page 1341 undefined on input line 1271.
+
+
+[1341] [1342]
+
+LaTeX Warning: Reference `sec:con' on page 1343 undefined on input line 1403.
+
+
+LaTeX Warning: Reference `prop:iso' on page 1343 undefined on input line 1405.
+
+
+LaTeX Warning: Reference `cor:fix' on page 1343 undefined on input line 1420.
+
+
+LaTeX Warning: Reference `prop:equ' on page 1343 undefined on input line 1421.
+
+
+LaTeX Warning: Reference `cor:int' on page 1343 undefined on input line 1430.
+
+[1343]
+
+LaTeX Warning: Reference `prop:one' on page 1344 undefined on input line 1458.
+
+
+LaTeX Warning: Reference `thm:so' on page 1344 undefined on input line 1461.
+
+
+LaTeX Warning: Reference `thm:nempty' on page 1344 undefined on input line 1463
+.
+
+
+LaTeX Warning: Reference `prop:ttt' on page 1344 undefined on input line 1468.
+
+
+LaTeX Warning: Reference `prop:gcon' on page 1344 undefined on input line 1469.
+
+
+
+LaTeX Warning: Reference `thm:ncts' on page 1344 undefined on input line 1475.
+
+[1344]
+
+LaTeX Warning: Reference `thm:cat' on page 1345 undefined on input line 1494.
+
+
+LaTeX Warning: Reference `thm:cat' on page 1345 undefined on input line 1495.
+
+
+LaTeX Warning: Reference `thm:clo' on page 1345 undefined on input line 1514.
+
+[1345] (./main_a.bbl
+Underfull \hbox (badness 10000) in paragraph at lines 6--11
+[]\OT1/ptm/b/n/10 M Bestv-ina\OT1/ptm/m/n/10 (+20) , \OT1/ptm/m/it/10 (+20) Que
+s-tions in ge-o-met-ric group the-ory  \OT1/ptm/m/n/10 (+20) Avail-able at
+)
+Underfull \hbox (badness 10000) in paragraph at lines 1522--1522
+
+[1346] (./main_a.aux)
+
+Package rerunfilecheck Warning: File `main_a.out' has changed.
+(rerunfilecheck)                Rerun to get outlines right
+(rerunfilecheck)                or use package `bookmark'.
+
+
+LaTeX Warning: There were undefined references.
+
+
+LaTeX Warning: Label(s) may have changed. Rerun to get cross-references right.
+
+ )
+(see the transcript file for additional information){/opt_arxiv/arXivTeX/texliv
+e/2016/texmf-dist/fonts/enc/dvips/base/8r.enc}</opt_arxiv/arXivTeX/texlive/2016
+/texmf-dist/fonts/type1/public/amsfonts/cm/cmex10.pfb></opt_arxiv/arXivTeX/texl
+ive/2016/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb></opt_arxiv/arXiv
+TeX/texlive/2016/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi8.pfb></opt_arxi
+v/arXivTeX/texlive/2016/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb></o
+pt_arxiv/arXivTeX/texlive/2016/texmf-dist/fonts/type1/public/amsfonts/cm/cmr8.p
+fb></opt_arxiv/arXivTeX/texlive/2016/texmf-dist/fonts/type1/public/amsfonts/cm/
+cmsy10.pfb></opt_arxiv/arXivTeX/texlive/2016/texmf-dist/fonts/type1/public/amsf
+onts/cm/cmsy6.pfb></opt_arxiv/arXivTeX/texlive/2016/texmf-dist/fonts/type1/publ
+ic/amsfonts/cm/cmsy8.pfb></opt_arxiv/arXivTeX/texlive/2016/texmf-dist/fonts/typ
+e1/public/amsfonts/cm/cmtt10.pfb></opt_arxiv/arXivTeX/texlive/2016/texmf-dist/f
+onts/type1/public/amsfonts/euler/eufm10.pfb></opt_arxiv/arXivTeX/texlive/2016/t
+exmf-dist/fonts/type1/public/amsfonts/symbols/msbm10.pfb></opt_arxiv/arXivTeX/t
+exlive/2016/texmf-dist/fonts/type1/urw/times/utmb8a.pfb></opt_arxiv/arXivTeX/te
+xlive/2016/texmf-dist/fonts/type1/urw/times/utmr8a.pfb></opt_arxiv/arXivTeX/tex
+live/2016/texmf-dist/fonts/type1/urw/times/utmr8a.pfb></opt_arxiv/arXivTeX/texl
+ive/2016/texmf-dist/fonts/type1/urw/times/utmri8a.pfb>
+Output written on main_a.pdf (28 pages, 278594 bytes).
+Transcript written on main_a.log.
+
+[verbose]:  ~~~~~~~~~~~ Running pdflatex for the second time ~~~~~~~~
+[verbose]: Running: (export HOME=/tmp  PATH=/opt_arxiv/arXivTeX/texlive/2016/bin/arch:/opt_arxiv/arXivTeX/bin; cd /opt_arxiv/arXivTeX/chroot/auto_gen_ps/1-1 && pdflatex  'main_a.tex' < /dev/null) 2>&1 (NO CHROOT)
+[verbose]: Executing-A: '(export HOME=/tmp  PATH=/opt_arxiv/arXivTeX/texlive/2016/bin/arch:/opt_arxiv/arXivTeX/bin; cd /opt_arxiv/arXivTeX/chroot/auto_gen_ps/1-1 && pdflatex  'main_a.tex' < /dev/null) 2>&1'
+[verbose]: This is pdfTeX, Version 3.14159265-2.6-1.40.17 (TeX Live 2016) (preloaded format=pdflatex)
+ restricted \write18 enabled.
+entering extended mode
+(./main_a.tex
+LaTeX2e <2016/03/31> patch level 3
+Babel <3.9r> and hyphenation patterns for 83 language(s) loaded.
+(./gtart_a.cls
+(/opt_arxiv/arXivTeX/texlive/2016/texmf-dist/tex/latex/base/article.cls
+Document Class: article 2014/09/29 v1.4h Standard LaTeX document class
+(/opt_arxiv/arXivTeX/texlive/2016/texmf-dist/tex/latex/base/size11.clo))
+(/opt_arxiv/arXivTeX/texlive/2016/texmf-dist/tex/latex/amscls/amsthm.sty)
+(/opt_arxiv/arXivTeX/texlive/2016/texmf-dist/tex/latex/amsfonts/amssymb.sty
+(/opt_arxiv/arXivTeX/texlive/2016/texmf-dist/tex/latex/amsfonts/amsfonts.sty))
+(/opt_arxiv/arXivTeX/texlive/2016/texmf-dist/tex/latex/amsmath/amsmath.sty
+For additional information on amsmath, use the `?' option.
+(/opt_arxiv/arXivTeX/texlive/2016/texmf-dist/tex/latex/amsmath/amstext.sty
+(/opt_arxiv/arXivTeX/texlive/2016/texmf-dist/tex/latex/amsmath/amsgen.sty))
+(/opt_arxiv/arXivTeX/texlive/2016/texmf-dist/tex/latex/amsmath/amsbsy.sty)
+(/opt_arxiv/arXivTeX/texlive/2016/texmf-dist/tex/latex/amsmath/amsopn.sty))
+(/opt_arxiv/arXivTeX/texlive/2016/texmf-dist/tex/latex/microtype/microtype.sty
+(/opt_arxiv/arXivTeX/texlive/2016/texmf-dist/tex/latex/graphics/keyval.sty)
+(/opt_arxiv/arXivTeX/texlive/2016/texmf-dist/tex/latex/microtype/microtype-pdft
+ex.def)
+(/opt_arxiv/arXivTeX/texlive/2016/texmf-dist/tex/latex/microtype/microtype.cfg)
+) (/opt_arxiv/arXivTeX/texlive/2016/texmf-dist/tex/latex/hyperref/hyperref.sty
+(/opt_arxiv/arXivTeX/texlive/2016/texmf-dist/tex/generic/oberdiek/hobsub-hyperr
+ef.sty
+(/opt_arxiv/arXivTeX/texlive/2016/texmf-dist/tex/generic/oberdiek/hobsub-generi
+c.sty))
+(/opt_arxiv/arXivTeX/texlive/2016/texmf-dist/tex/generic/ifxetex/ifxetex.sty)
+(/opt_arxiv/arXivTeX/texlive/2016/texmf-dist/tex/latex/oberdiek/auxhook.sty)
+(/opt_arxiv/arXivTeX/texlive/2016/texmf-dist/tex/latex/oberdiek/kvoptions.sty)
+(/opt_arxiv/arXivTeX/texlive/2016/texmf-dist/tex/latex/hyperref/pd1enc.def)
+(/opt_arxiv/arXivTeX/texlive/2016/texmf-config/tex/latex/latexconfig/hyperref.c
+fg) (/opt_arxiv/arXivTeX/texlive/2016/texmf-dist/tex/latex/url/url.sty))
+
+Package hyperref Message: Driver (autodetected): hpdftex.
+
+(/opt_arxiv/arXivTeX/texlive/2016/texmf-dist/tex/latex/hyperref/hpdftex.def
+(/opt_arxiv/arXivTeX/texlive/2016/texmf-dist/tex/latex/oberdiek/rerunfilecheck.
+sty))
+
+Package hyperref Warning: Option `bookmarks' has already been used,
+(hyperref)                setting the option has no effect on input line 197.
+
+
+Package hyperref Warning: Option `pagecolor' is not available anymore.
+
+) (./main_a.aux)
+(/opt_arxiv/arXivTeX/texlive/2016/texmf-dist/tex/latex/microtype/mt-ptm.cfg)
+(/opt_arxiv/arXivTeX/texlive/2016/texmf-dist/tex/latex/graphics/color.sty
+(/opt_arxiv/arXivTeX/texlive/2016/texmf-dist/tex/latex/graphics-cfg/color.cfg)
+(/opt_arxiv/arXivTeX/texlive/2016/texmf-dist/tex/latex/graphics-def/pdftex.def
+(/opt_arxiv/arXivTeX/texlive/2016/texmf-dist/tex/context/base/mkii/supp-pdf.mki
+i
+[Loading MPS to PDF converter (version 2006.09.02).]
+))) (/opt_arxiv/arXivTeX/texlive/2016/texmf-dist/tex/latex/hyperref/nameref.sty
+
+(/opt_arxiv/arXivTeX/texlive/2016/texmf-dist/tex/generic/oberdiek/gettitlestrin
+g.sty)) (./main_a.out) (./main_a.out)
+(/opt_arxiv/arXivTeX/texlive/2016/texmf-dist/tex/latex/amsfonts/umsa.fd)
+(/opt_arxiv/arXivTeX/texlive/2016/texmf-dist/tex/latex/microtype/mt-msa.cfg)
+(/opt_arxiv/arXivTeX/texlive/2016/texmf-dist/tex/latex/amsfonts/umsb.fd)
+(/opt_arxiv/arXivTeX/texlive/2016/texmf-dist/tex/latex/microtype/mt-msb.cfg)
+(/opt_arxiv/arXivTeX/texlive/2016/texmf-dist/tex/latex/microtype/mt-cmr.cfg)
+Overfull \hbox (1.5pt too wide) has occurred while \output is active
+[] 
+[1319{/opt_arxiv/arXivTeX/texlive/2016/texmf-var/fonts/map/pdftex/updmap/pdftex
+.map}] [1320] [1321] [1322] [1323]
+(/opt_arxiv/arXi

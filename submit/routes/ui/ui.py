@@ -457,7 +457,7 @@ def compilation_log(submission_id: int) -> Response:
     )
     rv = send_file(data, mimetype=headers['Content-Type'], cache_timeout=0)
     rv.set_etag(headers['ETag'])
-    response.headers['Cache-Control'] = 'no-store'
+    rv.headers['Cache-Control'] = 'no-store'
     return rv
 
 

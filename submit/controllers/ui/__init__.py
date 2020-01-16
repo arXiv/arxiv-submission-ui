@@ -7,22 +7,32 @@ from werkzeug import MultiDict
 from http import HTTPStatus as status
 from arxiv.users.domain import Session
 
-from .new.process import file_process, file_preview, compilation_log
-from .new.upload import upload_files
-from .new.upload import delete as delete_file
-from .new.upload import delete_all as delete_all_files
-
-from .new import create, verify_user, authorship, license, policy, final,\
-    classification, metadata, unsubmit, process
-
 from . import util, jref, withdraw, delete, cross
 
+# BDC34 I don't like this but it is so
+# I can import ui into submit.routes and have routes
+# named things like policy that are mapped to ui.policy
+# If I import submit.controllers.ui.new.policy,
+# then I'm trying to have two functions named policy.
+
+from .new.authorship import authorship
+from .new.classification import classification, cross_list
+from .new.create import create
+from .new.final import finalize
+from .new.license import license
+from .new.metadata import metadata
+from .new.policy import policy
+from .new.verify_user import verify
+from .new.unsubmit import unsubmit
+
+from .new import process
+from .new import upload
+
+
+  
 from submit.util import load_submission
 
 from .util import Response
-
-__all__ = ('verify_user', 'authorship', 'license', 'policy', 'classification',
-           'metadata', 'create', 'jref', 'delete', 'process')
 
 
 def submission_status(method: str, params: MultiDict, session: Session,

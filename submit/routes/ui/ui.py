@@ -21,6 +21,7 @@ from arxiv.submission.services.classic.exceptions import Unavailable
 from ..auth import is_owner
 from submit import util
 from submit.controllers import ui
+from submit.controllers.ui.new import upload
 
 from submit.workflow.stages import FileUpload
 # from submit.workflow.stages import Authorship, BaseStage, Classification, Confirm, \
@@ -177,23 +178,39 @@ def handle(controller: Callable, template: str, title: str,
     else:
         request_data = MultiDict(request.form.items(multi=True))
 
+    form_invalid = False
     context = {'pagetitle': title}
-    try:
-        data, code, headers = controller(request.method, request_data,
-                                         request.auth, submission_id,
-                                         **kwargs)
-    except InternalServerError as e:
-        logger.debug('Caught %s from controller', e)
-        assert isinstance(e.description, dict)
-        context.update(e.description)
-        context.update({'error': e})
-        message = Markup(f'Something unexpected went wrong. {SUPPORT}')
-        add_immediate_alert(context, alerts.FAILURE, message)
-        response = make_response(render_template(template, **context), e.code)
-        return response
-    except Unavailable as e:
-        raise ServiceUnavailable('Could not connect to database') from e
+
+    data, code, headers = controller(request.method, request_data,
+                                     request.auth, submission_id,
+                                     **kwargs)
     context.update(data)
+
+
+    # The BadRequest for form invalid is not working in a resonable
+    # and straight foward manner. Mabye it was gotten to work thorugh some
+    # tourured route but it is a hacky mess.
+    # Just do normal WTForms handling for success and failure.
+    
+    # except BadRequest:
+    #     # BadRequest being used here to single that something validate
+    #      # and they need to go back to the form.
+    #     form_invalid = True
+
+    # TODO Can we just use the handlers from other places in the code?
+    # this causes a lot of interaction with flow control        
+    # except InternalServerError as e:
+    #     logger.debug('Caught %s from controller', e)
+    #     assert isinstance(e.description, dict)
+    #     context.update(e.description)
+    #     context.update({'error': e})
+    #     message = Markup(f'Something unexpected went wrong. {SUPPORT}')
+    #     add_immediate_alert(context, alerts.FAILURE, message)
+    #     response = make_response(render_template(template, **context), e.code)
+    #     return response
+    # except Unavailable as e:
+    #     raise ServiceUnavailable('Could not connect to database') from e
+
 
     if code < 300:
         response = make_response(render_template(template, **context), code)
@@ -215,7 +232,7 @@ def service_status():
                         unauthorized=redirect_to_login)
 def manage_submissions():
     """Display the submission management dashboard."""
-    return handle(ui.new.create.create, 'submit/manage_submissions.html',
+    return handle(ui.create, 'submit/manage_submissions.html',
                   'Manage submissions')
 
 
@@ -224,7 +241,7 @@ def manage_submissions():
                         unauthorized=redirect_to_login)
 def create_submission():
     """Create a new submission."""
-    return handle(ui.create.create, 'submit/manage_submissions.html',
+    return handle(ui.create, 'submit/manage_submissions.html',
                   'Create a new submission')
 
 
@@ -356,7 +373,7 @@ def submission_edit(submission_id: int) -> Response:
 @flow_control()
 def verify_user(submission_id: Optional[int] = None) -> Response:
     """Render the submit start page."""
-    return handle(ui.new.verify_user.verify, 'submit/verify_user.html',
+    return handle(ui.verify, 'submit/verify_user.html',
                   'Verify User Information', submission_id)
 
 
@@ -366,7 +383,7 @@ def verify_user(submission_id: Optional[int] = None) -> Response:
 @flow_control()
 def authorship(submission_id: int) -> Response:
     """Render step 2, authorship."""
-    return handle(ui.new.authorship.authorship, 'submit/authorship.html',
+    return handle(ui.authorship, 'submit/authorship.html',
                   'Confirm Authorship', submission_id)
 
 
@@ -411,7 +428,7 @@ def classification(submission_id: int) -> Response:
 @flow_control()
 def cross_list(submission_id: int) -> Response:
     """Render step 6, secondary classes."""
-    return handle(ui.new.classification.cross_list,
+    return handle(ui.cross_list,
                   'submit/cross_list.html',
                   'Choose Cross-List Classifications', submission_id)
 
@@ -423,7 +440,7 @@ def cross_list(submission_id: int) -> Response:
 @flow_control()
 def file_upload(submission_id: int) -> Response:
     """Render step 7, file upload."""
-    return handle(ui.new.upload.upload_files, 'submit/file_upload.html',
+    return handle(upload.upload_files, 'submit/file_upload.html',
                   'Upload Files', submission_id, files=request.files,
                   token=request.environ['token'])
 
@@ -434,7 +451,7 @@ def file_upload(submission_id: int) -> Response:
 @flow_control(FileUpload)
 def file_delete(submission_id: int) -> Response:
     """Provide the file deletion endpoint, part of the upload step."""
-    return handle(ui.delete_file, 'submit/confirm_delete.html',
+    return handle(upload.delete, 'submit/confirm_delete.html',
                   'Delete File', submission_id, get_params=True,
                   token=request.environ['token'])
 
@@ -445,7 +462,7 @@ def file_delete(submission_id: int) -> Response:
 @flow_control(FileUpload)
 def file_delete_all(submission_id: int) -> Response:
     """Provide endpoint to delete all files, part of the upload step."""
-    return handle(ui.delete_all_files,
+    return handle(upload.delete_all,
                   'submit/confirm_delete_all.html', 'Delete All Files',
                   submission_id, get_params=True,
                   token=request.environ['token'])

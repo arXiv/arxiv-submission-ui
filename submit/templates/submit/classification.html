@@ -39,11 +39,12 @@
 {%- endblock more_notifications %}
 
 {% block within_content %}
+<p><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" class="icon filter-blue" role="presentation"><path d="M256 8C119.043 8 8 119.083 8 256c0 136.997 111.043 248 248 248s248-111.003 248-248C504 119.083 392.957 8 256 8zm0 110c23.196 0 42 18.804 42 42s-18.804 42-42 42-42-18.804-42-42 18.804-42 42-42zm56 254c0 6.627-5.373 12-12 12h-88c-6.627 0-12-5.373-12-12v-24c0-6.627 5.373-12 12-12h12v-64h-12c-6.627 0-12-5.373-12-12v-24c0-6.627 5.373-12 12-12h64c6.627 0 12 5.373 12 12v100h12c6.627 0 12 5.373 12 12v24z"/></svg> The most specific category for your article is best. If there is interest in more than one category for your article, you may choose cross-lists as secondary categories on the following page.</p>
 <form method="POST" action="{{ url_for('ui.classification', submission_id=submission_id) }}">
   <div class="action-container">
     {{ form.csrf_token }}
     <div class="columns">
-      <div class="column is-two-thirds-tablet is-half-desktop">
+      <div class="column is-one-third-tablet is-half-desktop">
         {% with field = form.category %}
         <div class="field">
           <div class="control">
@@ -82,11 +83,13 @@
         {% endwith %}
       </div>
 
-      <div class="column is-one-third-tablet is-half-desktop">
-        <div class="message is-link">
+      <div class="column is-two-thirds-tablet is-half-desktop">
+        <div class="message">
           <div class="message-body">
-            <p class="is-size-6 is-white has-text-weight-semibold"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" class="icon filter-blue" role="presentation"><path d="M256 8C119.043 8 8 119.083 8 256c0 136.997 111.043 248 248 248s248-111.003 248-248C504 119.083 392.957 8 256 8zm0 110c23.196 0 42 18.804 42 42s-18.804 42-42 42-42-18.804-42-42 18.804-42 42-42zm56 254c0 6.627-5.373 12-12 12h-88c-6.627 0-12-5.373-12-12v-24c0-6.627 5.373-12 12-12h12v-64h-12c-6.627 0-12-5.373-12-12v-24c0-6.627 5.373-12 12-12h64c6.627 0 12 5.373 12 12v100h12c6.627 0 12 5.373 12 12v24z"/></svg> Choosing a Good Category</p>
-            <p>The most specific category for your article is best. If there is interest in more than one category for your article, you may choose cross-lists as secondary categories on the following page.</p>
+            <p class="is-size-6">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512" class="icon filter-grey" role="presentation"><path d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"/></svg>
+              Select a category from the dropdown to view it's description
+            </p>
           </div>
         </div>
       </div>

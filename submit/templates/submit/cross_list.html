@@ -4,28 +4,28 @@
 
 {% block within_content %}
 <div class="columns">
-  <div class="column is-two-thirds-tablet is-half-desktop category-list">
-    <h3>Selected categories</h3>
-    <ol class="file-tree">
 
+  <div class="column is-one-third-tablet is-one-third-desktop category-list">
+    <p class="has-text-weight-bold">Selected primary category:</p>
+    <ol class="file-tree">
       <li>
-      <p class="has-text-weight-bold">Primary</p>
-      <p class="has-text-weight-bold" style="margin-bottom: .5em">
-        <span class="tag is-link">{{ primary.id }}</span> {{ primary.name }}
-        <a style="border: 0" title="Change primary category" href="{{ url_for('ui.classification', submission_id=submission_id)}}">
+        <p class="has-text-weight-bold" style="margin-bottom: .5em">
+          <span class="tag is-link">{{ primary.id }}</span> {{ primary.name }}
+          <a style="border: 0" title="Change primary category" href="{{ url_for('ui.classification', submission_id=submission_id)}}">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" class="icon filter-blue" role="presentation"><path d="M497.9 142.1l-46.1 46.1c-4.7 4.7-12.3 4.7-17 0l-111-111c-4.7-4.7-4.7-12.3 0-17l46.1-46.1c18.7-18.7 49.1-18.7 67.9 0l60.1 60.1c18.8 18.7 18.8 49.1 0 67.9zM284.2 99.8L21.6 362.4.4 483.9c-2.9 16.4 11.4 30.6 27.8 27.8l121.5-21.3 262.6-262.6c4.7-4.7 4.7-12.3 0-17l-111-111c-4.8-4.7-12.4-4.7-17.1 0zM124.1 339.9c-5.5-5.5-5.5-14.3 0-19.8l154-154c5.5-5.5 14.3-5.5 19.8 0s5.5 14.3 0 19.8l-154 154c-5.5 5.5-14.3 5.5-19.8 0zM88 424h48v36.3l-64.5 11.3-31.1-31.1L51.7 376H88v48z"/></svg>
           <span class="sr-only">Change primary category</span>
         </a>
-      </p>
+        </p>
       </li>
+    </ol>
+  </div>
 
-      {% if category, subform in formset.items() %}
-      <p class="has-text-weight-bold">Secondary</p>
-      <div class="action-container">
-      {% endif %}
-      {% for category, subform in formset.items() %}
-      <form method="POST" class="form form-margin control" action="{{ url_for('ui.cross_list', submission_id=submission_id) }}">
-        {{ subform.csrf_token }}
+  <div class="column is-one-third-tablet is-one-third-desktop category-list">
+    <p class="has-text-weight-bold">Selected cross-list Categories (optional):</p>
+    {% for category, subform in formset.items() %}
+    <form method="POST" class="form form-margin control" action="{{ url_for('ui.cross_list', submission_id=submission_id) }}">
+      {{ subform.csrf_token }}
+      <ol class="file-tree">
         <li>
           {{ subform.operation }}
           {{ subform.category()|safe }}
@@ -36,16 +36,12 @@
             <span class="sr-only">Remove category</span>
           </button>
         </li>
-      </form>
-      {% endfor %}
-      {% if category, subform in formset.items() %}
-      </div>
-      {% endif %}
-
-    </ol>
+      </ol>
+    </form>
+    {% endfor %}
   </div>
 
-  <div class="column is-one-third-tablet is-half-desktop">
+  <div class="column is-one-third-tablet is-one-third-desktop">
     <form method="POST" action="{{ url_for('ui.cross_list', submission_id=submission_id) }}">
       {{ form.csrf_token }}
       {{ form.operation }}

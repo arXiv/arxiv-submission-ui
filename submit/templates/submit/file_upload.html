@@ -51,11 +51,29 @@
 
 {% block title -%}Upload Files{%- endblock title %}
 
-{% block within_content %}
 
+{% if immediate_notifications %}
+  {% for notification in immediate_notifications %}
+  <div class="notification is-{{ notification.severity }}" role="alert" aria-atomic="true">
+    {% if notification.title %}<h2 class="is-size-5 is-marginless">{{ notification.title }}</h2>{% endif %}
+    <p>
+      {{ notification.body}}
+    </p>
+  </div>
+  {% endfor %}
+{% endif %}
+
+
+{% block within_content %}
+<<<<<<< HEAD
+
+=======
+<p>TeX and (La)TeX submissions are highly encouraged. This format is the most likely to retain readability and high-quality output in the future. TeX source uploaded to arXiv will be made publicly available.</p>
+>>>>>>> dae73c73ab8901f3710db540939d4335e34c17db
 <form class="form" action="{{ url_for('ui.file_upload', submission_id=submission_id) }}" method="POST" enctype="multipart/form-data">
-  <div class="columns">
-    <div class="column is-two-thirds-desktop is-three-quarters-tablet">
+  <div class="columns action-container">
+
+    <div class="column is-one-half-desktop is-one-half-tablet">
       {{ form.csrf_token }}
       <div class="field is-grouped is-grouped-multiline">
         <div class="control is-expanded">
@@ -118,89 +136,45 @@
       </p>
       {% else %}
       <p class="title is-4 breathe-vertical has-text-centered">
-        There's nothing here!
+        No files have been uploaded yet.
       </p>
       {% endif %}
-      <div class="message is-link">
-        <div class="message-header">
-          <p>
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512" class="icon filter-blue" role="presentation"><path d="M569.517 440.013C587.975 472.007 564.806 512 527.94 512H48.054c-36.937 0-59.999-40.055-41.577-71.987L246.423 23.985c18.467-32.009 64.72-31.951 83.154 0l239.94 416.028zM288 354c-25.405 0-46 20.595-46 46s20.595 46 46 46 46-20.595 46-46-20.595-46-46-46zm-43.673-165.346l7.418 136c.347 6.364 5.609 11.346 11.982 11.346h48.546c6.373 0 11.635-4.982 11.982-11.346l7.418-136c.375-6.874-5.098-12.654-11.982-12.654h-63.383c-6.884 0-12.356 5.78-11.981 12.654z"/></svg>
-            Submitting TeX
-          </p>
-        </div>
-        <div class="message-body">
-          <ul>
-            <li>TeX and (La)TeX submissions are highly encouraged. This format is the most likely to retain readability and high-quality output in the future.</li>
-            <li>PDF documents created from TeX are not typically accepted. The TeX source must be submitted and compiled by arXiv.
-            <a href="{{ url_for('help_whytex') }}">Why?</a></li>
-            <li>TeX source uploaded to arXiv will be made publicly available.</li>
-          </ul>
-        </div>
-      </div>
     </div>
-    <div class="column is-one-third-desktop is-one-quarter-tablet">
-      {% if immediate_notifications %}
-        {% for notification in immediate_notifications %}
-        <div class="notification is-{{ notification.severity }}" role="alert" aria-atomic="true">
-          {% if notification.title %}<h2 class="is-size-5 is-marginless">{{ notification.title }}</h2>{% endif %}
-          <p>
-            {{ notification.body}}
-          </p>
-        </div>
-        {% endfor %}
-      {% endif %}
-      <div class="message is-info">
+
+    <div class="column is-one-half-desktop is-one-half-tablet">
+      <div class="message">
         <div class="message-body">
           <p class="has-text-weight-semibold">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" class="icon filter-blue" role="presentation"><path d="M256 8C119.043 8 8 119.083 8 256c0 136.997 111.043 248 248 248s248-111.003 248-248C504 119.083 392.957 8 256 8zm0 110c23.196 0 42 18.804 42 42s-18.804 42-42 42-42-18.804-42-42 18.804-42 42-42zm56 254c0 6.627-5.373 12-12 12h-88c-6.627 0-12-5.373-12-12v-24c0-6.627 5.373-12 12-12h12v-64h-12c-6.627 0-12-5.373-12-12v-24c0-6.627 5.373-12 12-12h64c6.627 0 12 5.373 12 12v100h12c6.627 0 12 5.373 12 12v24z"/></svg>
             Accepted formats, in order of preference
           </p>
           <ul>
-            <li><a href="{{ url_for('help_submit_tex') }}">(La)TeX, AMS(La)TeX, PDFLaTeX</a></li>
-            <li><a href="{{ url_for('help_submit_pdf') }}">PDF</a></li>
-            <li><a href="{{ url_for('help_submit_html') }}">HTML (for proceedings index only)</a></li>
+            <li><a href="{{ url_for('help_submit_tex') }}">(La)TeX, AMS(La)TeX, or PDFLaTeX</a> | <a href="{{ url_for('help_submit_pdf') }}">PDF</a> | <a href="{{ url_for('help_submit_html') }}">HTML</a> (for proceedings index only)</li>
+            <li>PDF documents created from TeX are not typically accepted. <a href="{{ url_for('help_whytex') }}">Why?</a></li>
           </ul>
-
           <p class="has-text-weight-semibold">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" class="icon filter-blue" role="presentation"><path d="M256 8C119.043 8 8 119.083 8 256c0 136.997 111.043 248 248 248s248-111.003 248-248C504 119.083 392.957 8 256 8zm0 110c23.196 0 42 18.804 42 42s-18.804 42-42 42-42-18.804-42-42 18.804-42 42-42zm56 254c0 6.627-5.373 12-12 12h-88c-6.627 0-12-5.373-12-12v-24c0-6.627 5.373-12 12-12h12v-64h-12c-6.627 0-12-5.373-12-12v-24c0-6.627 5.373-12 12-12h64c6.627 0 12 5.373 12 12v100h12c6.627 0 12 5.373 12 12v24z"/></svg>
             Accepted formats for figures
           </p>
           <ul>
-            <li>PostScript (PS/EPS)</li>
-            <li>JPG (best for photographs)</li>
-            <li>GIF or PNG</li>
-            <li>PDF figures (only with PDFLaTeX)</li>
+            <li>(La)TeX: Postscript</li>
+            <li>PDFLaTeX: JPG, GIF, PNG, or PDF</li>
           </ul>
-
-
           <p class="has-text-weight-semibold">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" class="icon filter-blue" role="presentation"><path d="M256 8C119.043 8 8 119.083 8 256c0 136.997 111.043 248 248 248s248-111.003 248-248C504 119.083 392.957 8 256 8zm0 110c23.196 0 42 18.804 42 42s-18.804 42-42 42-42-18.804-42-42 18.804-42 42-42zm56 254c0 6.627-5.373 12-12 12h-88c-6.627 0-12-5.373-12-12v-24c0-6.627 5.373-12 12-12h12v-64h-12c-6.627 0-12-5.373-12-12v-24c0-6.627 5.373-12 12-12h64c6.627 0 12 5.373 12 12v100h12c6.627 0 12 5.373 12 12v24z"/></svg>
             Accepted file properties
           </p>
           <ul>
             <li>Names containing a-z A-Z 0-9 . , - _</li>
-            <li>Total compressed package size limit: 6MB</li>
-            <li>Total uncompressed package size limit: 18MB</li>
-            <li>Individual PDF size limit: 15MB</li>
+            <li>Total compressed package size limit is 6MB, and uncompressed is 18MB</li>
             <li>More information about <a href="{{ url_for('help_submit_sizes') }}">submission size and exemptions to size limits</a></li>
-
           </ul>
-
-
-          <p class="has-text-weight-semibold">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" class="icon filter-blue" role="presentation"><path d="M256 8C119.043 8 8 119.083 8 256c0 136.997 111.043 248 248 248s248-111.003 248-248C504 119.083 392.957 8 256 8zm0 110c23.196 0 42 18.804 42 42s-18.804 42-42 42-42-18.804-42-42 18.804-42 42-42zm56 254c0 6.627-5.373 12-12 12h-88c-6.627 0-12-5.373-12-12v-24c0-6.627 5.373-12 12-12h12v-64h-12c-6.627 0-12-5.373-12-12v-24c0-6.627 5.373-12 12-12h64c6.627 0 12 5.373 12 12v100h12c6.627 0 12 5.373 12 12v24z"/></svg>
-            TeX style and class files
-          </p>
-          <ul>
-            <li><a href="help_default_packages">Default packages</a></li>
-            <li><a href="help_submit_tex">What to include</a></li>
-            <!-- <li><a href="#">Upload FAQ</a></li> -->
-          </ul>
-
         </div>
       </div>
     </div>
+
   </div>
 {{ submit_macros.submit_nav(submission_id) }}
 </form>
+
 {% endblock within_content %}

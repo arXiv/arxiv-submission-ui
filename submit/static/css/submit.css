@@ -267,6 +267,13 @@ h1 .preamble {
   }
 }
 
+.box-new-submission {
+  text-align: left;
+}
+.box-new-submission .button {
+  margin: 0 0 1em 0;
+}
+
 /* tightens up user data display on verify user page */
 .user-info {
   margin-bottom: 1rem;

@@ -237,13 +237,8 @@ h1 .preamble {
 }
 .category-list form li {
   margin: 0;
-<<<<<<< HEAD
-  padding-top: 0.25em;
-  padding-bottom: 0.25em;
-=======
   padding-top: 0.25em !important;
   padding-bottom: 0.25em !important;
->>>>>>> dae73c73ab8901f3710db540939d4335e34c17db
   display: flex;
 }
 .category-list form li button {
@@ -253,10 +248,6 @@ h1 .preamble {
 }
 .category-list form li span.category-name-label {
   flex-grow: 1;
-<<<<<<< HEAD
-=======
-  padding-left: 0.25em;
->>>>>>> dae73c73ab8901f3710db540939d4335e34c17db
 }
 
 /* tightens up user data display on verify user page */

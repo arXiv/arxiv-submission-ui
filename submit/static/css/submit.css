@@ -254,6 +254,19 @@ h1 .preamble {
   flex-grow: 1;
 }
 
+.cross-list-area {
+  float: right;
+  width: 40%;
+  border-left: 1px solid #f2f2f2;
+}
+@media screen and (max-width: 768px) {
+  .cross-list-area {
+    width: 100%;
+    border-bottom: 1px solid #f2f2f2;
+    border-left: 0px;
+  }
+}
+
 /* tightens up user data display on verify user page */
 .user-info {
   margin-bottom: 1rem;

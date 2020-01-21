@@ -25,72 +25,60 @@
   {% set arxiv_id = "0000.00000" %}
 {% endif %}
 
-<section class="section">
-  <h2>
+
+<div class="content-container">
+{{ macros.abs(
+  arxiv_id,
+  submission.metadata.title,
+  submission.metadata.authors_display|tex2utf,
+  submission.metadata.abstract,
+  submission.created,
+  submission.primary_classification.category,
+  comments = submission.metadata.comments,
+  msc_class = submission.metadata.msc_class,
+  acm_class = submission.metadata.acm_class,
+  journal_ref = submission.metadata.journal_ref,
+  doi = submission.metadata.doi,
+  report_num = submission.metadata.report_num,
+  version = submission.version,
+  submission_history = submission_history,
+  secondary_categories = submission.secondary_categories) }}
+</div>
+
+
+<form method="POST" action="{{ url_for('ui.final_preview', submission_id=submission_id) }}">
+
+  <div class="content-container">
     <a href="{{ url_for('ui.add_metadata', submission_id=submission_id) }}" class="button is-small is-link is-outlined">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" class="icon filter-blue" role="presentation"><path d="M497.9 142.1l-46.1 46.1c-4.7 4.7-12.3 4.7-17 0l-111-111c-4.7-4.7-4.7-12.3 0-17l46.1-46.1c18.7-18.7 49.1-18.7 67.9 0l60.1 60.1c18.8 18.7 18.8 49.1 0 67.9zM284.2 99.8L21.6 362.4.4 483.9c-2.9 16.4 11.4 30.6 27.8 27.8l121.5-21.3 262.6-262.6c4.7-4.7 4.7-12.3 0-17l-111-111c-4.8-4.7-12.4-4.7-17.1 0zM124.1 339.9c-5.5-5.5-5.5-14.3 0-19.8l154-154c5.5-5.5 14.3-5.5 19.8 0s5.5 14.3 0 19.8l-154 154c-5.5 5.5-14.3 5.5-19.8 0zM88 424h48v36.3l-64.5 11.3-31.1-31.1L51.7 376H88v48z"/></svg>
       <span class="has-text-weight-normal">Make Changes to Metadata</span>
     </a>
-  </h2>
-  <div class="box">
-  {{ macros.abs(
-    arxiv_id,
-    submission.metadata.title,
-    submission.metadata.authors_display|tex2utf,
-    submission.metadata.abstract,
-    submission.created,
-    submission.primary_classification.category,
-    comments = submission.metadata.comments,
-    msc_class = submission.metadata.msc_class,
-    acm_class = submission.metadata.acm_class,
-    journal_ref = submission.metadata.journal_ref,
-    doi = submission.metadata.doi,
-    report_num = submission.metadata.report_num,
-    version = submission.version,
-    submission_history = submission_history,
-    secondary_categories = submission.secondary_categories) }}
+    <a href="{{ url_for('ui.file_upload', submission_id=submission_id) }}" class="button is-small is-link is-outlined">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" class="icon filter-blue" role="presentation"><path d="M497.9 142.1l-46.1 46.1c-4.7 4.7-12.3 4.7-17 0l-111-111c-4.7-4.7-4.7-12.3 0-17l46.1-46.1c18.7-18.7 49.1-18.7 67.9 0l60.1 60.1c18.8 18.7 18.8 49.1 0 67.9zM284.2 99.8L21.6 362.4.4 483.9c-2.9 16.4 11.4 30.6 27.8 27.8l121.5-21.3 262.6-262.6c4.7-4.7 4.7-12.3 0-17l-111-111c-4.8-4.7-12.4-4.7-17.1 0zM124.1 339.9c-5.5-5.5-5.5-14.3 0-19.8l154-154c5.5-5.5 14.3-5.5 19.8 0s5.5 14.3 0 19.8l-154 154c-5.5 5.5-14.3 5.5-19.8 0zM88 424h48v36.3l-64.5 11.3-31.1-31.1L51.7 376H88v48z"/></svg>
+      <span class="has-text-weight-normal">Make Changes to Files</span>
+    </a>
+    <a href="{{ url_for('ui.file_preview', submission_id=submission_id) }}" target="_blank" class="button is-small is-link">
+      <span>View PDF</span>
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" class="icon filter-white" role="presentation"><path d="M432,320H400a16,16,0,0,0-16,16V448H64V128H208a16,16,0,0,0,16-16V80a16,16,0,0,0-16-16H48A48,48,0,0,0,0,112V464a48,48,0,0,0,48,48H400a48,48,0,0,0,48-48V336A16,16,0,0,0,432,320ZM488,0h-128c-21.37,0-32.05,25.91-17,41l35.73,35.73L135,320.37a24,24,0,0,0,0,34L157.67,377a24,24,0,0,0,34,0L435.28,133.32,471,169c15,15,41,4.5,41-17V24A24,24,0,0,0,488,0Z"/></svg>
+    </a>
   </div>
-</section>
 
-
-<form method="POST" action="{{ url_for('ui.final_preview', submission_id=submission_id) }}">
-  <section class="section" style="margin-top: 1em;">
-    <h2>
-      <a href="{{ url_for('ui.file_upload', submission_id=submission_id) }}" class="button is-small is-link is-outlined">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" class="icon filter-blue" role="presentation"><path d="M497.9 142.1l-46.1 46.1c-4.7 4.7-12.3 4.7-17 0l-111-111c-4.7-4.7-4.7-12.3 0-17l46.1-46.1c18.7-18.7 49.1-18.7 67.9 0l60.1 60.1c18.8 18.7 18.8 49.1 0 67.9zM284.2 99.8L21.6 362.4.4 483.9c-2.9 16.4 11.4 30.6 27.8 27.8l121.5-21.3 262.6-262.6c4.7-4.7 4.7-12.3 0-17l-111-111c-4.8-4.7-12.4-4.7-17.1 0zM124.1 339.9c-5.5-5.5-5.5-14.3 0-19.8l154-154c5.5-5.5 14.3-5.5 19.8 0s5.5 14.3 0 19.8l-154 154c-5.5 5.5-14.3 5.5-19.8 0zM88 424h48v36.3l-64.5 11.3-31.1-31.1L51.7 376H88v48z"/></svg>
-        <span class="has-text-weight-normal">Make Changes to Files</span>
-      </a>
-    </h2>
-
-    <div class="box">
-      <div class="columns">
-        <div class="column is-narrow">
-          <a href="{{ url_for('ui.file_preview', submission_id=submission_id) }}" target="_blank" class="button is-link" style="margin: 0.5em;">
-            <span>View PDF</span>
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" class="icon filter-white" role="presentation"><path d="M432,320H400a16,16,0,0,0-16,16V448H64V128H208a16,16,0,0,0,16-16V80a16,16,0,0,0-16-16H48A48,48,0,0,0,0,112V464a48,48,0,0,0,48,48H400a48,48,0,0,0,48-48V336A16,16,0,0,0,432,320ZM488,0h-128c-21.37,0-32.05,25.91-17,41l35.73,35.73L135,320.37a24,24,0,0,0,0,34L157.67,377a24,24,0,0,0,34,0L435.28,133.32,471,169c15,15,41,4.5,41-17V24A24,24,0,0,0,488,0Z"/></svg>
-          </a>
+  <div class="action-container">
+    {{ form.csrf_token }}
+    {% if form.proceed.errors %}<div class="notification is-danger">{% endif %}
+    <div class="field">
+      <div class="control">
+        <div class="checkbox">
+          {{ form.proceed }}
+          {{ form.proceed.label }}
         </div>
-        <div class="column is-centered-vertically">
-
-            {{ form.csrf_token }}
-            {% if form.proceed.errors %}<div class="notification is-danger">{% endif %}
-            <div class="field">
-              <div class="control">
-                <div class="checkbox">
-                  {{ form.proceed }}
-                  {{ form.proceed.label }}
-                </div>
-                {% for error in form.proceed.errors %}
-                  <p class="help is-danger field-error">{{ error }}</p>
-                {% endfor %}
-              </div>
-            </div>
-            {% if form.proceed.errors %}</div>{% endif %}
-
-        </div>
+        {% for error in form.proceed.errors %}
+          <p class="help is-danger field-error">{{ error }}</p>
+        {% endfor %}
       </div>
     </div>
-  </section>
+    {% if form.proceed.errors %}</div>{% endif %}
+  </div>
 
   <div class="buttons submit-nav" role="navigation" aria-label="Submission form controls">
       <a href="{{ url_for('ui.delete_submission', submission_id=submission_id) }}" name="cancel" class="button has-text-grey is-light is-outlined" style="border:0" value="cancel" aria-label="Cancel submission" title="Cancel submission">

@@ -23,7 +23,8 @@ from wtforms.validators import DataRequired
 from submit.controllers.ui.util import validate_command, \
     user_and_client_from_session
 from submit.util import load_submission
-
+from submit.routes.ui.flow_control import ready_for_next, stay_on_this_stage
+from submit.controllers.ui.util import add_immediate_alert
 
 logger = logging.getLogger(__name__)
 
@@ -68,16 +69,16 @@ def delete_all(method: str, params: MultiDict, session: Session,
         applicable.
 
     """
+    rdata = {}
     if token is None:
-        logger.debug('Missing auth token')
-        raise BadRequest('Missing auth token')
+        add_immediate_alert(rdata, alerts.FAILURE, 'Missing auth token')
+        return stay_on_this_stage((rdata, status.OK, {}))
 
     fm = Filemanager.current_session()
     submission, submission_events = load_submission(submission_id)
     upload_id = submission.source_content.identifier
     submitter, client = user_and_client_from_session(session)
-
-    rdata = {'submission': submission, 'submission_id': submission_id}
+    rdata.update({'submission': submission, 'submission_id': submission_id})
 
     if method == 'GET':
         form = DeleteAllFilesForm()
@@ -88,8 +89,7 @@ def delete_all(method: str, params: MultiDict, session: Session,
         rdata.update({'form': form})
 
         if not (form.validate() and form.confirmed.data):
-            logger.debug('Invalid form data')
-            raise BadRequest(rdata)
+            return stay_on_this_stage((rdata, status.OK, {}))
 
         try:
             stat = fm.delete_all(upload_id, token)
@@ -128,6 +128,9 @@ def delete_all(method: str, params: MultiDict, session: Session,
                 f' again. {PLEASE_CONTACT_SUPPORT}'
             ))
 
+
+        # TODO this is not yet using the new non-BadRequest convention
+        # due to this sub controller having to go to the FileUpload stage.
         redirect = url_for('ui.file_upload', submission_id=submission_id)
         return {}, status.SEE_OTHER, {'Location': redirect}
     raise MethodNotAllowed('Method not supported')
@@ -175,9 +178,10 @@ def delete_file(method: str, params: MultiDict, session: Session,
         applicable.
 
     """
+    rdata = {}
     if token is None:
-        logger.debug('Missing auth token')
-        raise BadRequest('Missing auth token')
+        add_immediate_alert(rdata, alerts.FAILURE, 'Missing auth token')
+        return stay_on_this_stage((rdata, status.OK, {}))
 
     fm = Filemanager.current_session()
     submission, submission_events = load_submission(submission_id)

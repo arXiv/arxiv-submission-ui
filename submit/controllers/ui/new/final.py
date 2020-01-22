@@ -19,6 +19,7 @@ from arxiv.submission.domain.event import FinalizeSubmission
 from arxiv.submission.exceptions import SaveError
 from submit.util import load_submission
 from submit.controllers.ui.util import validate_command, user_and_client_from_session
+from submit.routes.ui.flow_control import ready_for_next, stay_on_this_stage
 
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 
@@ -44,28 +45,20 @@ def finalize(method: str, params: MultiDict, session: Session,
         'submission_history': submission_history
     }
 
-    if method == 'POST':
-        if form.validate():
-            logger.debug('Form is valid, with data: %s', str(form.data))
-            proofread_confirmed = form.proceed.data
-            if proofread_confirmed:
-                command = FinalizeSubmission(creator=submitter)
-                if not validate_command(form, command, submission):
-                    raise BadRequest(response_data)
-
-                try:
-                    # Create ConfirmPolicy event
-                    submission, stack = save(  # pylint: disable=W0612
-                        command,
-                        submission_id=submission_id
-                    )
-                except SaveError as e:
-                    logger.error('Could not save primary event')
-                    raise InternalServerError(response_data) from e
-            if params.get('action') in ['previous', 'save_exit', 'next']:
-                return response_data, status.SEE_OTHER, {}
-        else:   # Form data were invalid.
-            raise BadRequest(response_data)
+    command = FinalizeSubmission(creator=submitter)
+    proofread_confirmed = form.proceed.data
+    if method == 'POST' and form.validate() \
+       and proofread_confirmed \
+       and validate_command(form, command, submission):
+        try:
+            submission, stack = save(  # pylint: disable=W0612
+                command, submission_id=submission_id)
+        except SaveError as e:
+            logger.error('Could not save primary event')
+            raise InternalServerError(response_data) from e
+        return ready_for_next(response_data, status.OK, {})
+    else:
+        return stay_on_this_stage(response_data, status.OK, {})
 
     return response_data, status.OK, {}
 

@@ -18,7 +18,7 @@ from arxiv.submission.domain.event import SetTitle, SetAuthors, SetAbstract, \
 
 from submit.util import load_submission
 from submit.controllers.ui.util import validate_command, FieldMixin, user_and_client_from_session
-
+from submit.routes.ui.flow_control import ready_for_next, stay_on_this_stage
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 
 Response = Tuple[Dict[str, Any], int, Dict[str, Any]]  # pylint: disable=C0103
@@ -106,30 +106,23 @@ def metadata(method: str, params: MultiDict, session: Session,
         'submission': submission
     }
 
-    if method == 'POST':
-        if not form.validate():
-            raise BadRequest(response_data)
-
-        logger.debug('Form is valid, with data: %s', str(form.data))
-
+    if method == 'POST' and form.validate():
         commands, valid = _commands(form, submission, submitter, client)
         # We only want to apply an UpdateMetadata if the metadata has
         # actually changed.
-        if commands:   # Metadata has changed.
-            if not all(valid):
-                logger.debug('Not all commands are valid')
-                response_data['form'] = form
-                raise BadRequest(response_data)
-
+        if commands and all(valid):   # Metadata has changed and is valid
             try:
                 # Save the events created during form validation.
                 submission, _ = save(*commands, submission_id=submission_id)
+                response_data['submission'] = submission
+                return ready_for_next((response_data, status.OK, {}))
             except SaveError as e:
                 raise InternalServerError(response_data) from e
-            response_data['submission'] = submission
+        else:
+            return ready_for_next((response_data, status.OK, {}))
+    else:
+        return stay_on_this_stage((response_data, status.OK, {}))
 
-    if params.get('action') in ['previous', 'save_exit', 'next']:
-        return response_data, status.SEE_OTHER, {}
     return response_data, status.OK, {}
 
 
@@ -155,26 +148,23 @@ def optional(method: str, params: MultiDict, session: Session,
         'submission': submission
     }
 
-    if method == 'POST':
-        if not form.validate():
-            raise BadRequest(response_data)
-
+    if method == 'POST' and form.validate():
         logger.debug('Form is valid, with data: %s', str(form.data))
 
         commands, valid = _opt_commands(form, submission, submitter, client)
         # We only want to apply updates if the metadata has actually changed.
-        if commands:   # Metadata has changed.
-            if not all(valid):
-                raise BadRequest(response_data)
-
+        if commands and all(valid):  # Metadata has changed and is all valid
             try:
                 submission, _ = save(*commands, submission_id=submission_id)
+                response_data['submission'] = submission
+                return ready_for_next((response_data,status.OK,{}))
             except SaveError as e:
                 raise InternalServerError(response_data) from e
-            response_data['submission'] = submission
+        else:
+            stay_on_this_stage((response_data,status.OK,{}))
+    else:
+        stay_on_this_stage((response_data,status.OK,{}))
 
-    if params.get('action') in ['previous', 'save_exit', 'next']:
-        return response_data, status.SEE_OTHER, {}
     return response_data, status.OK, {}
 
 

@@ -22,19 +22,14 @@ class WorkflowProcessor:
         """Determine whether this workflow is complete."""
         return bool(self.submission.is_finalized)
 
-    def current_stage(self) -> Optional[Stage]:
-        """Get the first stage in the workflow that is not done."""
-        for stage in self.workflow:
-            if not self.is_done(self.submission, stage):
-                return stage
-        return None
-
     def next_stage(self, stage: Optional[Stage]) -> Optional[Stage]:
         """Get the stage after the one in the parameter."""
         return self.workflow.next_stage(stage)
     
     def can_proceed_to(self, stage: Optional[Stage]) -> bool:
         """Determine whether the user can proceed to a stage."""
+        if stage is None:
+            return True
         return all(map(self.is_done, self.workflow.iter_prior(stage)))
 
     def current_stage(self) -> Optional[Stage]:

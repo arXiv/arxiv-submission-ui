@@ -36,8 +36,10 @@ from arxiv.submission.exceptions import SaveError
 from arxiv.users.domain import Session
 
 from submit.controllers.ui.util import validate_command, \
-    user_and_client_from_session, next_stage
+    user_and_client_from_session
 from submit.util import load_submission, tidy_filesize
+from submit.routes.ui.flow_control import ready_for_next, stay_on_this_stage
+from submit.controllers.ui.util import add_immediate_alert
 
 logger = logging.getLogger(__name__)
 
@@ -92,17 +94,17 @@ def upload_files(method: str, params: MultiDict, session: Session,
         applicable.
 
     """
+    rdata = {}
     if files is None or token is None:
-        logger.debug('Missing files or auth token')
-        raise BadRequest("Missing files or auth token")
+        add_immediate_alert(rdata, alerts.FAILURE,
+                            'Missing auth files or token')
+        return stay_on_this_stage((rdata, status.OK, {}))
 
     submission, _ = load_submission(submission_id)
 
-    rdata = {
-        'submission_id': submission_id,
-        'submission': submission,
-        'form': UploadForm()
-    }
+    rdata.update({'submission_id': submission_id,
+                  'submission': submission,
+                  'form': UploadForm()})
 
     if method == 'GET':
         logger.debug('GET; load current upload state')
@@ -266,7 +268,7 @@ def _new_upload(params: MultiDict, pointer: FileStorage, session: Session,
 
     if not form.validate():
         logger.debug('Invalid form data')
-        raise BadRequest(rdata)
+        return stay_on_this_stage((rdata, status.OK, {}))
 
     try:
         stat = fm.upload_package(pointer, token)
@@ -301,8 +303,10 @@ def _new_upload(params: MultiDict, pointer: FileStorage, session: Session,
         )
     alerts.flash_hidden(stat.to_dict(), '_status')
 
-    loc = url_for('ui.file_upload', submission_id=submission.submission_id)
-    return {}, status.SEE_OTHER, {'Location': loc}
+    return stay_on_this_stage(({}, status.OK, {}))
+
+#    loc = url_for('ui.file_upload', submission_id=submission.submission_id)
+#    return {}, status.SEE_OTHER, {'Location': loc}
 
 
 def _new_file(params: MultiDict, pointer: FileStorage, session: Session,
@@ -349,13 +353,10 @@ def _new_file(params: MultiDict, pointer: FileStorage, session: Session,
 
     if not form.validate():
         logger.error('Invalid upload form: %s', form.errors)
-
         alerts.flash_failure(
             "No file was uploaded; please try again.",
             title="Something went wrong")
-
-        loc = url_for('ui.file_upload', submission_id=submission.submission_id)
-        return {}, status.SEE_OTHER, {'Location': loc}
+        return stay_on_this_stage(({},status.OK,{}))
 
     ancillary: bool = form.ancillary.data
 
@@ -371,7 +372,7 @@ def _new_file(params: MultiDict, pointer: FileStorage, session: Session,
                 'There was a problem carrying out your request:'
                 f' {ex_data["reason"]}. {PLEASE_CONTACT_SUPPORT}'
             ))
-            raise BadRequest(rdata)
+            return stay_on_this_stage((rdata, status.OK, {}))
         alerts.flash_failure(Markup(
             'There was a problem carrying out your request. Please try'
             f' again. {PLEASE_CONTACT_SUPPORT}'
@@ -402,8 +403,7 @@ def _new_file(params: MultiDict, pointer: FileStorage, session: Session,
         )
     status_data = stat.to_dict()
     alerts.flash_hidden(status_data, '_status')
-    loc = url_for('ui.file_upload', submission_id=submission.submission_id)
-    return {}, status.SEE_OTHER, {'Location': loc}
+    return stay_on_this_stage((rdata, status.OK, {}))
 
 
 def _post_upload(params: MultiDict, files: MultiDict, session: Session,
@@ -438,6 +438,8 @@ def _post_upload(params: MultiDict, files: MultiDict, session: Session,
         the `Location` header for use in the 303 redirect response.
 
     """
+    # TODO figure out this SECTION of code
+    # It's to deal with the back and save buttons
     try:    # Make sure that we have a file to work with.
         pointer = files['file']
     except KeyError:   # User is going back, saving/exiting, or next step.
@@ -451,11 +453,16 @@ def _post_upload(params: MultiDict, files: MultiDict, session: Session,
         if action:
             logger.debug('User is navigating away from upload UI')
             return {}, status.SEE_OTHER, {}
+    # END SECTION
+
+    # TODO This isn't doing much and is only used in one place
+    # Consider moving it to upload_files()
     if submission.source_content is None:   # New upload package.
         logger.debug('New upload package')
         return _new_upload(params, pointer, session, submission, rdata, token)
-    logger.debug('Adding additional files')
-    return _new_file(params, pointer, session, submission, rdata, token)
+    else:
+        logger.debug('Adding additional files')
+        return _new_file(params, pointer, session, submission, rdata, token)
 
 
 def _get_notifications(stat: Upload) -> List[Dict[str, str]]:
@@ -505,24 +512,18 @@ def _get_notifications(stat: Upload) -> List[Dict[str, str]]:
     return notifications
 
 
-NestedFileTree = Mapping[str, Union[FileStatus, 'NestedFileTree']]
-
-
-def group_files(files: List[FileStatus]) -> NestedFileTree:
-    """
-    Group a set of file status objects by directory structure.
+def group_files(files: List[FileStatus]) -> OrderedDict:
+    """Group a set of file status objects by directory structure.
 
     Parameters
     ----------
     list
         Elements are :class:`FileStatus` objects.
 
-    Returns
-    -------
-    :class:`OrderedDict`
-        Keys are strings. Values are either :class:`FileStatus` instances
-        (leaves) or :class:`OrderedDict` (containing more :class:`FileStatus`
-        and/or :class:`OrderedDict`, etc).
+    Returns ------- :class:`OrderedDict` Keys are strings of either
+    file or directory names.  Values are either :class:`FileStatus`
+    instances (leaves) or :class:`OrderedDict` (containing more
+    :class:`FileStatus` and/or :class:`OrderedDict`, etc).
 
     """
     # First step is to organize by file tree.

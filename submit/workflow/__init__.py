@@ -29,9 +29,10 @@ class WorkflowDefinition:
                 return
             yield prior_stage
 
-    def complete(self) -> bool:
-        """Determine whether this workflow is complete."""
-        return bool(self.submission.is_finalized)
+    # Get rid of this bogus method
+    # def complete(self) -> bool:
+    #     """Determine whether this workflow is complete."""
+    #     return bool(self.submission.is_finalized)
 
     # I wonder if we should move next_stage and previous_stage to WorkflowProcessor?
     def next_stage(self, stage: Optional[Stage]) -> Optional[Stage]:
@@ -58,8 +59,9 @@ class WorkflowDefinition:
             if stage.endpoint == endpoint:
                 return stage
             raise ValueError(f'No stage for endpoint: {endpoint}')
+        return self.order[0]  # mypy
 
-    def __getitem__(self, query):
+    def __getitem__(self, query: Union[type, Stage, str, int]) -> Optional[Stage]:
         return self.get_stage(query)
 
     def get_stage(self, query: Union[type, Stage, str, int]) -> Optional[Stage]:
@@ -82,8 +84,7 @@ class WorkflowDefinition:
                 return None
             else:
                 return self.order[query]
-        if query in self.order:
-            return self[self.order.index(query)]
+
         if isinstance(query, str):
             # it could be classname, stage label or stage endpoint
             for stage in self.order:
@@ -92,6 +93,8 @@ class WorkflowDefinition:
                         or stage.endpoint == query):
                     return stage
             return None
+        if query in self.order:
+            return self[self.order.index(query)]
         raise ValueError("query should be Stage class or class name or "
                          f"endpoint or lable str or int. Not {type(query)}")
 

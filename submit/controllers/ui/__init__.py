@@ -28,33 +28,34 @@ from .new.unsubmit import unsubmit
 from .new import process
 from .new import upload
 
-
-  
 from submit.util import load_submission
+from submit.routes.ui.flow_control import ready_for_next, advance_to_current
 
 from .util import Response
 
 
-def submission_status(method: str, params: MultiDict, session: Session,
-                      submission_id: int) -> Response:
-    user, client = util.user_and_client_from_session(session)
+# def submission_status(method: str, params: MultiDict, session: Session,
+#                       submission_id: int) -> Response:
+#     user, client = util.user_and_client_from_session(session)
 
-    # Will raise NotFound if there is no such submission.
-    submission, submission_events = load_submission(submission_id)
-    response_data = {
-        'submission': submission,
-        'submission_id': submission_id,
-        'events': submission_events
-    }
-    return response_data, status.OK, {}
+#     # Will raise NotFound if there is no such submission.
+#     submission, submission_events = load_submission(submission_id)
+#     response_data = {
+#         'submission': submission,
+#         'submission_id': submission_id,
+#         'events': submission_events
+#     }
+#     return response_data, status.OK, {}
 
 
 def submission_edit(method: str, params: MultiDict, session: Session,
                     submission_id: int) -> Response:
     """Cause flow_control to go to the current_stage of the Submission."""
+    submission, submission_events = load_submission(submission_id)
     response_data = {
-        'form': {
-            'action': 'NEXT'
-        }
+        'submission': submission,
+        'submission_id': submission_id,
+        'events': submission_events,
     }
-    return response_data, status.SEE_OTHER, {}
+    #
+    return advance_to_current((response_data, status.OK, {}))

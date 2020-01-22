@@ -22,6 +22,7 @@ from arxiv.submission.core import load_submissions_for_user
 
 from submit.controllers.ui.util import Response, user_and_client_from_session, validate_command
 from submit.util import load_submission
+from submit.routes.ui.flow_control import ready_for_next, stay_on_this_stage, advance_to_current
 
 logger = logging.getLogger(__name__)    # pylint: disable=C0103
 
@@ -44,24 +45,20 @@ def create(method: str, params: MultiDict, session: Session, *args,
     form = CreateSubmissionForm(params)
     response_data['form'] = form
 
-    if method == 'POST':
-        if not form.validate():
-            raise BadRequest(response_data)
-
-        command = CreateSubmission(creator=submitter, client=client)
-        if not validate_command(form, command):
-            raise BadRequest(response_data)
-
+    command = CreateSubmission(creator=submitter, client=client)
+    if method == 'POST' and form.validate() and validate_command(form, command):
         try:
             submission, _ = save(command)
         except SaveError as e:
             logger.error('Could not save command: %s', e)
             raise InternalServerError(response_data) from e
 
-        # loc = url_for('ui.verify_user', submission_id=submission.submission_id)
-        # return {}, status.SEE_OTHER, {'Location': loc}
-        return response_data, status.SEE_OTHER, {}
-    return response_data, status.OK, {}
+        # TODO Do we need a better way to enter a workflow?
+        # Maybe a controller that is defined as the entrypoint?
+        loc = url_for('ui.verify_user', submission_id=submission.submission_id)
+        return {}, status.SEE_OTHER, {'Location': loc}
+
+    return advance_to_current((response_data, status.OK, {}))
 
 
 def replace(method: str, params: MultiDict, session: Session,

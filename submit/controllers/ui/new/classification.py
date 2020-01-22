@@ -24,8 +24,7 @@ from arxiv.submission.domain.event import RemoveSecondaryClassification, \
 from submit.controllers.ui.util import validate_command, OptGroupSelectField, \
     user_and_client_from_session
 from submit.util import load_submission
-
-logger = logging.getLogger(__name__)  # pylint: disable=C0103
+from submit.routes.ui.flow_control import ready_for_next, stay_on_this_stage
 
 Response = Tuple[Dict[str, Any], int, Dict[str, Any]]  # pylint: disable=C0103
 
@@ -127,24 +126,17 @@ def classification(method: str, params: MultiDict, session: Session,
         'form': form
     }
 
-    if method == 'POST':
-        if not form.validate():
-            raise BadRequest(response_data)
-
-        command = SetPrimaryClassification(category=form.category.data,
-                                           creator=submitter, client=client)
-        if not validate_command(form, command, submission, 'category'):
-            raise BadRequest(response_data)
-
+    command = SetPrimaryClassification(category=form.category.data,
+                                       creator=submitter, client=client)
+    if method == 'POST' and form.validate()\
+       and validate_command(form, command, submission, 'category'):
         try:
             submission, _ = save(command, submission_id=submission_id)
             response_data['submission'] = submission
         except SaveError as e:
-            logger.error('Could not save command: %s', e)
             raise InternalServerError(response_data) from e
+        return ready_for_next((response_data, status.OK, {}))
 
-        if params.get('action') in ['previous', 'save_exit', 'next']:
-            return response_data, status.SEE_OTHER, {}
     return response_data, status.OK, {}
 
 
@@ -180,49 +172,39 @@ def cross_list(method: str, params: MultiDict, session: Session,
         },
     }
 
-    if method == 'POST':
-        # Make sure that the user is not attempting to move to a different
-        # step.
-        #
-        # Since the interface provides an "add" button to add cross-list
-        # categories, we only want to handle the form data if the user is not
-        # attempting to move to a different step.
-        action = params.get('action')
-        if not action:
-            if not form.validate():
-                raise BadRequest(response_data)
+    # Ensure the user is not attempting to move to a different step.
+    # Since the interface provides an "add" button to add cross-list
+    # categories, we only want to handle the form data if the user is not
+    # attempting to move to a different step.
 
-            if form.operation.data == form.REMOVE:
-                command_type = RemoveSecondaryClassification
-            else:
-                command_type = AddSecondaryClassification
-            command = command_type(category=form.category.data,
-                                   creator=submitter, client=client)
-            if not validate_command(form, command, submission, 'category'):
-                raise BadRequest(response_data)
+    if form.operation.data == form.REMOVE:
+        command_type = RemoveSecondaryClassification
+    else:
+        command_type = AddSecondaryClassification
+    command = command_type(category=form.category.data,
+                           creator=submitter, client=client)
+    if method == 'POST' and form.validate() \
+       and validate_command(form, command, submission, 'category'):
+        try:
+            submission, _ = save(command, submission_id=submission_id)
+            response_data['submission'] = submission
+            # do not go to next yet, re-show cross form
+        except SaveError as e:
+            raise InternalServerError(response_data) from e
 
-            try:
-                submission, _ = save(command, submission_id=submission_id)
-                response_data['submission'] = submission
-            except SaveError as e:
-                raise InternalServerError(response_data) from e
+        # Re-build the formset to reflect changes that we just made, and
+        # generate a fresh form for adding another secondary. The POSTed
+        # data should now be reflected in the formset.
+        response_data['formset'] = ClassificationForm.formset(submission)
+        form = ClassificationForm()
+        form.operation._value = lambda: form.operation.data
+        form.filter_choices(submission, session)
+        response_data['form'] = form
 
-            # Re-build the formset to reflect changes that we just made, and
-            # generate a fresh form for adding another secondary. The POSTed
-            # data should now be reflected in the formset.
-            response_data['formset'] = ClassificationForm.formset(submission)
-            form = ClassificationForm()
-            form.operation._value = lambda: form.operation.data
-            form.filter_choices(submission, session)
-            response_data['form'] = form
+        if len(submission.secondary_categories) > 3:
+            alerts.flash_warning(Markup(
+                'Adding more than three cross-list classifications will'
+                ' result in a delay in the acceptance of your submission.'
+            ))
 
-            # Warn the user if they have too many secondaries.
-            if len(submission.secondary_categories) > 3:
-                alerts.flash_warning(Markup(
-                    'Adding more than three cross-list classifications will'
-                    ' result in a delay in the acceptance of your submission.'
-                ))
-
-        if action in ['previous', 'save_exit', 'next']:
-            return response_data, status.SEE_OTHER, {}
     return response_data, status.OK, {}

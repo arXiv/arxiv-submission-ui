@@ -20,7 +20,7 @@ from arxiv.submission.services.classic.exceptions import Unavailable
 
 from ..auth import is_owner
 from submit import util
-from submit.controllers import ui
+from submit.controllers import ui as cntrls
 from submit.controllers.ui.new import upload
 
 from submit.workflow.stages import FileUpload
@@ -112,7 +112,6 @@ def load_submission() -> None:
 #     }
 
 
-
 @UI.context_processor
 def inject_workflow() -> Dict[str, Optional[WorkflowProcessor]]:
     """Inject the current workflow into the template rendering context."""
@@ -144,7 +143,8 @@ def add_immediate_alert(context: dict, severity: str,
 
 def handle(controller: Callable, template: str, title: str,
            submission_id: Optional[int] = None,
-           get_params: bool = False, **kwargs: Any) -> Response:
+           get_params: bool = False, flow_controlled: bool = False,
+           **kwargs: Any) -> Response:
     """
     Generalized request handling pattern.
 
@@ -186,19 +186,18 @@ def handle(controller: Callable, template: str, title: str,
                                      **kwargs)
     context.update(data)
 
-
     # The BadRequest for form invalid is not working in a resonable
     # and straight foward manner. Mabye it was gotten to work thorugh some
     # tourured route but it is a hacky mess.
     # Just do normal WTForms handling for success and failure.
-    
+
     # except BadRequest:
     #     # BadRequest being used here to single that something validate
     #      # and they need to go back to the form.
     #     form_invalid = True
 
     # TODO Can we just use the handlers from other places in the code?
-    # this causes a lot of interaction with flow control        
+    # this causes a lot of interaction with flow control
     # except InternalServerError as e:
     #     logger.debug('Caught %s from controller', e)
     #     assert isinstance(e.description, dict)
@@ -211,7 +210,9 @@ def handle(controller: Callable, template: str, title: str,
     # except Unavailable as e:
     #     raise ServiceUnavailable('Could not connect to database') from e
 
-
+    # TODO need something like
+    if flow_controlled:
+        return data, code, headers, lambda : make_response(render_template(template, **context), code)
     if code < 300:
         response = make_response(render_template(template, **context), code)
     elif 'Location' in headers:
@@ -232,7 +233,7 @@ def service_status():
                         unauthorized=redirect_to_login)
 def manage_submissions():
     """Display the submission management dashboard."""
-    return handle(ui.create, 'submit/manage_submissions.html',
+    return handle(cntrls.create, 'submit/manage_submissions.html',
                   'Manage submissions')
 
 
@@ -241,7 +242,7 @@ def manage_submissions():
                         unauthorized=redirect_to_login)
 def create_submission():
     """Create a new submission."""
-    return handle(ui.create, 'submit/manage_submissions.html',
+    return handle(cntrls.create, 'submit/manage_submissions.html',
                   'Create a new submission')
 
 
@@ -250,7 +251,7 @@ def create_submission():
                         unauthorized=redirect_to_login)
 def unsubmit_submission(submission_id: int):
     """Unsubmit (unfinalize) a submission."""
-    return handle(ui.new.unsubmit.unsubmit,
+    return handle(cntrls.new.unsubmit.unsubmit,
                   'submit/confirm_unsubmit.html',
                   'Unsubmit submission', submission_id)
 
@@ -260,7 +261,7 @@ def unsubmit_submission(submission_id: int):
                         unauthorized=redirect_to_login)
 def delete_submission(submission_id: int):
     """Delete, or roll a submission back to the last announced state."""
-    return handle(ui.delete.delete,
+    return handle(cntrls.delete.delete,
                   'submit/confirm_delete_submission.html',
                   'Delete submission or replacement', submission_id)
 
@@ -270,7 +271,7 @@ def delete_submission(submission_id: int):
                         unauthorized=redirect_to_login)
 def cancel_request(submission_id: int, request_id: str):
     """Cancel a pending request."""
-    return handle(ui.delete.cancel_request,
+    return handle(cntrls.delete.cancel_request,
                   'submit/confirm_cancel_request.html', 'Cancel request',
                   submission_id, request_id=request_id)
 
@@ -280,7 +281,7 @@ def cancel_request(submission_id: int, request_id: str):
                         unauthorized=redirect_to_login)
 def create_replacement(submission_id: int):
     """Create a replacement submission."""
-    return handle(ui.new.create.replace, 'submit/replace.html',
+    return handle(cntrls.new.create.replace, 'submit/replace.html',
                   'Create a new version (replacement)', submission_id)
 
 
@@ -289,7 +290,7 @@ def create_replacement(submission_id: int):
                         unauthorized=redirect_to_login)
 def submission_status(submission_id: int) -> Response:
     """Display the current state of the submission."""
-    return handle(ui.submission_status, 'submit/status.html',
+    return handle(cntrls.submission_status, 'submit/status.html',
                   'Submission status', submission_id)
 
 
@@ -299,8 +300,8 @@ def submission_status(submission_id: int) -> Response:
 @flow_control()
 def submission_edit(submission_id: int) -> Response:
     """Redirects to current edit stage of the submission."""
-    return handle(ui.submission_edit, 'submit/status.html',
-                  'Submission status', submission_id)
+    return handle(cntrls.submission_edit, 'submit/status.html',
+                  'Submission status', submission_id, flow_controlled=True)
 
 # # TODO: remove me!!
 # @UI.route(path('announce'), methods=["GET"])
@@ -367,14 +368,15 @@ def submission_edit(submission_id: int) -> Response:
 #     return Response(response={}, status=status.SEE_OTHER,
 #                     headers={'Location': target})
 
+
 @UI.route('/<int:submission_id>/verify_user', methods=['GET', 'POST'])
 @auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION, authorizer=is_owner,
                         unauthorized=redirect_to_login)
 @flow_control()
 def verify_user(submission_id: Optional[int] = None) -> Response:
     """Render the submit start page."""
-    return handle(ui.verify, 'submit/verify_user.html',
-                  'Verify User Information', submission_id)
+    return handle(cntrls.verify, 'submit/verify_user.html',
+                  'Verify User Information', submission_id, flow_controlled=True)
 
 
 @UI.route('/<int:submission_id>/authorship', methods=['GET', 'POST'])
@@ -383,9 +385,8 @@ def verify_user(submission_id: Optional[int] = None) -> Response:
 @flow_control()
 def authorship(submission_id: int) -> Response:
     """Render step 2, authorship."""
-    return handle(ui.authorship, 'submit/authorship.html',
-                  'Confirm Authorship', submission_id)
-
+    return handle(cntrls.authorship, 'submit/authorship.html',
+                  'Confirm Authorship', submission_id, flow_controlled=True)
 
 
 @UI.route('/<int:submission_id>/license', methods=['GET', 'POST'])
@@ -394,8 +395,8 @@ def authorship(submission_id: int) -> Response:
 @flow_control()
 def license(submission_id: int) -> Response:
     """Render step 3, select license."""
-    return handle(ui.new.license.license, 'submit/license.html',
-                  'Select a License', submission_id)
+    return handle(cntrls.new.license.license, 'submit/license.html',
+                  'Select a License', submission_id, flow_controlled=True)
 
 
 # @workflow_route(Policy)
@@ -405,8 +406,8 @@ def license(submission_id: int) -> Response:
 @flow_control()
 def policy(submission_id: int) -> Response:
     """Render step 4, policy agreement."""
-    return handle(ui.new.policy.policy, 'submit/policy.html',
-                  'Acknowledge Policy Statement', submission_id)
+    return handle(cntrls.new.policy.policy, 'submit/policy.html',
+                  'Acknowledge Policy Statement', submission_id, flow_controlled=True)
 
 
 # @workflow_route(Classification)
@@ -416,9 +417,9 @@ def policy(submission_id: int) -> Response:
 @flow_control()
 def classification(submission_id: int) -> Response:
     """Render step 5, choose classification."""
-    return handle(ui.new.classification.classification,
+    return handle(cntrls.new.classification.classification,
                   'submit/classification.html',
-                  'Choose a Primary Classification', submission_id)
+                  'Choose a Primary Classification', submission_id, flow_controlled=True)
 
 
 # @workflow_route(CrossList)
@@ -428,9 +429,9 @@ def classification(submission_id: int) -> Response:
 @flow_control()
 def cross_list(submission_id: int) -> Response:
     """Render step 6, secondary classes."""
-    return handle(ui.cross_list,
+    return handle(cntrls.cross_list,
                   'submit/cross_list.html',
-                  'Choose Cross-List Classifications', submission_id)
+                  'Choose Cross-List Classifications', submission_id, flow_controlled=True)
 
 
 # @workflow_route(FileUpload)
@@ -442,7 +443,7 @@ def file_upload(submission_id: int) -> Response:
     """Render step 7, file upload."""
     return handle(upload.upload_files, 'submit/file_upload.html',
                   'Upload Files', submission_id, files=request.files,
-                  token=request.environ['token'])
+                  token=request.environ['token'], flow_controlled=True)
 
 
 @UI.route('/<int:submission_id>/file_delete', methods=["GET", "POST"])
@@ -453,7 +454,7 @@ def file_delete(submission_id: int) -> Response:
     """Provide the file deletion endpoint, part of the upload step."""
     return handle(upload.delete, 'submit/confirm_delete.html',
                   'Delete File', submission_id, get_params=True,
-                  token=request.environ['token'])
+                  token=request.environ['token'], flow_controlled=True)
 
 
 @UI.route('/<int:submission_id>/file_delete_all', methods=["GET", "POST"])
@@ -465,7 +466,7 @@ def file_delete_all(submission_id: int) -> Response:
     return handle(upload.delete_all,
                   'submit/confirm_delete_all.html', 'Delete All Files',
                   submission_id, get_params=True,
-                  token=request.environ['token'])
+                  token=request.environ['token'], flow_controlled=True)
 
 
 # @workflow_route(Process)
@@ -475,9 +476,9 @@ def file_delete_all(submission_id: int) -> Response:
 @flow_control()
 def file_process(submission_id: int) -> Response:
     """Render step 8, file processing."""
-    return handle(ui.new.process.file_process, 'submit/file_process.html',
+    return handle(cntrls.new.process.file_process, 'submit/file_process.html',
                   'Process Files', submission_id, get_params=True,
-                  token=request.environ['token'])
+                  token=request.environ['token'], flow_controlled=True)
 
 
 @UI.route('/<int:submission_id>/preview.pdf', methods=["GET"])
@@ -485,7 +486,7 @@ def file_process(submission_id: int) -> Response:
                         unauthorized=redirect_to_login)
 # TODO @flow_control(Process)?
 def file_preview(submission_id: int) -> Response:
-    data, code, headers = ui.new.process.file_preview(
+    data, code, headers = cntrls.new.process.file_preview(
         MultiDict(request.args.items(multi=True)),
         request.auth,
         submission_id,
@@ -501,9 +502,9 @@ def file_preview(submission_id: int) -> Response:
 @UI.route('/<int:submission_id>/compilation_log', methods=["GET"])
 @auth.decorators.scoped(auth.scopes.VIEW_SUBMISSION, authorizer=is_owner,
                         unauthorized=redirect_to_login)
-#TODO @flow_control(Process) ?
+# TODO @flow_control(Process) ?
 def compilation_log(submission_id: int) -> Response:
-    data, code, headers = ui.new.process.compilation_log(
+    data, code, headers = cntrls.new.process.compilation_log(
         MultiDict(request.args.items(multi=True)),
         request.auth,
         submission_id,
@@ -522,8 +523,8 @@ def compilation_log(submission_id: int) -> Response:
 @flow_control()
 def add_metadata(submission_id: int) -> Response:
     """Render step 9, metadata."""
-    return handle(ui.new.metadata.metadata, 'submit/add_metadata.html',
-                  'Add or Edit Metadata', submission_id)
+    return handle(cntrls.new.metadata.metadata, 'submit/add_metadata.html',
+                  'Add or Edit Metadata', submission_id, flow_controlled=True)
 
 
 # @workflow_route(OptionalMetadata)
@@ -533,9 +534,9 @@ def add_metadata(submission_id: int) -> Response:
 @flow_control()
 def add_optional_metadata(submission_id: int) -> Response:
     """Render step 9, metadata."""
-    return handle(ui.new.metadata.optional,
+    return handle(cntrls.new.metadata.optional,
                   'submit/add_optional_metadata.html',
-                  'Add or Edit Metadata', submission_id)
+                  'Add or Edit Metadata', submission_id, flow_controlled=True)
 
 
 # @workflow_route(FinalPreview)
@@ -545,8 +546,8 @@ def add_optional_metadata(submission_id: int) -> Response:
 @flow_control()
 def final_preview(submission_id: int) -> Response:
     """Render step 10, preview."""
-    return handle(ui.new.final.finalize, 'submit/final_preview.html',
-                  'Preview and Approve', submission_id)
+    return handle(cntrls.new.final.finalize, 'submit/final_preview.html',
+                  'Preview and Approve', submission_id, flow_controlled=True)
 
 
 # @workflow_route(Confirm, methods=["GET"])
@@ -556,9 +557,9 @@ def final_preview(submission_id: int) -> Response:
 @flow_control()
 def confirmation(submission_id: int) -> Response:
     """Render the final confirmation page."""
-    return handle(ui.new.final.confirm, "submit/confirm_submit.html",
+    return handle(cntrls.new.final.confirm, "submit/confirm_submit.html",
                   'Submission Confirmed',
-                  submission_id)
+                  submission_id, flow_controlled=True)
 
 # Other workflows.
 
@@ -569,8 +570,8 @@ def confirmation(submission_id: int) -> Response:
 @flow_control()
 def jref(submission_id: Optional[int] = None) -> Response:
     """Render the JREF submission page."""
-    return handle(ui.jref.jref, 'submit/jref.html',
-                  'Add journal reference', submission_id)
+    return handle(cntrls.jref.jref, 'submit/jref.html',
+                  'Add journal reference', submission_id, flow_controlled=True)
 
 
 @UI.route('/<int:submission_id>/withdraw', methods=["GET", "POST"])
@@ -579,8 +580,8 @@ def jref(submission_id: Optional[int] = None) -> Response:
 @flow_control()
 def withdraw(submission_id: Optional[int] = None) -> Response:
     """Render the withdrawal request page."""
-    return handle(ui.withdraw.request_withdrawal,
-                  'submit/withdraw.html', 'Request withdrawal', submission_id)
+    return handle(cntrls.withdraw.request_withdrawal,
+                  'submit/withdraw.html', 'Request withdrawal', submission_id, flow_controlled=True)
 
 
 @UI.route('/<int:submission_id>/request_cross', methods=["GET", "POST"])
@@ -589,9 +590,9 @@ def withdraw(submission_id: Optional[int] = None) -> Response:
 @flow_control()
 def request_cross(submission_id: Optional[int] = None) -> Response:
     """Render the cross-list request page."""
-    return handle(ui.cross.request_cross,
+    return handle(cntrls.cross.request_cross,
                   'submit/request_cross_list.html', 'Request cross-list',
-                  submission_id)
+                  submission_id, flow_controlled=True)
 
 
 @UI.app_template_filter()

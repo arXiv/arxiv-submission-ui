@@ -293,6 +293,7 @@ def _new_upload(params: MultiDict, pointer: FileStorage, session: Session,
         )
     alerts.flash_hidden(stat.to_dict(), '_status')
 
+    rdata.update({'status': stat})
     return stay_on_this_stage((rdata, status.OK, {}))
 
 #    loc = url_for('ui.file_upload', submission_id=submission.submission_id)
@@ -393,6 +394,7 @@ def _new_file(params: MultiDict, pointer: FileStorage, session: Session,
         )
     status_data = stat.to_dict()
     alerts.flash_hidden(status_data, '_status')
+    rdata.update({'status': stat})
     return stay_on_this_stage((rdata, status.OK, {}))
 
 

@@ -153,17 +153,19 @@ def optional(method: str, params: MultiDict, session: Session,
 
         commands, valid = _opt_commands(form, submission, submitter, client)
         # We only want to apply updates if the metadata has actually changed.
-        if commands and all(valid):  # Metadata has changed and is all valid
+        if not commands:
+            return ready_for_next((response_data, status.OK, {}))
+        if all(valid):  # Metadata has changed and is all valid
             try:
                 submission, _ = save(*commands, submission_id=submission_id)
                 response_data['submission'] = submission
-                return ready_for_next((response_data,status.OK,{}))
+                return ready_for_next((response_data, status.OK, {}))
             except SaveError as e:
                 raise InternalServerError(response_data) from e
         else:
-            stay_on_this_stage((response_data,status.OK,{}))
+            stay_on_this_stage((response_data, status.OK, {}))
     else:
-        stay_on_this_stage((response_data,status.OK,{}))
+        stay_on_this_stage((response_data, status.OK, {}))
 
     return response_data, status.OK, {}
 

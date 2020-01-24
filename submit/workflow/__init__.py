@@ -13,9 +13,7 @@ from .stages import Stage
 class WorkflowDefinition:
     name: str
     order: List[Stage] = field(default_factory=list)
-
-    # TODO do we have workflows that don't have confirmations?
-    confirmation: Optional[Stage] = None
+    confirmation: Stage = None
 
     def __iter__(self) -> Iterator[Stage]:
         """Iterate over stages in this workflow."""
@@ -111,8 +109,7 @@ SubmissionWorkflow = WorkflowDefinition(
      stages.Process(),
      stages.Metadata(),
      stages.OptionalMetadata(required=False, must_see=True),
-     stages.FinalPreview(),
-     stages.Confirm()
+     stages.FinalPreview()
      ],
     # Kind of odd that this is different instance than last in the list
     stages.Confirm()
@@ -129,8 +126,7 @@ ReplacementWorkflow = WorkflowDefinition(
      stages.Process(must_see=True),
      stages.Metadata(must_see=True),
      stages.OptionalMetadata(required=False, must_see=True),
-     stages.FinalPreview(must_see=True),
-     stages.Confirm(must_see=True)
+     stages.FinalPreview(must_see=True)
      ],
     stages.Confirm()
 )

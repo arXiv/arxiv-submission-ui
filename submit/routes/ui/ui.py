@@ -22,6 +22,7 @@ from ..auth import is_owner
 from submit import util
 from submit.controllers import ui as cntrls
 from submit.controllers.ui.new import upload
+from submit.controllers.ui.new import upload_delete
 
 from submit.workflow.stages import FileUpload
 # from submit.workflow.stages import Authorship, BaseStage, Classification, Confirm, \
@@ -452,7 +453,7 @@ def file_upload(submission_id: int) -> Response:
 @flow_control(FileUpload)
 def file_delete(submission_id: int) -> Response:
     """Provide the file deletion endpoint, part of the upload step."""
-    return handle(upload.delete, 'submit/confirm_delete.html',
+    return handle(upload_delete.delete_file, 'submit/confirm_delete.html',
                   'Delete File', submission_id, get_params=True,
                   token=request.environ['token'], flow_controlled=True)
 
@@ -463,7 +464,7 @@ def file_delete(submission_id: int) -> Response:
 @flow_control(FileUpload)
 def file_delete_all(submission_id: int) -> Response:
     """Provide endpoint to delete all files, part of the upload step."""
-    return handle(upload.delete_all,
+    return handle(upload_delete.delete_all,
                   'submit/confirm_delete_all.html', 'Delete All Files',
                   submission_id, get_params=True,
                   token=request.environ['token'], flow_controlled=True)

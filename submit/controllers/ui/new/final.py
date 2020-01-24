@@ -56,9 +56,9 @@ def finalize(method: str, params: MultiDict, session: Session,
         except SaveError as e:
             logger.error('Could not save primary event')
             raise InternalServerError(response_data) from e
-        return ready_for_next(response_data, status.OK, {})
+        return ready_for_next((response_data, status.OK, {}))
     else:
-        return stay_on_this_stage(response_data, status.OK, {})
+        return stay_on_this_stage((response_data, status.OK, {}))
 
     return response_data, status.OK, {}
 

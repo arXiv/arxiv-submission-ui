@@ -11,7 +11,7 @@ RUN yum install -y which mysql mysql-devel
 RUN pip install -U pip pipenv uwsgi
 RUN pipenv install flask uwsgi pytz
 
-ADD mock_vault.py /opt/arxiv/
+ADD mock-services/mock_vault.py /opt/arxiv/
 
 EXPOSE 8200
 

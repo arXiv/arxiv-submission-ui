@@ -8,34 +8,25 @@ types.
 """
 
 import io
-import re
 from http import HTTPStatus as status
 from typing import Tuple, Dict, Any, Optional
 
-
-import bleach
-from werkzeug import MultiDict
-from werkzeug.exceptions import InternalServerError, BadRequest, NotFound, \
-    MethodNotAllowed
-from flask import url_for, Markup
-from wtforms import SelectField, widgets, HiddenField, validators
-
 from arxiv.base import logging, alerts
 from arxiv.forms import csrf
-from arxiv.users.domain import Session
 from arxiv.integration.api import exceptions
-
-from arxiv.submission import save, SaveError, Submission
-from arxiv.submission.process import process_source
-from arxiv.submission.domain.compilation import Compilation
+from arxiv.submission import save, SaveError
 from arxiv.submission.domain.event import ConfirmSourceProcessed
-from arxiv.submission.domain.preview import Preview
-from arxiv.submission.domain.submission import Compilation, SubmissionContent
+from arxiv.submission.process import process_source
 from arxiv.submission.services import PreviewService, Compiler
+from arxiv.users.domain import Session
+from flask import url_for, Markup
+from werkzeug import MultiDict
+from werkzeug.exceptions import InternalServerError, NotFound, MethodNotAllowed
+from wtforms import SelectField
 
-from submit.util import load_submission
-from submit.controllers.ui.util import validate_command, user_and_client_from_session
+from submit.controllers.ui.util import user_and_client_from_session
 from submit.routes.ui.flow_control import ready_for_next, stay_on_this_stage
+from submit.util import load_submission
 
 logger = logging.getLogger(__name__)
 
@@ -217,9 +208,7 @@ def start_compilation(params: MultiDict, session: Session, submission_id: int,
             title="Processing started"
         )
 
-    #redirect = url_for('ui.file_process', submission_id=submission_id)
-    #return response_data, status.SEE_OTHER, {'Location': redirect}
-    return stay_on_this_stage(response_data, status.OK, {})
+    return stay_on_this_stage((response_data, status.OK, {}))
 
 
 def file_preview(params, session: Session, submission_id: int, token: str,

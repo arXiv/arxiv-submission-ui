@@ -45,7 +45,7 @@ STAGE_SUCCESS: ControllerDesires = 'stage_success'
 STAGE_RESHOW: ControllerDesires = 'stage_reshow'
 STAGE_CURRENT: ControllerDesires = 'stage_current'
 
-def ready_for_next(response: CResponse,) -> CResponse:
+def ready_for_next(response: CResponse) -> CResponse:
     """Mark the result from a controller being ready to move to the
     next stage"""
     response[0].update({'flow_control_from_controller': STAGE_SUCCESS})
@@ -57,11 +57,13 @@ def stay_on_this_stage(response: CResponse) -> CResponse:
     response[0].update({'flow_control_from_controller': STAGE_RESHOW})
     return response
 
+
 def advance_to_current(response: CResponse) -> CResponse:
     """Mark the result from a controller as should return to the same stage."""
     response[0].update({'flow_control_from_controller': STAGE_CURRENT})
     return response
-    
+
+
 def get_controllers_desire(data: Dict) -> Optional[ControllerDesires]:
     return data.get('flow_control_from_controller', None)
 
@@ -171,13 +173,9 @@ def flow_control(blueprint_this_stage: Optional[Stage] = None, exit: str = EXIT)
     Route to redirect to when user selectes exit action.
 
     """
-    logger.debug('here above route')
     def route(controller: Callable) -> Callable:
         """Decorate blueprint route so that it wrapps the controller with
-        workflow redirection."""
-
-        logger.debug('here above wrapper')
-        
+        workflow redirection."""        
         # controler gets 'updated' to look like wrapper but keeps
         # name and docstr
         # https://docs.python.org/2/library/functools.html#functools.wraps
@@ -198,18 +196,6 @@ def flow_control(blueprint_this_stage: Optional[Stage] = None, exit: str = EXIT)
 
             if not workflow.can_proceed_to(this_stage):
                 return to_current(workflow, submission_id)
-
-            # Mark the previous state as seen.
-            # if workflow.previous_stage(this_stage):
-            #    workflow.mark_seen(workflow.previous_stage(this_stage))
-
-            # NOTE: The below conditional is subsubmed by the above conditional
-
-            # If the user has proceeded past an optional stage, consider it
-            # to be seen.
-            # if not workflow.is_required(workflow.previous_stage(this_stage)) \
-                #         and workflow.previous_stage(this_stage) is not None:
-            #     workflow.mark_seen(workflow.previous_stage(this_stage))
 
             # If the user selects "go back", we attempt to save their input
             # above. But if the input does not validate, we don't prevent them
@@ -256,7 +242,7 @@ def flow_decision(method: str, user_action: Optional[str], code: int, controller
         return 'SHOW_CONTROLLER_RESULT'  # some sort of error?
 
     if method != 'POST':
-        return 'SHOW_CONTROLLER_RESULT'  # Not sure, HEAD? PUT?
+        return 'SHOW_CONTROLLER_RESULT'  # Not sure, HEAD? PUT? Likely need to fix with Upload
 
     #  after this point method must be POST
     if controller_action == STAGE_SUCCESS:
@@ -266,7 +252,7 @@ def flow_decision(method: str, user_action: Optional[str], code: int, controller
             return 'REDIRECT_EXIT'
         if user_action == PREVIOUS:
             return 'REDIRECT_PREVIOUS'
-        if user_action == None:  #case of something like cross_list with action ADD
+        if user_action == None:  #case of something like cross_list with action ADD?
             return 'SHOW_CONTROLLER_RESULT'
         
     if controller_action == STAGE_RESHOW:
@@ -281,6 +267,14 @@ def flow_decision(method: str, user_action: Optional[str], code: int, controller
         if user_action == SAVE_EXIT:
             return 'REDIRECT_EXIT'
 
+    # These are the same as if the controller_action was STAGE_SUCCESS
+    # Not sure if that is a good thing or a bad thing.
+    if user_action == NEXT:
+        return 'REDIRECT_NEXT'
+    if user_action == SAVE_EXIT:
+        return 'REDIRECT_EXIT'
+    if user_action == PREVIOUS:
+        return 'REDIRECT_PREVIOUS'
     # default to what?
     return 'SHOW_CONTROLLER_RESULT'
 

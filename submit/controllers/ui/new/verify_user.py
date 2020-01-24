@@ -59,7 +59,7 @@ def verify(method: str, params: MultiDict, session: Session,
         # Now that we have a submission, we can verify the user's contact
         # information. There is no need to do this more than once.
         if submission.submitter_contact_verified:
-            return ready_for_next(response_data)
+            return ready_for_next((response_data, status.OK,{}))
         else:
             cmd = ConfirmContactInformation(creator=submitter, client=client)
             if validate_command(form, cmd, submission, 'verify_user'):

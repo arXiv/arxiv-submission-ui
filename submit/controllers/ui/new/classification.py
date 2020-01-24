@@ -188,23 +188,25 @@ def cross_list(method: str, params: MultiDict, session: Session,
         try:
             submission, _ = save(command, submission_id=submission_id)
             response_data['submission'] = submission
+            
+            # Re-build the formset to reflect changes that we just made, and
+            # generate a fresh form for adding another secondary. The POSTed
+            # data should now be reflected in the formset.
+            response_data['formset'] = ClassificationForm.formset(submission)
+            form = ClassificationForm()
+            form.operation._value = lambda: form.operation.data
+            form.filter_choices(submission, session)
+            response_data['form'] = form
+
             # do not go to next yet, re-show cross form
+            return stay_on_this_stage((response_data, status.OK, {}))
         except SaveError as e:
             raise InternalServerError(response_data) from e
 
-        # Re-build the formset to reflect changes that we just made, and
-        # generate a fresh form for adding another secondary. The POSTed
-        # data should now be reflected in the formset.
-        response_data['formset'] = ClassificationForm.formset(submission)
-        form = ClassificationForm()
-        form.operation._value = lambda: form.operation.data
-        form.filter_choices(submission, session)
-        response_data['form'] = form
-
-        if len(submission.secondary_categories) > 3:
-            alerts.flash_warning(Markup(
-                'Adding more than three cross-list classifications will'
-                ' result in a delay in the acceptance of your submission.'
-            ))
-
+        
+    if len(submission.secondary_categories) > 3:
+        alerts.flash_warning(Markup(
+            'Adding more than three cross-list classifications will'
+            ' result in a delay in the acceptance of your submission.'
+        ))
     return response_data, status.OK, {}

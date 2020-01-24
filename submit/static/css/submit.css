@@ -115,9 +115,6 @@ main {
   max-height: 400px;
   overflow-y: scroll;
 }
-.policy-scroll p, .policy-scroll h2, .policy-scroll h3, .policy-scroll ol li, .policy-scroll ul li {
-  color: grey;
-}
 @media screen and (max-width: 400px) {
   .policy-scroll {
     max-height: 250px;

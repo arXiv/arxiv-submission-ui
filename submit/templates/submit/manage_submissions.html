@@ -9,7 +9,8 @@
 <section class="columns is-marginless section">
   <div class="column box is-one-third-tablet is-one-third-desktop">
     <div class="box-new-submission">
-      <h2>Welcome [Firstname]</h2>
+      <!-- TODO: add controller and dynamic first name user.name.forename -->
+      <h2>Welcome [First Name]</h2>
       <p>Click to start a new submission</p>
       <form class="form" method="POST" action="{{ url_for('ui.create_submission') }}">
         {{ form.csrf_token }}

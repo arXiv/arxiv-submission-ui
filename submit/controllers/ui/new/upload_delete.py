@@ -23,7 +23,8 @@ from wtforms.validators import DataRequired
 from submit.controllers.ui.util import validate_command, \
     user_and_client_from_session
 from submit.util import load_submission
-from submit.routes.ui.flow_control import ready_for_next, stay_on_this_stage
+from submit.routes.ui.flow_control import ready_for_next, \
+    stay_on_this_stage, return_to_parent_stage
 from submit.controllers.ui.util import add_immediate_alert
 
 logger = logging.getLogger(__name__)
@@ -83,7 +84,8 @@ def delete_all(method: str, params: MultiDict, session: Session,
     if method == 'GET':
         form = DeleteAllFilesForm()
         rdata.update({'form': form})
-        return rdata, status.OK, {}
+        return stay_on_this_stage((rdata, status.OK, {}))
+
     elif method == 'POST':
         form = DeleteAllFilesForm(params)
         rdata.update({'form': form})
@@ -118,7 +120,7 @@ def delete_all(method: str, params: MultiDict, session: Session,
                                       source_format=stat.source_format)
         if not validate_command(form, command, submission):
             logger.debug('Command validation failed')
-            raise BadRequest(rdata)
+            return return_to_parent_stage((rdata, status.OK, {}))
 
         try:
             submission, _ = save(command, submission_id=submission_id)
@@ -128,11 +130,8 @@ def delete_all(method: str, params: MultiDict, session: Session,
                 f' again. {PLEASE_CONTACT_SUPPORT}'
             ))
 
+        return return_to_parent_stage((rdata, status.OK, {}))
 
-        # TODO this is not yet using the new non-BadRequest convention
-        # due to this sub controller having to go to the FileUpload stage.
-        redirect = url_for('ui.file_upload', submission_id=submission_id)
-        return {}, status.SEE_OTHER, {'Location': redirect}
     raise MethodNotAllowed('Method not supported')
 
 
@@ -203,7 +202,7 @@ def delete_file(method: str, params: MultiDict, session: Session,
     if method == 'POST':
         if not (form.validate() and form.confirmed.data):
             logger.debug('Invalid form data')
-            raise BadRequest(rdata)
+            return stay_on_this_stage((rdata, status.OK, {}))
 
         stat: Optional[Upload] = None
         try:
@@ -214,17 +213,7 @@ def delete_file(method: str, params: MultiDict, session: Session,
                 ' successfully', title='Deleted file successfully',
                 safe=True
             )
-        except exceptions.RequestForbidden:
-            alerts.flash_failure(Markup(
-                'There was a problem authorizing your request. Please try'
-                f' again. {PLEASE_CONTACT_SUPPORT}'
-            ))
-        except exceptions.BadRequest:
-            alerts.flash_warning(Markup(
-                'Something odd happened when processing your request.'
-                f'{PLEASE_CONTACT_SUPPORT}'
-            ))
-        except exceptions.RequestFailed:
+        except (exceptions.RequestForbidden, exceptions.BadRequest, exceptions.RequestFailed):
             alerts.flash_failure(Markup(
                 'There was a problem carrying out your request. Please try'
                 f' again. {PLEASE_CONTACT_SUPPORT}'
@@ -237,7 +226,7 @@ def delete_file(method: str, params: MultiDict, session: Session,
                                           source_format=stat.source_format)
             if not validate_command(form, command, submission):
                 logger.debug('Command validation failed')
-                raise BadRequest(rdata)
+                return stay_on_this_stage((rdata, status.OK, {}))
             try:
                 submission, _ = save(command, submission_id=submission_id)
             except SaveError:
@@ -245,9 +234,8 @@ def delete_file(method: str, params: MultiDict, session: Session,
                     'There was a problem carrying out your request. Please try'
                     f' again. {PLEASE_CONTACT_SUPPORT}'
                 ))
-        redirect = url_for('ui.file_upload', submission_id=submission_id)
-        return {}, status.SEE_OTHER, {'Location': redirect}
-    return rdata, status.OK, {}
+        return return_to_parent_stage(({}, status.OK, {}))
+    return stay_on_this_stage((rdata, status.OK, {}))
 
 
 class DeleteFileForm(csrf.CSRFForm):

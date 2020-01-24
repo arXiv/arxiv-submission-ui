@@ -31,7 +31,8 @@ SAVE_EXIT = 'save_exit'
 
 
 FlowDecision = Literal['SHOW_CONTROLLER_RESULT', 'REDIRECT_EXIT',
-                       'REDIRECT_PREVIOUS', 'REDIRECT_NEXT']
+                       'REDIRECT_PREVIOUS', 'REDIRECT_NEXT',
+                       'REDIRECT_PARENT_STAGE']
 
 
 Response = Union[FResponse, WResponse]
@@ -40,10 +41,11 @@ Response = Union[FResponse, WResponse]
 FlowAction = Literal['prevous','next','save_exit']
 FlowResponse = Tuple[FlowAction, Response]
 
-ControllerDesires = Literal['stage_success', 'stage_reshow', 'stage_current']
+ControllerDesires = Literal['stage_success', 'stage_reshow', 'stage_current', 'stage_parent']
 STAGE_SUCCESS: ControllerDesires = 'stage_success'
 STAGE_RESHOW: ControllerDesires = 'stage_reshow'
 STAGE_CURRENT: ControllerDesires = 'stage_current'
+STAGE_PARENT: ControllerDesires = 'stage_parent'
 
 def ready_for_next(response: CResponse) -> CResponse:
     """Mark the result from a controller being ready to move to the
@@ -61,6 +63,13 @@ def stay_on_this_stage(response: CResponse) -> CResponse:
 def advance_to_current(response: CResponse) -> CResponse:
     """Mark the result from a controller as should return to the same stage."""
     response[0].update({'flow_control_from_controller': STAGE_CURRENT})
+    return response
+
+
+def return_to_parent_stage(response: CResponse) -> CResponse:
+    """Mark the result from a controller as should return to the parent stage.
+    Such as delete_file to the FileUpload stage."""
+    response[0].update({'flow_control_from_controller': STAGE_PARENT})
     return response
 
 
@@ -184,15 +193,19 @@ def flow_control(blueprint_this_stage: Optional[Stage] = None, exit: str = EXIT)
             """Update the redirect to the next, previous, or exit page."""
 
             logger.debug('here in wrapper')
+#            import pdb; pdb.set_trace()
             action = request.form.get('action', None)
             submission, _ = load_submission(submission_id)
             workflow = request.workflow
             this_stage = blueprint_this_stage or \
                 workflow.workflow[endpoint_name()]
 
+            # convert classes, ints and strs to actual instances
+            this_stage = workflow.workflow[this_stage]
+            
             if workflow.is_complete() and \
-               not this_stage == workflow.confirmation:
-                return to_stage(workflow.confirmation, submission_id)
+               not this_stage == workflow.workflow.confirmation:
+                return to_stage(workflow.workflow.confirmation, submission_id)
 
             if not workflow.can_proceed_to(this_stage):
                 return to_current(workflow, submission_id)
@@ -224,8 +237,10 @@ def flow_control(blueprint_this_stage: Optional[Stage] = None, exit: str = EXIT)
                 return to_next(workflow, this_stage, submission_id)
             if flow_desc == 'REDIRECT_PREVIOUS':
                 return to_previous(workflow, this_stage, submission_id)
+            if flow_desc == 'REDIRECT_PARENT_STAGE':
+                return to_stage(this_stage, submission_id)
             else:
-                raise ValueError('flow_desc must be of type FlowDecision')
+                raise ValueError(f'flow_desc must be of type FlowDecision but was {flow_desc}')
 
         return wrapper
     return route
@@ -266,6 +281,11 @@ def flow_decision(method: str, user_action: Optional[str], code: int, controller
             return 'REDIRECT_PREVIOUS'
         if user_action == SAVE_EXIT:
             return 'REDIRECT_EXIT'
+
+    if controller_action == STAGE_PARENT:        
+        # This is what we get from a sub-form like upload_delete.delete_file
+        # on success. Redirect to parent stage.
+        return 'REDIRECT_PARENT_STAGE'
 
     # These are the same as if the controller_action was STAGE_SUCCESS
     # Not sure if that is a good thing or a bad thing.

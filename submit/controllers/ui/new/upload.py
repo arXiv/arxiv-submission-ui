@@ -53,15 +53,13 @@ PLEASE_CONTACT_SUPPORT = Markup(
 def upload_files(method: str, params: MultiDict, session: Session,
                  submission_id: int, files: Optional[MultiDict] = None,
                  token: Optional[str] = None, **kwargs) -> Response:
-    """
-    Handle a file upload request.
+    """Handle a file upload request.
 
     GET requests are treated as a request for information about the current
     state of the submission upload.
 
-    POST requests are treated either as package upload or a request to replace
-    a file. If a submission upload workspace does not already exist, the upload
-    is treated as the former.
+    POST requests are treated either as package upload if the upload
+    workspace does not already exist or a request to replace a file.
 
     Parameters
     ----------
@@ -109,13 +107,12 @@ def upload_files(method: str, params: MultiDict, session: Session,
         logger.debug('GET; load current upload state')
         rdata.update({'status': None, 'form': UploadForm()})
 
-        if submission.source_content is None:
-            # Nothing to show; should generate a blank-slate upload screen.
-            return rdata, status.OK, {}
+        if submission.source_content is None:  # Nothing to show
+            return rdata, status.OK, {}  # generate blank-slate upload screen
 
         fm = Filemanager.current_session()
-
         upload_id = submission.source_content.identifier
+
         status_data = alerts.get_hidden_alerts('_status')
         if type(status_data) is dict and status_data['identifier'] == upload_id:
             stat = Upload.from_dict(status_data)
@@ -170,8 +167,8 @@ class UploadForm(csrf.CSRFForm):
 
 
 def _update(form: UploadForm, submission: Submission, stat: Upload,
-            submitter: User, client: Optional[Client] = None,
-            rdata: Dict[str, Any] = {}) -> Tuple[Optional[Submission], Response]:
+            submitter: User, client: Optional[Client] = None) \
+        -> Optional[Submission]:
     """
     Update the :class:`.Submission` after an upload-related action.
 
@@ -183,8 +180,9 @@ def _update(form: UploadForm, submission: Submission, stat: Upload,
 
     Parameters
     ----------
+    form : WTForm for adding validation error messages
     submission : :class:`Submission`
-    _status : :class:`Upload`
+    stat : :class:`Upload`
     submitter : :class:`User`
     client : :class:`Client` or None
 
@@ -207,8 +205,7 @@ def _update(form: UploadForm, submission: Submission, stat: Upload,
                                    source_format=stat.source_format)
 
     if not validate_command(form, command, submission):
-        logger.debug('Command validation failed')
-        return None, stay_on_this_stage((rdata, status.OK, {}))
+        return None
 
     try:
         submission, _ = save(command, submission_id=submission.submission_id)
@@ -217,58 +214,7 @@ def _update(form: UploadForm, submission: Submission, stat: Upload,
             'There was a problem carrying out your request. Please try'
             f' again. {PLEASE_CONTACT_SUPPORT}'
         ))
-    rdata['submission'] = submission
-    return submission, None
-
-
-def _get_upload(params: MultiDict, session: Session, submission: Submission,
-                rdata: Dict[str, Any], token) -> Response:
-    """
-    Get the current state of the upload workspace, and prepare a response.
-
-    Parameters
-    ----------
-    params : :class:`MultiDict`
-        The query parameters from the request.
-    session : :class:`Session`
-        The authenticated session for the request.
-    submission : :class:`Submission`
-        The submission for which to retrieve upload workspace information.
-
-    Returns
-    -------
-    dict
-        Response data, to render in template.
-    int
-        HTTP status code.
-    dict
-        Extra headers to add/update on the response.
-
-    """
-    rdata.update({'status': None, 'form': UploadForm()})
-
-    if submission.source_content is None:
-        # Nothing to show; should generate a blank-slate upload screen.
-        return rdata, status.OK, {}
-
-    fm = Filemanager.current_session()
-
-    upload_id = submission.source_content.identifier
-    status_data = alerts.get_hidden_alerts('_status')
-    if type(status_data) is dict and status_data['identifier'] == upload_id:
-        stat = Upload.from_dict(status_data)
-    else:
-        try:
-            stat = fm.get_upload_status(upload_id, token)
-        except exceptions.RequestFailed as e:
-            # TODO: handle specific failure cases.
-            logger.debug('Failed to get upload status: %s', e)
-            logger.error(traceback.format_exc())
-            raise InternalServerError(rdata) from e
-    rdata.update({'status': stat})
-    if stat:
-        rdata.update({'immediate_notifications': _get_notifications(stat)})
-    return rdata, status.OK, {}
+    return submission
 
 
 def _new_upload(params: MultiDict, pointer: FileStorage, session: Session,
@@ -325,7 +271,7 @@ def _new_upload(params: MultiDict, pointer: FileStorage, session: Session,
         logger.error(traceback.format_exc())
         raise InternalServerError(rdata) from e
 
-    submission = _update(form, submission, stat, submitter, client, rdata)
+    submission = _update(form, submission, stat, submitter, client)
     converted_size = tidy_filesize(stat.size)
     if stat.status is UploadStatus.READY:
         alerts.flash_success(
@@ -393,7 +339,7 @@ def _new_file(params: MultiDict, pointer: FileStorage, session: Session,
     # request; provides CSRF goodies.
     params['file'] = pointer
     form = UploadForm(params)
-    rdata['form'] = form
+    rdata.update({'form': form, 'submission': submission})
 
     if not form.validate():
         logger.error('Invalid upload form: %s', form.errors)
@@ -425,7 +371,7 @@ def _new_file(params: MultiDict, pointer: FileStorage, session: Session,
         logger.error(traceback.format_exc())
         raise InternalServerError(rdata) from ex
 
-    submission = _update(form, submission, stat, submitter, client, rdata)
+    submission = _update(form, submission, stat, submitter, client)
     converted_size = tidy_filesize(stat.size)
     if stat.status is UploadStatus.READY:
         alerts.flash_success(
@@ -448,65 +394,6 @@ def _new_file(params: MultiDict, pointer: FileStorage, session: Session,
     status_data = stat.to_dict()
     alerts.flash_hidden(status_data, '_status')
     return stay_on_this_stage((rdata, status.OK, {}))
-
-
-def _post_upload(params: MultiDict, files: MultiDict, session: Session,
-                 submission: Submission, rdata: Dict[str, Any], token: str) \
-        -> Response:
-    """
-    Compose POST request handling for the file upload endpoint.
-
-    See the :attr:`Submission.source_content` attribute, which is set using
-    :class:`SetUploadPackage`.
-
-    Parameters
-    ----------
-    params : :class:`MultiDict`
-        The form data from the request.
-    files : :class:`MultiDict`
-        File data in the multipart request. Values should be
-        :class:`FileStorage` instances.
-    session : :class:`Session`
-        The authenticated session for the request.
-    submission : :class:`Submission`
-        The submission for which the request is being made.
-
-    Returns
-    -------
-    dict
-        Response data, to render in template.
-    int
-        HTTP status code. This should be ``303``, unless something goes wrong.
-    dict
-        Extra headers to add/update on the response. This should include
-        the `Location` header for use in the 303 redirect response.
-
-    """
-    # TODO figure out this SECTION of code
-    # It's to deal with the back and save buttons
-    try:    # Make sure that we have a file to work with.
-        pointer = files['file']
-    except KeyError:   # User is going back, saving/exiting, or next step.
-        pointer = None
-
-    if not pointer:
-        # Don't flash a message if the user is just trying to go back to the
-        # previous page.
-        logger.debug('No files on request')
-        action = params.get('action', None)
-        if action:
-            logger.debug('User is navigating away from upload UI')
-            return {}, status.SEE_OTHER, {}
-    # END SECTION
-
-    # TODO This isn't doing much and is only used in one place
-    # Consider moving it to upload_files()
-    if submission.source_content is None:   # New upload package.
-        logger.debug('New upload package')
-        return _new_upload(params, pointer, session, submission, rdata, token)
-    else:
-        logger.debug('Adding additional files')
-        return _new_file(params, pointer, session, submission, rdata, token)
 
 
 def _get_notifications(stat: Upload) -> List[Dict[str, str]]:

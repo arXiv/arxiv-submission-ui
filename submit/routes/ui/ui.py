@@ -476,7 +476,7 @@ def file_delete_all(submission_id: int) -> Response:
 @flow_control()
 def file_process(submission_id: int) -> Response:
     """Render step 8, file processing."""
-    return handle(cntrls.new.process.file_process, 'submit/file_process.html',
+    return handle(cntrls.process.file_process, 'submit/file_process.html',
                   'Process Files', submission_id, get_params=True,
                   token=request.environ['token'], flow_controlled=True)
 

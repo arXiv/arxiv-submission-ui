@@ -19,8 +19,7 @@ from typing import Tuple, Dict, Any, Optional, List, Union, Mapping
 from flask import url_for, Markup
 from werkzeug import MultiDict
 from werkzeug.datastructures import FileStorage
-from werkzeug.exceptions import InternalServerError, BadRequest, \
-    MethodNotAllowed
+from werkzeug.exceptions import InternalServerError, MethodNotAllowed
 from wtforms import BooleanField, HiddenField, FileField
 from wtforms.validators import DataRequired
 
@@ -108,10 +107,57 @@ def upload_files(method: str, params: MultiDict, session: Session,
 
     if method == 'GET':
         logger.debug('GET; load current upload state')
-        return _get_upload(params, session, submission, rdata, token)
+        rdata.update({'status': None, 'form': UploadForm()})
+
+        if submission.source_content is None:
+            # Nothing to show; should generate a blank-slate upload screen.
+            return rdata, status.OK, {}
+
+        fm = Filemanager.current_session()
+
+        upload_id = submission.source_content.identifier
+        status_data = alerts.get_hidden_alerts('_status')
+        if type(status_data) is dict and status_data['identifier'] == upload_id:
+            stat = Upload.from_dict(status_data)
+        else:
+            try:
+                stat = fm.get_upload_status(upload_id, token)
+            except exceptions.RequestFailed as e:
+                # TODO: handle specific failure cases.
+                logger.debug('Failed to get upload status: %s', e)
+                logger.error(traceback.format_exc())
+                raise InternalServerError(rdata) from e
+        rdata.update({'status': stat})
+        if stat:
+            rdata.update({'immediate_notifications': _get_notifications(stat)})
+        return rdata, status.OK, {}
+
     elif method == 'POST':
         logger.debug('POST; user is uploading file(s)')
-        return _post_upload(params, files, session, submission, rdata, token)
+        # TODO figure out this SECTION of code
+        # It's to deal with the back and save buttons
+        try:    # Make sure that we have a file to work with.
+            pointer = files['file']
+        except KeyError:   # User is going back, saving/exiting, or next step.
+            pointer = None
+
+        if not pointer:
+            # Don't flash a message if the user is just trying to go back to the
+            # previous page.
+            logger.debug('No files on request')
+            action = params.get('action', None)
+            if action:
+                logger.debug('User is navigating away from upload UI')
+                return {}, status.SEE_OTHER, {}
+        # END SECTION
+
+        if submission.source_content is None:
+            logger.debug('New upload package')
+            return _new_upload(params, pointer, session, submission, rdata, token)
+        else:
+            logger.debug('Adding additional files')
+            return _new_file(params, pointer, session, submission, rdata, token)
+
     raise MethodNotAllowed()
 
 
@@ -125,7 +171,7 @@ class UploadForm(csrf.CSRFForm):
 
 def _update(form: UploadForm, submission: Submission, stat: Upload,
             submitter: User, client: Optional[Client] = None,
-            rdata: Dict[str, Any] = {}) -> Submission:
+            rdata: Dict[str, Any] = {}) -> Tuple[Optional[Submission], Response]:
     """
     Update the :class:`.Submission` after an upload-related action.
 
@@ -162,7 +208,7 @@ def _update(form: UploadForm, submission: Submission, stat: Upload,
 
     if not validate_command(form, command, submission):
         logger.debug('Command validation failed')
-        raise BadRequest(rdata)
+        return None, stay_on_this_stage((rdata, status.OK, {}))
 
     try:
         submission, _ = save(command, submission_id=submission.submission_id)
@@ -172,7 +218,7 @@ def _update(form: UploadForm, submission: Submission, stat: Upload,
             f' again. {PLEASE_CONTACT_SUPPORT}'
         ))
     rdata['submission'] = submission
-    return submission
+    return submission, None
 
 
 def _get_upload(params: MultiDict, session: Session, submission: Submission,
@@ -260,8 +306,6 @@ def _new_upload(params: MultiDict, pointer: FileStorage, session: Session,
     submitter, client = user_and_client_from_session(session)
     fm = Filemanager.current_session()
 
-    # Using a form object provides some extra assurance that this is a legit
-    # request; provides CSRF goodies.
     params['file'] = pointer
     form = UploadForm(params)
     rdata.update({'form': form})
@@ -303,7 +347,7 @@ def _new_upload(params: MultiDict, pointer: FileStorage, session: Session,
         )
     alerts.flash_hidden(stat.to_dict(), '_status')
 
-    return stay_on_this_stage(({}, status.OK, {}))
+    return stay_on_this_stage((rdata, status.OK, {}))
 
 #    loc = url_for('ui.file_upload', submission_id=submission.submission_id)
 #    return {}, status.SEE_OTHER, {'Location': loc}
@@ -356,7 +400,7 @@ def _new_file(params: MultiDict, pointer: FileStorage, session: Session,
         alerts.flash_failure(
             "No file was uploaded; please try again.",
             title="Something went wrong")
-        return stay_on_this_stage(({},status.OK,{}))
+        return stay_on_this_stage((rdata, status.OK, {}))
 
     ancillary: bool = form.ancillary.data
 

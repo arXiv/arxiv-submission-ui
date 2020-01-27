@@ -18,29 +18,69 @@ main
 .button-feedback
   vertical-align: baseline
 
-.content h2.replacement
-  margin-top: -2rem
-  margin-bottom: 2rem
-  font-style: italic
-  font-weight: 400
-
 .submit-nav
-  margin-top: 2.5rem
-
+  margin-top: 1.75rem
+  justify-content: flex-end
+  .button
+    .icon
+      margin-right: 0 !important
+      
 .form-margin
   margin: .4em 0
 
-.content h1.title
-  margin-bottom: 2.5rem
+.notifications
+  margin-bottom: 1em
 
-h2.title-submit
-  margin-bottom: 0em
-  margin-top: 0.25em
+.policy-scroll
+  margin: 0
+  padding: 1em
+  max-height: 400px
+  overflow-y: scroll
 
-h1.title.title-submit
-  margin-top: 0em
-  margin-bottom: 0.5em
+  @media screen and (max-width: 400px)
+    max-height: 250px
 
+.policy-scroll::-webkit-scrollbar
+  -webkit-appearance: none
+  width: 7px
+
+.policy-scroll::-webkit-scrollbar-thumb
+  border-radius: 4px
+  background-color: rgba(0,0,0,.5)
+  -webkit-box-shadow: 0 0 1px rgba(255,255,255,.5)
+
+nav.submit-pagination
+  display: block
+  /*float: right*/
+  width: 100%
+
+h2
+  .title-submit
+    margin-bottom: 0em
+    margin-top: 0.25em !important
+    display: block
+    float: left
+    width: 10%
+    display: none
+
+  .replacement
+    margin-top: -2rem
+    margin-bottom: 2rem
+    font-style: italic
+    font-weight: 400
+
+h1
+  .title.title-submit
+    margin-top: .5em
+    margin-bottom: 0.5em
+    clear: both
+
+  .preamble
+    color: grey
+
+  @media screen and (max-width: 768px)
+    .title.title-submit
+      margin-top: 0
 
 .texlive-summary article
   padding: .8rem
@@ -72,16 +112,58 @@ h1.title.title-submit
     font-family: serif
 
 /* overrides for this form only? may move to base */
-
 .field:not(:last-child)
   margin-bottom: 1.25em
 
 .label:not(:last-child)
   margin-bottom: .25em
 
+.is-horizontal
+  border-bottom: 1px solid whitesmoke
+.is-horizontal:last-of-type
+  border-bottom: 0px
+
 .buttons .button:not(:last-child)
   margin-right: .75rem
 
+.content-container, .action-container
+  border: 1px solid #cccccc
+  padding: 1em
+  margin: 0 !important
+.content-container
+  border-bottom: 0px
+/* category styles on cross-list page */
+.category-list
+  .action-container
+    padding: 0
+  form
+    margin: 0
+    li
+      margin: 0
+      padding-top: .25em !important
+      padding-bottom: .25em !important
+      display: flex
+      button
+        padding-top: 0 !important
+        margin: 0
+        height: 1em
+      span.category-name-label
+        flex-grow: 1
+
+.cross-list-area
+  float: right
+  width: 40%
+  border-left: 1px solid #f2f2f2
+
+  @media screen and (max-width: 768px)
+    width: 100%
+    border-bottom: 1px solid #f2f2f2
+    border-left: 0px
+
+.box-new-submission
+  text-align: left
+  .button
+    margin: 0 0 1em 0
 /* tightens up user data display on verify user page */
 .user-info
   margin-bottom: 1rem
@@ -89,17 +171,19 @@ h1.title.title-submit
     margin-bottom: .5rem
     .field-label
       flex-grow: 2
+    span.field-note
+      font-style: italic
 
 .control .radio
   margin-bottom: .25em
 
 /* Classes for zebra striping and nested directory display */
-
 $stripe-color: #E8E8E8
 $directory-color: #CCC
 
 ol.file-tree
   margin: 0 0 1rem 0
+  list-style-type: none
   li
     margin-top: 0
     padding-top: .15em
@@ -108,6 +192,9 @@ ol.file-tree
     padding-right: .25em
     background-color: white
     &.even
+      background-color: $stripe-color
+  form:nth-of-type(odd)
+    li
       background-color: $stripe-color
   .columns
     margin: 0
@@ -124,7 +211,6 @@ ol.file-tree
         margin-top: 0
 
 /* For highlighting TeX logs */
-
 .tex-help
   background-color: rgba(28, 97, 246, 0.40)
   /* background-color: rgba(152, 35, 255, 0.40) */
@@ -166,76 +252,95 @@ ol.file-tree
   color: rgba(255,255,255,1)
   padding: 0 0.2em
 
-/* Classes for responsive bubble-style progress bar */
 
-$bubblesize: 16px
-$barsize: 16px
-$dotcolor: #FFF
-$complete: #0068ac
-$incomplete: #ccc
-
-ul.progressbar
-  width: 100%
+/* Classes for condensed, responsive progress bar */
+.progressbar,
+.progressbar li a
   display: flex
-  margin: 0 0 1.5em 0
-  > li
-    text-align: center
+  flex-wrap: wrap
+  justify-content: center
+  align-items: center
+  margin: 0
+
+.progressbar
+  li
+    background-color: rgba(0, 0, 0, .15)
     list-style: none
-    position: relative
-    margin-top: 1em
-    width: 100%
-    > a
-      display: block
-      color: #222
-      line-height: 2em
-      &:before
-        content: ''
-        display: block
-        position: relative
-        margin: 0 auto 4px
-        background-color: $dotcolor
-        width: $bubblesize
-        height: $bubblesize
-        text-align: center
-        border: 5px solid $incomplete
-        border-radius: 50%
-      &:hover
-        border-bottom: 1px solid transparent
-        &:before
-          border-width: 6px
-          $background-color: $incomplete
-          transform: scale(1.6)
-          box-shadow: 0px 0px 1px .5px #999
+    padding: 0
+    margin: .5px
+    transition: background-color 0.3s
+    border: 0
+    color: whitesmoke
+    flex-grow: 1
 
-    &:after
-      content: ''
-      height: $barsize
-      width: 100%
-      background-color: $incomplete
-      position: absolute
-      top: 0
-      right: 50%
-      z-index: -1
+  li:hover
+    background-color: rgba(0, 0, 0, .25)
+    border: 0
 
-    &:first-child
-      &:after
-        display: none
+  li a
+    font-weight: 300
+    text-decoration: none
+    color: #666666
+    padding-top: .25em
+    padding-bottom: .25em
+    padding-left: 1em
+    padding-right: 1em
+    transition: color 0.3s
 
-    &.is-active
-      > a
-        &:before
-          background-color: $dotcolor
-          border-color: $complete
-          border-width: 2px
-          transform: scale(1.6)
+  li a:hover
+    text-decoration: none
+    border-bottom: 0px
 
-    &.is-complete
-      &:after
-        background-color: $complete
-      > a
-        &:before
-          background-color: $dotcolor
-          border-color: $complete
+  li:not([class*="is-active"]) a:hover,
+  li:not([class*="is-active"]) a:focus,
+  li:not([class*="is-active"]) a:active
+    color: black
+
+  li.is-active,
+  li.is-complete.is-active
+    background-color: #515151
+
+  li.is-active a
+    color: white
+    font-weight: 600
+    cursor: default
+    pointer-events: none
+    /*padding-right: calc(1.25em - 15px)*/
+
+  li.is-active::after
+    content: ""
+    height: 0px
+    width: 0px
+    border: 8px solid transparent
+    border-left-color: #515151
+    margin-left: -8px
+    z-index: 2
+    float: right
+    margin-right: -13px
+    margin-top: -20px
+
+  li:last-child.is-active::after
+      content: none !important
+
+  li.is-complete
+    background-color: rgba(0, 0, 0, .45)
+
+  li.is-complete a
+    color: white
+
+  li.is-active a .icon
+    display: none
+
+  li.is-complete a .icon
+    height: 1rem
+    width: 1rem
+    fill: grey
+    margin: 0 3px 0 0
+
+  /*controls number of links per row when screen is too narrow for just one row*/
+  @media screen and (max-width: 1100px)
+    li
+      width: calc(100% * (1/6) - 10px - 1px)
 
 /* info and help bubbles */
 .help-bubble

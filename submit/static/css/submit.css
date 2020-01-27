@@ -23,33 +23,78 @@ main {
   vertical-align: baseline;
 }
 
-.content h2.replacement {
-  margin-top: -2rem;
-  margin-bottom: 2rem;
-  font-style: italic;
-  font-weight: 400;
-}
-
 .submit-nav {
-  margin-top: 2.5rem;
+  margin-top: 1.75rem;
+  justify-content: flex-end;
+}
+.submit-nav .button .icon {
+  margin-right: 0 !important;
 }
 
 .form-margin {
   margin: 0.4em 0;
 }
 
-.content h1.title {
-  margin-bottom: 2.5rem;
+.notifications {
+  margin-bottom: 1em;
 }
 
-h2.title-submit {
+.policy-scroll {
+  margin: 0;
+  padding: 1em;
+  max-height: 400px;
+  overflow-y: scroll;
+}
+@media screen and (max-width: 400px) {
+  .policy-scroll {
+    max-height: 250px;
+  }
+}
+
+.policy-scroll::-webkit-scrollbar {
+  -webkit-appearance: none;
+  width: 7px;
+}
+
+.policy-scroll::-webkit-scrollbar-thumb {
+  border-radius: 4px;
+  background-color: rgba(0, 0, 0, 0.5);
+  -webkit-box-shadow: 0 0 1px rgba(255, 255, 255, 0.5);
+}
+
+nav.submit-pagination {
+  display: block;
+  /*float: right*/
+  width: 100%;
+}
+
+h2 .title-submit {
   margin-bottom: 0em;
-  margin-top: 0.25em;
+  margin-top: 0.25em !important;
+  display: block;
+  float: left;
+  width: 10%;
+  display: none;
+}
+h2 .replacement {
+  margin-top: -2rem;
+  margin-bottom: 2rem;
+  font-style: italic;
+  font-weight: 400;
 }
 
-h1.title.title-submit {
-  margin-top: 0em;
+h1 .title.title-submit {
+  margin-top: 0.5em;
   margin-bottom: 0.5em;
+  clear: both;
+}
+h1 .preamble {
+  color: grey;
+}
+@media screen and (max-width: 768px) {
+  h1 .title.title-submit {
+    margin-top: 0;
+  }
 }
 
 .texlive-summary article {
@@ -92,8 +137,68 @@ h1.title.title-submit {
   margin-bottom: 0.25em;
 }
 
+.is-horizontal {
+  border-bottom: 1px solid whitesmoke;
+}
+
+.is-horizontal:last-of-type {
+  border-bottom: 0px;
+}
+
 .buttons .button:not(:last-child) {
   margin-right: 0.75rem;
+}
+
+.content-container, .action-container {
+  border: 1px solid #cccccc;
+  padding: 1em;
+  margin: 0 !important;
+}
+
+.content-container {
+  border-bottom: 0px;
+}
+
+/* category styles on cross-list page */
+.category-list .action-container {
+  padding: 0;
+}
+.category-list form {
+  margin: 0;
+}
+.category-list form li {
+  margin: 0;
+  padding-top: 0.25em !important;
+  padding-bottom: 0.25em !important;
+  display: flex;
+}
+.category-list form li button {
+  padding-top: 0 !important;
+  margin: 0;
+  height: 1em;
+}
+.category-list form li span.category-name-label {
+  flex-grow: 1;
+}
+
+.cross-list-area {
+  float: right;
+  width: 40%;
+  border-left: 1px solid #f2f2f2;
+}
+@media screen and (max-width: 768px) {
+  .cross-list-area {
+    width: 100%;
+    border-bottom: 1px solid #f2f2f2;
+    border-left: 0px;
+  }
+}
+
+.box-new-submission {
+  text-align: left;
+}
+.box-new-submission .button {
+  margin: 0 0 1em 0;
 }
 
 /* tightens up user data display on verify user page */
@@ -106,6 +211,9 @@ h1.title.title-submit {
 .user-info .field .field-label {
   flex-grow: 2;
 }
+.user-info .field span.field-note {
+  font-style: italic;
+}
 
 .control .radio {
   margin-bottom: 0.25em;
@@ -114,6 +222,7 @@ h1.title.title-submit {
 /* Classes for zebra striping and nested directory display */
 ol.file-tree {
   margin: 0 0 1rem 0;
+  list-style-type: none;
 }
 ol.file-tree li {
   margin-top: 0;
@@ -124,6 +233,9 @@ ol.file-tree li {
   background-color: white;
 }
 ol.file-tree li.even {
+  background-color: #E8E8E8;
+}
+ol.file-tree form:nth-of-type(odd) li {
   background-color: #E8E8E8;
 }
 ol.file-tree .columns {
@@ -196,69 +308,97 @@ ol.file-tree > li ol li:first-child {
   padding: 0 0.2em;
 }
 
-/* Classes for responsive bubble-style progress bar */
-ul.progressbar {
-  width: 100%;
+/* Classes for condensed, responsive progress bar */
+.progressbar,
+.progressbar li a {
   display: flex;
-  margin: 0 0 1.5em 0;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  margin: 0;
 }
-ul.progressbar > li {
-  text-align: center;
+
+.progressbar {
+  /*controls number of links per row when screen is too narrow for just one row*/
+}
+.progressbar li {
+  background-color: rgba(0, 0, 0, 0.15);
   list-style: none;
-  position: relative;
-  margin-top: 1em;
-  width: 100%;
+  padding: 0;
+  margin: 0.5px;
+  transition: background-color 0.3s;
+  border: 0;
+  color: whitesmoke;
+  flex-grow: 1;
 }
-ul.progressbar > li > a {
-  display: block;
-  color: #222;
-  line-height: 2em;
+.progressbar li:hover {
+  background-color: rgba(0, 0, 0, 0.25);
+  border: 0;
 }
-ul.progressbar > li > a:before {
+.progressbar li a {
+  font-weight: 300;
+  text-decoration: none;
+  color: #666666;
+  padding-top: 0.25em;
+  padding-bottom: 0.25em;
+  padding-left: 1em;
+  padding-right: 1em;
+  transition: color 0.3s;
+}
+.progressbar li a:hover {
+  text-decoration: none;
+  border-bottom: 0px;
+}
+.progressbar li:not([class*=is-active]) a:hover,
+.progressbar li:not([class*=is-active]) a:focus,
+.progressbar li:not([class*=is-active]) a:active {
+  color: black;
+}
+.progressbar li.is-active,
+.progressbar li.is-complete.is-active {
+  background-color: #515151;
+}
+.progressbar li.is-active a {
+  color: white;
+  font-weight: 600;
+  cursor: default;
+  pointer-events: none;
+  /*padding-right: calc(1.25em - 15px)*/
+}
+.progressbar li.is-active::after {
   content: "";
-  display: block;
-  position: relative;
-  margin: 0 auto 4px;
-  background-color: #FFF;
-  width: 16px;
-  height: 16px;
-  text-align: center;
-  border: 5px solid #ccc;
-  border-radius: 50%;
+  height: 0px;
+  width: 0px;
+  border: 8px solid transparent;
+  border-left-color: #515151;
+  margin-left: -8px;
+  z-index: 2;
+  float: right;
+  margin-right: -13px;
+  margin-top: -20px;
 }
-ul.progressbar > li > a:hover {
-  border-bottom: 1px solid transparent;
+.progressbar li:last-child.is-active::after {
+  content: none !important;
 }
-ul.progressbar > li > a:hover:before {
-  border-width: 6px;
-  transform: scale(1.6);
-  box-shadow: 0px 0px 1px 0.5px #999;
+.progressbar li.is-complete {
+  background-color: rgba(0, 0, 0, 0.45);
 }
-ul.progressbar > li:after {
-  content: "";
-  height: 16px;
-  width: 100%;
-  background-color: #ccc;
-  position: absolute;
-  top: 0;
-  right: 50%;
-  z-index: -1;
+.progressbar li.is-complete a {
+  color: white;
 }
-ul.progressbar > li:first-child:after {
+.progressbar li.is-active a .icon {
   display: none;
 }
-ul.progressbar > li.is-active > a:before {
-  background-color: #FFF;
-  border-color: #0068ac;
-  border-width: 2px;
-  transform: scale(1.6);
+.progressbar li.is-complete a .icon {
+  height: 1rem;
+  width: 1rem;
+  fill: grey;
+  margin: 0 3px 0 0;
 }
-ul.progressbar > li.is-complete:after {
-  background-color: #0068ac;
-}
-ul.progressbar > li.is-complete > a:before {
-  background-color: #FFF;
-  border-color: #0068ac;
+@media screen and (max-width: 1100px) {
+  .progressbar li {
+    width: calc(100% * (1/6) - 10px - 1px);
+  }
 }
 
 /* info and help bubbles */

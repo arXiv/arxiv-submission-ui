@@ -27,6 +27,9 @@ main {
   margin-top: 1.75rem;
   justify-content: flex-end;
 }
+.submit-nav .button .icon {
+  margin-right: 0 !important;
+}
 
 .form-margin {
   margin: 0.4em 0;

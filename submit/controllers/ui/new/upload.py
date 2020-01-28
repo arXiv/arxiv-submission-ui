@@ -19,8 +19,12 @@ from typing import Tuple, Dict, Any, Optional, List, Union, Mapping
 from flask import url_for, Markup
 from werkzeug import MultiDict
 from werkzeug.datastructures import FileStorage
-from werkzeug.exceptions import InternalServerError, BadRequest, \
-    MethodNotAllowed
+from werkzeug.exceptions import (
+    InternalServerError,
+    BadRequest,
+    MethodNotAllowed,
+    RequestEntityTooLarge
+)
 from wtforms import BooleanField, HiddenField, FileField
 from wtforms.validators import DataRequired
 
@@ -35,8 +39,10 @@ from arxiv.submission.domain.event import SetUploadPackage, UpdateUploadPackage
 from arxiv.submission.exceptions import SaveError
 from arxiv.users.domain import Session
 
-from submit.controllers.ui.util import validate_command, \
+from submit.controllers.ui.util import (
+    validate_command,
     user_and_client_from_session
+)
 from submit.util import load_submission, tidy_filesize
 
 
@@ -113,8 +119,25 @@ def upload_files(method: str, params: MultiDict, session: Session,
     elif method == 'POST':
         # Otherwise, treat this as an upload attempt.
         logger.debug('POST; user is uploading file(s)')
-        return _post_upload(params, files, session, submission, rdata, token)
-    raise MethodNotAllowed('Nope')
+        try:
+            return _post_upload(params, files, session,
+                                submission, rdata, token)
+        except exceptions.ConnectionFailed as ex:
+            logger.debug('Problem POSTing upload: %s', ex)
+            alerts.flash_failure(Markup(
+                'There was a problem uploading your file. '
+                f'{PLEASE_CONTACT_SUPPORT}'
+            ))
+            return _get_upload(params, session, submission, rdata, token)
+
+        except RequestEntityTooLarge as ex:
+            logger.debug('Problem POSTing upload: %s', ex)
+            alerts.flash_failure(Markup(
+                'There was a problem uploading your file because it exceeds '
+                f'our maximum size limit. {PLEASE_CONTACT_SUPPORT}'
+            ))
+            return _get_upload(params, session, submission, rdata, token)
+    raise MethodNotAllowed('method not allowed')
 
 
 def delete_all(method: str, params: MultiDict, session: Session,
@@ -175,24 +198,24 @@ def delete_all(method: str, params: MultiDict, session: Session,
 
         try:
             stat = fm.delete_all(upload_id, token)
-        except exceptions.RequestForbidden as e:
+        except exceptions.RequestForbidden as ex:
             alerts.flash_failure(Markup(
                 'There was a problem authorizing your request. Please try'
                 f' again. {PLEASE_CONTACT_SUPPORT}'
             ))
-            logger.error('Encountered RequestForbidden: %s', e)
-        except exceptions.BadRequest as e:
+            logger.error('Encountered RequestForbidden: %s', ex)
+        except exceptions.BadRequest as ex:
             alerts.flash_warning(Markup(
                 'Something odd happened when processing your request.'
                 f'{PLEASE_CONTACT_SUPPORT}'
             ))
-            logger.error('Encountered BadRequest: %s', e)
-        except exceptions.RequestFailed as e:
+            logger.error('Encountered BadRequest: %s', ex)
+        except exceptions.RequestFailed as ex:
             alerts.flash_failure(Markup(
                 'There was a problem carrying out your request. Please try'
                 f' again. {PLEASE_CONTACT_SUPPORT}'
             ))
-            logger.error('Encountered RequestFailed: %s', e)
+            logger.error('Encountered RequestFailed: %s', ex)
 
         command = UpdateUploadPackage(creator=submitter, client=client,
                                       checksum=stat.checksum,
@@ -440,11 +463,11 @@ def _get_upload(params: MultiDict, session: Session, submission: Submission,
     else:
         try:
             stat = fm.get_upload_status(upload_id, token)
-        except exceptions.RequestFailed as e:
+        except exceptions.RequestFailed as ex:
             # TODO: handle specific failure cases.
-            logger.debug('Failed to get upload status: %s', e)
+            logger.debug('Failed to get upload status: %s', ex)
             logger.error(traceback.format_exc())
-            raise InternalServerError(rdata) from e
+            raise InternalServerError(rdata) from ex
     rdata.update({'status': stat})
     if stat:
         rdata.update({'immediate_notifications': _get_notifications(stat)})
@@ -498,14 +521,14 @@ def _new_upload(params: MultiDict, pointer: FileStorage, session: Session,
 
     try:
         stat = fm.upload_package(pointer, token)
-    except exceptions.RequestFailed as e:
+    except exceptions.RequestFailed as ex:
         alerts.flash_failure(Markup(
             'There was a problem carrying out your request. Please try'
             f' again. {PLEASE_CONTACT_SUPPORT}'
         ))
-        logger.debug('Failed to upload package: %s', e)
+        logger.debug('Failed to upload package: %s', ex)
         logger.error(traceback.format_exc())
-        raise InternalServerError(rdata) from e
+        raise InternalServerError(rdata) from ex
 
     submission = _update(form, submission, stat, submitter, client, rdata)
     converted_size = tidy_filesize(stat.size)

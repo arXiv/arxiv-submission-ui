@@ -30,7 +30,9 @@ class WorkflowProcessor:
         """Determine whether the user can proceed to a stage."""
         if stage is None:
             return True
-        return all(map(self.is_done, self.workflow.iter_prior(stage)))
+        must_be_done = self.workflow.order if stage == self.workflow.confirmation \
+            else self.workflow.iter_prior(stage)
+        return all(map(self.is_done, must_be_done))
 
     def current_stage(self) -> Optional[Stage]:
         """Get the first stage in the workflow that is not done."""

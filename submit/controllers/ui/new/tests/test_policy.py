@@ -14,6 +14,7 @@ from arxiv.submission.domain.event import ConfirmPolicy
 from arxiv.users import auth, domain
 from submit.controllers.ui.new import policy
 
+from submit.routes.ui.flow_control import get_controllers_desire, STAGE_SUCCESS
 
 class TestConfirmPolicy(TestCase):
     """Test behavior of :func:`.policy` controller."""
@@ -87,12 +88,8 @@ class TestConfirmPolicy(TestCase):
         mock_load.return_value = (before, [])
 
         params = MultiDict()
-        try:
-            policy.policy('POST', params, self.session, submission_id)
-            self.fail('BadRequest was not raised')
-        except BadRequest as e:
-            data = e.description
-            self.assertIsInstance(data['form'], Form, "Data includes a form")
+        data, _, _ = policy.policy('POST', params, self.session, submission_id)
+        self.assertIsInstance(data['form'], Form, "Data includes a form")
 
     @mock.patch(f'{policy.__name__}.PolicyForm.Meta.csrf', False)
     @mock.patch('arxiv.submission.load')
@@ -104,12 +101,9 @@ class TestConfirmPolicy(TestCase):
                                 submitter_accepts_policy=False)
         mock_load.return_value = (before, [])
         params = MultiDict({})
-        try:
-            policy.policy('POST', params, self.session, submission_id)
-            self.fail('BadRequest was not raised')
-        except BadRequest as e:
-            data = e.description
-            self.assertIsInstance(data['form'], Form, "Data includes a form")
+        data, _, _ = policy.policy('POST', params, self.session, submission_id)
+        self.assertIsInstance(data['form'], Form, "Data includes a form")
+
 
     @mock.patch(f'{policy.__name__}.PolicyForm.Meta.csrf', False)
     @mock.patch('submit.controllers.ui.util.url_for')
@@ -128,8 +122,9 @@ class TestConfirmPolicy(TestCase):
         mock_url_for.return_value = 'https://foo.bar.com/yes'
 
         params = MultiDict({'policy': 'y', 'action': 'next'})
-        _, code, _ = policy.policy('POST', params, self.session, submission_id)
-        self.assertEqual(code, status.SEE_OTHER, "Returns redirect")
+        data, code, _ = policy.policy('POST', params, self.session, submission_id)
+        self.assertEqual(code, status.OK)
+        self.assertEqual(get_controllers_desire(data), STAGE_SUCCESS)
 
     @mock.patch(f'{policy.__name__}.PolicyForm.Meta.csrf', False)
     @mock.patch('submit.controllers.ui.util.url_for')

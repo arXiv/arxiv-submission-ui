@@ -50,8 +50,8 @@ class TestNewSubmissionWorkflow(TestCase):
         self.assertFalse(nswfps.can_proceed_to(nswfps.workflow[Metadata]))
         self.assertFalse(nswfps.can_proceed_to(
             nswfps.workflow[OptionalMetadata]))
-        self.assertFalse(nswfps.can_proceed_to(nswfps.workflow[FinalPreview]))
-        self.assertFalse(nswfps.can_proceed_to(nswfps.workflow[Confirm]))
+        self.assertFalse(nswfps.can_proceed_to(nswfps.workflow[FinalPreview]))        
+        self.assertFalse(nswfps.can_proceed_to(nswfps.workflow.confirmation))
 
         self.assertEqual(nswfps.current_stage(), nswfps.workflow[VerifyUser])
 
@@ -72,7 +72,7 @@ class TestNewSubmissionWorkflow(TestCase):
         self.assertFalse(nswfps.can_proceed_to(
             nswfps.workflow[OptionalMetadata]))
         self.assertFalse(nswfps.can_proceed_to(nswfps.workflow[FinalPreview]))
-        self.assertFalse(nswfps.can_proceed_to(nswfps.workflow[Confirm]))
+        self.assertFalse(nswfps.can_proceed_to(nswfps.workflow.confirmation))
 
         self.assertEqual(nswfps.current_stage(), nswfps.workflow[Authorship])
 
@@ -93,7 +93,7 @@ class TestNewSubmissionWorkflow(TestCase):
         self.assertFalse(nswfps.can_proceed_to(
             nswfps.workflow[OptionalMetadata]))
         self.assertFalse(nswfps.can_proceed_to(nswfps.workflow[FinalPreview]))
-        self.assertFalse(nswfps.can_proceed_to(nswfps.workflow[Confirm]))
+        self.assertFalse(nswfps.can_proceed_to(nswfps.workflow.confirmation))
 
         self.assertEqual(nswfps.current_stage(), nswfps.workflow[License])
 
@@ -114,7 +114,7 @@ class TestNewSubmissionWorkflow(TestCase):
         self.assertFalse(nswfps.can_proceed_to(
             nswfps.workflow[OptionalMetadata]))
         self.assertFalse(nswfps.can_proceed_to(nswfps.workflow[FinalPreview]))
-        self.assertFalse(nswfps.can_proceed_to(nswfps.workflow[Confirm]))
+        self.assertFalse(nswfps.can_proceed_to(nswfps.workflow.confirmation))
 
         self.assertEqual(nswfps.current_stage(), nswfps.workflow[Policy])
 
@@ -135,7 +135,7 @@ class TestNewSubmissionWorkflow(TestCase):
         self.assertFalse(nswfps.can_proceed_to(
             nswfps.workflow[OptionalMetadata]))
         self.assertFalse(nswfps.can_proceed_to(nswfps.workflow[FinalPreview]))
-        self.assertFalse(nswfps.can_proceed_to(nswfps.workflow[Confirm]))
+        self.assertFalse(nswfps.can_proceed_to(nswfps.workflow.confirmation))
 
         self.assertEqual(nswfps.current_stage(),
                          nswfps.workflow[Classification])
@@ -157,7 +157,7 @@ class TestNewSubmissionWorkflow(TestCase):
         self.assertFalse(nswfps.can_proceed_to(
             nswfps.workflow[OptionalMetadata]))
         self.assertFalse(nswfps.can_proceed_to(nswfps.workflow[FinalPreview]))
-        self.assertFalse(nswfps.can_proceed_to(nswfps.workflow[Confirm]))
+        self.assertFalse(nswfps.can_proceed_to(nswfps.workflow.confirmation))
 
         self.assertEqual(nswfps.current_stage(), nswfps.workflow[CrossList])
 
@@ -179,7 +179,7 @@ class TestNewSubmissionWorkflow(TestCase):
         self.assertFalse(nswfps.can_proceed_to(
             nswfps.workflow[OptionalMetadata]))
         self.assertFalse(nswfps.can_proceed_to(nswfps.workflow[FinalPreview]))
-        self.assertFalse(nswfps.can_proceed_to(nswfps.workflow[Confirm]))
+        self.assertFalse(nswfps.can_proceed_to(nswfps.workflow.confirmation))
 
         self.assertEqual(nswfps.current_stage(), nswfps.workflow[FileUpload])
 
@@ -201,7 +201,7 @@ class TestNewSubmissionWorkflow(TestCase):
         self.assertFalse(nswfps.can_proceed_to(
             nswfps.workflow[OptionalMetadata]))
         self.assertFalse(nswfps.can_proceed_to(nswfps.workflow[FinalPreview]))
-        self.assertFalse(nswfps.can_proceed_to(nswfps.workflow[Confirm]))
+        self.assertFalse(nswfps.can_proceed_to(nswfps.workflow.confirmation))
 
         self.assertEqual(nswfps.current_stage(), nswfps.workflow[Process])
 
@@ -214,7 +214,7 @@ class TestNewSubmissionWorkflow(TestCase):
         self.assertFalse(nswfps.can_proceed_to(
             nswfps.workflow[OptionalMetadata]))
         self.assertFalse(nswfps.can_proceed_to(nswfps.workflow[FinalPreview]))
-        self.assertFalse(nswfps.can_proceed_to(nswfps.workflow[Confirm]))
+        self.assertFalse(nswfps.can_proceed_to(nswfps.workflow.confirmation))
         self.assertEqual(nswfps.current_stage(), nswfps.workflow[Metadata])
                
         submission.metadata = SubmissionMetadata(title="FakeOFakeyDuFakeFake",
@@ -236,7 +236,7 @@ class TestNewSubmissionWorkflow(TestCase):
             nswfps.workflow[OptionalMetadata]))
 
         self.assertFalse(nswfps.can_proceed_to(nswfps.workflow[FinalPreview]))
-        self.assertFalse(nswfps.can_proceed_to(nswfps.workflow[Confirm]))
+        self.assertFalse(nswfps.can_proceed_to(nswfps.workflow.confirmation))
 
         self.assertEqual(nswfps.current_stage(), nswfps.workflow[OptionalMetadata])
 
@@ -245,7 +245,7 @@ class TestNewSubmissionWorkflow(TestCase):
         
         self.assertTrue(nswfps.can_proceed_to(nswfps.workflow[FinalPreview]))
         
-        self.assertFalse(nswfps.can_proceed_to(nswfps.workflow[Confirm]))
+        self.assertFalse(nswfps.can_proceed_to(nswfps.workflow.confirmation))
 
         submission.status = 'submitted'
         nswfps.mark_seen(nswfps.workflow[FinalPreview])
@@ -263,4 +263,4 @@ class TestNewSubmissionWorkflow(TestCase):
         self.assertTrue(nswfps.can_proceed_to(
             nswfps.workflow[OptionalMetadata]))        
         self.assertTrue(nswfps.can_proceed_to(nswfps.workflow[FinalPreview]))
-        self.assertTrue(nswfps.can_proceed_to(nswfps.workflow[Confirm]))
+        self.assertTrue(nswfps.can_proceed_to(nswfps.workflow.confirmation))

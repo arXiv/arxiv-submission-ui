@@ -565,24 +565,24 @@ def confirmation(submission_id: int) -> Response:
 # Other workflows.
 
 
+# Jref is a single controller and not a workflow
 @UI.route('/<int:submission_id>/jref', methods=["GET", "POST"])
 @auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION, authorizer=is_owner,
                         unauthorized=redirect_to_login)
-@flow_control()
 def jref(submission_id: Optional[int] = None) -> Response:
     """Render the JREF submission page."""
     return handle(cntrls.jref.jref, 'submit/jref.html',
-                  'Add journal reference', submission_id, flow_controlled=True)
+                  'Add journal reference', submission_id, flow_controlled=False)
 
 
 @UI.route('/<int:submission_id>/withdraw', methods=["GET", "POST"])
 @auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION, authorizer=is_owner,
                         unauthorized=redirect_to_login)
-@flow_control()
 def withdraw(submission_id: Optional[int] = None) -> Response:
     """Render the withdrawal request page."""
     return handle(cntrls.withdraw.request_withdrawal,
-                  'submit/withdraw.html', 'Request withdrawal', submission_id, flow_controlled=True)
+                  'submit/withdraw.html', 'Request withdrawal',
+                  submission_id, flow_controlled=False)
 
 
 @UI.route('/<int:submission_id>/request_cross', methods=["GET", "POST"])

@@ -14,7 +14,7 @@ from arxiv.submission.domain.event import ConfirmAuthorship
 from arxiv.users import auth, domain
 
 from submit.controllers.ui.new import authorship
-
+from submit.routes.ui.flow_control import get_controllers_desire, STAGE_RESHOW
 
 class TestVerifyAuthorship(TestCase):
     """Test behavior of :func:`.authorship` controller."""
@@ -86,8 +86,8 @@ class TestVerifyAuthorship(TestCase):
                                 submitter_is_author=False)
         mock_load.return_value = (before, [])
         params = MultiDict()
-        with self.assertRaises(BadRequest):
-            authorship.authorship('POST', params, self.session, submission_id)
+        _, code, _ = authorship.authorship('POST', params, self.session, submission_id)
+        self.assertEqual(code, status.OK)
 
     @mock.patch(f'{authorship.__name__}.AuthorshipForm.Meta.csrf', False)
     @mock.patch('arxiv.submission.load')
@@ -98,9 +98,9 @@ class TestVerifyAuthorship(TestCase):
                                 submitter_is_author=False)
         mock_load.return_value = (before, [])
         params = MultiDict({'authorship': authorship.AuthorshipForm.NO})
+        data, code, _ = authorship.authorship('POST', params, self.session, submission_id)        
+        self.assertEqual(code, status.OK)
 
-        with self.assertRaises(BadRequest):
-            authorship.authorship('POST', params, self.session, submission_id)
 
     @mock.patch(f'{authorship.__name__}.AuthorshipForm.Meta.csrf', False)
     @mock.patch('submit.controllers.ui.util.url_for')

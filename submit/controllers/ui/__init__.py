@@ -9,12 +9,6 @@ from arxiv.users.domain import Session
 
 from . import util, jref, withdraw, delete, cross
 
-# BDC34 I don't like this but it is so
-# I can import ui into submit.routes and have routes
-# named things like policy that are mapped to ui.policy
-# If I import submit.controllers.ui.new.policy,
-# then I'm trying to have two functions named policy.
-
 from .new.authorship import authorship
 from .new.classification import classification, cross_list
 from .new.create import create
@@ -57,5 +51,4 @@ def submission_edit(method: str, params: MultiDict, session: Session,
         'submission_id': submission_id,
         'events': submission_events,
     }
-    #
     return advance_to_current((response_data, status.OK, {}))

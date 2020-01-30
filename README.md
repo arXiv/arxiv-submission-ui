@@ -110,7 +110,7 @@ without the hassle of installing the compiler service.
 ## Quick start using arXiv Compiler service (with actual TeX compilation)
 
 There are now multiple converter images that may be configured to compile TeX source.
-Most converter images contains a single TeX tree (to reduce size) along with one
+Most converter images contain a single TeX tree (to reduce size) along with one
 very large converter image that contains the complete set of all arXiv TeX trees (14.5G).
 At the current time you may configure a single converter image to compile TeX sources.
 

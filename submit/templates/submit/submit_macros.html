@@ -13,7 +13,12 @@
   <nav class="submit-pagination is-hidden-mobile" aria-labelledby="progress">
     <p class="sr-only" id="progress">Steps in Submission Process</p>
     <ul class="progressbar">
+        {% if this_stage %}
         {% set before = workflow.workflow.order[:workflow.index(this_stage)] %}
+        {% else %}
+        {% set before = [] %}
+        {% endif %}
+
         {% for stage in workflow.workflow %}
         {% set earlier = stage in before %}
         <li class="{% if earlier or this_stage == stage %}is-complete{% endif %} 

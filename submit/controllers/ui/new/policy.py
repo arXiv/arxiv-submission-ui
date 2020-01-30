@@ -19,9 +19,9 @@ from arxiv.submission import save, SaveError
 from arxiv.submission.domain.event import ConfirmPolicy
 
 from submit.util import load_submission
-from submit.controllers.ui.util import validate_command, user_and_client_from_session
-
-logger = logging.getLogger(__name__)  # pylint: disable=C0103
+from submit.routes.ui.flow_control import ready_for_next, stay_on_this_stage
+from submit.controllers.ui.util import validate_command, \
+    user_and_client_from_session
 
 Response = Tuple[Dict[str, Any], int, Dict[str, Any]]  # pylint: disable=C0103
 
@@ -30,8 +30,6 @@ def policy(method: str, params: MultiDict, session: Session,
            submission_id: int, **kwargs) -> Response:
     """Convert policy form data into an `ConfirmPolicy` event."""
     submitter, client = user_and_client_from_session(session)
-
-    logger.debug(f'method: {method}, submission: {submission_id}. {params}')
     submission, submission_events = load_submission(submission_id)
 
     if method == 'GET' and submission.submitter_accepts_policy:
@@ -44,26 +42,46 @@ def policy(method: str, params: MultiDict, session: Session,
         'submission': submission
     }
 
-    if method == 'POST':
-        if not form.validate():
-            raise BadRequest(response_data)
+    #     if method == 'POST':
+    #     if not form.validate():
+    #         raise BadRequest(response_data)
 
-        logger.debug('Form is valid, with data: %s', str(form.data))
+    #     logger.debug('Form is valid, with data: %s', str(form.data))
 
+    #     accept_policy = form.policy.data
+    #     if accept_policy and not submission.submitter_accepts_policy:
+    #         command = ConfirmPolicy(creator=submitter, client=client)
+    #         if not validate_command(form, command, submission, 'policy'):
+    #             raise BadRequest(response_data)
+
+    #         try:
+    #             submission, _ = save(command, submission_id=submission_id)
+    #         except SaveError as e:
+    #             raise InternalServerError(response_data) from e
+    #         response_data['submission'] = submission
+
+    #     if params.get('action') in ['previous', 'save_exit', 'next']:
+    #         return response_data, status.SEE_OTHER, {}
+    # return response_data, status.OK, {}
+
+    if method == 'POST' and form.validate():
         accept_policy = form.policy.data
         if accept_policy and not submission.submitter_accepts_policy:
             command = ConfirmPolicy(creator=submitter, client=client)
-            if not validate_command(form, command, submission, 'policy'):
-                raise BadRequest(response_data)
-
-            try:
-                submission, _ = save(command, submission_id=submission_id)
-            except SaveError as e:
-                raise InternalServerError(response_data) from e
-            response_data['submission'] = submission
-
-        if params.get('action') in ['previous', 'save_exit', 'next']:
-            return response_data, status.SEE_OTHER, {}
+            if validate_command(form, command, submission, 'policy'):
+                try:
+                    submission, _ = save(command, submission_id=submission_id)
+                    response_data['submission'] = submission
+                    return ready_for_next((response_data, status.OK, {}))
+                except SaveError as e:
+                    raise InternalServerError(response_data) from e
+            else:
+                return stay_on_this_stage((response_data, status.OK, {}))
+        else:
+            return stay_on_this_stage((response_data, status.OK, {}))
+    else:
+        return stay_on_this_stage((response_data, status.OK, {}))
+        
     return response_data, status.OK, {}
 
 

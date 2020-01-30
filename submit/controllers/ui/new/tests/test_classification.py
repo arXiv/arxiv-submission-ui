@@ -88,13 +88,9 @@ class TestClassification(TestCase):
                                 is_announced=False, version=1, arxiv_id=None)
         mock_load.return_value = (before, [])
 
-        try:
-            classification.classification('POST', MultiDict(), self.session,
-                                          submission_id)
-            self.fail('BadRequest not raised')
-        except BadRequest as e:
-            data = e.description
-            self.assertIsInstance(data['form'], Form, "Data includes a form")
+        data, _, _ = classification.classification('POST', MultiDict(), self.session,
+                                                   submission_id)
+        self.assertIsInstance(data['form'], Form, "Data includes a form")
 
     @mock.patch(f'{classification.__name__}.ClassificationForm.Meta.csrf',
                 False)
@@ -111,13 +107,9 @@ class TestClassification(TestCase):
 
         params = MultiDict({'category': 'astro-ph'})  # <- expired
 
-        try:
-            classification.classification('POST', params, self.session,
-                                          submission_id)
-            self.fail('BadRequest not raised')
-        except BadRequest as e:
-            data = e.description
-            self.assertIsInstance(data['form'], Form, "Data includes a form")
+        data, _, _ = classification.classification('POST', params, self.session,
+                                                   submission_id)        
+        self.assertIsInstance(data['form'], Form, "Data includes a form")
 
     @mock.patch(f'{classification.__name__}.ClassificationForm.Meta.csrf',
                 False)
@@ -224,13 +216,9 @@ class TestCrossList(TestCase):
                                 is_announced=False, version=1, arxiv_id=None)
         mock_load.return_value = (before, [])
 
-        try:
-            classification.cross_list('POST', MultiDict(), self.session,
-                                      submission_id)
-            self.fail('BadRequest not raised')
-        except BadRequest as e:
-            data = e.description
-            self.assertIsInstance(data['form'], Form, "Data includes a form")
+        data, _, _ = classification.cross_list('POST', MultiDict(), self.session,
+                                               submission_id)
+        self.assertIsInstance(data['form'], Form, "Data includes a form")
 
     @mock.patch(f'{classification.__name__}.ClassificationForm.Meta.csrf',
                 False)
@@ -247,13 +235,9 @@ class TestCrossList(TestCase):
         mock_load.return_value = (before, [])
         mock_save.return_value = (before, [])
         params = MultiDict({'category': 'astro-ph'})  # <- expired
-        try:
-            classification.classification('POST', params, self.session,
-                                          submission_id)
-            self.fail('BadRequest not raised')
-        except BadRequest as e:
-            data = e.description
-            self.assertIsInstance(data['form'], Form, "Data includes a form")
+        data, _, _ = classification.classification('POST', params, self.session,
+                                                   submission_id)        
+        self.assertIsInstance(data['form'], Form, "Data includes a form")
 
     @mock.patch(f'{classification.__name__}.ClassificationForm.Meta.csrf',
                 False)

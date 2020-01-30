@@ -15,6 +15,7 @@ from arxiv.users import auth, domain
 
 from submit.controllers.ui.new import license
 
+from submit.routes.ui.flow_control import get_controllers_desire, STAGE_SUCCESS
 
 class TestSetLicense(TestCase):
     """Test behavior of :func:`.license` controller."""
@@ -83,12 +84,8 @@ class TestSetLicense(TestCase):
         mock_load.return_value = (
             mock.MagicMock(submission_id=submission_id), []
         )
-        try:
-            license.license('POST', MultiDict(), self.session, submission_id)
-            self.fail('BadRequest not raised')
-        except BadRequest as e:
-            data = e.description
-            self.assertIsInstance(data['form'], Form, "Data includes a form")
+        data, _, _ = license.license('POST', MultiDict(), self.session, submission_id)
+        self.assertIsInstance(data['form'], Form, "Data includes a form")
 
     @mock.patch(f'{license.__name__}.LicenseForm.Meta.csrf', False)
     @mock.patch('submit.controllers.ui.util.url_for')
@@ -111,7 +108,7 @@ class TestSetLicense(TestCase):
         })
         data, code, headers = license.license('POST', form_data, self.session,
                                               submission_id)
-        self.assertEqual(code, status.SEE_OTHER, "Returns redirect")
+        self.assertEqual(get_controllers_desire(data), STAGE_SUCCESS)
 
     @mock.patch(f'{license.__name__}.LicenseForm.Meta.csrf', False)
     @mock.patch('submit.controllers.ui.util.url_for')

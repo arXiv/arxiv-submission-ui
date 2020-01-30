@@ -1,116 +1,312 @@
-"""Utilities for routes."""
+"""Handles which UI route to proceeded in submission workflows."""
 
 from http import HTTPStatus as status
 from functools import wraps
-from typing import Optional, Callable, Union
+from typing import Optional, Callable, Union, Dict, Tuple
+from typing_extensions import Literal
 
-from flask import request, redirect, url_for, session
+from flask import request, redirect, url_for, session, make_response
 from flask import Response as FResponse
 from werkzeug import Response as WResponse
-from werkzeug.exceptions import BadRequest
+from werkzeug.exceptions import InternalServerError, BadRequest
 
 from arxiv.base import alerts, logging
-from arxiv.base.globals import get_application_global
 from arxiv.submission.domain import Submission
 
-from .workflow import Stage, Workflow, SubmissionWorkflow, \
-    ReplacementWorkflow, BaseStage
-from ...util import load_submission
+from submit.workflow import SubmissionWorkflow, ReplacementWorkflow
+from submit.workflow.stages import Stage
+from submit.workflow.processor import WorkflowProcessor
+
+from submit.controllers.ui.util import Response as CResponse
+from submit.util import load_submission
+
 
 logger = logging.getLogger(__name__)
 
 EXIT = 'ui.create_submission'
 
+PREVIOUS = 'previous'
+NEXT = 'next'
+SAVE_EXIT = 'save_exit'
+
+
+FlowDecision = Literal['SHOW_CONTROLLER_RESULT', 'REDIRECT_EXIT',
+                       'REDIRECT_PREVIOUS', 'REDIRECT_NEXT',
+                       'REDIRECT_PARENT_STAGE']
+
+
 Response = Union[FResponse, WResponse]
 
+# might need RESHOW_FORM
+FlowAction = Literal['prevous','next','save_exit']
+FlowResponse = Tuple[FlowAction, Response]
 
-def get_workflow(submission: Optional[Submission]) -> Workflow:
+ControllerDesires = Literal['stage_success', 'stage_reshow', 'stage_current', 'stage_parent']
+STAGE_SUCCESS: ControllerDesires = 'stage_success'
+STAGE_RESHOW: ControllerDesires = 'stage_reshow'
+STAGE_CURRENT: ControllerDesires = 'stage_current'
+STAGE_PARENT: ControllerDesires = 'stage_parent'
+
+def ready_for_next(response: CResponse) -> CResponse:
+    """Mark the result from a controller being ready to move to the
+    next stage"""
+    response[0].update({'flow_control_from_controller': STAGE_SUCCESS})
+    return response
+
+
+def stay_on_this_stage(response: CResponse) -> CResponse:
+    """Mark the result from a controller as should return to the same stage."""
+    response[0].update({'flow_control_from_controller': STAGE_RESHOW})
+    return response
+
+
+def advance_to_current(response: CResponse) -> CResponse:
+    """Mark the result from a controller as should return to the same stage."""
+    response[0].update({'flow_control_from_controller': STAGE_CURRENT})
+    return response
+
+
+def return_to_parent_stage(response: CResponse) -> CResponse:
+    """Mark the result from a controller as should return to the parent stage.
+    Such as delete_file to the FileUpload stage."""
+    response[0].update({'flow_control_from_controller': STAGE_PARENT})
+    return response
+
+
+def get_controllers_desire(data: Dict) -> Optional[ControllerDesires]:
+    return data.get('flow_control_from_controller', None)
+
+# PLAN:
+# define obj to return 4 tuples
+# use that in controllers
+# in routes.ui.ui.handler,
+# check for len(resp) == 4 and handle flow
+# or
+# len(resp) == 3 and do normal flask stuff./
+
+    # We know: Method [GET, POST]
+    #          action [ PREVIOUS, SAVE_EXIT, NEXT, NONE? ]
+    #          response.status [ OK, SEE_OTHER, BAD_REQUEST ]
+
+    # We can distinguish:   (Method, action, status)
+    # Just get the form:       GET,  None,     OK
+    # Reshow on form invalid:  POST, NEXT,     BAD_REQUEST
+    # Saved and Next step:     POST, NEXT,     OK
+    # Reshow form (cross add): POST, None,     OK
+    # Save and exit:           POST, SAVE_EXIT, OK
+    # Save and exit invalid:   POST, SAVE_EXIT, BAD_REQUEST
+    # go back:                 POST, PREVIOUS, ANY
+
+
+def endpoint_name() -> Optional[str]:
+    """Get workflow compatable endpoint name from request"""
+    if request.url_rule is None:
+        return None
+    endpoint = request.url_rule.endpoint
+    if '.' in endpoint:
+        _, endpoint = endpoint.split('.', 1)
+    return str(endpoint)
+
+
+def get_seen() -> Dict[str, bool]:
+    """Get seen steps from user session."""
+    # TODO Fix seen to handle mutlipe submissions at the same time
+    return session.get('steps_seen', {})  # type: ignore   We know this is a dict.
+
+
+def put_seen(seen: Dict[str, bool]) -> None:
+    """Put the seen steps into the users session."""
+    # TODO Fix seen to handle mutlipe submissions at the same time
+    session['steps_seen'] = seen
+
+
+def get_workflow(submission: Optional[Submission]) -> WorkflowProcessor:
+    """Guesses the workflow based on the submission and its version."""
     if submission is not None and submission.version > 1:
-        return ReplacementWorkflow(submission, session)
-    return SubmissionWorkflow(submission, session)
+        return WorkflowProcessor(ReplacementWorkflow, submission, get_seen())
+    return WorkflowProcessor(SubmissionWorkflow, submission, get_seen())
 
 
-def to_stage(_: Workflow, stage: BaseStage, ident: str) -> Response:
+def to_stage(stage: Optional[Stage], ident: str) -> Response:
+    """Return a flask redirect to Stage."""
     if stage is None:
         return redirect(url_for('ui.create_submission'), code=status.SEE_OTHER)
     loc = url_for(f'ui.{stage.endpoint}', submission_id=ident)
     return redirect(loc, code=status.SEE_OTHER)
 
 
-def to_previous(workflow: Workflow, stage: BaseStage, ident: str) -> Response:
-    return to_stage(workflow, workflow.previous_stage(stage), ident)
+def to_previous(wfs: WorkflowProcessor, stage: Stage, ident: str) -> Response:
+    """Return a flask redirect to the previous stage."""
+    return to_stage(wfs.workflow.previous_stage(stage), ident)
 
 
-def to_next(workflow: Workflow, stage: BaseStage, ident: str) -> Response:
-    return to_stage(workflow, workflow.next_stage(stage), ident)
+def to_next(wfs: WorkflowProcessor, stage: Stage, ident: str) -> Response:
+    """Return a flask redirect to the next stage."""
+    if stage is None:
+        return to_current(wfs,ident)
+    else:
+        return to_stage(wfs.next_stage(stage), ident)
 
 
-def to_current(workflow: Workflow, _: BaseStage, ident: str,
-               flash: bool = True) -> Response:
-    next_stage = workflow.current_stage
-    if flash:
+def to_current(wfs: WorkflowProcessor, ident: str, flash: bool = True) -> Response:
+    """Return a flask redirect to the stage required by the workflow."""
+    next_stage = wfs.current_stage()
+    if flash and next_stage is not None:
         alerts.flash_warning(f'Please {next_stage.label} before proceeding.')
-    return to_stage(workflow, next_stage, ident)
+    return to_stage(next_stage, ident)
 
 
-def flow_control(this_stage: Stage, exit: str = EXIT) -> Callable:
-    """Get a decorator that handles redirection to next/previous steps."""
-    PREVIOUS = 'previous'
-    NEXT = 'next'
-    SAVE_EXIT = 'save_exit'
+# TODO QUESTION: Can we just wrap the controller and not
+# do the decorate flask route to wrap the controller?
+# Answer: Not sure, @wraps saves the function name which might
+# be done for debugging.
 
-    def deco(func: Callable) -> Callable:
-        """Decorate func with workflow redirection."""
-        @wraps(func)
+
+def flow_control(blueprint_this_stage: Optional[Stage] = None, exit: str = EXIT) -> Callable:
+    """Get a blueprint route decorator that wraps a controller to
+    handle redirection to next/previous steps.
+
+
+    Parameters
+    ----------
+
+    blueprint_this_stage :
+    The mapping of the Stage to blueprint is in the Stage. So,
+    usually, this will be None and the stage will be determined from
+    the context by checking the submission and route. If passed, this
+    will be used as the stage for controlling the flow of the wrapped
+    controller. This will allow a auxilrary route to be used with a
+    stage, ex delete_all_files route for the stage FileUpload.
+
+    exit:
+    Route to redirect to when user selectes exit action.
+
+    """
+    def route(controller: Callable) -> Callable:
+        """Decorate blueprint route so that it wrapps the controller with
+        workflow redirection."""        
+        # controler gets 'updated' to look like wrapper but keeps
+        # name and docstr
+        # https://docs.python.org/2/library/functools.html#functools.wraps
+        @wraps(controller)
         def wrapper(submission_id: str) -> Response:
             """Update the redirect to the next, previous, or exit page."""
-            action = request.form.get('action')
+
+            logger.debug('here in wrapper')
+#            import pdb; pdb.set_trace()
+            action = request.form.get('action', None)
             submission, _ = load_submission(submission_id)
-            workflow = get_workflow(submission)
+            workflow = request.workflow
+            this_stage = blueprint_this_stage or \
+                workflow.workflow[endpoint_name()]
 
-            if workflow.complete and not this_stage == workflow.confirmation:
-                return to_stage(workflow, workflow.confirmation, submission_id)
+            # convert classes, ints and strs to actual instances
+            this_stage = workflow.workflow[this_stage]
+            
+            if workflow.is_complete() and \
+               not this_stage == workflow.workflow.confirmation:
+                return to_stage(workflow.workflow.confirmation, submission_id)
 
-            # try:
             if not workflow.can_proceed_to(this_stage):
-                return to_current(workflow, this_stage, submission_id)
-
-            # except ValueError:
-            #     raise BadRequest('Request not allowed for this submission')
-
-            # Mark the previous state as seen.
-            if workflow.previous_stage(this_stage):
-                workflow.mark_seen(workflow.previous_stage(this_stage))
-
-            # If the user has proceeded past an optional stage, consider it
-            # to be seen.
-            if not workflow.is_required(workflow.previous_stage(this_stage)) \
-                    and workflow.previous_stage(this_stage) is not None:
-                workflow.mark_seen(workflow.previous_stage(this_stage))
+                return to_current(workflow, submission_id)
 
             # If the user selects "go back", we attempt to save their input
             # above. But if the input does not validate, we don't prevent them
             # from going to the previous step.
             try:
-                response = func(submission_id)
+                data, code, headers, resp_fn = controller(submission_id)
             except BadRequest:
                 if action == PREVIOUS:
                     return to_previous(workflow, this_stage, submission_id)
                 raise
-            if action == PREVIOUS and \
-                    response.status_code == status.BAD_REQUEST:
-                return to_previous(workflow, this_stage, submission_id)
+            
+            workflow.mark_seen(this_stage)
+            put_seen(workflow.seen)
 
-            # Intercept redirection and route based on workflow.
-            if response.status_code == status.SEE_OTHER:
-                workflow.mark_seen(this_stage)
-                if action == NEXT:
-                    return to_next(workflow, this_stage, submission_id)
-                elif action == PREVIOUS:
-                    return to_previous(workflow, this_stage, submission_id)
-                elif action == SAVE_EXIT:
-                    return redirect(url_for(exit),
-                                    code=status.SEE_OTHER)
-            return response    # No redirect; nothing to do.
+            controller_action = get_controllers_desire(data)
+            flow_desc = flow_decision(request.method, action, code, controller_action)
+            logger.debug(f'method: {request.method} action: {action}, code: {code}, controller action: {controller_action}')
+            logger.debug(f'flow decisions is {flow_desc}')
+            
+            if flow_desc == 'SHOW_CONTROLLER_RESULT':
+                return resp_fn()
+            if flow_desc == 'REDIRECT_EXIT':
+                return redirect(url_for(exit), code=status.SEE_OTHER)
+            if flow_desc == 'REDIRECT_NEXT':
+#                import pdb; pdb.set_trace()
+                return to_next(workflow, this_stage, submission_id)
+            if flow_desc == 'REDIRECT_PREVIOUS':
+                return to_previous(workflow, this_stage, submission_id)
+            if flow_desc == 'REDIRECT_PARENT_STAGE':
+                return to_stage(this_stage, submission_id)
+            else:
+                raise ValueError(f'flow_desc must be of type FlowDecision but was {flow_desc}')
+
         return wrapper
-    return deco
+    return route
+
+
+def flow_decision(method: str, user_action: Optional[str], code: int, controller_action: Optional[ControllerDesires]) -> FlowDecision:
+    # For now with GET we do the same sort of things
+    if method == 'GET' and controller_action == STAGE_CURRENT:
+        return 'REDIRECT_NEXT'
+    if (method == 'GET' and code == 200) or \
+       (method == 'GET' and controller_action == STAGE_RESHOW):
+        return 'SHOW_CONTROLLER_RESULT'
+    if method == 'GET' and code != status.OK:
+        return 'SHOW_CONTROLLER_RESULT'  # some sort of error?
+
+    if method != 'POST':
+        return 'SHOW_CONTROLLER_RESULT'  # Not sure, HEAD? PUT? Likely need to fix with Upload
+
+    #  after this point method must be POST
+    if controller_action == STAGE_SUCCESS:
+        if user_action == NEXT:
+            return 'REDIRECT_NEXT'
+        if user_action == SAVE_EXIT:
+            return 'REDIRECT_EXIT'
+        if user_action == PREVIOUS:
+            return 'REDIRECT_PREVIOUS'
+        if user_action == None:  #case of something like cross_list with action ADD?
+            return 'SHOW_CONTROLLER_RESULT'
+        
+    if controller_action == STAGE_RESHOW:
+        if user_action == NEXT:
+            # Reshow the form to the due to form errors
+            return 'SHOW_CONTROLLER_RESULT'
+        if user_action == PREVIOUS:
+            # User wants to go back but there are errors on the form
+            # We ignore the errors and go back.  The user's form input
+            # is probably lost.
+            return 'REDIRECT_PREVIOUS'
+        if user_action == SAVE_EXIT:
+            return 'REDIRECT_EXIT'
+
+    if controller_action == STAGE_PARENT:        
+        # This is what we get from a sub-form like upload_delete.delete_file
+        # on success. Redirect to parent stage.
+        return 'REDIRECT_PARENT_STAGE'
+
+    # These are the same as if the controller_action was STAGE_SUCCESS
+    # Not sure if that is a good thing or a bad thing.
+    if user_action == NEXT:
+        return 'REDIRECT_NEXT'
+    if user_action == SAVE_EXIT:
+        return 'REDIRECT_EXIT'
+    if user_action == PREVIOUS:
+        return 'REDIRECT_PREVIOUS'
+    # default to what?
+    return 'SHOW_CONTROLLER_RESULT'
+
+
+    # We know: Method [GET, POST]
+    #          action [ PREVIOUS, SAVE_EXIT, NEXT, NONE? ]
+    #          response.status [ OK, SEE_OTHER, BAD_REQUEST ]
+    # We can distinguish:   (Method, action, status)        result             problem?
+    # Just get the form:       GET,  None,     OK            show resp          no
+    # Reshow on form invalid:  POST, NEXT,     BAD_REQUEST   show resp          YES: need to get rid of bad_request
+    # Saved and Next step:     POST, NEXT,     OK            redirect           no
+    # Reshow form (cross add): POST, None,     OK            show resp          no
+    # Save and exit:           POST, SAVE_EXIT, OK           redirect           no
+    # Save and exit invalid:   POST, SAVE_EXIT, BAD_REQUEST  show form          Yes: need to get rid of bad_request
+    # go back:                 POST, PREVIOUS, OK or BAD_R   redirect           Yes: need to get rid of bad_request

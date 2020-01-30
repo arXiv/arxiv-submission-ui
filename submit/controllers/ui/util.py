@@ -1,10 +1,11 @@
 """Helpers for controllers."""
 
-from typing import Callable, Any, Dict, Tuple, Optional, List
+from typing import Callable, Any, Dict, Tuple, Optional, List, Union
+from http import HTTPStatus as status
 
 from werkzeug import MultiDict
 from werkzeug.exceptions import InternalServerError, NotFound, BadRequest
-from flask import url_for
+from flask import url_for, Markup
 
 from wtforms.widgets import ListWidget, CheckboxInput, Select, HTMLString, \
     html_params
@@ -155,3 +156,16 @@ def user_and_client_from_session(session: Session) \
         endorsements=session.authorizations.endorsements
     )
     return user, None
+
+
+def add_immediate_alert(context: dict, severity: str,
+                        message: Union[str, dict], title: Optional[str] = None,
+                        dismissable: bool = True, safe: bool = False) -> None:
+    """Add an alert for immediate display."""
+    if safe and isinstance(message, str):
+        message = Markup(message)
+    data = {'message': message, 'title': title, 'dismissable': dismissable}
+
+    if 'immediate_alerts' not in context:
+        context['immediate_alerts'] = []
+    context['immediate_alerts'].append((severity, data))

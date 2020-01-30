@@ -19,9 +19,10 @@ from arxiv.submission import save, SaveError
 from arxiv.submission.domain.event import ConfirmContactInformation
 
 from submit.util import load_submission
-from submit.controllers.ui.util import validate_command, user_and_client_from_session
-
-
+from submit.controllers.ui.util import validate_command, \
+    user_and_client_from_session
+from submit.routes.ui.flow_control import ready_for_next, stay_on_this_stage
+    
 logger = logging.getLogger(__name__)    # pylint: disable=C0103
 
 Response = Tuple[Dict[str, Any], int, Dict[str, Any]]   # pylint: disable=C0103
@@ -54,29 +55,22 @@ def verify(method: str, params: MultiDict, session: Session,
         'user': session.user,   # We want the most up-to-date representation.
     }
 
-    if method == 'POST':
-        if not (form.validate() and form.verify_user.data):
-            # Either the form data were invalid, or the user did not check the
-            # "verify" box.
-            raise BadRequest(response_data)
-
-        logger.debug(f'Form is valid: {form.verify_user.data}')
-
+    if method == 'POST' and form.validate() and form.verify_user.data:
         # Now that we have a submission, we can verify the user's contact
         # information. There is no need to do this more than once.
-        if not submission.submitter_contact_verified:
+        if submission.submitter_contact_verified:
+            return ready_for_next((response_data, status.OK,{}))
+        else:
             cmd = ConfirmContactInformation(creator=submitter, client=client)
-            if not validate_command(form, cmd, submission, 'verify_user'):
-                raise BadRequest(response_data)
+            if validate_command(form, cmd, submission, 'verify_user'):
+                try:
+                    submission, _ = save(cmd, submission_id=submission_id)
+                    response_data['submission'] = submission
+                    return ready_for_next((response_data, status.OK, {}))
+                except SaveError as ex:
+                    raise InternalServerError(response_data) from ex
 
-            try:
-                submission, _ = save(cmd, submission_id=submission_id)
-            except SaveError as e:
-                raise InternalServerError(response_data) from e
-            response_data['submission'] = submission
-
-        return response_data, status.SEE_OTHER, {}
-    return response_data, status.OK, {}
+    return stay_on_this_stage((response_data, status.OK, {}))
 
 
 class VerifyUserForm(csrf.CSRFForm):

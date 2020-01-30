@@ -16,7 +16,10 @@ from arxiv.submission.domain.uploads import Upload, FileStatus, FileError, \
 from arxiv.submission.services import filemanager
 
 from submit.controllers.ui.new import upload
+from submit.controllers.ui.new import upload_delete
 
+from submit.routes.ui.flow_control import STAGE_SUCCESS, \
+    get_controllers_desire, STAGE_RESHOW
 
 class TestUpload(TestCase):
     """Tests for :func:`submit.controllers.upload`."""
@@ -176,10 +179,13 @@ class TestUpload(TestCase):
         params = MultiDict({})
         mock_file = mock.MagicMock()
         files = MultiDict({'file': mock_file})
-        _, code, _ = upload.upload_files('POST', params, self.session,
-                                         submission_id, files=files,
-                                         token='footoken')
-        self.assertEqual(code, status.SEE_OTHER, 'Returns 303')
+        data, code, _ = upload.upload_files('POST', params, self.session,
+                                            submission_id, files=files,
+                                            token='footoken')
+        
+        self.assertEqual(code, status.OK)        
+        self.assertEqual(get_controllers_desire(data), STAGE_RESHOW,
+                         'Successful upload and reshow form')
         self.assertEqual(mock_fm.add_file.call_count, 1,
                          'Calls the file management service')
         self.assertTrue(mock_filemanager.add_file.called_with(mock_file))
@@ -218,8 +224,8 @@ class TestDelete(TestCase):
             )
         )
 
-    @mock.patch(f'{upload.__name__}.DeleteFileForm.Meta.csrf', False)
-    @mock.patch(f'{upload.__name__}.Filemanager')
+    @mock.patch(f'{upload_delete.__name__}.DeleteFileForm.Meta.csrf', False)
+    @mock.patch(f'{upload_delete.__name__}.Filemanager')
     @mock.patch('arxiv.submission.load')
     def test_get_delete(self, mock_load, mock_filemanager):
         """GET request to delete a file."""
@@ -240,15 +246,15 @@ class TestDelete(TestCase):
         )
         file_path = 'anc/foo.jpeg'
         params = MultiDict({'path': file_path})
-        data, code, _ = upload.delete('GET', params, self.session,
-                                      submission_id, 'footoken')
+        data, code, _ = upload_delete.delete_file('GET', params, self.session,
+                                                  submission_id, 'footoken')
         self.assertEqual(code, status.OK, "Returns 200 OK")
         self.assertIn('form', data, "Returns a form in response")
         self.assertEqual(data['form'].file_path.data, file_path, 'Path is set')
 
-    @mock.patch(f'{upload.__name__}.alerts', mock.MagicMock())
-    @mock.patch(f'{upload.__name__}.DeleteFileForm.Meta.csrf', False)
-    @mock.patch(f'{upload.__name__}.Filemanager')
+    @mock.patch(f'{upload_delete.__name__}.alerts', mock.MagicMock())
+    @mock.patch(f'{upload_delete.__name__}.DeleteFileForm.Meta.csrf', False)
+    @mock.patch(f'{upload_delete.__name__}.Filemanager')
     @mock.patch('arxiv.submission.load')
     def test_post_delete(self, mock_load, mock_filemanager):
         """POST request to delete a file without confirmation."""
@@ -270,16 +276,16 @@ class TestDelete(TestCase):
         file_path = 'anc/foo.jpeg'
         params = MultiDict({'file_path': file_path})
         try:
-            upload.delete('POST', params, self.session, submission_id, 'tok')
+            upload_delete.delete_file('POST', params, self.session, submission_id, 'tok')
         except BadRequest as e:
             data = e.description
             self.assertIn('form', data, "Returns a form in response")
 
-    @mock.patch(f'{upload.__name__}.alerts', mock.MagicMock())
-    @mock.patch(f'{upload.__name__}.DeleteFileForm.Meta.csrf', False)
-    @mock.patch(f'{upload.__name__}.url_for')
-    @mock.patch(f'{upload.__name__}.Filemanager')
-    @mock.patch(f'{upload.__name__}.save')
+    @mock.patch(f'{upload_delete.__name__}.alerts', mock.MagicMock())
+    @mock.patch(f'{upload_delete.__name__}.DeleteFileForm.Meta.csrf', False)
+    @mock.patch(f'{upload_delete.__name__}.url_for')
+    @mock.patch(f'{upload_delete.__name__}.Filemanager')
+    @mock.patch(f'{upload_delete.__name__}.save')
     @mock.patch('arxiv.submission.load')
     def test_post_delete_confirmed(self, mock_load, mock_save,
                                    mock_filemanager, mock_url_for):
@@ -318,10 +324,11 @@ class TestDelete(TestCase):
         )
         file_path = 'anc/foo.jpeg'
         params = MultiDict({'file_path': file_path, 'confirmed': True})
-        _, code, _ = upload.delete('POST', params, self.session, submission_id,
-                                   'footoken')
+        data, code, _ = upload_delete.delete_file('POST', params, self.session, submission_id,
+                                               'footoken')
         self.assertTrue(
             mock_filemanager.delete_file.called_with(upload_id, file_path),
             "Delete file method of file manager service is called"
         )
-        self.assertEqual(code, status.SEE_OTHER, "Returns See Other")
+        self.assertEqual(code, status.OK)
+        self.assertTrue(get_controllers_desire(data), STAGE_SUCCESS)

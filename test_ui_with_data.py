@@ -39,7 +39,8 @@ from arxiv.users.auth import scopes
 from arxiv.users.domain import Category
 from http import HTTPStatus as status
 
-import submit.routes.ui.workflow as workflow
+import submit.workflow as workflow
+import submit.workflow.stages as stages
 
 class GetStageFailed(RuntimeError):
     """Failed to get a stage."""
@@ -88,7 +89,7 @@ def run_test_case(endpoint, datum, headers={}):
     submission_id = create_submission(endpoint, headers)
     prior_endpoint = None
     result = OrderedDict()
-    for stage in [type(stage) for stage in workflow.SubmissionWorkflow.ORDER]:
+    for stage in [type(stage) for stage in workflow.SubmissionWorkflow.order]:
         # print(stage)
         if stage in data_getters:
             try:
@@ -380,31 +381,31 @@ def get_process_data(datum):
 
 
 data_getters = {
-    workflow.VerifyUser: get_verify_user_data,
-    workflow.Authorship: get_authorship_data,
-    workflow.License: get_license_data,
-    workflow.Policy: get_policy_data,
-    workflow.Classification: get_primary_classification_data,
-    workflow.CrossList: lambda datum: ({}, {}),
-    workflow.FileUpload: get_file_upload_data,
-    workflow.Process: get_process_data,
-    workflow.Metadata: get_metadata_data,
-    workflow.OptionalMetadata: get_optional_metadata_data,
-    workflow.FinalPreview: get_final_preview_data
+    stages.VerifyUser: get_verify_user_data,
+    stages.Authorship: get_authorship_data,
+    stages.License: get_license_data,
+    stages.Policy: get_policy_data,
+    stages.Classification: get_primary_classification_data,
+    stages.CrossList: lambda datum: ({}, {}),
+    stages.FileUpload: get_file_upload_data,
+    stages.Process: get_process_data,
+    stages.Metadata: get_metadata_data,
+    stages.OptionalMetadata: get_optional_metadata_data,
+    stages.FinalPreview: get_final_preview_data
 }
 
 test_runners = {
-    workflow.VerifyUser: test_stage,
-    workflow.Authorship: test_stage,
-    workflow.License: test_stage,
-    workflow.Policy: test_stage,
-    workflow.Classification: test_stage,
-    workflow.CrossList: test_stage,
-    workflow.FileUpload: test_upload,
-    workflow.Process: test_compile,
-    workflow.Metadata: test_stage,
-    workflow.OptionalMetadata: test_stage,
-    workflow.FinalPreview: test_stage
+    stages.VerifyUser: test_stage,
+    stages.Authorship: test_stage,
+    stages.License: test_stage,
+    stages.Policy: test_stage,
+    stages.Classification: test_stage,
+    stages.CrossList: test_stage,
+    stages.FileUpload: test_upload,
+    stages.Process: test_compile,
+    stages.Metadata: test_stage,
+    stages.OptionalMetadata: test_stage,
+    stages.FinalPreview: test_stage
 }
 
 

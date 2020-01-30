@@ -15,7 +15,7 @@ from arxiv.users.domain import Session
 
 from submit.controllers.ui.util import Response, user_and_client_from_session, validate_command
 from submit.util import load_submission
-
+from submit.routes.ui.flow_control import ready_for_next, stay_on_this_stage
 
 class UnsubmitForm(csrf.CSRFForm):
     """Form for unsubmitting a submission."""
@@ -55,4 +55,5 @@ def unsubmit(method: str, params: MultiDict, session: Session,
             redirect = url_for('ui.create_submission')
             return {}, status.SEE_OTHER, {'Location': redirect}
         response_data.update({'form': form})
+        # TODO not updated to non-BadRequest convention
         raise BadRequest(response_data)

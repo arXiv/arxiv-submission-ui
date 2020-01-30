@@ -186,8 +186,12 @@ class TestSubmissionWorkflow(TestCase):
         # Submit the cross-list category page.
         response = self.client.post(next_page.path,
                                     data={'category': 'astro-ph.CO',
-                                          'action': 'next',
                                           'csrf_token': token},
+                                    headers=self.headers)
+        self.assertEqual(response.status_code, status.OK)
+
+        response = self.client.post(next_page.path,
+                                    data={'action':'next'},
                                     headers=self.headers)
         self.assertEqual(response.status_code, status.SEE_OTHER)
 
@@ -621,7 +625,7 @@ class TestWithdrawalWorkflow(TestCase):
                         'csrf_token': token}
         response = self.client.post(endpoint, data=request_data,
                                     headers=self.headers)
-        self.assertEqual(response.status_code, status.BAD_REQUEST)
+        self.assertEqual(response.status_code, status.OK)
         token = self._parse_csrf_token(response)
 
         # Set the withdrawal reason to something reasonable (ha).

@@ -25,6 +25,7 @@ from submit.util import load_submission
 from submit.controllers.ui.util import user_and_client_from_session, validate_command
 
 # from arxiv-submission-core.events.event import ConfirmContactInformation
+from submit.routes.ui.flow_control import ready_for_next, stay_on_this_stage
 
 logger = logging.getLogger(__name__)  # pylint: disable=C0103
 
@@ -35,8 +36,6 @@ def authorship(method: str, params: MultiDict, session: Session,
                submission_id: int, **kwargs) -> Response:
     """Handle the authorship assertion view."""
     submitter, client = user_and_client_from_session(session)
-
-    # Will raise NotFound if there is no such submission.
     submission, submission_events = load_submission(submission_id)
 
     # The form should be prepopulated based on the current state of the
@@ -60,29 +59,21 @@ def authorship(method: str, params: MultiDict, session: Session,
         'client': client,
     }
 
-    if method == 'POST':
-        if not form.validate():
-            raise BadRequest(response_data)
+    if method == 'POST' and form.validate():
         value = (form.authorship.data == form.YES)
-
         # No need to do this more than once.
         if submission.submitter_is_author != value:
             command = ConfirmAuthorship(creator=submitter, client=client,
                                         submitter_is_author=value)
-
-            if not validate_command(form, command, submission, 'authorship'):
-                raise BadRequest(response_data)
-
-            try:
-                # Create ConfirmAuthorship event
-                submission, _ = save(command, submission_id=submission_id)
-                response_data['submission'] = submission
-            except SaveError as e:
-                logger.error('Could not save command: %s', e)
-                raise InternalServerError(response_data) from e
-
-        if params.get('action') in ['previous', 'save_exit', 'next']:
-            return response_data, status.SEE_OTHER, {}
+            if validate_command(form, command, submission, 'authorship'):
+                try:
+                    submission, _ = save(command, submission_id=submission_id)
+                    response_data['submission'] = submission
+                    return response_data, status.SEE_OTHER, {}
+                except SaveError as e:
+                    raise InternalServerError(response_data) from e
+        return ready_for_next((response_data, status.OK, {}))
+    
     return response_data, status.OK, {}
 
 

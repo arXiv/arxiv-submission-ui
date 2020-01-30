@@ -14,7 +14,7 @@ from arxiv.submission.domain.event import SetPrimaryClassification
 from submit.controllers.ui.new import classification
 
 from arxiv.users import auth, domain
-
+from submit.routes.ui.flow_control import get_controllers_desire, STAGE_SUCCESS
 
 class TestSetPrimaryClassification(TestCase):
     """Test behavior of :func:`.classification` controller."""
@@ -93,13 +93,9 @@ class TestSetPrimaryClassification(TestCase):
                                 arxiv_id=None, submitter_is_author=False,
                                 is_finalized=False, version=1)
         mock_load.return_value = (before, [])
-        try:
-            classification.classification('POST', MultiDict(), self.session,
-                                          submission_id)
-            self.fail('BadRequest not raised')
-        except BadRequest as e:
-            data = e.description
-            self.assertIsInstance(data['form'], Form, "Data includes a form")
+        data, _, _  = classification.classification('POST', MultiDict(), self.session,
+                                                    submission_id)
+        self.assertIsInstance(data['form'], Form, "Data includes a form")
 
     @mock.patch(f'{classification.__name__}.ClassificationForm.Meta.csrf',
                 False)
@@ -124,9 +120,9 @@ class TestSetPrimaryClassification(TestCase):
         mock_url_for.return_value = 'https://foo.bar.com/yes'
 
         params = MultiDict({'category': 'astro-ph.CO', 'action': 'next'})
-        _, code, _ = classification.classification('POST', params,
-                                                   self.session, submission_id)
-        self.assertEqual(code, status.SEE_OTHER, "Returns redirect")
+        data, code, _ = classification.classification('POST', params,
+                                                      self.session, submission_id)
+        self.assertEqual(get_controllers_desire(data), STAGE_SUCCESS)
 
     @mock.patch(f'{classification.__name__}.ClassificationForm.Meta.csrf',
                 False)

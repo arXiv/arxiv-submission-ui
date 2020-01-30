@@ -162,12 +162,8 @@ def optional(method: str, params: MultiDict, session: Session,
                 return ready_for_next((response_data, status.OK, {}))
             except SaveError as e:
                 raise InternalServerError(response_data) from e
-        else:
-            stay_on_this_stage((response_data, status.OK, {}))
-    else:
-        stay_on_this_stage((response_data, status.OK, {}))
 
-    return response_data, status.OK, {}
+    return stay_on_this_stage((response_data, status.OK, {}))
 
 
 def _commands(form: CoreMetadataForm, submission: Submission,

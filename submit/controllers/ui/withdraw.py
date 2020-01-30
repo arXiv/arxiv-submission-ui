@@ -80,8 +80,8 @@ def request_withdrawal(method: str, params: MultiDict, session: Session,
             alerts.flash_success("Withdrawal request submitted.")
             status_url = url_for('ui.create_submission')
             return {}, status.SEE_OTHER, {'Location': status_url}
-        except SaveError as e:
-            raise InternalServerError(response_data) from e
+        except SaveError as ex:
+            raise InternalServerError(response_data) from ex
     else:
         response_data['require_confirmation'] = True
 

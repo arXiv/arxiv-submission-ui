@@ -157,7 +157,7 @@ compiler service will simply download a fresh copy. This seems like a useful saf
 
 In both cases you will need to configure your AWS credentials prior to attempting converter image download.
 
-To let compiler service download converter image simply set (include version number**)
+In order to let the compiler service download a converter image simply set (including version number**):
 ```bash
 export CONVERTER_DOCKER_IMAGE=626657773168.dkr.ecr.us-east-1.amazonaws.com/arxiv/converter-2009:0.1.0
 ```

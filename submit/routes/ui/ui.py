@@ -29,7 +29,7 @@ from submit.workflow.stages import FileUpload
 from submit.workflow import SubmissionWorkflow, ReplacementWorkflow, Stage
 from submit.workflow.processor import WorkflowProcessor
 
-from .flow_control import flow_control, get_workflow
+from .flow_control import flow_control, get_workflow, endpoint_name
 
 logger = logging.getLogger(__name__)
 
@@ -63,6 +63,7 @@ def load_submission() -> None:
     wfp = get_workflow(request.submission)
     request.workflow = wfp
     request.current_stage = wfp.current_stage()
+    request.this_stage = wfp.workflow[endpoint_name()]
 
 
 @UI.context_processor

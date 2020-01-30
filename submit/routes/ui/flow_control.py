@@ -192,8 +192,6 @@ def flow_control(blueprint_this_stage: Optional[Stage] = None, exit: str = EXIT)
         def wrapper(submission_id: str) -> Response:
             """Update the redirect to the next, previous, or exit page."""
 
-            logger.debug('here in wrapper')
-#            import pdb; pdb.set_trace()
             action = request.form.get('action', None)
             submission, _ = load_submission(submission_id)
             workflow = request.workflow

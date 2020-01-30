@@ -59,8 +59,28 @@ class WorkflowDefinition:
             raise ValueError(f'No stage for endpoint: {endpoint}')
         return self.order[0]  # mypy
 
-    def __getitem__(self, query: Union[type, Stage, str, int]) -> Optional[Stage]:
-        return self.get_stage(query)
+    def index(self, stage: Union[type, Stage, str]) -> int:
+        if stage in self.order:
+            return self.order.index(stage)
+        if isinstance(stage, type) and issubclass(stage, Stage):
+            for idx, st in enumerate(self.order):
+                if issubclass(st.__class__, stage):
+                    return idx
+            raise ValueError(f"{stage} not In workflow")
+
+        if isinstance(stage, str):  # it could be classname, stage label
+            for idx, wstg in self.order:
+                if(wstg.label == stage
+                   or wstg.__class__.__name__ == stage):
+                    return idx
+
+        raise ValueError(f"Should be subclass of Stage, classname or stage instance. Cannot call with {stage} of type {type(stage)}")
+
+    def __getitem__(self, query: Union[type, Stage, str, int, slice]) -> Union[Optional[Stage], List[Stage]]:
+        if isinstance(query, slice):
+            return self.order.__getitem__(query)
+        else:
+            return self.get_stage(query)
 
     def get_stage(self, query: Union[type, Stage, str, int]) -> Optional[Stage]:
         """Get the stage object from this workflow for Class, class name,

@@ -35,6 +35,7 @@ def has_valid_content(submission: Submission) -> bool:
     return submission.source_content is not None and\
         submission.source_content.checksum is not None and\
         submission.source_content.source_format is not None and \
+        submission.source_content.uncompressed_size > 0 and \
         submission.source_content.source_format != SubmissionContent.Format.INVALID
 
 def has_non_processing_content(submission: Submission) -> bool:

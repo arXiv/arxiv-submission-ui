@@ -193,7 +193,6 @@ def flow_control(blueprint_this_stage: Optional[Stage] = None, exit: str = EXIT)
             """Update the redirect to the next, previous, or exit page."""
 
             logger.debug('here in wrapper')
-#            import pdb; pdb.set_trace()
             action = request.form.get('action', None)
             submission, _ = load_submission(submission_id)
             workflow = request.workflow
@@ -233,7 +232,6 @@ def flow_control(blueprint_this_stage: Optional[Stage] = None, exit: str = EXIT)
             if flow_desc == 'REDIRECT_EXIT':
                 return redirect(url_for(exit), code=status.SEE_OTHER)
             if flow_desc == 'REDIRECT_NEXT':
-#                import pdb; pdb.set_trace()
                 return to_next(workflow, this_stage, submission_id)
             if flow_desc == 'REDIRECT_PREVIOUS':
                 return to_previous(workflow, this_stage, submission_id)

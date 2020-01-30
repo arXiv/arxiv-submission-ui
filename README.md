@@ -114,7 +114,7 @@ Most converter images contain a single TeX tree (to reduce size) along with one
 very large converter image that contains the complete set of all arXiv TeX trees (14.5G).
 At the current time you may configure a single converter image to compile TeX sources.
 
-The Following TeX trees are available: TeX Live 2016 (most recent). TeX Live 2011,
+The following TeX trees are available: TeX Live 2016 (most recent); TeX Live 2011;
 TeX Live 2009, teTeX 2, and teTeX 3. The teTeX 2 tree contains multiple local trees.
 
 Set the CONVERTER_DOCKER_IMAGE environment variable to indicate the converter image

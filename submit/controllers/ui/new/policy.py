@@ -42,28 +42,6 @@ def policy(method: str, params: MultiDict, session: Session,
         'submission': submission
     }
 
-    #     if method == 'POST':
-    #     if not form.validate():
-    #         raise BadRequest(response_data)
-
-    #     logger.debug('Form is valid, with data: %s', str(form.data))
-
-    #     accept_policy = form.policy.data
-    #     if accept_policy and not submission.submitter_accepts_policy:
-    #         command = ConfirmPolicy(creator=submitter, client=client)
-    #         if not validate_command(form, command, submission, 'policy'):
-    #             raise BadRequest(response_data)
-
-    #         try:
-    #             submission, _ = save(command, submission_id=submission_id)
-    #         except SaveError as e:
-    #             raise InternalServerError(response_data) from e
-    #         response_data['submission'] = submission
-
-    #     if params.get('action') in ['previous', 'save_exit', 'next']:
-    #         return response_data, status.SEE_OTHER, {}
-    # return response_data, status.OK, {}
-
     if method == 'POST' and form.validate():
         accept_policy = form.policy.data
         if accept_policy and not submission.submitter_accepts_policy:
@@ -75,14 +53,8 @@ def policy(method: str, params: MultiDict, session: Session,
                     return ready_for_next((response_data, status.OK, {}))
                 except SaveError as e:
                     raise InternalServerError(response_data) from e
-            else:
-                return stay_on_this_stage((response_data, status.OK, {}))
-        else:
-            return stay_on_this_stage((response_data, status.OK, {}))
-    else:
-        return stay_on_this_stage((response_data, status.OK, {}))
-        
-    return response_data, status.OK, {}
+
+    return stay_on_this_stage((response_data, status.OK, {}))
 
 
 class PolicyForm(csrf.CSRFForm):

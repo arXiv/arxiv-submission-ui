@@ -15,6 +15,7 @@ from .new.create import create
 from .new.final import finalize
 from .new.license import license
 from .new.metadata import metadata
+from .new.metadata import optional
 from .new.policy import policy
 from .new.verify_user import verify
 from .new.unsubmit import unsubmit

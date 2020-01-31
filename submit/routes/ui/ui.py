@@ -460,7 +460,7 @@ def add_metadata(submission_id: int) -> Response:
 @flow_control()
 def add_optional_metadata(submission_id: int) -> Response:
     """Render step 9, metadata."""
-    return handle(cntrls.metadata.optional,
+    return handle(cntrls.optional,
                   'submit/add_optional_metadata.html',
                   'Add or Edit Metadata', submission_id, flow_controlled=True)
 

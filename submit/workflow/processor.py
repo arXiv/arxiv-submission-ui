@@ -67,7 +67,11 @@ class WorkflowProcessor:
         # TODO older logic:
         # return ((self.is_complete(stage) or not stage.required)
         #         and (self.is_seen(stage) or not stage.must_see))
-        # More efficent:        
+        # More efficent:
         return ((not stage.required or stage.is_complete(self.submission))
                 and
                 (not stage.must_see or self.is_seen(stage)))
+
+    def index(self, stage):
+        return self.workflow.index(stage)
+

@@ -532,6 +532,22 @@ def request_cross(submission_id: Optional[int] = None) -> Response:
                   'submit/request_cross_list.html', 'Request cross-list',
                   submission_id)
 
+@UI.route('/testalerts')
+def testalerts() -> Response:
+    tc = {}
+    request.submission, request.events = util.load_submission(1)
+    wfp = get_workflow(request.submission)
+    request.workflow = wfp
+    request.current_stage = wfp.current_stage()
+    request.this_stage = wfp.workflow[endpoint_name()]
+
+    tc['workflow'] = wfp
+    tc['submission_id'] = 1
+
+    add_immediate_alert(tc, 'WARNING', 'This is a warning to you from the normal submission alert system.', "SUBMISSION ALERT TITLE")
+    alerts.flash_failure('This is one of those alerts from base alert(): you failed', 'BASE ALERT')
+    return make_response(render_template('submit/testalerts.html', **tc), 200)
+
 
 @UI.app_template_filter()
 def endorsetype(endorsements: List[str]) -> str:

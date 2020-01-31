@@ -27,12 +27,6 @@ class WorkflowDefinition:
                 return
             yield prior_stage
 
-    # Get rid of this bogus method
-    # def complete(self) -> bool:
-    #     """Determine whether this workflow is complete."""
-    #     return bool(self.submission.is_finalized)
-
-    # I wonder if we should move next_stage and previous_stage to WorkflowProcessor?
     def next_stage(self, stage: Optional[Stage]) -> Optional[Stage]:
         """Get the next stage."""
         if stage is None:
@@ -74,15 +68,19 @@ class WorkflowDefinition:
                    or wstg.__class__.__name__ == stage):
                     return idx
 
-        raise ValueError(f"Should be subclass of Stage, classname or stage instance. Cannot call with {stage} of type {type(stage)}")
+        raise ValueError(f"Should be subclass of Stage, classname or stage"
+                         f"instance. Cannot call with {stage} of type "
+                         f"{type(stage)}")
 
-    def __getitem__(self, query: Union[type, Stage, str, int, slice]) -> Union[Optional[Stage], List[Stage]]:
+    def __getitem__(self, query: Union[type, Stage, str, int, slice])\
+        -> Union[Optional[Stage], List[Stage]]:
         if isinstance(query, slice):
             return self.order.__getitem__(query)
         else:
             return self.get_stage(query)
 
-    def get_stage(self, query: Union[type, Stage, str, int]) -> Optional[Stage]:
+    def get_stage(self, query: Union[type, Stage, str, int])\
+        -> Optional[Stage]:
         """Get the stage object from this workflow for Class, class name,
         stage label, endpoint or index in order """
         if query is None:
@@ -131,7 +129,6 @@ SubmissionWorkflow = WorkflowDefinition(
      stages.OptionalMetadata(required=False, must_see=True),
      stages.FinalPreview()
      ],
-    # Kind of odd that this is different instance than last in the list
     stages.Confirm()
 )
 """Workflow for new submissions."""

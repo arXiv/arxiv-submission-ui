@@ -32,7 +32,7 @@ SAVE_EXIT = 'save_exit'
 
 FlowDecision = Literal['SHOW_CONTROLLER_RESULT', 'REDIRECT_EXIT',
                        'REDIRECT_PREVIOUS', 'REDIRECT_NEXT',
-                       'REDIRECT_PARENT_STAGE']
+                       'REDIRECT_PARENT_STAGE', 'REDIRECT_CONFIRMATION']
 
 
 Response = Union[FResponse, WResponse]
@@ -143,12 +143,13 @@ def to_previous(wfs: WorkflowProcessor, stage: Stage, ident: str) -> Response:
 def to_next(wfs: WorkflowProcessor, stage: Stage, ident: str) -> Response:
     """Return a flask redirect to the next stage."""
     if stage is None:
-        return to_current(wfs,ident)
+        return to_current(wfs, ident)
     else:
         return to_stage(wfs.next_stage(stage), ident)
 
 
-def to_current(wfs: WorkflowProcessor, ident: str, flash: bool = True) -> Response:
+def to_current(wfs: WorkflowProcessor, ident: str, flash: bool = True)\
+   -> Response:
     """Return a flask redirect to the stage required by the workflow."""
     next_stage = wfs.current_stage()
     if flash and next_stage is not None:
@@ -162,7 +163,8 @@ def to_current(wfs: WorkflowProcessor, ident: str, flash: bool = True) -> Respon
 # be done for debugging.
 
 
-def flow_control(blueprint_this_stage: Optional[Stage] = None, exit: str = EXIT) -> Callable:
+def flow_control(blueprint_this_stage: Optional[Stage] = None,
+                 exit: str = EXIT) -> Callable:
     """Get a blueprint route decorator that wraps a controller to
     handle redirection to next/previous steps.
 
@@ -200,9 +202,8 @@ def flow_control(blueprint_this_stage: Optional[Stage] = None, exit: str = EXIT)
 
             # convert classes, ints and strs to actual instances
             this_stage = workflow.workflow[this_stage]
-            
-            if workflow.is_complete() and \
-               not this_stage == workflow.workflow.confirmation:
+
+            if workflow.is_complete() and not endpoint_name() == workflow.workflow.confirmation.endpoint:
                 return to_stage(workflow.workflow.confirmation, submission_id)
 
             if not workflow.can_proceed_to(this_stage):
@@ -213,25 +214,30 @@ def flow_control(blueprint_this_stage: Optional[Stage] = None, exit: str = EXIT)
             # from going to the previous step.
             try:
                 data, code, headers, resp_fn = controller(submission_id)
+                #WARNING: controllers do not update the submission in this scope
             except BadRequest:
                 if action == PREVIOUS:
                     return to_previous(workflow, this_stage, submission_id)
                 raise
-            
+
             workflow.mark_seen(this_stage)
             put_seen(workflow.seen)
 
+            last_stage = workflow.workflow.order[-1] == this_stage
             controller_action = get_controllers_desire(data)
-            flow_desc = flow_decision(request.method, action, code, controller_action)
-            logger.debug(f'method: {request.method} action: {action}, code: {code}, controller action: {controller_action}')
+            flow_desc = flow_decision(request.method, action, code,
+                                      controller_action, last_stage)
+            logger.debug(f'method: {request.method} action: {action}, code: {code}, '
+                         f'controller action: {controller_action}, last_stage: {last_stage}')
             logger.debug(f'flow decisions is {flow_desc}')
-            
+
+            if flow_desc == 'REDIRECT_CONFIRMATION':
+                return to_stage(workflow.workflow.confirmation, submission_id)
             if flow_desc == 'SHOW_CONTROLLER_RESULT':
                 return resp_fn()
             if flow_desc == 'REDIRECT_EXIT':
                 return redirect(url_for(exit), code=status.SEE_OTHER)
             if flow_desc == 'REDIRECT_NEXT':
-#                import pdb; pdb.set_trace()
                 return to_next(workflow, this_stage, submission_id)
             if flow_desc == 'REDIRECT_PREVIOUS':
                 return to_previous(workflow, this_stage, submission_id)
@@ -244,7 +250,12 @@ def flow_control(blueprint_this_stage: Optional[Stage] = None, exit: str = EXIT)
     return route
 
 
-def flow_decision(method: str, user_action: Optional[str], code: int, controller_action: Optional[ControllerDesires]) -> FlowDecision:
+def flow_decision(method: str,
+                  user_action: Optional[str],
+                  code: int,
+                  controller_action: Optional[ControllerDesires],
+                  last_stage: bool)\
+                  -> FlowDecision:
     # For now with GET we do the same sort of things
     if method == 'GET' and controller_action == STAGE_CURRENT:
         return 'REDIRECT_NEXT'
@@ -255,19 +266,21 @@ def flow_decision(method: str, user_action: Optional[str], code: int, controller
         return 'SHOW_CONTROLLER_RESULT'  # some sort of error?
 
     if method != 'POST':
-        return 'SHOW_CONTROLLER_RESULT'  # Not sure, HEAD? PUT? Likely need to fix with Upload
+        return 'SHOW_CONTROLLER_RESULT'  # Not sure, HEAD? PUT?
 
     #  after this point method must be POST
     if controller_action == STAGE_SUCCESS:
+        if last_stage:
+            return 'REDIRECT_CONFIRMATION'
         if user_action == NEXT:
             return 'REDIRECT_NEXT'
         if user_action == SAVE_EXIT:
             return 'REDIRECT_EXIT'
         if user_action == PREVIOUS:
             return 'REDIRECT_PREVIOUS'
-        if user_action == None:  #case of something like cross_list with action ADD?
+        if user_action is None:  # like cross_list with action ADD?
             return 'SHOW_CONTROLLER_RESULT'
-        
+
     if controller_action == STAGE_RESHOW:
         if user_action == NEXT:
             # Reshow the form to the due to form errors

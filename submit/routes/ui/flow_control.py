@@ -193,7 +193,7 @@ def flow_control(blueprint_this_stage: Optional[Stage] = None,
         @wraps(controller)
         def wrapper(submission_id: str) -> Response:
             """Update the redirect to the next, previous, or exit page."""
-
+            
             action = request.form.get('action', None)
             submission, _ = load_submission(submission_id)
             workflow = request.workflow

@@ -385,6 +385,10 @@ ol.file-tree > li ol li:first-child {
 }
 .progressbar li.is-complete a {
   color: white;
+  text-decoration: underline;
+}
+.progressbar li.is-active a {
+  text-decoration: none;
 }
 .progressbar li.is-active a .icon {
   display: none;

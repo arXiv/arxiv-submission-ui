@@ -11,7 +11,7 @@
 
 {% macro progress_bar(submission_id, workflow, this_stage) %}
   <nav class="submit-pagination is-hidden-mobile" aria-labelledby="progress">
-    <p class="sr-only" id="progress">Steps in Submission Process</p>
+    <p class="is-sr-only" id="progress">Steps in Submission Process</p>
     <ul class="progressbar">
         {% if this_stage %}
         {% set before = workflow.workflow.order[:workflow.index(this_stage)] %}

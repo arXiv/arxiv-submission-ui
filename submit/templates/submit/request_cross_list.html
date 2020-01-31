@@ -23,6 +23,7 @@
       {# This formset is used to send POST requests to REMOVE secondaries from the list. #}
       {% if formset %}
         {% for category, subform in formset.items() %}
+        <!-- TODO: limit number of cross links to just 5 -->
         <form method="POST" class="form form-margin" action="{{ url_for('ui.request_cross', submission_id=submission_id) }}">
           {{ form.csrf_token }}
           <p>
@@ -33,7 +34,7 @@
             {{ subform.category()|safe }}
               <span class="tag" style="border: 1px solid #999;">{{ subform.category.data }}</span> <span>{{ category|get_category_name }}</span>
               <button class="button is-outlined is-link is-small" style="border: 0" title="Remove category">
-              <span class="icon"><i class="fa fa-trash"><span class="sr-only">Remove this category</span></i>
+              <span class="icon"><i class="fa fa-trash"><span class="is-sr-only">Remove this category</span></i>
             </button>
           </p>
         </form>

@@ -133,8 +133,8 @@ def classification(method: str, params: MultiDict, session: Session,
         try:
             submission, _ = save(command, submission_id=submission_id)
             response_data['submission'] = submission
-        except SaveError as e:
-            raise InternalServerError(response_data) from e
+        except SaveError as ex:
+            raise InternalServerError(response_data) from ex
         return ready_for_next((response_data, status.OK, {}))
 
     return response_data, status.OK, {}
@@ -200,8 +200,8 @@ def cross_list(method: str, params: MultiDict, session: Session,
 
             # do not go to next yet, re-show cross form
             return stay_on_this_stage((response_data, status.OK, {}))
-        except SaveError as e:
-            raise InternalServerError(response_data) from e
+        except SaveError as ex:
+            raise InternalServerError(response_data) from ex
 
         
     if len(submission.secondary_categories) > 3:

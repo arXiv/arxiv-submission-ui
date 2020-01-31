@@ -25,15 +25,11 @@ from submit.controllers.ui.new import upload
 from submit.controllers.ui.new import upload_delete
 
 from submit.workflow.stages import FileUpload
-# from submit.workflow.stages import Authorship, BaseStage, Classification, Confirm, \
-#     CrossList, FileUpload, FinalPreview, License, Metadata, OptionalMetadata,\
-#     Policy, Process, ReplacementWorkflow, Stage, SubmissionWorkflow, \
-#     VerifyUser, Workflow, stage_from_endpoint
 
 from submit.workflow import SubmissionWorkflow, ReplacementWorkflow, Stage
 from submit.workflow.processor import WorkflowProcessor
 
-from .flow_control import flow_control, get_workflow
+from .flow_control import flow_control, get_workflow, endpoint_name
 
 logger = logging.getLogger(__name__)
 
@@ -45,25 +41,6 @@ SUPPORT = Markup(
 )
 
 Response = Union[FResponse, WResponse]
-
-
-# TODO Eliminate workflow_route. mapping between stages and endpoints is in stage definitions
-# def workflow_route(stage: Stage, methods=["GET","POST"],  **options) -> Callable:
-#     """Register a UI route wrapped in workflow flow_control and associate it with a workflow stage."""
-
-#     def deco(func: Callable) -> Callable:
-# #        endpoint_to_stage[stage] = options.get("endpoint", func.__name__)#same as flask
-#         # TODO there are two different mech. to define stage endpoint, in the class and in the UI.bluprint def
-#         # consider eliminating one, this sort of thing is overly coupled
-#         #endpoint_to_stage[stage] = stage.endpoint
-#         #options['endpoint'] = stage.endpoint
-#         #options['methods'] = methods
-
-#         #TODO eliminate stage parameter to flow control: can be recovered from request+wfp
-#         controled = flow_control(stage)(func) #wrap controller in flow_control
-#         route = UI.route(path(stage.endpoint), **options)(controled) # register flow_control_controller with flask
-#         return route # route is a defered function to be registered on the flask app at startup
-#     return deco
 
 
 def redirect_to_login(*args, **kwargs) -> str:
@@ -86,31 +63,7 @@ def load_submission() -> None:
     wfp = get_workflow(request.submission)
     request.workflow = wfp
     request.current_stage = wfp.current_stage()
-
-
-# moved to inject_workflow
-# @UI.context_processor
-# def inject_stage() -> Dict[str, Optional[Stage]]:
-#     """Inject the current stage into the template rendering context."""
-#     if request.url_rule is None:
-#         return {}
-#     endpoint = request.url_rule.endpoint
-#     if '.' in endpoint:
-#         _, endpoint = endpoint.split('.', 1)
-#     stage: Optional[Stage]
-#     try:
-#         stage = stage_from_endpoint(endpoint)
-#     except ValueError:
-#         stage = None
-
-#     # def get_current_stage_for_submission(submission: Submission) -> str:
-#     #     """Get the endpoint of the current step for a submission."""
-#     #     return get_workflow(submission).current_stage.endpoint
-
-#     return {
-#         'this_stage': stage,
-# #        'get_current_stage_for_submission': get_current_stage_for_submission
-#     }
+    request.this_stage = wfp.workflow[endpoint_name()]
 
 
 @UI.context_processor
@@ -187,33 +140,9 @@ def handle(controller: Callable, template: str, title: str,
                                      **kwargs)
     context.update(data)
 
-    # The BadRequest for form invalid is not working in a resonable
-    # and straight foward manner. Mabye it was gotten to work thorugh some
-    # tourured route but it is a hacky mess.
-    # Just do normal WTForms handling for success and failure.
-
-    # except BadRequest:
-    #     # BadRequest being used here to single that something validate
-    #      # and they need to go back to the form.
-    #     form_invalid = True
-
-    # TODO Can we just use the handlers from other places in the code?
-    # this causes a lot of interaction with flow control
-    # except InternalServerError as e:
-    #     logger.debug('Caught %s from controller', e)
-    #     assert isinstance(e.description, dict)
-    #     context.update(e.description)
-    #     context.update({'error': e})
-    #     message = Markup(f'Something unexpected went wrong. {SUPPORT}')
-    #     add_immediate_alert(context, alerts.FAILURE, message)
-    #     response = make_response(render_template(template, **context), e.code)
-    #     return response
-    # except Unavailable as e:
-    #     raise ServiceUnavailable('Could not connect to database') from e
-
-    # TODO need something like
     if flow_controlled:
-        return data, code, headers, lambda : make_response(render_template(template, **context), code)
+        return (data, code, headers,
+                lambda: make_response(render_template(template, **context), code))
     if code < 300:
         response = make_response(render_template(template, **context), code)
     elif 'Location' in headers:
@@ -396,34 +325,33 @@ def authorship(submission_id: int) -> Response:
 @flow_control()
 def license(submission_id: int) -> Response:
     """Render step 3, select license."""
-    return handle(cntrls.new.license.license, 'submit/license.html',
+    return handle(cntrls.license, 'submit/license.html',
                   'Select a License', submission_id, flow_controlled=True)
 
 
-# @workflow_route(Policy)
 @UI.route('/<int:submission_id>/policy', methods=['GET', 'POST'])
 @auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION, authorizer=is_owner,
                         unauthorized=redirect_to_login)
 @flow_control()
 def policy(submission_id: int) -> Response:
     """Render step 4, policy agreement."""
-    return handle(cntrls.new.policy.policy, 'submit/policy.html',
-                  'Acknowledge Policy Statement', submission_id, flow_controlled=True)
+    return handle(cntrls.policy, 'submit/policy.html',
+                  'Acknowledge Policy Statement', submission_id,
+                  flow_controlled=True)
 
 
-# @workflow_route(Classification)
 @UI.route('/<int:submission_id>/classification', methods=['GET', 'POST'])
 @auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION, authorizer=is_owner,
                         unauthorized=redirect_to_login)
 @flow_control()
 def classification(submission_id: int) -> Response:
     """Render step 5, choose classification."""
-    return handle(cntrls.new.classification.classification,
+    return handle(cntrls.classification,
                   'submit/classification.html',
-                  'Choose a Primary Classification', submission_id, flow_controlled=True)
+                  'Choose a Primary Classification', submission_id,
+                  flow_controlled=True)
 
 
-# @workflow_route(CrossList)
 @UI.route('/<int:submission_id>/cross_list', methods=['GET', 'POST'])
 @auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION, authorizer=is_owner,
                         unauthorized=redirect_to_login)
@@ -432,10 +360,10 @@ def cross_list(submission_id: int) -> Response:
     """Render step 6, secondary classes."""
     return handle(cntrls.cross_list,
                   'submit/cross_list.html',
-                  'Choose Cross-List Classifications', submission_id, flow_controlled=True)
+                  'Choose Cross-List Classifications', submission_id,
+                  flow_controlled=True)
 
 
-# @workflow_route(FileUpload)
 @UI.route('/<int:submission_id>/file_upload', methods=['GET', 'POST'])
 @auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION, authorizer=is_owner,
                         unauthorized=redirect_to_login)
@@ -470,7 +398,6 @@ def file_delete_all(submission_id: int) -> Response:
                   token=request.environ['token'], flow_controlled=True)
 
 
-# @workflow_route(Process)
 @UI.route('/<int:submission_id>/file_process', methods=['GET', 'POST'])
 @auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION, authorizer=is_owner,
                         unauthorized=redirect_to_login)
@@ -505,7 +432,7 @@ def file_preview(submission_id: int) -> Response:
                         unauthorized=redirect_to_login)
 # TODO @flow_control(Process) ?
 def compilation_log(submission_id: int) -> Response:
-    data, code, headers = cntrls.new.process.compilation_log(
+    data, code, headers = cntrls.process.compilation_log(
         MultiDict(request.args.items(multi=True)),
         request.auth,
         submission_id,
@@ -517,41 +444,37 @@ def compilation_log(submission_id: int) -> Response:
     return rv
 
 
-# @workflow_route(Metadata)
 @UI.route('/<int:submission_id>/add_metadata', methods=['GET', 'POST'])
 @auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION, authorizer=is_owner,
                         unauthorized=redirect_to_login)
 @flow_control()
 def add_metadata(submission_id: int) -> Response:
     """Render step 9, metadata."""
-    return handle(cntrls.new.metadata.metadata, 'submit/add_metadata.html',
+    return handle(cntrls.metadata, 'submit/add_metadata.html',
                   'Add or Edit Metadata', submission_id, flow_controlled=True)
 
 
-# @workflow_route(OptionalMetadata)
 @UI.route('/<int:submission_id>/add_optional_metadata', methods=['GET', 'POST'])
 @auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION, authorizer=is_owner,
                         unauthorized=redirect_to_login)
 @flow_control()
 def add_optional_metadata(submission_id: int) -> Response:
     """Render step 9, metadata."""
-    return handle(cntrls.new.metadata.optional,
+    return handle(cntrls.optional,
                   'submit/add_optional_metadata.html',
                   'Add or Edit Metadata', submission_id, flow_controlled=True)
 
 
-# @workflow_route(FinalPreview)
 @UI.route('/<int:submission_id>/final_preview', methods=['GET', 'POST'])
 @auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION, authorizer=is_owner,
                         unauthorized=redirect_to_login)
 @flow_control()
 def final_preview(submission_id: int) -> Response:
     """Render step 10, preview."""
-    return handle(cntrls.new.final.finalize, 'submit/final_preview.html',
+    return handle(cntrls.finalize, 'submit/final_preview.html',
                   'Preview and Approve', submission_id, flow_controlled=True)
 
 
-# @workflow_route(Confirm, methods=["GET"])
 @UI.route('/<int:submission_id>/confirmation', methods=['GET', 'POST'])
 @auth.decorators.scoped(auth.scopes.EDIT_SUBMISSION, authorizer=is_owner,
                         unauthorized=redirect_to_login)
@@ -572,7 +495,8 @@ def confirmation(submission_id: int) -> Response:
 def jref(submission_id: Optional[int] = None) -> Response:
     """Render the JREF submission page."""
     return handle(cntrls.jref.jref, 'submit/jref.html',
-                  'Add journal reference', submission_id, flow_controlled=False)
+                  'Add journal reference', submission_id,
+                  flow_controlled=False)
 
 
 @UI.route('/<int:submission_id>/withdraw', methods=["GET", "POST"])

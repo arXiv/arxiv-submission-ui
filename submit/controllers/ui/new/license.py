@@ -59,13 +59,8 @@ def license(method: str, params: MultiDict, session: Session,
                     return ready_for_next((response_data, status.OK, {}))
                 except SaveError as e:
                     raise InternalServerError(response_data) from e
-            else:
-                pass  # these passes make the conditionals unambiguous
-        else:
-            pass
-        stay_on_this_stage((response_data, status.OK, {}))
 
-    return response_data, status.OK, {}
+    return stay_on_this_stage((response_data, status.OK, {}))
 
 
 class LicenseForm(csrf.CSRFForm):

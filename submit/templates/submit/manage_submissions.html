@@ -7,43 +7,49 @@
 
 {% block within_content %}
 <section class="columns is-marginless section">
-  <div class="column is-one-third-tablet is-one-third-desktop">
-    <div class="box has-text-centered box-new-submission">
-          <form class="form" method="POST" action="{{ url_for('ui.create_submission') }}">
-            {{ form.csrf_token }}
-            <button name="new" class="button button-is-wrappable button-create-submission is-large is-link" value="new" aria-label="Create New Submission">Start a New Submission</button>
-          </form>
-          <h3><a href="https://arxiv.org/help#submission-and-revision">Submission Help Pages</a></h3>
-
+  <div class="column box is-one-third-tablet is-one-third-desktop">
+    <div class="box-new-submission">
+      <!-- TODO: add controller and dynamic first name user.name.forename -->
+      <h2>Welcome [First Name]</h2>
+      <p>Click to start a new submission</p>
+      <form class="form" method="POST" action="{{ url_for('ui.create_submission') }}">
+        {{ form.csrf_token }}
+        <button name="new" class="button is-success button-is-wrappable is-large is-link" value="new" aria-label="Create New Submission">Start a New Submission</button>
+      </form>
+      <p>Review arXiv's extensive submission documentation</p>
+      <a href="https://arxiv.org/help#submission-and-revision" class="button is-link is-outlined">Submission Help Pages</a><br>
+      <p>Need to make changes to your account before submitting? Manage account info here</p>
+      <a href="{{ url_for('account') }}" class="button is-link is-outlined">Manage Account</a>
     </div>
   </div>
-  <div class="column is-two-thirds-tablet is-two-thirds-desktop">
-      <p class="has-text-right help">
-        <a href="#">Submission 0.1.4 released 2019-05-04 </a>
-        <button class="button button-feedback is-small" id="feedback-button">Feedback?</button>
-      </p>
-        <div class="message is-link alpha-before">
-          <div class="message-body">
-            <p class="subtitle subtitle-intro">Thank you for using our new submission system!</p>
-            <p>
-              This interface is an alpha release, which means that we fully expect some bugs to exist.
-              If you encounter unexpected behavior or problems, or if you have suggestions for how to improve this interface,
-              please let us know by <a href="https://github.com/arXiv/arxiv-submission-ui/issues" target="_blank" rel="noopener">creating an issue via GitHub</a>.
-            </p>
-            <p>
-              <strong>Intro to Creating Issues on GitHub</strong><br/>
-              <ol>
-                <li>If you do not already have a free GitHub account, <a href="https://github.com/join" target="_blank" rel="noopener">create one</a>.</li>
-                <li>Navigate to the <a href="https://github.com/arXiv/arxiv-submission-ui/issues" target="_blank" rel="noopener">issues page</a> for this project.</li>
-                <li>Before creating a new issue, confirm whether a similar issue already exists via the search box.<br/>
-                  <img src="{{ url_for('static', filename='images/github_issues_search_box.png') }}" style="max-width:50%" alt="GitHub Issues search box"/>
-                </li>
-                <li>If no similar issue exists, click the <a class="button is-success is-small" href="https://github.com/arXiv/arxiv-submission-ui/issues/new/choose" style="vertical-align:text-bottom"><strong>New issue</strong></a> button.<br/></li>
-                <li>Choose an issue type, then follow the corresponding directions to describe and submit the issue.</li>
-              </ol>
-            </p>
-          </div>
-        </div> <!-- end message -->
+  <div class="column is-two-thirds-tablet is-two-thirds-desktop" style="padding-top:0;">
+    <div class="message is-link alpha-before">
+      <div class="message-body">
+        <p class="has-text-right help">
+          <a href="#">Submission 0.1.4 released 2019-05-04 </a>
+          <button class="button button-feedback is-small" id="feedback-button">Feedback?</button>
+        </p>
+
+        <p class="subtitle subtitle-intro">Thank you for using our new submission system!</p>
+        <p>
+          This interface is an alpha release, which means that we fully expect some bugs to exist.
+          If you encounter unexpected behavior or problems, or if you have suggestions for how to improve this interface,
+          please let us know by <a href="https://github.com/arXiv/arxiv-submission-ui/issues" target="_blank" rel="noopener">creating an issue via GitHub</a>.
+        </p>
+        <p>
+          <strong>Intro to Creating Issues on GitHub</strong><br/>
+          <ol>
+            <li>If you do not already have a free GitHub account, <a href="https://github.com/join" target="_blank" rel="noopener">create one</a>.</li>
+            <li>Navigate to the <a href="https://github.com/arXiv/arxiv-submission-ui/issues" target="_blank" rel="noopener">issues page</a> for this project.</li>
+            <li>Before creating a new issue, confirm whether a similar issue already exists via the search box.<br/>
+              <img src="{{ url_for('static', filename='images/github_issues_search_box.png') }}" style="max-width:50%" alt="GitHub Issues search box"/>
+            </li>
+            <li>If no similar issue exists, click the <a class="button is-success is-small" href="https://github.com/arXiv/arxiv-submission-ui/issues/new/choose" style="vertical-align:text-bottom"><strong>New issue</strong></a> button.<br/></li>
+            <li>Choose an issue type, then follow the corresponding directions to describe and submit the issue.</li>
+          </ol>
+        </p>
+      </div>
+    </div> <!-- end message -->
   </div>
 </section>
 
@@ -62,7 +68,14 @@
         <table class="table is-fullwidth is-hoverable">
           <thead>
             <tr>
-              <th scope="col">Status</th>
+              <th scope="col">Status
+                <!-- TODO: need real link to status descriptions -->
+                <a href="{{ url_for('help') }}" class="help-bubble">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" class="icon filter-blue"><path d="M256 8C119.043 8 8 119.083 8 256c0 136.997 111.043 248 248 248s248-111.003 248-248C504 119.083 392.957 8 256 8zm0 110c23.196 0 42 18.804 42 42s-18.804 42-42 42-42-18.804-42-42 18.804-42 42-42zm56 254c0 6.627-5.373 12-12 12h-88c-6.627 0-12-5.373-12-12v-24c0-6.627 5.373-12 12-12h12v-64h-12c-6.627 0-12-5.373-12-12v-24c0-6.627 5.373-12 12-12h64c6.627 0 12 5.373 12 12v100h12c6.627 0 12 5.373 12 12v24z"/></svg>
+                  <span class="sr-only">Read status descriptions</span>
+                  <div class="bubble-text">The current status of your submission in arXiv moderation. Click to read all status descriptinos.</div>
+                </a>
+              </th>
               <th scope="col">Identifier</th>
               <th scope="col">Title</th>
               <th scope="col">Created</th>

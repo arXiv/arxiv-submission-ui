@@ -67,8 +67,8 @@ def verify(method: str, params: MultiDict, session: Session,
                     submission, _ = save(cmd, submission_id=submission_id)
                     response_data['submission'] = submission
                     return ready_for_next((response_data, status.OK, {}))
-                except SaveError as e:
-                    raise InternalServerError(response_data) from e
+                except SaveError as ex:
+                    raise InternalServerError(response_data) from ex
 
     return stay_on_this_stage((response_data, status.OK, {}))
 

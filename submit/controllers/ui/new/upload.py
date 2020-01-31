@@ -19,7 +19,12 @@ from typing import Tuple, Dict, Any, Optional, List, Union, Mapping
 from flask import url_for, Markup
 from werkzeug import MultiDict
 from werkzeug.datastructures import FileStorage
-from werkzeug.exceptions import InternalServerError, MethodNotAllowed
+from werkzeug.exceptions import (
+    InternalServerError,
+    BadRequest,
+    MethodNotAllowed,
+    RequestEntityTooLarge
+)
 from wtforms import BooleanField, HiddenField, FileField
 from wtforms.validators import DataRequired
 
@@ -34,8 +39,10 @@ from arxiv.submission.domain.event import SetUploadPackage, UpdateUploadPackage
 from arxiv.submission.exceptions import SaveError
 from arxiv.users.domain import Session
 
-from submit.controllers.ui.util import validate_command, \
+from submit.controllers.ui.util import (
+    validate_command,
     user_and_client_from_session
+)
 from submit.util import load_submission, tidy_filesize
 from submit.routes.ui.flow_control import ready_for_next, stay_on_this_stage
 from submit.controllers.ui.util import add_immediate_alert
@@ -105,34 +112,9 @@ def upload_files(method: str, params: MultiDict, session: Session,
 
     if method == 'GET':
         logger.debug('GET; load current upload state')
-        rdata.update({'status': None, 'form': UploadForm()})
-
-        if submission.source_content is None:  # Nothing to show
-            return rdata, status.OK, {}  # generate blank-slate upload screen
-
-        fm = Filemanager.current_session()
-        upload_id = submission.source_content.identifier
-
-        status_data = alerts.get_hidden_alerts('_status')
-        if type(status_data) is dict and status_data['identifier'] == upload_id:
-            stat = Upload.from_dict(status_data)
-        else:
-            try:
-                stat = fm.get_upload_status(upload_id, token)
-            except exceptions.RequestFailed as e:
-                # TODO: handle specific failure cases.
-                logger.debug('Failed to get upload status: %s', e)
-                logger.error(traceback.format_exc())
-                raise InternalServerError(rdata) from e
-        rdata.update({'status': stat})
-        if stat:
-            rdata.update({'immediate_notifications': _get_notifications(stat)})
-        return rdata, status.OK, {}
-
+        return _get_upload(params, session, submission, rdata, token)
     elif method == 'POST':
         logger.debug('POST; user is uploading file(s)')
-        # TODO figure out this SECTION of code
-        # It's to deal with the back and save buttons
         try:    # Make sure that we have a file to work with.
             pointer = files['file']
         except KeyError:   # User is going back, saving/exiting, or next step.
@@ -146,15 +128,25 @@ def upload_files(method: str, params: MultiDict, session: Session,
             if action:
                 logger.debug('User is navigating away from upload UI')
                 return {}, status.SEE_OTHER, {}
-        # END SECTION
 
-        if submission.source_content is None:
-            logger.debug('New upload package')
-            return _new_upload(params, pointer, session, submission, rdata, token)
-        else:
-            logger.debug('Adding additional files')
-            return _new_file(params, pointer, session, submission, rdata, token)
-
+        try:
+            if submission.source_content is None:
+                logger.debug('New upload package')
+                return _new_upload(params, pointer, session, submission, rdata, token)
+            else:
+                logger.debug('Adding additional files')
+                return _new_file(params, pointer, session, submission, rdata, token)
+        except exceptions.ConnectionFailed as ex:
+            logger.debug('Problem POSTing upload: %s', ex)
+            alerts.flash_failure(Markup(
+                'There was a problem uploading your file. '
+                f'{PLEASE_CONTACT_SUPPORT}'))
+        except RequestEntityTooLarge as ex:
+            logger.debug('Problem POSTing upload: %s', ex)
+            alerts.flash_failure(Markup(
+                'There was a problem uploading your file because it exceeds '
+                f'our maximum size limit. {PLEASE_CONTACT_SUPPORT}'))
+        return stay_on_this_stage(_get_upload(params, session, submission, rdata, token))
     raise MethodNotAllowed()
 
 
@@ -217,6 +209,56 @@ def _update(form: UploadForm, submission: Submission, stat: Upload,
     return submission
 
 
+def _get_upload(params: MultiDict, session: Session, submission: Submission,
+                rdata: Dict[str, Any], token) -> Response:
+    """
+    Get the current state of the upload workspace, and prepare a response.
+
+    Parameters
+    ----------
+    params : :class:`MultiDict`
+        The query parameters from the request.
+    session : :class:`Session`
+        The authenticated session for the request.
+    submission : :class:`Submission`
+        The submission for which to retrieve upload workspace information.
+
+    Returns
+    -------
+    dict
+        Response data, to render in template.
+    int
+        HTTP status code.
+    dict
+        Extra headers to add/update on the response.
+
+    """
+    rdata.update({'status': None, 'form': UploadForm()})
+
+    if submission.source_content is None:
+        # Nothing to show; should generate a blank-slate upload screen.
+        return rdata, status.OK, {}
+
+    fm = Filemanager.current_session()
+
+    upload_id = submission.source_content.identifier
+    status_data = alerts.get_hidden_alerts('_status')
+    if type(status_data) is dict and status_data['identifier'] == upload_id:
+        stat = Upload.from_dict(status_data)
+    else:
+        try:
+            stat = fm.get_upload_status(upload_id, token)
+        except exceptions.RequestFailed as ex:
+            # TODO: handle specific failure cases.
+            logger.debug('Failed to get upload status: %s', ex)
+            logger.error(traceback.format_exc())
+            raise InternalServerError(rdata) from ex
+    rdata.update({'status': stat})
+    if stat:
+        rdata.update({'immediate_notifications': _get_notifications(stat)})
+    return rdata, status.OK, {}
+
+
 def _new_upload(params: MultiDict, pointer: FileStorage, session: Session,
                 submission: Submission, rdata: Dict[str, Any], token: str) \
         -> Response:
@@ -262,14 +304,14 @@ def _new_upload(params: MultiDict, pointer: FileStorage, session: Session,
 
     try:
         stat = fm.upload_package(pointer, token)
-    except exceptions.RequestFailed as e:
+    except exceptions.RequestFailed as ex:
         alerts.flash_failure(Markup(
             'There was a problem carrying out your request. Please try'
             f' again. {PLEASE_CONTACT_SUPPORT}'
         ))
-        logger.debug('Failed to upload package: %s', e)
+        logger.debug('Failed to upload package: %s', ex)
         logger.error(traceback.format_exc())
-        raise InternalServerError(rdata) from e
+        raise InternalServerError(rdata) from ex
 
     submission = _update(form, submission, stat, submitter, client)
     converted_size = tidy_filesize(stat.size)

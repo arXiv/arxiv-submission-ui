@@ -25,6 +25,7 @@ main {
 
 .submit-nav {
   margin-top: 1.75rem;
+  margin-bottom: 2em !important;
   justify-content: flex-end;
 }
 .submit-nav .button .icon {
@@ -41,6 +42,7 @@ main {
 
 .policy-scroll {
   margin: 0;
+  margin-bottom: -1em;
   padding: 1em;
   max-height: 400px;
   overflow-y: scroll;
@@ -75,6 +77,7 @@ h2 .title-submit {
   float: left;
   width: 10%;
   display: none;
+  color: #005e9d;
 }
 h2 .replacement {
   margin-top: -2rem;
@@ -83,16 +86,17 @@ h2 .replacement {
   font-weight: 400;
 }
 
-h1 .title.title-submit {
-  margin-top: 0.5em;
+h1.title.title-submit {
+  margin-top: 0.75em;
   margin-bottom: 0.5em;
   clear: both;
+  color: #005e9d !important;
 }
-h1 .preamble {
-  color: grey;
+h1.title.title-submit .preamble {
+  color: #7f8d93;
 }
 @media screen and (max-width: 768px) {
-  h1 .title.title-submit {
+  h1.title.title-submit .title.title-submit {
     margin-top: 0;
   }
 }
@@ -150,13 +154,17 @@ h1 .preamble {
 }
 
 .content-container, .action-container {
-  border: 1px solid #cccccc;
+  border: 1px solid #d3e1e6;
   padding: 1em;
   margin: 0 !important;
 }
 
 .content-container {
   border-bottom: 0px;
+}
+
+.action-container {
+  box-shadow: 0 0 9px 0 rgba(210, 210, 210, 0.5);
 }
 
 /* category styles on cross-list page */
@@ -319,85 +327,68 @@ ol.file-tree > li ol li:first-child {
 }
 
 .progressbar {
+  /*default styles*/
+  /*complete styles*/
+  /*active styles*/
   /*controls number of links per row when screen is too narrow for just one row*/
 }
 .progressbar li {
-  background-color: rgba(0, 0, 0, 0.15);
+  background-color: #1c8bd6;
   list-style: none;
   padding: 0;
-  margin: 0.5px;
-  transition: background-color 0.3s;
+  margin: 0 0.5px;
+  transition: 0.3s;
   border: 0;
-  color: whitesmoke;
   flex-grow: 1;
-}
-.progressbar li:hover {
-  background-color: rgba(0, 0, 0, 0.25);
-  border: 0;
 }
 .progressbar li a {
   font-weight: 300;
   text-decoration: none;
-  color: #666666;
-  padding-top: 0.25em;
-  padding-bottom: 0.25em;
+  color: #f5fbff;
   padding-left: 1em;
   padding-right: 1em;
+  padding-top: 0px;
+  padding-bottom: 0px;
   transition: color 0.3s;
+  height: 25px;
 }
 .progressbar li a:hover {
   text-decoration: none;
   border-bottom: 0px;
+  color: #f5fbff;
 }
 .progressbar li:not([class*=is-active]) a:hover,
 .progressbar li:not([class*=is-active]) a:focus,
 .progressbar li:not([class*=is-active]) a:active {
   color: black;
 }
+.progressbar li.is-complete {
+  background-color: #e9f0f5;
+}
+.progressbar li.is-complete a {
+  color: #657277;
+  text-decoration: underline;
+  font-weight: 300;
+  transition: 0.3s;
+}
+.progressbar li.is-complete a:hover {
+  height: 30px;
+}
 .progressbar li.is-active,
 .progressbar li.is-complete.is-active {
-  background-color: #515151;
+  background-color: #005e9d;
+  box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.25);
 }
-.progressbar li.is-active a {
-  color: white;
+.progressbar li.is-active a,
+.progressbar li.is-complete.is-active a {
+  color: #f5fbff;
   font-weight: 600;
   cursor: default;
   pointer-events: none;
-  /*padding-right: calc(1.25em - 15px)*/
-}
-.progressbar li.is-active::after {
-  content: "";
-  height: 0px;
-  width: 0px;
-  border: 8px solid transparent;
-  border-left-color: #515151;
-  margin-left: -8px;
-  z-index: 2;
-  float: right;
-  margin-right: -13px;
-  margin-top: -20px;
-}
-.progressbar li:last-child.is-active::after {
-  content: none !important;
-}
-.progressbar li.is-complete {
-  background-color: rgba(0, 0, 0, 0.45);
-}
-.progressbar li.is-complete a {
-  color: white;
-  text-decoration: underline;
+  height: 30px;
 }
 .progressbar li.is-active a {
   text-decoration: none;
-}
-.progressbar li.is-active a .icon {
-  display: none;
-}
-.progressbar li.is-complete a .icon {
-  height: 1rem;
-  width: 1rem;
-  fill: grey;
-  margin: 0 3px 0 0;
 }
 @media screen and (max-width: 1100px) {
   .progressbar li {

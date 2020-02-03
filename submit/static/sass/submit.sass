@@ -289,15 +289,12 @@ ol.file-tree
     transition: color 0.3s
     height: 25px
 
-  li a:hover
+  li a:hover,
+  li a:focus,
+  li a:active
     text-decoration: none
     border-bottom: 0px
     color: #f5fbff
-
-  li:not([class*="is-active"]) a:hover,
-  li:not([class*="is-active"]) a:focus,
-  li:not([class*="is-active"]) a:active
-    color: black
 
   /*complete styles*/
   li.is-complete

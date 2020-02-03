@@ -352,15 +352,12 @@ ol.file-tree > li ol li:first-child {
   transition: color 0.3s;
   height: 25px;
 }
-.progressbar li a:hover {
+.progressbar li a:hover,
+.progressbar li a:focus,
+.progressbar li a:active {
   text-decoration: none;
   border-bottom: 0px;
   color: #f5fbff;
-}
-.progressbar li:not([class*=is-active]) a:hover,
-.progressbar li:not([class*=is-active]) a:focus,
-.progressbar li:not([class*=is-active]) a:active {
-  color: black;
 }
 .progressbar li.is-complete {
   background-color: #e9f0f5;

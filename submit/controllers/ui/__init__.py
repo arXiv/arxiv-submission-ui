@@ -7,33 +7,49 @@ from werkzeug import MultiDict
 from http import HTTPStatus as status
 from arxiv.users.domain import Session
 
-from .new.process import file_process, file_preview, compilation_log
-from .new.upload import upload_files
-from .new.upload import delete as delete_file
-from .new.upload import delete_all as delete_all_files
+from . import util, jref, withdraw, delete, cross
 
-from .new import create, verify_user, authorship, license, policy, final,\
-    classification, metadata, unsubmit
+from .new.authorship import authorship
+from .new.classification import classification, cross_list
+from .new.create import create
+from .new.final import finalize
+from .new.license import license
+from .new.metadata import metadata
+from .new.metadata import optional
+from .new.policy import policy
+from .new.verify_user import verify
+from .new.unsubmit import unsubmit
 
-from . import  util, jref, withdraw, delete, cross
+from .new import process
+from .new import upload
 
 from submit.util import load_submission
+from submit.routes.ui.flow_control import ready_for_next, advance_to_current
 
 from .util import Response
 
-__all__ = ('verify_user', 'authorship', 'license', 'policy', 'classification',
-           'metadata', 'create', 'jref', 'delete', 'process')
+
+# def submission_status(method: str, params: MultiDict, session: Session,
+#                       submission_id: int) -> Response:
+#     user, client = util.user_and_client_from_session(session)
+
+#     # Will raise NotFound if there is no such submission.
+#     submission, submission_events = load_submission(submission_id)
+#     response_data = {
+#         'submission': submission,
+#         'submission_id': submission_id,
+#         'events': submission_events
+#     }
+#     return response_data, status.OK, {}
 
 
-def submission_status(method: str, params: MultiDict, session: Session,
-                      submission_id: int) -> Response:
-    user, client = util.user_and_client_from_session(session)
-
-    # Will raise NotFound if there is no such submission.
+def submission_edit(method: str, params: MultiDict, session: Session,
+                    submission_id: int) -> Response:
+    """Cause flow_control to go to the current_stage of the Submission."""
     submission, submission_events = load_submission(submission_id)
     response_data = {
         'submission': submission,
         'submission_id': submission_id,
-        'events': submission_events
+        'events': submission_events,
     }
-    return response_data, status.OK, {}
+    return advance_to_current((response_data, status.OK, {}))

@@ -260,12 +260,8 @@ class TestMetadata(TestCase):
         mock_load.return_value = (
             mock.MagicMock(submission_id=submission_id), []
         )
-        try:
-            metadata.metadata('POST', MultiDict(), self.session, submission_id)
-            self.fail('BadRequest not raised')
-        except BadRequest as e:
-            data = e.description
-            self.assertIsInstance(data['form'], Form, "Data includes a form")
+        data, _, _ = metadata.metadata('POST', MultiDict(), self.session, submission_id)        
+        self.assertIsInstance(data['form'], Form, "Data includes a form")
 
     @mock.patch(f'{metadata.__name__}.CoreMetadataForm.Meta.csrf', False)
     @mock.patch(f'{metadata.__name__}.save')
@@ -376,12 +372,8 @@ class TestMetadata(TestCase):
             'abstract': 'too short',
             'authors_display': 'bloggs, j'
         })
-        try:
-            metadata.metadata('POST', params, self.session, submission_id)
-            self.fail('BadRequest not raised')
-        except BadRequest as e:
-            data = e.description
-            self.assertIsInstance(data['form'], Form, "Data includes a form")
+        data, _, _ = metadata.metadata('POST', params, self.session, submission_id)
+        self.assertIsInstance(data['form'], Form, "Data includes a form")
 
     @mock.patch(f'{metadata.__name__}.CoreMetadataForm.Meta.csrf', False)
     @mock.patch(f'{metadata.__name__}.save')

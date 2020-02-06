@@ -68,30 +68,21 @@ def request_withdrawal(method: str, params: MultiDict, session: Session,
         'form': form,
     }
 
-    if method == 'POST':
-        # We require the user to confirm that they wish to proceed.
-        if not form.validate():
-            raise BadRequest(response_data)
-
-        cmd = RequestWithdrawal(reason=form.withdrawal_reason.data,
-                                creator=submitter, client=client)
-        if not validate_command(form, cmd, submission, 'withdrawal_reason'):
-            raise BadRequest(response_data)
-
-        if not form.confirmed.data:
-            response_data['require_confirmation'] = True
-            return response_data, status.OK, {}
-
-        response_data['require_confirmation'] = True
+    cmd = RequestWithdrawal(reason=form.withdrawal_reason.data,
+                            creator=submitter, client=client)
+    if method == 'POST' and form.validate() \
+       and form.confirmed.data \
+       and validate_command(form, cmd, submission, 'withdrawal_reason'):
         try:
             # Save the events created during form validation.
             submission, _ = save(cmd, submission_id=submission_id)
-        except SaveError as e:
-            raise InternalServerError(response_data) from e
+            # Success! Send user back to the submission page.
+            alerts.flash_success("Withdrawal request submitted.")
+            status_url = url_for('ui.create_submission')
+            return {}, status.SEE_OTHER, {'Location': status_url}
+        except SaveError as ex:
+            raise InternalServerError(response_data) from ex
+    else:
+        response_data['require_confirmation'] = True
 
-        # Success! Send user back to the submission page.
-        alerts.flash_success("Withdrawal request submitted.")
-        status_url = url_for('ui.create_submission')
-        return {}, status.SEE_OTHER, {'Location': status_url}
-    logger.debug('Nothing to do, return 200')
     return response_data, status.OK, {}

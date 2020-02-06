@@ -8,33 +8,25 @@ types.
 """
 
 import io
-import re
 from http import HTTPStatus as status
 from typing import Tuple, Dict, Any, Optional
 
-
-import bleach
-from werkzeug import MultiDict
-from werkzeug.exceptions import InternalServerError, BadRequest, NotFound, \
-    MethodNotAllowed
-from flask import url_for, Markup
-from wtforms import SelectField, widgets, HiddenField, validators
-
 from arxiv.base import logging, alerts
 from arxiv.forms import csrf
-from arxiv.users.domain import Session
 from arxiv.integration.api import exceptions
-
-from arxiv.submission import save, SaveError, Submission
-from arxiv.submission.process import process_source
-from arxiv.submission.domain.compilation import Compilation
+from arxiv.submission import save, SaveError
 from arxiv.submission.domain.event import ConfirmSourceProcessed
-from arxiv.submission.domain.preview import Preview
-from arxiv.submission.domain.submission import Compilation, SubmissionContent
+from arxiv.submission.process import process_source
 from arxiv.submission.services import PreviewService, Compiler
+from arxiv.users.domain import Session
+from flask import url_for, Markup
+from werkzeug import MultiDict
+from werkzeug.exceptions import InternalServerError, NotFound, MethodNotAllowed
+from wtforms import SelectField
 
+from submit.controllers.ui.util import user_and_client_from_session
+from submit.routes.ui.flow_control import ready_for_next, stay_on_this_stage
 from submit.util import load_submission
-from submit.controllers.ui.util import validate_command, user_and_client_from_session
 
 logger = logging.getLogger(__name__)
 
@@ -81,11 +73,13 @@ def file_process(method: str, params: MultiDict, session: Session,
         return compile_status(params, session, submission_id, token)
     elif method == "POST":
         if params.get('action') in ['previous', 'next', 'save_exit']:
-            _check_status(params, session, submission_id, token)
+            return _check_status(params, session, submission_id, token)
             # User is not actually trying to process anything; let flow control
             # in the routes handle the response.
-            return {}, status.SEE_OTHER, {}
-        return start_compilation(params, session, submission_id, token)
+            # TODO there is a chance this will allow the user to go to next stage without processing
+            # return ready_for_next({}, status.SEE_OTHER, {})
+        else:
+            return start_compilation(params, session, submission_id, token)
     raise MethodNotAllowed('Unsupported request')
 
 
@@ -103,11 +97,12 @@ def _check_status(params: MultiDict, session: Session,  submission_id: int,
     if not submission.is_source_processed:
         form = CompilationForm(params)  # Providing CSRF protection.
         if not form.validate():
-            raise BadRequest('Invalid request; please try again.')
+            return stay_on_this_stage(({'form': form}, status.OK, {}))
 
         command = ConfirmSourceProcessed(creator=submitter, client=client)
         try:
             submission, _ = save(command, submission_id=submission_id)
+            return ready_for_next(({}, status.OK, {}))
         except SaveError as e:
             alerts.flash_failure(Markup(
                 'There was a problem carrying out your request. Please'
@@ -116,6 +111,8 @@ def _check_status(params: MultiDict, session: Session,  submission_id: int,
             logger.error('Error while saving command %s: %s',
                          command.event_id, e)
             raise InternalServerError('Could not save changes') from e
+    else:
+        return ready_for_next(({}, status.OK, {}))
 
 
 def compile_status(params: MultiDict, session: Session, submission_id: int,
@@ -171,7 +168,7 @@ def compile_status(params: MultiDict, session: Session, submission_id: int,
     if result is not None:
         response_data['status'] = result.status
         response_data.update(**result.extra)
-    return response_data, status.OK, {}
+    return stay_on_this_stage((response_data, status.OK, {}))
 
 
 def start_compilation(params: MultiDict, session: Session, submission_id: int,
@@ -187,7 +184,7 @@ def start_compilation(params: MultiDict, session: Session, submission_id: int,
     }
 
     if not form.validate():
-        raise BadRequest(response_data)
+        return stay_on_this_stage((response_data,status.OK,{}))
 
     try:
         result = process_source.start(submission, submitter, client, token)
@@ -210,8 +207,8 @@ def start_compilation(params: MultiDict, session: Session, submission_id: int,
             " also refresh this page manually to check the current status. ",
             title="Processing started"
         )
-    redirect = url_for('ui.file_process', submission_id=submission_id)
-    return response_data, status.SEE_OTHER, {'Location': redirect}
+
+    return stay_on_this_stage((response_data, status.OK, {}))
 
 
 def file_preview(params, session: Session, submission_id: int, token: str,

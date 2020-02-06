@@ -71,12 +71,10 @@ class TestVerifyUser(TestCase):
                                 submitter_contact_verified=False)
         mock_load.return_value = (before, [])
         params = MultiDict()
-        try:
-            verify_user.verify('POST', params, self.session, submission_id)
-            self.fail('BadRequest not raised')
-        except BadRequest as e:
-            data = e.description
-            self.assertIsInstance(data['form'], Form, "Data includes a form")
+        data, code, _ = verify_user.verify('POST', params, self.session,
+                                           submission_id)
+        self.assertEqual(code, status.OK)
+        self.assertIsInstance(data['form'], Form, "Data includes a form")
 
     @mock.patch(f'{verify_user.__name__}.VerifyUserForm.Meta.csrf', False)
     @mock.patch('submit.controllers.ui.util.url_for')
@@ -98,7 +96,7 @@ class TestVerifyUser(TestCase):
         form_data = MultiDict({'verify_user': 'y', 'action': 'next'})
         _, code, _ = verify_user.verify('POST', form_data, self.session,
                                         submission_id)
-        self.assertEqual(code, status.SEE_OTHER, "Returns redirect")
+        self.assertEqual(code, status.OK,)
 
     @mock.patch(f'{verify_user.__name__}.VerifyUserForm.Meta.csrf', False)
     @mock.patch('submit.controllers.ui.util.url_for')

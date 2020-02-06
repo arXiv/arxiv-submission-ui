@@ -107,7 +107,67 @@ When using the mock-compiler service you will get the same PDF and compilation l
 The idea behind the mock compiler service is to let you work through the entire submission process workflow
 without the hassle of installing the compiler service.
 
-## Quick start using full arXiv Compiler service (with actual TeX compilation)
+## Quick start using arXiv Compiler service (with actual TeX compilation)
+
+There are now multiple converter images that may be configured to compile TeX source.
+Most converter images contain a single TeX tree (to reduce size) along with one
+very large converter image that contains the complete set of all arXiv TeX trees (14.5G).
+At the current time you may configure a single converter image to compile TeX sources.
+
+The following TeX trees are available: TeX Live 2016 (most recent); TeX Live 2011;
+TeX Live 2009; teTeX 2; and teTeX 3. The teTeX 2 tree contains multiple local trees.
+
+Set the CONVERTER_DOCKER_IMAGE environment variable to indicate the converter image
+you would like to select.
+
+Please check arXiv's ASW ECR repository for the current list of images.
+
+  All Trees: (14.5G) Contains all trees, submissions uses latest tree.
+    626657773168.dkr.ecr.us-east-1.amazonaws.com/arxiv/converter
+
+  TL2016: (7.9G) 2017-02-09
+    626657773168.dkr.ecr.us-east-1.amazonaws.com/arxiv/converter-2016
+
+  TL2011: (5.8G) 2011-12-06
+    626657773168.dkr.ecr.us-east-1.amazonaws.com/arxiv/converter-2011
+
+  TL2009: (4.9G) 2009-12-31
+    626657773168.dkr.ecr.us-east-1.amazonaws.com/arxiv/converter-2009
+
+  teTeX 3: (3.1G) 2006-11-02
+    626657773168.dkr.ecr.us-east-1.amazonaws.com/arxiv/converter-tetex-3
+
+  teTeX 2: (3.2G) Uses different binaries and texmf (local tree) versions: 2002-09-01, 2003-01-01, 2004-01-01
+    626657773168.dkr.ecr.us-east-1.amazonaws.com/arxiv/converter-tetex-2
+
+There are two ways to download and install the converter image: manual and automatic.
+
+The 'automated' method lets the compiler service download the converter image for you. If you set the environment
+variable 'CONVERTER_IMAGE_PULL' to 1 in the docker-compose.yml file under both the compiler-api: and
+the compiler-worker: sections, and then rebuild/up the compiler service, the compiler service will attempt to download
+the image from AWS in the event it does not find it locally. There will be a delay during startup while the converter image
+is being downloaded.
+
+The second method is to manually download the converter image(s) you need prior to starting up the
+submission UI. This will save time during startup.
+
+The 'CONVERTER_IMAGE_PULL' environment variables are now set to 1 (enabled) by default. You may still want to
+manually download the image to speed up startup. In the event you accidently remove the converter image the
+compiler service will simply download a fresh copy. This seems like a useful safety feature.
+
+In both cases you will need to configure your AWS credentials prior to attempting converter image download.
+
+In order to let the compiler service download a converter image simply set (including version number**):
+```bash
+export CONVERTER_DOCKER_IMAGE=626657773168.dkr.ecr.us-east-1.amazonaws.com/arxiv/converter-2009:0.1.0
+```
+To download manually execute the pull command with the appropriate converter image specification:
+```bash
+$ docker pull 626657773168.dkr.ecr.us-east-1.amazonaws.com/arxiv/converter:latest
+```
+
+** Compiler service seems to get confused when version number is not included. This will be fixed
+in a subsequent ticket whe time permits.
 
 ### AWS Credentials
 First, you will need credentials to AWS ECR to get the converter docker

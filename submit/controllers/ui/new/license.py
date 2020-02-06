@@ -50,7 +50,10 @@ def license(method: str, params: MultiDict, session: Session,
 
     if method == 'POST' and form.validate():
         license_uri = form.license.data
-        if not submission.license or submission.license.uri != license_uri:
+        if submission.license and submission.license.uri == license_uri:
+            return ready_for_next((response_data, status.OK, {}))
+        if not submission.license \
+           or submission.license.uri != license_uri:
             command = SetLicense(creator=submitter, client=client,
                                  license_uri=license_uri)
             if validate_command(form, command, submission, 'license'):

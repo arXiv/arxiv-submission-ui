@@ -110,6 +110,31 @@ class TestSetLicense(TestCase):
                                               submission_id)
         self.assertEqual(get_controllers_desire(data), STAGE_SUCCESS)
 
+
+    @mock.patch(f'{license.__name__}.LicenseForm.Meta.csrf', False)
+    @mock.patch('submit.controllers.ui.util.url_for')
+    @mock.patch(f'{license.__name__}.save')
+    @mock.patch('arxiv.submission.load')
+    def test_post_request_with_data(self, mock_load, mock_save, mock_url_for):
+        """POST request with `license` set and same license already on submission."""
+        submission_id = 2
+        arxiv_lic = 'http://arxiv.org/licenses/nonexclusive-distrib/1.0/'
+        lic = mock.MagicMock(uri=arxiv_lic)
+        sub = mock.MagicMock(submission_id=submission_id,
+                             license=lic,
+                             is_finalized=False)
+        mock_load.return_value = (sub, [])
+        mock_save.return_value = (sub, [])
+        mock_url_for.return_value = 'https://example.com/'
+
+        form_data = MultiDict({
+            'license': arxiv_lic,
+            'action': 'next'
+        })
+        data, code, headers = license.license('POST', form_data, self.session,
+                                              submission_id)
+        self.assertEqual(get_controllers_desire(data), STAGE_SUCCESS)
+
     @mock.patch(f'{license.__name__}.LicenseForm.Meta.csrf', False)
     @mock.patch('submit.controllers.ui.util.url_for')
     @mock.patch(f'{license.__name__}.save')

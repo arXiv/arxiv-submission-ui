@@ -20,6 +20,7 @@ main
 
 .submit-nav
   margin-top: 1.75rem
+  margin-bottom: 2em !important
   justify-content: flex-end
   .button
     .icon
@@ -33,6 +34,7 @@ main
 
 .policy-scroll
   margin: 0
+  margin-bottom: -1em
   padding: 1em
   max-height: 400px
   overflow-y: scroll
@@ -62,6 +64,7 @@ h2
     float: left
     width: 10%
     display: none
+    color: #005e9d
 
   .replacement
     margin-top: -2rem
@@ -69,14 +72,14 @@ h2
     font-style: italic
     font-weight: 400
 
-h1
-  .title.title-submit
-    margin-top: .5em
-    margin-bottom: 0.5em
-    clear: both
+h1.title.title-submit
+  margin-top: .75em
+  margin-bottom: 0.5em
+  clear: both
+  color: #005e9d !important
 
   .preamble
-    color: grey
+    color: #7f8d93
 
   @media screen and (max-width: 768px)
     .title.title-submit
@@ -127,11 +130,13 @@ h1
   margin-right: .75rem
 
 .content-container, .action-container
-  border: 1px solid #cccccc
+  border: 1px solid #d3e1e6
   padding: 1em
   margin: 0 !important
 .content-container
   border-bottom: 0px
+.action-container
+  box-shadow: 0 0 9px 0 rgba(210, 210, 210, .5)
 /* category styles on cross-list page */
 .category-list
   .action-container
@@ -263,83 +268,62 @@ ol.file-tree
   margin: 0
 
 .progressbar
+  /*default styles*/
   li
-    background-color: rgba(0, 0, 0, .15)
+    background-color: #1c8bd6
     list-style: none
     padding: 0
-    margin: .5px
-    transition: background-color 0.3s
+    margin: 0 .5px
+    transition: 0.3s
     border: 0
-    color: whitesmoke
     flex-grow: 1
-
-  li:hover
-    background-color: rgba(0, 0, 0, .25)
-    border: 0
 
   li a
     font-weight: 300
     text-decoration: none
-    color: #666666
-    padding-top: .25em
-    padding-bottom: .25em
+    color: #f5fbff
     padding-left: 1em
     padding-right: 1em
+    padding-top: 0px
+    padding-bottom: 0px
     transition: color 0.3s
+    height: 25px
 
-  li a:hover
+  li a:hover,
+  li a:focus,
+  li a:active
     text-decoration: none
     border-bottom: 0px
+    color: #f5fbff
 
-  li:not([class*="is-active"]) a:hover,
-  li:not([class*="is-active"]) a:focus,
-  li:not([class*="is-active"]) a:active
-    color: black
+  /*complete styles*/
+  li.is-complete
+    background-color: #e9f0f5
 
+  li.is-complete a
+    color: #657277
+    text-decoration: underline
+    font-weight: 300
+    transition: 0.3s
+    &:hover
+      height: 30px
+
+  /*active styles*/
   li.is-active,
   li.is-complete.is-active
-    background-color: #515151
+    background-color: #005e9d
+    box-shadow: 0 0 10px 0 rgba(0,0,0,.25)
 
-  li.is-active a
-    color: white
+  li.is-active a,
+  li.is-complete.is-active a
+    color: #f5fbff
     font-weight: 600
     cursor: default
     pointer-events: none
-    /*padding-right: calc(1.25em - 15px)*/
-
-  li.is-active::after
-    content: ""
-    height: 0px
-    width: 0px
-    border: 8px solid transparent
-    border-left-color: #515151
-    margin-left: -8px
-    z-index: 2
-    float: right
-    margin-right: -13px
-    margin-top: -20px
-
-  li:last-child.is-active::after
-      content: none !important
-
-  li.is-complete
-    background-color: rgba(0, 0, 0, .45)
-
-  li.is-complete a
-    color: white
-    text-decoration: underline
+    height: 30px
 
   li.is-active a
     text-decoration: none
-
-  li.is-active a .icon
-    display: none
-
-  li.is-complete a .icon
-    height: 1rem
-    width: 1rem
-    fill: grey
-    margin: 0 3px 0 0
 
   /*controls number of links per row when screen is too narrow for just one row*/
   @media screen and (max-width: 1100px)

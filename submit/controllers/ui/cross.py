@@ -4,7 +4,7 @@ from http import HTTPStatus as status
 from typing import Tuple, Dict, Any, Optional, List
 
 from flask import url_for, Markup
-from werkzeug import MultiDict
+from werkzeug.datastructures import MultiDict
 from werkzeug.exceptions import InternalServerError, NotFound, BadRequest
 from wtforms import Form, widgets
 from wtforms.fields import Field, BooleanField, HiddenField

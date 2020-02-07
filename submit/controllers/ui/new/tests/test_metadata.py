@@ -5,7 +5,7 @@ from http import HTTPStatus as status
 from unittest import TestCase, mock
 
 from pytz import timezone
-from werkzeug import MultiDict
+from werkzeug.datastructures import MultiDict
 from werkzeug.exceptions import InternalServerError, BadRequest
 from wtforms import Form
 

@@ -3,7 +3,7 @@
 from http import HTTPStatus as status
 from typing import Optional, Tuple, Dict, Any
 
-from werkzeug import MultiDict
+from werkzeug.datastructures import MultiDict
 from werkzeug.exceptions import InternalServerError, BadRequest, \
     MethodNotAllowed
 from flask import url_for

@@ -8,7 +8,7 @@ from http import HTTPStatus as status
 from typing import Tuple, Dict, Any, Optional
 
 from flask import url_for
-from werkzeug import MultiDict
+from werkzeug.datastructures import MultiDict
 from werkzeug.exceptions import InternalServerError, NotFound, BadRequest
 from wtforms import BooleanField, RadioField
 from wtforms.validators import InputRequired, ValidationError, optional

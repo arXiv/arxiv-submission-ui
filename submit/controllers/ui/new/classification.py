@@ -5,7 +5,7 @@ Creates an event of type `core.events.event.SetPrimaryClassification`
 Creates an event of type `core.events.event.AddSecondaryClassification`
 """
 from typing import Tuple, Dict, Any, List, Optional
-from werkzeug import MultiDict
+from werkzeug.datastructures import MultiDict
 from werkzeug.exceptions import InternalServerError, BadRequest
 from flask import url_for, Markup
 from wtforms import SelectField, widgets, HiddenField, validators

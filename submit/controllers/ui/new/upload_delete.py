@@ -15,7 +15,7 @@ from arxiv.submission.exceptions import SaveError
 from arxiv.submission.services import Filemanager
 from arxiv.users.domain import Session
 from flask import url_for, Markup
-from werkzeug import MultiDict
+from werkzeug.datastructures import MultiDict
 from werkzeug.exceptions import BadRequest, MethodNotAllowed
 from wtforms import BooleanField, HiddenField
 from wtforms.validators import DataRequired

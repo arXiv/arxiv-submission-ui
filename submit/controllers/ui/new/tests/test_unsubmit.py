@@ -1,7 +1,7 @@
 """Tests for :mod:`submit.controllers.unsubmit`."""
 
 from unittest import TestCase, mock
-from werkzeug import MultiDict
+from werkzeug.datastructures import MultiDict
 from werkzeug.exceptions import BadRequest
 from wtforms import Form
 from http import HTTPStatus as status

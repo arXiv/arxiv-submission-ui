@@ -2,7 +2,7 @@
 
 from typing import Tuple, Dict, Any
 
-from werkzeug import MultiDict
+from werkzeug.datastructures import MultiDict
 
 from http import HTTPStatus as status
 from arxiv.users.domain import Session

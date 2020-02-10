@@ -2,7 +2,7 @@
 
 from typing import Tuple, Dict, Any, List
 
-from werkzeug import MultiDict
+from werkzeug.datastructures import MultiDict
 from werkzeug.exceptions import InternalServerError, BadRequest
 from wtforms.fields import TextField, TextAreaField, Field
 from wtforms import validators

@@ -6,7 +6,7 @@ from typing import Optional, Callable, Dict, List, Union, Any
 from flask import Blueprint, make_response, redirect, request, Markup, \
     render_template, url_for, g, send_file, session
 from flask import Response as FResponse
-from werkzeug import MultiDict
+from werkzeug.datastructures import MultiDict
 from werkzeug import Response as WResponse
 from werkzeug.exceptions import InternalServerError, BadRequest, \
     ServiceUnavailable

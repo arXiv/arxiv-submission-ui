@@ -3,7 +3,7 @@
 from typing import Callable, Any, Dict, Tuple, Optional, List, Union
 from http import HTTPStatus as status
 
-from werkzeug import MultiDict
+from werkzeug.datastructures import MultiDict
 from werkzeug.exceptions import InternalServerError, NotFound, BadRequest
 from flask import url_for, Markup
 

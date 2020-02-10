@@ -44,6 +44,8 @@ def policy(method: str, params: MultiDict, session: Session,
 
     if method == 'POST' and form.validate():
         accept_policy = form.policy.data
+        if accept_policy and submission.submitter_accepts_policy:
+            return ready_for_next((response_data, status.OK, {}))
         if accept_policy and not submission.submitter_accepts_policy:
             command = ConfirmPolicy(creator=submitter, client=client)
             if validate_command(form, command, submission, 'policy'):

@@ -9,8 +9,20 @@ main {
   padding: 1em 0;
 }
 
-.button.is-short {
+.button, p .button {
+  font-family: "Open Sans", "Lucida Grande", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 1rem;
+}
+.button.is-short, p .button.is-short {
   height: 1.75em;
+}
+.button svg.icon, p .button svg.icon {
+  top: 0;
+  font-size: 0.9em;
+}
+
+.button.reprocess {
+  margin-top: 0.5em;
 }
 
 /* Allows text in a button to wrap responsively. */
@@ -43,9 +55,14 @@ main {
 .policy-scroll {
   margin: 0;
   margin-bottom: -1em;
-  padding: 1em;
+  padding: 1em 3em;
   max-height: 400px;
   overflow-y: scroll;
+}
+@media screen and (max-width: 768px) {
+  .policy-scroll {
+    padding: 1em;
+  }
 }
 @media screen and (max-width: 400px) {
   .policy-scroll {
@@ -53,6 +70,7 @@ main {
   }
 }
 
+/* forces display of scrollbar in webkit browsers */
 .policy-scroll::-webkit-scrollbar {
   -webkit-appearance: none;
   width: 7px;
@@ -167,6 +185,34 @@ h1.title.title-submit .preamble {
   box-shadow: 0 0 9px 0 rgba(210, 210, 210, 0.5);
 }
 
+/* abs preview styles */
+.content-container #abs {
+  margin: 1em 2em;
+}
+.content-container #abs .title {
+  font-weight: 700;
+  font-size: x-large;
+}
+.content-container #abs blockquote.abstract {
+  font-size: 1.15rem;
+  margin: 1em 2em 2em 4em;
+}
+.content-container #abs .authors {
+  margin-top: 20px;
+  margin-bottom: 0;
+}
+.content-container #abs .dateline {
+  text-transform: uppercase;
+  font-style: normal;
+  font-size: 0.8rem;
+  margin-top: 2px;
+}
+@media screen and (max-width: 768px) {
+  .content-container #abs blockquote.abstract {
+    margin: 1em;
+  }
+}
+
 /* category styles on cross-list page */
 .category-list .action-container {
   padding: 0;
@@ -243,6 +289,9 @@ ol.file-tree li {
 ol.file-tree li.even {
   background-color: #E8E8E8;
 }
+ol.file-tree li button {
+  vertical-align: baseline;
+}
 ol.file-tree form:nth-of-type(odd) li {
   background-color: #E8E8E8;
 }
@@ -267,6 +316,12 @@ ol.file-tree > li ol li:first-child {
 }
 
 /* For highlighting TeX logs */
+.highlight-key {
+  border-top: 1px solid #d3e1e6;
+  border-bottom: 1px solid #d3e1e6;
+  padding: 1em 0 2em 0;
+}
+
 .tex-help {
   background-color: rgba(28, 97, 246, 0.4);
   /* background-color: rgba(152, 35, 255, 0.40) */
@@ -342,7 +397,7 @@ ol.file-tree > li ol li:first-child {
   flex-grow: 1;
 }
 .progressbar li a {
-  font-weight: 300;
+  font-weight: 600;
   text-decoration: none;
   color: #f5fbff;
   padding-left: 1em;
@@ -357,13 +412,13 @@ ol.file-tree > li ol li:first-child {
 .progressbar li a:active {
   text-decoration: none;
   border-bottom: 0px;
-  color: #f5fbff;
+  color: #032121;
 }
 .progressbar li.is-complete {
   background-color: #e9f0f5;
 }
 .progressbar li.is-complete a {
-  color: #657277;
+  color: #535E62;
   text-decoration: underline;
   font-weight: 300;
   transition: 0.3s;

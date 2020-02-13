@@ -128,11 +128,10 @@
         {% elif status == "succeeded" and warnings %}
           <p>All files have been processed with some warnings.</p>
         {% elif status == "succeeded" %}
-          <p>All files have been processed successfully.</p>
-          <p>Preview your article PDF before continuing.</p>
+          <p>All files have been processed successfully. Preview your article PDF before continuing.</p>
           <p><a class="button is-link" href="{{ url_for('ui.file_preview', submission_id=submission_id) }}" target="_blank" title="PDF preview opens in a new tab">
             <span>View PDF</span>
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" class="icon filter-white"><path d="M432,320H400a16,16,0,0,0-16,16V448H64V128H208a16,16,0,0,0,16-16V80a16,16,0,0,0-16-16H48A48,48,0,0,0,0,112V464a48,48,0,0,0,48,48H400a48,48,0,0,0,48-48V336A16,16,0,0,0,432,320ZM488,0h-128c-21.37,0-32.05,25.91-17,41l35.73,35.73L135,320.37a24,24,0,0,0,0,34L157.67,377a24,24,0,0,0,34,0L435.28,133.32,471,169c15,15,41,4.5,41-17V24A24,24,0,0,0,488,0Z"/></svg>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" class="icon filter-white" role="presentation"><path d="M432,320H400a16,16,0,0,0-16,16V448H64V128H208a16,16,0,0,0,16-16V80a16,16,0,0,0-16-16H48A48,48,0,0,0,0,112V464a48,48,0,0,0,48,48H400a48,48,0,0,0,48-48V336A16,16,0,0,0,432,320ZM488,0h-128c-21.37,0-32.05,25.91-17,41l35.73,35.73L135,320.37a24,24,0,0,0,0,34L157.67,377a24,24,0,0,0,34,0L435.28,133.32,471,169c15,15,41,4.5,41-17V24A24,24,0,0,0,488,0Z"/></svg>
           </a></p>
         {% endif %}
         <!-- Selecting a preferred compiler is not supported in v0.1
@@ -140,13 +139,12 @@
         <div class="select">
           {{ form.compiler(**{"aria-labelledby": "compiler"})|safe }}
         </div> -->
-      <p><button class="button is-link" type="submit" value="process" {% if status == "in_progress" %}disabled=true{% endif %}>Reprocess</button></p>
     {% endif %}
 
     {% if status and log_output %}
       <p>Check the compiler log summary for any warnings and errors. <a href="{{ url_for('ui.compilation_log', submission_id=submission_id) }}" target="_blank">View the raw log</a> for further details.</p>
-      <div class="is-size-7">
-        <p><strong>Highlighting Key</strong></p>
+      <div class="highlight-key">
+        <h3>Summary Highlight Key</h3>
         <code><span class="tex-fatal">Severe warnings/errors</span></code><br/>
         <code><span class="tex-danger">Important warnings</span></code><br/>
         <code><span class="tex-warning">General warnings/errors from packages</span></code><br/>
@@ -162,6 +160,14 @@
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" class="icon" role="presentation"><path d="M432,320H400a16,16,0,0,0-16,16V448H64V128H208a16,16,0,0,0,16-16V80a16,16,0,0,0-16-16H48A48,48,0,0,0,0,112V464a48,48,0,0,0,48,48H400a48,48,0,0,0,48-48V336A16,16,0,0,0,432,320ZM488,0h-128c-21.37,0-32.05,25.91-17,41l35.73,35.73L135,320.37a24,24,0,0,0,0,34L157.67,377a24,24,0,0,0,34,0L435.28,133.32,471,169c15,15,41,4.5,41-17V24A24,24,0,0,0,488,0Z"/></svg>
       </a>
     {% endif %}
+
+    {% if status and status != "not_started" %}
+      <br>
+      <button class="button reprocess" type="submit" value="process" {% if status == "in_progress" %}disabled=true{% endif %}>
+        <span>Reprocess</span>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" class="icon" role="presentation"><title>Reprocess</title><path d="M255.545 8c-66.269.119-126.438 26.233-170.86 68.685L48.971 40.971C33.851 25.851 8 36.559 8 57.941V192c0 13.255 10.745 24 24 24h134.059c21.382 0 32.09-25.851 16.971-40.971l-41.75-41.75c30.864-28.899 70.801-44.907 113.23-45.273 92.398-.798 170.283 73.977 169.484 169.442C423.236 348.009 349.816 424 256 424c-41.127 0-79.997-14.678-110.63-41.556-4.743-4.161-11.906-3.908-16.368.553L89.34 422.659c-4.872 4.872-4.631 12.815.482 17.433C133.798 479.813 192.074 504 256 504c136.966 0 247.999-111.033 248-247.998C504.001 119.193 392.354 7.755 255.545 8z"/></svg>
+      </button>
+    {% endif%}
   </div>
 
   <div class="column is-two-thirds-desktop is-half-tablet is-full-mobile">

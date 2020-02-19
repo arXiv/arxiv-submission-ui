@@ -21,7 +21,9 @@
 
         {% for stage in workflow.workflow %}
         {% set earlier = stage in before %}
-        <li class="{% if earlier or this_stage == stage %}is-complete{% endif %} 
+        {% set complete = workflow.is_seen(stage) and workflow.is_done( stage ) %}
+        
+        <li class="{% if complete %}is-complete{% endif %} 
                    {% if this_stage == stage %}is-active{% endif %}">
           <a class="is-size-7" title="{{ stage.title }}"
              href="{% if submission_id %} 

@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "373cefec240379d9d3cbd930ac91cc6efb189eedbd9f1c5e4554c4d284c16b52"
+            "sha256": "0dc84579f44963635a8e129ddd856b99d70288ecacb8c446c23ae1786ace28b7"
         },
         "pipfile-spec": 6,
         "requires": {},
@@ -30,10 +30,10 @@
         },
         "arxiv-base": {
             "hashes": [
-                "sha256:2653b048bed399e57e96f9283bed5ead6148f2d4032a96e574ab9fbe930b0bed"
+                "sha256:5b2bdfc16807c70a420b962f16b5736736a5e5ab56d50b9bf61e1ae45210b285"
             ],
             "index": "pypi",
-            "version": "==0.16.5"
+            "version": "==0.16.7.dev0"
         },
         "arxiv-submission-core": {
             "hashes": [
@@ -296,10 +296,13 @@
         },
         "mysqlclient": {
             "hashes": [
-                "sha256:b95edaa41d6cc47deecabcdcbb5ab437ad9ae6d8955f5cf10d1847b37e66ef5e"
+                "sha256:4c82187dd6ab3607150fbb1fa5ef4643118f3da122b8ba31c3149ddd9cf0cb39",
+                "sha256:9e6080a7aee4cc6a06b58b59239f20f1d259c1d2fddf68ddeed242d2311c7087",
+                "sha256:f3fdaa9a38752a3b214a6fe79d7cae3653731a53e577821f9187e67cbecb2e16",
+                "sha256:f646f8d17d02be0872291f258cce3813497bc7888cd4712a577fd1e719b2f213"
             ],
             "index": "pypi",
-            "version": "==1.4.2"
+            "version": "==1.4.6"
         },
         "py": {
             "hashes": [
@@ -494,10 +497,11 @@
         },
         "wtforms": {
             "hashes": [
-                "sha256:ffdf10bd1fa565b8233380cb77a304cd36fd55c73023e91d4b803c96bc11d46f"
+                "sha256:0cdbac3e7f6878086c334aa25dc5a33869a3954e9d1e015130d65a69309b3b61",
+                "sha256:e3ee092c827582c50877cdbd49e9ce6d2c5c1f6561f849b3b068c1b8029626f1"
             ],
             "index": "pypi",
-            "version": "==2.1"
+            "version": "==2.2.1"
         },
         "zipp": {
             "hashes": [

@@ -30,6 +30,13 @@ main
   .button
     .icon
       margin-right: 0 !important
+/* controls display of close button for messages */
+.message
+  button.notification-dismiss
+    position: relative
+    z-index: 1
+    top: 30px
+    margin-left: calc(100% - 30px)
 
 .form-margin
   margin: .4em 0
@@ -139,6 +146,9 @@ h1.title.title-submit
   border-bottom: 0px
 .action-container
   box-shadow: 0 0 9px 0 rgba(210, 210, 210, .5)
+  .upload-notes
+    border-bottom: 1px solid #d3e1e6
+    padding-bottom: 1em
 
 /* abs preview styles */
 .content-container #abs

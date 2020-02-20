@@ -76,27 +76,6 @@ def return_to_parent_stage(response: CResponse) -> CResponse:
 def get_controllers_desire(data: Dict) -> Optional[ControllerDesires]:
     return data.get('flow_control_from_controller', None)
 
-# PLAN:
-# define obj to return 4 tuples
-# use that in controllers
-# in routes.ui.ui.handler,
-# check for len(resp) == 4 and handle flow
-# or
-# len(resp) == 3 and do normal flask stuff./
-
-    # We know: Method [GET, POST]
-    #          action [ PREVIOUS, SAVE_EXIT, NEXT, NONE? ]
-    #          response.status [ OK, SEE_OTHER, BAD_REQUEST ]
-
-    # We can distinguish:   (Method, action, status)
-    # Just get the form:       GET,  None,     OK
-    # Reshow on form invalid:  POST, NEXT,     BAD_REQUEST
-    # Saved and Next step:     POST, NEXT,     OK
-    # Reshow form (cross add): POST, None,     OK
-    # Save and exit:           POST, SAVE_EXIT, OK
-    # Save and exit invalid:   POST, SAVE_EXIT, BAD_REQUEST
-    # go back:                 POST, PREVIOUS, ANY
-
 
 def endpoint_name() -> Optional[str]:
     """Get workflow compatable endpoint name from request"""
@@ -308,16 +287,3 @@ def flow_decision(method: str,
         return 'REDIRECT_PREVIOUS'
     # default to what?
     return 'SHOW_CONTROLLER_RESULT'
-
-
-    # We know: Method [GET, POST]
-    #          action [ PREVIOUS, SAVE_EXIT, NEXT, NONE? ]
-    #          response.status [ OK, SEE_OTHER, BAD_REQUEST ]
-    # We can distinguish:   (Method, action, status)        result             problem?
-    # Just get the form:       GET,  None,     OK            show resp          no
-    # Reshow on form invalid:  POST, NEXT,     BAD_REQUEST   show resp          YES: need to get rid of bad_request
-    # Saved and Next step:     POST, NEXT,     OK            redirect           no
-    # Reshow form (cross add): POST, None,     OK            show resp          no
-    # Save and exit:           POST, SAVE_EXIT, OK           redirect           no
-    # Save and exit invalid:   POST, SAVE_EXIT, BAD_REQUEST  show form          Yes: need to get rid of bad_request
-    # go back:                 POST, PREVIOUS, OK or BAD_R   redirect           Yes: need to get rid of bad_request

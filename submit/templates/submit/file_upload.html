@@ -96,7 +96,6 @@
         </div>
         <div class="control">
           <button id="file-submit" type="submit" class="button is-link" disabled>Upload</button>
-
         </div>
       </div>
       {% if form.file.errors %}
@@ -104,8 +103,11 @@
           <p class="help is-danger field-error">{{ error }}</p>
         {% endfor %}
       {% endif %}
-      <p class="is-marginless help has-text-grey">
-        You can upload all your files at once as a single .tar.gz or .zip file, or upload individual files as needed.
+      <p class="is-marginless help has-text-grey upload-notes">
+        You can upload all your files at once as a single .zip or .tar.gz file, or upload individual files as needed.
+        <br><br>
+        <strong>Avoid common causes of delay:</strong> Make sure included files match the filenames exactly (it is case sensitive),
+        and verify your references, citations and captions.
       </p>
       {% if status and status.errors %}
         {% for error in status.errors %}

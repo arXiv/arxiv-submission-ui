@@ -272,7 +272,7 @@ services:
       - arxiv-submission-ui
 
   submission-ui:
-    image: arxiv/submission-ui
+    image: arxiv/submission-ui:22ae284
     build:
       context: .
       dockerfile: Dockerfile

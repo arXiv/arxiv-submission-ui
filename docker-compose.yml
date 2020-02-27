@@ -277,7 +277,7 @@ services:
       context: .
       dockerfile: Dockerfile
       args:
-        BASE_VERSION: 0.16.1
+        BASE_VERSION: 0.16.6
     container_name: arxiv-submission-ui
     environment:
       VAULT_ENABLED: "0"
@@ -318,7 +318,7 @@ services:
       retries: 3
 
   submission-preview:
-    image: arxiv/preview:4c4e282
+    image: arxiv/submission-preview:0.1rc1
     container_name: preview
     networks:
       - arxiv-submission-ui

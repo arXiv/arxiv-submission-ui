@@ -32,12 +32,10 @@ with app.app_context():
         except Exception as e:
             logger.info(e)
             logger.info(f"...waiting {wait} seconds...")
-            print(f"{e}...waiting {wait} seconds...\n")
             time.sleep(wait)
             wait *= 2
 
     logger.info("Checking for database")
-    print("Checking for database")
     if not engine.dialect.has_table(engine, "arXiv_submissions"):
         created_users = []
         logger.info("Database not yet initialized; creating tables")

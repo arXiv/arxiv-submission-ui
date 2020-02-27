@@ -216,7 +216,8 @@ services:
       - arxiv-submission-ui
 
   submission-agent:
-    image: arxiv/submission-agent:2c83801
+    # corresponds with commit from 2020-02-27: https://github.com/arXiv/arxiv-submission-core/commit/9222d6f650d9ce45a1a76961018f2ae562a37e26
+    image: arxiv/submission-agent:9222d6f
     container_name: arxiv-submission-agent
     command: "/bin/bash -c 'python -m agent.bootstrap && python -m agent.consumer'"
     environment:
@@ -275,6 +276,7 @@ services:
       - arxiv-submission-ui
 
   submission-ui:
+    # corresponds with commit from 2020-02-27: https://github.com/arXiv/arxiv-submission-ui/commit/22ae284
     image: arxiv/submission-ui:22ae284
     build:
       context: .

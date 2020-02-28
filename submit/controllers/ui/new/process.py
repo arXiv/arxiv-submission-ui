@@ -199,7 +199,25 @@ def start_compilation(params: MultiDict, session: Session, submission_id: int,
     response_data.update(**result.extra)
 
     if result.status == process_source.FAILED:
-        alerts.flash_failure(f"Processing failed")
+        if 'reason' in result.extra and "produced from TeX source" in result.extra['reason']:
+            msg = Markup("The submission PDF file appears to have been produced by TeX. <p>This file has been rejected " \
+                  "as part your submission because it appears to be pdf generated from TeX/LaTeX source. " \
+                  "For the reasons outlined at in the Why TeX FAQ we insist on submission of the TeX " \
+                  "source rather than the processed version.</p>" \
+                  "<p>Our software includes an automatic TeX processing " \
+                  "script that will produce PDF, PostScript and dvi from your TeX source. " \
+                  "If our determination that your " \
+                  "submission is TeX produced is incorrect, you should send e-mail with your submission " \
+                  'number to <a href="mailto:help@arxiv.org">arXiv administrators.</a></p>')
+            alerts.flash_failure(Markup(msg))
+        elif 'reason' in result.extra and 'docker' in result.extra['reason']:
+            msg = Markup("Our automatic TeX processing system has failed to launch. " \
+                         "There is a good cchance we are aware of the issue, but if the problem persists "
+                         "you should send e-mail with your submission " \
+                         'number to <a href="mailto:help@arxiv.org">arXiv administrators.</a></p>')
+            alerts.flash_failure(Markup(msg))
+        else:
+            alerts.flash_failure(f"Processing failed")
     else:
         alerts.flash_success(
             "We are processing your submission. This may take a minute or two."

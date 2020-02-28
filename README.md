@@ -39,12 +39,15 @@ arxiv-submission-ui     | 1 picoline2058@gmail.com _JWT_STARTS_HERE_AND_GOES_ON_
 ```
 You will need to pass the JWT in the ``Authorization`` header.
 This is a valid session so you can use the submission UI.
-For Chrome, try [Requestly](https://www.requestly.in/).
-In Requestly, you can limit the url to localhost, so the JWT is not sent to additional websites.
+For Chrome, try the [Requestly](https://www.requestly.in/) plugin, where you:
+- Create a rule to modify headers
+- Add a request header of "Authorization", with a value as the JWT you found in the logs.
+- Add a value for "request url contains" as localhost:8000.
 
 You should be able to access the UI at http://localhost:8000. If you don't
 get a response right away, the UI is probably still waiting for something
-to come up. If you are redirected to the production archive login page, the JWT is not being sent.
+to come up. If you are redirected to the production ArXiv.org login page,
+then your browser is not sending a valid JWT to localhost.
 
 To stop the service, and remove the docker compose containers, you can Ctrl-C or "stop", and then "rm":
 ```bash
@@ -130,9 +133,8 @@ To do this,
 To test if you have access to ECR run:
 `aws ecr list-images --repository-name arxiv/converter`
 You should get a response of no error and a list of docker images.
-
-If you installed credentials with `aws configure`,
-you may need to remove fake credentials in your shell, for example:
+- You can install your credentials in ~/.aws/ with `aws configure`.
+- You may need to remove the fake credentials from above, in your shell, for example:
 ```bash
 unset AWS_ACCESS_KEY_ID  AWS_SECRET_ACCESS_KEY
 ```
@@ -191,10 +193,10 @@ In order to let the compiler service download a converter image simply set (incl
 ```bash
 export CONVERTER_DOCKER_IMAGE=626657773168.dkr.ecr.us-east-1.amazonaws.com/arxiv/converter-2009:0.1.0
 ```
-Login to the AWS ECR server to download docker images with one of these:
+Login to the AWS ECR server using the AWS CLI version 1 or 2:
 ```bash
-aws ecr get-login --no-include-email --region us-east-1
-aws ecr get-login-password | docker login --username AWS --password-stdin https://626657773168.dkr.ecr.us-east-1.amazonaws.com
+aws ecr get-login --no-include-email --region us-east-1      # aws-cli/1.x
+aws ecr get-login-password | docker login --username AWS --password-stdin https://626657773168.dkr.ecr.us-east-1.amazonaws.com # aws-cli/2.x
 ```
 To download manually execute the pull command with the appropriate converter image specification:
 ```bash

@@ -14,39 +14,45 @@ more effort to download and install so we supply a mock compiler service for cas
 where you are not focused on the compilation aspects of the 'process' step within the
 submission workflow.
 
-## Overview of Quick start options - full TeX compilation or mock compilation
+## Quick start with mock compilation
 
 Submission involves several back-end services, worker processes and
 the UI application itself. The easiest way to spin up all of this
 stuff with correct wiring is to use the provided docker-compose
 configuration.
 
-The default docker-compose configuration requires the fully-functional Compiler
-service converter image. To bypass installation of this compiler image use the mock compiler
-configuration option.
-
-How to chose the option that's right for you: If you are not concerned with TeX
-compilation, or you have limited disk space, you will want the mock compiler option.
-If you are concerned with evaluating TeX compilation output and/or the submission
-'process' step under normal operating conditions you will want to install the
-actual Compiler service's converter image.
-
-## Setup required for both mock and full compilation options - AWS settings
-
-One of the back-end services we run is 'localstack' which is a fully functional
-local AWS stack. While this local AWS stack implementation doesn't actually
-check credentials you must have the environment variables set for the service
-to work properly.
-
-You may set these to your real AWS credentials or simply set them to arbitrary
-dummy values.
-
 ```bash
-export AWS_ACCESS_KEY_ID=fookey
-export AWS_SECRET_ACCESS_KEY=foosecretkey
+mkdir /tmp/foo          # Mock compiler service will use this.
+export DIND_SOURCE_ROOT=/tmp/foo
+export AWS_ACCESS_KEY_ID=fookey  AWS_SECRET_ACCESS_KEY=foosecretkey
+cd /path/to/arxiv-submission-ui
+docker-compose -f docker-compose-mock-compiler.yml pull     # Pulls in images that you might not have already.
+docker-compose -f docker-compose-mock-compiler.yml build    # Builds the submission UI
+docker-compose -f docker-compose-mock-compiler.yml up
 ```
 
-## Quick start using mock compiler service
+After starting the "up" command, scroll down past about 400 lines of log messages.
+A bootstrap process will generate a bunch of users who are authorized to submit things.
+Cut and paste one of those JWTs. It will look something like this:
+```
+arxiv-submission-ui     | 1 picoline2058@gmail.com _JWT_STARTS_HERE_AND_GOES_ON_FOR_SEVERAL_LINES_
+```
+You will need to pass the JWT in the ``Authorization`` header.
+This is a valid session so you can use the submission UI.
+For Chrome, try [Requestly](https://www.requestly.in/).
+In Requestly, you can limit the url to localhost, so the JWT is not sent to additional websites.
+
+You should be able to access the UI at http://localhost:8000. If you don't
+get a response right away, the UI is probably still waiting for something
+to come up. If you are redirected to the production archive login page, the JWT is not being sent.
+
+To stop the service, and remove the docker compose containers, you can Ctrl-C or "stop", and then "rm":
+```bash
+docker-compose -f docker-compose-mock-compiler.yml stop
+docker-compose -f docker-compose-mock-compiler.yml rm -v
+```
+
+### About the mock compiler service
 
 The mock compiler service simulates responses from the compilation service. The primary
 deliverables of the compiler service are the PDF and logs generated from compiling the submission's
@@ -58,39 +64,18 @@ Another option is to replace the 'docker-compose.yml' with the 'docker-compose-m
 in the event you do not want to bother with adding the '-f' argument. Be careful not to commit this
 overwrite of the default configuration file.
 
-### Quick start commands (mock compiler)
-
-Make sure you have your AWS settings configured properly before proceeding ([see above](#aws-credentials)).
-
-docker-compose note: When you are running with an alternate config (-f <config>) you will want to add
-the '-f <config>' argument to all docker-compose commands since this configuration file defines the set of services
-it is operating on.
-
-```bash
-cd /path/to/arxiv-submission-ui
-mkdir /tmp/foo          # Compiler service will use this.
-docker-compose -f docker-compose-mock-compiler.yml pull     # Pulls in images that you might not have already.
-docker-compose -f docker-compose-mock-compiler.yml build    # Builds the submission UI
-DIND_SOURCE_ROOT=/tmp/foo docker-compose -f docker-compose-mock-compiler.yml up
-```
-
 You may see the following errors when running ``docker-compose -f docker-compose-mock-compiler.yml pull``,
 and you can ignore them:
 
 ```bash
 ERROR: for submission-ui  manifest for arxiv/submission-ui:latest not found: manifest unknown: manifest unknown
-
 ERROR: for mock-compiler-api  pull access denied for arxiv/mock-compiler, repository does not exist or may require
 'docker login': denied: requested access to the resource is denied
-
 ERROR: for mock-classifier  pull access denied for arxiv/mock-classifier, repository does not exist or may require
 'docker login': denied: requested access to the resource is denied
 ERROR: pull access denied for arxiv/mock-classifier, repository does not exist or may require
 'docker login': denied: requested access to the resource is denied
 ```
-
-From this point on (after issuing docker-compose up command) the output is similar for both the mock and full
-compiler options. You may skip ahead to the section on what to expect during startup.
 
 ### Using your own PDF and compilation log.
 
@@ -107,7 +92,52 @@ When using the mock-compiler service you will get the same PDF and compilation l
 The idea behind the mock compiler service is to let you work through the entire submission process workflow
 without the hassle of installing the compiler service.
 
-## Quick start using arXiv Compiler service (with actual TeX compilation)
+## Quick start, adding the arXiv Compiler service with full TeX compilation
+
+This builds on the "Quick start with mock compilation" steps above.
+
+How to chose the option that's right for you: If you are not concerned with TeX
+compilation, or you have limited disk space, you will want the mock compiler option.
+If you are concerned with evaluating TeX compilation output and/or the submission
+'process' step under normal operating conditions you will want to install the
+actual Compiler service's converter image.
+
+###  AWS settings and Credentials
+
+One of the back-end services we run is 'localstack' which is a fully functional
+local AWS stack. While this local AWS stack implementation doesn't actually
+check credentials you must have the environment variables set for the service
+to work properly.
+
+First, you will need credentials to AWS ECR to get the converter docker
+image. You should only need to do this once. If it seems your quick
+start is not running the compiler it is probably because it cannot
+access this docker image on AWS ECR.
+
+To do this,
+1. log on to Cornell's AWS single sign-on http://signin.aws.cucloud.net
+2. On the AWS console, got to IAM
+3. Click "users: on the left, click the button "Add user"
+4. Add a name like YOURNETID-dev, click "Programmatic access", click "next: permissions"
+5. Click "Copy permissions from existing user"
+6. Select radio button for "arxiv-ecr-test", Click on the bottom "Next: tags"
+7. Click on bottom "next: review", click on bottom "create user", Click "Download.csv"
+
+8. Install awscli, on linux you can do "pip install awscli" or "pipenv install awscli" or look up how to do this on your OS. [Instructions for CLI install from AWS](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-install.html)
+
+9. On the command line run `aws configure` and enter the AWS access key ID, AWS secret access key and us-east-1 for region when prompted. Format can be 'json' 'text' or 'table' and is your preference.
+
+To test if you have access to ECR run:
+`aws ecr list-images --repository-name arxiv/converter`
+You should get a response of no error and a list of docker images.
+
+If you installed credentials with `aws configure`,
+you may need to remove fake credentials in your shell, for example:
+```bash
+unset AWS_ACCESS_KEY_ID  AWS_SECRET_ACCESS_KEY
+```
+
+### Compiler service (with actual TeX compilation)
 
 There are now multiple converter images that may be configured to compile TeX source.
 Most converter images contain a single TeX tree (to reduce size) along with one
@@ -120,7 +150,7 @@ TeX Live 2009; teTeX 2; and teTeX 3. The teTeX 2 tree contains multiple local tr
 Set the CONVERTER_DOCKER_IMAGE environment variable to indicate the converter image
 you would like to select.
 
-Please check arXiv's ASW ECR repository for the current list of images.
+Please check arXiv's AWS ECR repository for the current list of images.
 
   All Trees: (14.5G) Contains all trees, submissions uses latest tree.
     626657773168.dkr.ecr.us-east-1.amazonaws.com/arxiv/converter
@@ -161,46 +191,33 @@ In order to let the compiler service download a converter image simply set (incl
 ```bash
 export CONVERTER_DOCKER_IMAGE=626657773168.dkr.ecr.us-east-1.amazonaws.com/arxiv/converter-2009:0.1.0
 ```
+Login to the AWS ECR server to download docker images with one of these:
+```bash
+aws ecr get-login --no-include-email --region us-east-1
+aws ecr get-login-password | docker login --username AWS --password-stdin https://626657773168.dkr.ecr.us-east-1.amazonaws.com
+```
 To download manually execute the pull command with the appropriate converter image specification:
 ```bash
-$ docker pull 626657773168.dkr.ecr.us-east-1.amazonaws.com/arxiv/converter:latest
+$ docker pull $CONVERTER_DOCKER_IMAGE
 ```
 
 ** Compiler service seems to get confused when version number is not included. This will be fixed
 in a subsequent ticket whe time permits.
 
-### AWS Credentials
-First, you will need credentials to AWS ECR to get the converter docker
-image. You should only need to do this once. If it seems your quick
-start is not running the compiler it is probably because it cannot
-access this docker image on AWS ECR.
 
-To do this, 
-1. log on to Cornell's AWS single sign-on http://signin.aws.cucloud.net
-2. On the AWS console, got to IAM
-3. Click "users: on the left, click the button "Add user"
-4. Add a name like YOURNETID-dev, click "Programmatic access", click "next: permissions"
-5. Click "Copy permissions from existing user", select radio button for "arxiv-ecr-test", Click on the bottom "Next: tags"
-6. Click on bottom "next: review", click on bottom "create user", Click "Download.csv"
-
-7. Install awscli, on linux you can do "pip install awscli" or "pipenv install awscli" or look up how to do this on your OS. [Instructions for CLI install from AWS](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-install.html)
-
-8. On the command line run `aws configure` and enter the AWS access key ID, AWS secret access key and us-east-1 for region when prompted. Format can be 'json' 'text' or 'table' and is your preference.
-
-To test if you have access to ECR run:
-`aws ecr list-images --repository-name arxiv/converter`
-You should get a response of no error and a list of docker images.
-
-### Quick start commands (full compiler)
+### Running with the full compiler
 
 Make sure you have your AWS settings configured properly before proceeding ([see above](#aws-credentials)).
 
 ```bash
-cd /path/to/arxiv-submission-ui
 mkdir /tmp/foo          # Compiler service will use this.
+export DIND_SOURCE_ROOT=/tmp/foo
+export CONVERTER_DOCKER_IMAGE=626657773168.dkr.ecr.us-east-1.amazonaws.com/arxiv/converter:0.9
+export AWS_ACCESS_KEY_ID=fookey  AWS_SECRET_ACCESS_KEY=foosecretkey
+cd /path/to/arxiv-submission-ui
 docker-compose pull     # Pulls in images that you might not have already.
 docker-compose build    # Builds the submission UI
-DIND_SOURCE_ROOT=/tmp/foo CONVERTER_DOCKER_IMAGE=626657773168.dkr.ecr.us-east-1.amazonaws.com/arxiv/converter:0.9 docker-compose up
+docker-compose up
 ```
 
 You may see the following errors when running ``docker-compose pull``,
@@ -214,20 +231,7 @@ ERROR: for submission-bootstrap  manifest for arxiv/submission-ui:latest not fou
 ERROR: pull access denied for arxiv/mock-vault, repository does not exist or may require 'docker login'
 ```
 
-## What to expect during startup (hint: lots of logs messages from the various microservices)
-
-The `DIND_SOURCE_ROOT...docker-compose up` command will start a whole
-bunch of stuff. Fairly late in the process, a bootstrap process will
-run and generate a bunch of users who are authorized to submit
-things. It will look something like this:
-
-```
-submission-bootstrap     | 1 picoline2058@gmail.com eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzZXNzaW9uX2lkIjoiYWQyY2UxNmUtMjQwNi00NjgwLWI2NWItMDE3NGYyNDA0MzhlIiwic3RhcnRfdGltZSI6IjIwMTktMDItMTNUMTI6MjM6MzQuMjE2NzcxLTA1OjAwIiwidXNlciI6eyJ1c2VybmFtZSI6InBpY29saW5lMjA1OEBnbWFpbC5jb20iLCJlbWFpbCI6InBpY29saW5lMjA1OEBnbWFpbC5jb20iLCJ1c2VyX2lkIjoxLCJuYW1lIjp7ImZvcmVuYW1lIjoiTWF1cmEiLCJzdXJuYW1lIjoiWmFyZW1iYSIsInN1ZmZpeCI6IlBhbiJ9LCJwcm9maWxlIjp7ImFmZmlsaWF0aW9uIjoiQ29ybmVsbCBVbml2ZXJzaXR5IiwiY291bnRyeSI6InVzIiwicmFuayI6Mywic3VibWlzc2lvbl9ncm91cHMiOlsiZ3JwX3BoeXNpY3MiXSwiZGVmYXVsdF9jYXRlZ29yeSI6ImFzdHJvLXBoLkdBIiwiaG9tZXBhZ2VfdXJsIjoiIiwicmVtZW1iZXJfbWUiOnRydWV9LCJ2ZXJpZmllZCI6ZmFsc2V9LCJjbGllbnQiOm51bGwsImVuZF90aW1lIjoiMjAxOS0wMi0xM1QyMjoyMzozNC4yMTY3NzEtMDU6MDAiLCJhdXRob3JpemF0aW9ucyI6eyJjbGFzc2ljIjowLCJlbmRvcnNlbWVudHMiOlsiKi4qIl0sInNjb3BlcyI6WyJwdWJsaWM6cmVhZCIsInN1Ym1pc3Npb246Y3JlYXRlIiwic3VibWlzc2lvbjp1cGRhdGUiLCJzdWJtaXNzaW9uOnJlYWQiLCJ1cGxvYWQ6cmVhZCIsInVwbG9hZDp1cGRhdGUiLCJ1cGxvYWQ6ZGVsZXRlIiwidXBsb2FkOnJlYWRfbG9ncyJdfSwiaXBfYWRkcmVzcyI6bnVsbCwicmVtb3RlX2hvc3QiOm51bGwsIm5vbmNlIjpudWxsfQ.iNOiCGVIZi5iipElLRyUlnx9uucdK7aytjkvr87FTvI
-submission-bootstrap     | 2 aggregat2070@gmail.com eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzZXNzaW9uX2lkIjoiODhmYzMwYTUtNWMyMi00N2ZlLWIzMzEtMDJkNWFhNjUxZjRkIiwic3RhcnRfdGltZSI6IjIwMTktMDItMTNUMTI6MjM6MzQuMjIxNDQ3LTA1OjAwIiwidXNlciI6eyJ1c2VybmFtZSI6ImFnZ3JlZ2F0MjA3MEBnbWFpbC5jb20iLCJlbWFpbCI6ImFnZ3JlZ2F0MjA3MEBnbWFpbC5jb20iLCJ1c2VyX2lkIjoyLCJuYW1lIjp7ImZvcmVuYW1lIjoiQmlsZ2UiLCJzdXJuYW1lIjoiT2t1bXVcdTAxNWYiLCJzdWZmaXgiOiJQcm9mLiJ9LCJwcm9maWxlIjp7ImFmZmlsaWF0aW9uIjoiQ29ybmVsbCBVbml2ZXJzaXR5IiwiY291bnRyeSI6InVzIiwicmFuayI6Mywic3VibWlzc2lvbl9ncm91cHMiOlsiZ3JwX3BoeXNpY3MiXSwiZGVmYXVsdF9jYXRlZ29yeSI6ImFzdHJvLXBoLkdBIiwiaG9tZXBhZ2VfdXJsIjoiIiwicmVtZW1iZXJfbWUiOnRydWV9LCJ2ZXJpZmllZCI6ZmFsc2V9LCJjbGllbnQiOm51bGwsImVuZF90aW1lIjoiMjAxOS0wMi0xM1QyMjoyMzozNC4yMjE0NDctMDU6MDAiLCJhdXRob3JpemF0aW9ucyI6eyJjbGFzc2ljIjowLCJlbmRvcnNlbWVudHMiOlsiKi4qIl0sInNjb3BlcyI6WyJwdWJsaWM6cmVhZCIsInN1Ym1pc3Npb246Y3JlYXRlIiwic3VibWlzc2lvbjp1cGRhdGUiLCJzdWJtaXNzaW9uOnJlYWQiLCJ1cGxvYWQ6cmVhZCIsInVwbG9hZDp1cGRhdGUiLCJ1cGxvYWQ6ZGVsZXRlIiwidXBsb2FkOnJlYWRfbG9ncyJdfSwiaXBfYWRkcmVzcyI6bnVsbCwicmVtb3RlX2hvc3QiOm51bGwsIm5vbmNlIjpudWxsfQ.dZdha4zYX9KYsCCucCxcTNVFQQdV4p-ml00XvKKI2zY
-```
-
-Those are some JWTs you can use to access the submission UI. You will need to
-pass the JWT in the ``Authorization`` header.
+### What to expect during startup (hint: lots of logs messages from the various microservices)
 
 Keep in mind that it can take a little while for everything to spin up -- each
 service checks for all of its upstreams to be available, and provisions any

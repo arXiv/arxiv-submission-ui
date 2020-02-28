@@ -70,7 +70,9 @@ with app.app_context():
             scopes.DELETE_UPLOAD_FILE,
             scopes.READ_UPLOAD_LOGS,
             scopes.READ_COMPILE,
-            scopes.CREATE_COMPILE
+            scopes.CREATE_COMPILE,
+            scopes.READ_PREVIEW,
+            scopes.CREATE_PREVIEW
         ]
         for user in created_users:
             token = generate_token(user.user_id, user.email, user.email,

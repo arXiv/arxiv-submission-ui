@@ -16,6 +16,10 @@ submission workflow.
 
 ## Quick start with mock compilation
 
+The mock compilation configuration will run with Docker's default setting of 2GB memory.
+If you have the resources available, it's recommended to increase to 4GB now, to avoid later issues:
+[add memory for Docker on a Mac](https://docs.docker.com/docker-for-mac/#resources).
+
 Submission involves several back-end services, worker processes and
 the UI application itself. The easiest way to spin up all of this
 stuff with correct wiring is to use the provided docker-compose
@@ -49,11 +53,20 @@ get a response right away, the UI is probably still waiting for something
 to come up. If you are redirected to the production ArXiv.org login page,
 then your browser is not sending a valid JWT to localhost.
 
-To stop the service, and remove the docker compose containers, you can Ctrl-C or "stop", and then "rm":
+To stop the service, and remove the docker compose containers, you can Ctrl-C or "stop", and then "rm".
+To remove images so they will be rebuilt, use 'docker prune' or 'docker rmi':
 ```bash
 docker-compose -f docker-compose-mock-compiler.yml stop
 docker-compose -f docker-compose-mock-compiler.yml rm -v
+docker system prune
 ```
+
+### Common issues getting started
+
+- If localhost is not working:
+  - You may have a local process running on a port. E.g.: With docker compose stopped, check for a running mysql with 'brew services' or 'lsof -i :3306' or 'ps aux | grep mysqld'.
+  - Increase the memory, up to 4GB.
+- If you are redirected from localhost to arxiv.org, check your JWT configuration.
 
 ### About the mock compiler service
 

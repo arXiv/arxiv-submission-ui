@@ -303,42 +303,44 @@ development server for quicker cycles.
 So you can start the submission UI in dev mode with something like:
 
 ```bash
-$ cd arxiv-submission-ui
-$ # Check out branch you are evaluating and be sure to pull recent changes
-$ git pull
-$ pipenv install --dev
-$ export VAULT_ENABLED="0"
-$ export NAMESPACE="development"
-$ export LOGLEVEL=10
-$ export JWT_SECRET=foosecret
-$ export SESSION_COOKIE_SECURE=0
-$ export CLASSIC_DATABASE_URI="mysql+mysqldb://foouser:foopass@127.0.0.1:3307/submission?charset=utf8mb4"
-$ export WAIT_FOR_SERVICES=0
-$ export WAIT_ON_STARTUP=0
-$ export FILEMANAGER_ENDPOINT="http://localhost:8001/filemanager/api"
-$ export FILEMANAGER_CONTENT_PATH="/{source_id}/content"
-$ export COMPILER_ENDPOINT="http://localhost:8100/"
-$ export COMPILER_VERIFY=0
-$ export PREVIEW_ENDPOINT='http://localhost:9001/'
-$ export PREVIEW_VERIFY=0
-$ export KINESIS_STREAM="SubmissionEvents"
-$ export KINESIS_VERIFY=0
-$ export KINESIS_ENDPOINT="https://localhost:4568"
-$ export KINESIS_START_TYPE="TRIM_HORIZON"
-$ FLASK_APP=app.py FLASK_DEBUG=1 pipenv run flask run
+cd arxiv-submission-ui
+# Check out branch you are evaluating and be sure to pull recent changes
+git pull
+pipenv install --dev
+export VAULT_ENABLED="0"
+export NAMESPACE="development"
+export LOGLEVEL=10
+export JWT_SECRET=foosecret
+export SESSION_COOKIE_SECURE=0
+export CLASSIC_DATABASE_URI="mysql+mysqldb://foouser:foopass@127.0.0.1:3307/submission?charset=utf8mb4"
+export WAIT_FOR_SERVICES=0
+export WAIT_ON_STARTUP=0
+export FILEMANAGER_ENDPOINT="http://localhost:8001/filemanager/api"
+export FILEMANAGER_CONTENT_PATH="/{source_id}/content"
+export COMPILER_ENDPOINT="http://localhost:8100/"
+export COMPILER_VERIFY=0
+export PREVIEW_ENDPOINT='http://localhost:9001/'
+export PREVIEW_VERIFY=0
+export KINESIS_STREAM="SubmissionEvents"
+export KINESIS_VERIFY=0
+export KINESIS_ENDPOINT="https://localhost:4568"
+export KINESIS_START_TYPE="TRIM_HORIZON"
+export FLASK_APP=app.py
+export FLASK_DEBUG=1
+pipenv run flask run
 ```
 
 And access it at http://localhost:5000.
 
 ## Generating an auth token
 
-You MUST create a valid token to run the UI/FM development environment. The easiest way to do this is use the generate_token.py script in arxiv-auth.
+You MUST create a valid token to run the UI/FM development environment. The easiest way to do this is use the generate-token script in arxiv-auth. Adjust the defaults for 'Endorsement categories' and 'Authorization scope', and add the JWT to requestly for localhost:5000:
 
 ```bash
 $ cd arxiv-auth
 $ git pull
 $ pipenv install ./users
-$ JWT_SECRET=foosecret pipenv run python generate_token.py
+$ JWT_SECRET=foosecret pipenv run python users/bin/generate-token
 Numeric user ID: 1234
 Email address: jdoe@cornell.edu
 Username: Jane Doe

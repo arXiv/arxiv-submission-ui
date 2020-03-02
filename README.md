@@ -54,7 +54,7 @@ to come up. If you are redirected to the production ArXiv.org login page,
 then your browser is not sending a valid JWT to localhost.
 
 To stop the service, and remove the docker compose containers, you can Ctrl-C or "stop", and then "rm".
-To remove images so they will be rebuilt, use 'docker prune' or 'docker rmi':
+To remove images so they will be rebuilt, use prune or 'docker rmi':
 ```bash
 docker-compose -f docker-compose-mock-compiler.yml stop
 docker-compose -f docker-compose-mock-compiler.yml rm -v

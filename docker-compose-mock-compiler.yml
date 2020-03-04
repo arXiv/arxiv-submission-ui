@@ -33,7 +33,8 @@ x-base-service:
 services:
 
   filemanager:
-    image: arxiv/filemanager:8846087
+    # corresponds with commit from 2020-02-27: https://github.com/arXiv/arxiv-filemanager/commit/564f852a9078138c462481c2efb7b0a070c00c05
+    image: arxiv/filemanager:564f852
     # You can uncomment these lines to build this from a local
     # repo. You may need to update `context`.
     # build:
@@ -68,7 +69,8 @@ services:
       retries: 3
 
   submission-worker:
-    image: arxiv/submission-agent:2c83801
+    # corresponds with commit from 2020-02-27: https://github.com/arXiv/arxiv-submission-core/commit/9222d6f650d9ce45a1a76961018f2ae562a37e26
+    image: arxiv/submission-agent:9222d6f
     command: "/bin/bash -c 'python -m agent.bootstrap && celery worker -A agent.worker.worker_app --loglevel=INFO -E --concurrency=2'"
     container_name: arxiv-submission-worker
     environment:
@@ -126,7 +128,8 @@ services:
       - arxiv-submission-ui
 
   submission-agent:
-    image: arxiv/submission-agent:2c83801
+    # corresponds with commit from 2020-02-27: https://github.com/arXiv/arxiv-submission-core/commit/9222d6f650d9ce45a1a76961018f2ae562a37e26
+    image: arxiv/submission-agent:9222d6f
     container_name: arxiv-submission-agent
     command: "/bin/bash -c 'python -m agent.bootstrap && python -m agent.consumer'"
     environment:
@@ -187,7 +190,8 @@ services:
       - arxiv-submission-ui
 
   submission-ui:
-    image: arxiv/submission-ui
+    # corresponds with commit from 2020-02-27: https://github.com/arXiv/arxiv-submission-ui/commit/22ae284
+    image: arxiv/submission-ui:22ae284
     build:
       context: .
       dockerfile: Dockerfile
@@ -235,7 +239,7 @@ services:
       retries: 3
 
   submission-preview:
-    image: arxiv/preview:4c4e282
+    image: arxiv/submission-preview:0.1rc1
     container_name: preview
     networks:
       - arxiv-submission-ui

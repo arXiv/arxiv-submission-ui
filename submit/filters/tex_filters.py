@@ -513,6 +513,8 @@ def compilation_log_display(autotex_log: str, submission_id: int,
         status_class = 'fatal'
         if xetex_luatex_abort:
             display_status = "Failed: XeTeX/LuaTeX are not supported at current time."
+        elif missing_file:
+            display_status = "Failed: File not found."
         else:
             display_status = "Failed"
     elif compilation_status == 'succeeded':

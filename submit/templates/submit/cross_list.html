@@ -3,14 +3,24 @@
 {% block title -%}Choose Cross-List Categories (Optional){%- endblock title %}
 
 {% block within_content %}
-<p>You may cross-list your article to another relevant category here. If accepted your article will appear in the regular listing for that category (in the cross-list section).<br><br>
+<p>You may cross-list your article to another relevant category here.
+  If accepted your article will appear in the regular listing for that category (in the cross-list section).
   Cross-lists should be of direct interest to the professionals studying that field, not simply use techniques of, or derived from, that field.
-  Readers consider <strong>excessive or inappropriate cross-listing to be bad etiquette</strong>. 
-  Adding more than three cross-list classifications will result in a delay in the acceptance of your submission.
-  It is rarely appropriate to add more than one or two cross-lists. Note you are unlikely to know that a cross-list is appropriate unless you are yourself a reader of the archive which you are considering.</p>
+</p>
+<div class="message is-warning">
+  <div class="message-body">
+    <p><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" class="icon filter-orange" role="presentation"><path d="M256 8C119.043 8 8 119.083 8 256c0 136.997 111.043 248 248 248s248-111.003 248-248C504 119.083 392.957 8 256 8zm0 110c23.196 0 42 18.804 42 42s-18.804 42-42 42-42-18.804-42-42 18.804-42 42-42zm56 254c0 6.627-5.373 12-12 12h-88c-6.627 0-12-5.373-12-12v-24c0-6.627 5.373-12 12-12h12v-64h-12c-6.627 0-12-5.373-12-12v-24c0-6.627 5.373-12 12-12h64c6.627 0 12 5.373 12 12v100h12c6.627 0 12 5.373 12 12v24z"/></svg>
+      <span class="has-text-weight-bold">Adding more than three cross-list classifications will result in a delay in the acceptance of your submission.</span>
+      Readers consider excessive or inappropriate cross-listing to be bad etiquette.
+      It is rarely appropriate to add more than one or two cross-lists.
+      Note you are unlikely to know that a cross-list is appropriate unless you are yourself a reader of the archive which you are considering.
+    </p>
+  </div>
+</div>
 
 {% if formset.items %}
 <div class="content-container">
+  <p>(Optional) Add cross-list categories from the list below.</p>
   {% for category, subform in formset.items() %}
   <!-- TODO: limit number of cross links to no more than 5 total -->
   <form method="POST" class="form form-margin control" action="{{ url_for('ui.cross_list', submission_id=submission_id) }}">

@@ -3,15 +3,6 @@
 {% block title -%}Choose a Primary Category{%- endblock title %}
 
 {% block more_notifications -%}
-  <div class="message is-warning">
-    <div class="message-header">
-      <p>Test message header</p>
-    </div>
-    <div class="message-body">
-      <p>This is a test additional message. The real messages are about endorsers and endorsed categories. If applicable will appear here in the messages area.</p>
-    </div>
-  </div>
-
   {% if submitter.endorsements|endorsetype == 'None' %}
   <div class="message is-danger">
     <div class="message-header">

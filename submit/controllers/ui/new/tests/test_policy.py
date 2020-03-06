@@ -5,7 +5,7 @@ from http import HTTPStatus as status
 from unittest import TestCase, mock
 
 from pytz import timezone
-from werkzeug import MultiDict
+from werkzeug.datastructures import MultiDict
 from werkzeug.exceptions import InternalServerError, NotFound, BadRequest
 from wtforms import Form
 
@@ -126,6 +126,27 @@ class TestConfirmPolicy(TestCase):
         self.assertEqual(code, status.OK)
         self.assertEqual(get_controllers_desire(data), STAGE_SUCCESS)
 
+
+    @mock.patch(f'{policy.__name__}.PolicyForm.Meta.csrf', False)
+    @mock.patch('submit.controllers.ui.util.url_for')
+    @mock.patch(f'{policy.__name__}.save')
+    @mock.patch('arxiv.submission.load')
+    def test_post_request_with_data_already_accepted(self, mock_load, mock_save, mock_url_for):
+        """POST request with `policy` y and already set on the submission."""
+        submission_id = 2
+        before = mock.MagicMock(submission_id=submission_id,
+                                is_finalized=False,
+                                submitter_accepts_policy=True)
+        after = mock.MagicMock(submission_id=submission_id, is_finalized=False)
+        mock_load.return_value = (before, [])
+        mock_save.return_value = (after, [])
+        mock_url_for.return_value = 'https://foo.bar.com/yes'
+
+        params = MultiDict({'policy': 'y', 'action': 'next'})
+        data, code, _ = policy.policy('POST', params, self.session, submission_id)
+        self.assertEqual(code, status.OK)
+        self.assertEqual(get_controllers_desire(data), STAGE_SUCCESS)
+        
     @mock.patch(f'{policy.__name__}.PolicyForm.Meta.csrf', False)
     @mock.patch('submit.controllers.ui.util.url_for')
     @mock.patch(f'{policy.__name__}.save')

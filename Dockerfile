@@ -1,13 +1,13 @@
 # arXiv submission UI
 
-ARG BASE_VERSION=0.16.5
+ARG BASE_VERSION=0.16.6
 
 FROM arxiv/base:${BASE_VERSION}
 
 WORKDIR /opt/arxiv/
 
 COPY Pipfile Pipfile.lock /opt/arxiv/
-RUN pipenv install && rm -rf ~/.cache/pip
+RUN pipenv sync && rm -rf ~/.cache/pip
 
 ENV PATH "/opt/arxiv:${PATH}"
 

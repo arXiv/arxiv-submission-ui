@@ -6,15 +6,20 @@ main
   /* move this to base as $section-padding */
   padding: 1em 0
 
-.button
+.button, p .button
+  font-family: "Open Sans", "Lucida Grande", "Helvetica Neue", Helvetica, Arial, sans-serif
+  font-size: 1rem
   &.is-short
     height: 1.75em
-
+  svg.icon
+    top: 0
+    font-size: .9em
+.button.reprocess
+  margin-top: .5em
 /* Allows text in a button to wrap responsively. */
 .button-is-wrappable
   height: 100%
   white-space: normal
-
 .button-feedback
   vertical-align: baseline
 
@@ -25,6 +30,13 @@ main
   .button
     .icon
       margin-right: 0 !important
+/* controls display of close button for messages */
+.message
+  button.notification-dismiss
+    position: relative
+    z-index: 1
+    top: 30px
+    margin-left: calc(100% - 30px)
 
 .form-margin
   margin: .4em 0
@@ -35,17 +47,17 @@ main
 .policy-scroll
   margin: 0
   margin-bottom: -1em
-  padding: 1em
+  padding: 1em 3em
   max-height: 400px
   overflow-y: scroll
-
+  @media screen and (max-width: 768px)
+    padding: 1em
   @media screen and (max-width: 400px)
     max-height: 250px
-
+/* forces display of scrollbar in webkit browsers */
 .policy-scroll::-webkit-scrollbar
   -webkit-appearance: none
   width: 7px
-
 .policy-scroll::-webkit-scrollbar-thumb
   border-radius: 4px
   background-color: rgba(0,0,0,.5)
@@ -65,7 +77,6 @@ h2
     width: 10%
     display: none
     color: #005e9d
-
   .replacement
     margin-top: -2rem
     margin-bottom: 2rem
@@ -77,10 +88,8 @@ h1.title.title-submit
   margin-bottom: 0.5em
   clear: both
   color: #005e9d !important
-
   .preamble
     color: #7f8d93
-
   @media screen and (max-width: 768px)
     .title.title-submit
       margin-top: 0
@@ -137,6 +146,31 @@ h1.title.title-submit
   border-bottom: 0px
 .action-container
   box-shadow: 0 0 9px 0 rgba(210, 210, 210, .5)
+  .upload-notes
+    border-bottom: 1px solid #d3e1e6
+    padding-bottom: 1em
+
+/* abs preview styles */
+.content-container #abs
+  margin: 1em 2em
+  .title
+    font-weight: 700
+    font-size: x-large
+  blockquote.abstract
+    font-size: 1.15rem
+    margin: 1em 2em 2em 4em
+  .authors
+    margin-top: 20px
+    margin-bottom: 0
+  .dateline
+    text-transform: uppercase
+    font-style: normal
+    font-size: .8rem
+    margin-top: 2px
+  @media screen and (max-width: 768px)
+    blockquote.abstract
+      margin: 1em
+
 /* category styles on cross-list page */
 .category-list
   .action-container
@@ -198,6 +232,8 @@ ol.file-tree
     background-color: white
     &.even
       background-color: $stripe-color
+    button
+      vertical-align: baseline
   form:nth-of-type(odd)
     li
       background-color: $stripe-color
@@ -216,6 +252,10 @@ ol.file-tree
         margin-top: 0
 
 /* For highlighting TeX logs */
+.highlight-key
+    border-top: 1px solid #d3e1e6
+    border-bottom: 1px solid #d3e1e6
+    padding: 1em 0 2em 0
 .tex-help
   background-color: rgba(28, 97, 246, 0.40)
   /* background-color: rgba(152, 35, 255, 0.40) */
@@ -277,9 +317,8 @@ ol.file-tree
     transition: 0.3s
     border: 0
     flex-grow: 1
-
   li a
-    font-weight: 300
+    font-weight: 600
     text-decoration: none
     color: #f5fbff
     padding-left: 1em
@@ -288,20 +327,18 @@ ol.file-tree
     padding-bottom: 0px
     transition: color 0.3s
     height: 25px
-
   li a:hover,
   li a:focus,
   li a:active
     text-decoration: none
     border-bottom: 0px
-    color: #f5fbff
+    color: #032121
 
   /*complete styles*/
   li.is-complete
     background-color: #e9f0f5
-
   li.is-complete a
-    color: #657277
+    color: #535E62
     text-decoration: underline
     font-weight: 300
     transition: 0.3s
@@ -313,7 +350,6 @@ ol.file-tree
   li.is-complete.is-active
     background-color: #005e9d
     box-shadow: 0 0 10px 0 rgba(0,0,0,.25)
-
   li.is-active a,
   li.is-complete.is-active a
     color: #f5fbff
@@ -321,7 +357,6 @@ ol.file-tree
     cursor: default
     pointer-events: none
     height: 30px
-
   li.is-active a
     text-decoration: none
 

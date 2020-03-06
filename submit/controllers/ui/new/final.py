@@ -4,7 +4,7 @@ Provides the final preview and confirmation step.
 
 from typing import Tuple, Dict, Any
 
-from werkzeug import MultiDict
+from werkzeug.datastructures import MultiDict
 from werkzeug.exceptions import InternalServerError, BadRequest
 from flask import url_for
 from wtforms import BooleanField

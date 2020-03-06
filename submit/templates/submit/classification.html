@@ -3,15 +3,6 @@
 {% block title -%}Choose a Primary Category{%- endblock title %}
 
 {% block more_notifications -%}
-  <div class="message is-warning">
-    <div class="message-header">
-      <p>Test message header</p>
-    </div>
-    <div class="message-body">
-      <p>This is a test additional message. The real messages are about endorsers and endorsed categories. If applicable will appear here in the messages area.</p>
-    </div>
-  </div>
-
   {% if submitter.endorsements|endorsetype == 'None' %}
   <div class="message is-danger">
     <div class="message-header">
@@ -90,7 +81,7 @@
           <div class="message-body">
             <p class="is-size-6">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512" class="icon filter-grey" role="presentation"><path d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"/></svg>
-              Select a category from the dropdown to view it's description
+              Select a category from the dropdown to view its description
             </p>
           </div>
         </div>

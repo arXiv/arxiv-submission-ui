@@ -5,7 +5,7 @@ from typing import Optional
 
 from flask import url_for
 from wtforms import BooleanField, validators
-from werkzeug import MultiDict
+from werkzeug.datastructures import MultiDict
 from werkzeug.exceptions import BadRequest, InternalServerError, NotFound
 
 from arxiv.base import logging, alerts

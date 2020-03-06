@@ -17,7 +17,7 @@ from locale import strxfrm
 from typing import Tuple, Dict, Any, Optional, List, Union, Mapping
 
 from flask import url_for, Markup
-from werkzeug import MultiDict
+from werkzeug.datastructures import MultiDict
 from werkzeug.datastructures import FileStorage
 from werkzeug.exceptions import (
     InternalServerError,
@@ -153,8 +153,7 @@ def upload_files(method: str, params: MultiDict, session: Session,
 class UploadForm(csrf.CSRFForm):
     """Form for uploading files."""
 
-    file = FileField('Choose a file...',
-                     validators=[DataRequired()])
+    file = FileField('Choose a file...')
     ancillary = BooleanField('Ancillary')
 
 

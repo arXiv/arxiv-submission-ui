@@ -8,7 +8,7 @@ from http import HTTPStatus as status
 from typing import Tuple, Dict, Any
 
 from flask import url_for
-from werkzeug import MultiDict
+from werkzeug.datastructures import MultiDict
 from werkzeug.exceptions import InternalServerError, BadRequest
 from wtforms.fields import RadioField
 from wtforms.validators import InputRequired
@@ -50,7 +50,10 @@ def license(method: str, params: MultiDict, session: Session,
 
     if method == 'POST' and form.validate():
         license_uri = form.license.data
-        if not submission.license or submission.license.uri != license_uri:
+        if submission.license and submission.license.uri == license_uri:
+            return ready_for_next((response_data, status.OK, {}))
+        if not submission.license \
+           or submission.license.uri != license_uri:
             command = SetLicense(creator=submitter, client=client,
                                  license_uri=license_uri)
             if validate_command(form, command, submission, 'license'):

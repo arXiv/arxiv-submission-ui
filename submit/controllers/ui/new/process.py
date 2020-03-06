@@ -20,7 +20,7 @@ from arxiv.submission.process import process_source
 from arxiv.submission.services import PreviewService, Compiler
 from arxiv.users.domain import Session
 from flask import url_for, Markup
-from werkzeug import MultiDict
+from werkzeug.datastructures import MultiDict
 from werkzeug.exceptions import InternalServerError, NotFound, MethodNotAllowed
 from wtforms import SelectField
 

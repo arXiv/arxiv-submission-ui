@@ -144,7 +144,7 @@ SUBMISSION_PREVIEW_ENDPOINT = environ.get(
 """
 Full URL to the root preview service API endpoint.
 
-If not explicitly provided, this is composed from :const:`PREVIEW_HOST`,
+If not explicitly provided, this is composed from :const:`SUBMISSION_PREVIEW_HOST`,
 :const:`SUBMISSION_PREVIEW_PORT`, :const:`SUBMISSION_PREVIEW_PROTO`,
 and :const:`SUBMISSION_PREVIEW_PATH`.
 """

@@ -23,7 +23,7 @@ spec:
   - host: "{{ .Values.ingress.host }}"
     http:
       paths:
-      - path: "{{ default "/" .Values.ingress.path }}"
+      - path: "{{ default "/submit" .Values.ingress.path }}"
         backend:
           serviceName: "{{ default "submission-ui" .Values.name }}"
           servicePort: 80

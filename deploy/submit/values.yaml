@@ -18,7 +18,7 @@ authenticator:
 ingress:
   name: submission-ui
   host: changeme
-  path: /
+  path: /submit
 
 vault:
   host: changeme

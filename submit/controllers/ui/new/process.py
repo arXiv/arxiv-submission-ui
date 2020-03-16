@@ -202,7 +202,7 @@ def start_compilation(params: MultiDict, session: Session, submission_id: int,
         if 'reason' in result.extra and "produced from TeX source" in result.extra['reason']:
             msg = Markup("The submission PDF file appears to have been produced by TeX. <p>This file has been rejected " \
                   "as part your submission because it appears to be pdf generated from TeX/LaTeX source. " \
-                  "For the reasons outlined at in the Why TeX FAQ we insist on submission of the TeX " \
+                  "For the reasons outlined in the "Why TeX" FAQ we insist on submission of the TeX " \
                   "source rather than the processed version.</p>" \
                   "<p>Our software includes an automatic TeX processing " \
                   "script that will produce PDF, PostScript and dvi from your TeX source. " \

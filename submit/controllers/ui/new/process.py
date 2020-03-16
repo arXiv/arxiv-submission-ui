@@ -212,7 +212,7 @@ def start_compilation(params: MultiDict, session: Session, submission_id: int,
             alerts.flash_failure(Markup(msg))
         elif 'reason' in result.extra and 'docker' in result.extra['reason']:
             msg = Markup("Our automatic TeX processing system has failed to launch. " \
-                         "There is a good cchance we are aware of the issue, but if the problem persists "
+                         "There is a good chance we are aware of the issue, but if the problem persists "
                          "you should send e-mail with your submission " \
                          'number to <a href="mailto:help@arxiv.org">arXiv administrators.</a></p>')
             alerts.flash_failure(Markup(msg))

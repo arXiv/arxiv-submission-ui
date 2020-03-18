@@ -22,8 +22,8 @@ mypy_extensions = "*"
 mypy = "==0.720"
 arxiv-auth = "~=0.4.2rc1"
 arxiv-vault = "~=0.1.1rc15"
-arxiv-base = "~=0.16.5"
-arxiv-submission-core = "==0.7.2rc14"
+arxiv-base = "~=0.16.6"
+arxiv-submission-core = "==0.7.2rc16"
 pypdf2 = "==1.26.0"
 
 [dev-packages]

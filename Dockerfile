@@ -1,6 +1,6 @@
 # arXiv submission UI
 
-ARG BASE_VERSION=0.16.5
+ARG BASE_VERSION=0.16.6
 
 FROM arxiv/base:${BASE_VERSION}
 

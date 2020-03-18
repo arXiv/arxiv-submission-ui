@@ -157,7 +157,7 @@ services:
       - arxiv-submission-ui
 
   submission-worker:
-    image: arxiv/submission-agent:2c83801
+    image: arxiv/submission-agent:9222d6f
     command: "/bin/bash -c 'python -m agent.bootstrap && celery worker -A agent.worker.worker_app --loglevel=INFO -E --concurrency=2'"
     container_name: arxiv-submission-worker
     environment:
@@ -213,7 +213,7 @@ services:
       - arxiv-submission-ui
 
   submission-agent:
-    image: arxiv/submission-agent:2c83801
+    image: arxiv/submission-agent:9222d6f
     container_name: arxiv-submission-agent
     command: "/bin/bash -c 'python -m agent.bootstrap && python -m agent.consumer'"
     environment:

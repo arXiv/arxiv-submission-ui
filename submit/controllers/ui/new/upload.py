@@ -153,8 +153,7 @@ def upload_files(method: str, params: MultiDict, session: Session,
 class UploadForm(csrf.CSRFForm):
     """Form for uploading files."""
 
-    file = FileField('Choose a file...',
-                     validators=[DataRequired()])
+    file = FileField('Choose a file...')
     ancillary = BooleanField('Ancillary')
 
 

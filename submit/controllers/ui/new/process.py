@@ -23,7 +23,7 @@ from flask import url_for, Markup
 from werkzeug.datastructures import MultiDict
 from werkzeug.exceptions import InternalServerError, NotFound, MethodNotAllowed
 from wtforms import SelectField
-
+from .reasons import TEX_PRODUCED_MARKUP, DOCKER_ERROR_MARKUOP, SUCCESS_MARKUP
 from submit.controllers.ui.util import user_and_client_from_session
 from submit.routes.ui.flow_control import ready_for_next, stay_on_this_stage
 from submit.util import load_submission
@@ -200,30 +200,13 @@ def start_compilation(params: MultiDict, session: Session, submission_id: int,
 
     if result.status == process_source.FAILED:
         if 'reason' in result.extra and "produced from TeX source" in result.extra['reason']:
-            msg = Markup("The submission PDF file appears to have been produced by TeX. <p>This file has been rejected " \
-                  "as part your submission because it appears to be pdf generated from TeX/LaTeX source. " \
-                  "For the reasons outlined at in the Why TeX FAQ we insist on submission of the TeX " \
-                  "source rather than the processed version.</p>" \
-                  "<p>Our software includes an automatic TeX processing " \
-                  "script that will produce PDF, PostScript and dvi from your TeX source. " \
-                  "If our determination that your " \
-                  "submission is TeX produced is incorrect, you should send e-mail with your submission " \
-                  'number to <a href="mailto:help@arxiv.org">arXiv administrators.</a></p>')
-            alerts.flash_failure(Markup(msg))
+            alerts.flash_failure(TEX_PRODUCED_MARKUP)
         elif 'reason' in result.extra and 'docker' in result.extra['reason']:
-            msg = Markup("Our automatic TeX processing system has failed to launch. " \
-                         "There is a good cchance we are aware of the issue, but if the problem persists "
-                         "you should send e-mail with your submission " \
-                         'number to <a href="mailto:help@arxiv.org">arXiv administrators.</a></p>')
-            alerts.flash_failure(Markup(msg))
+            alerts.flash_failure(DOCKER_ERROR_MARKUOP)
         else:
             alerts.flash_failure(f"Processing failed")
     else:
-        alerts.flash_success(
-            "We are processing your submission. This may take a minute or two."
-            " This page will refresh automatically every 5 seconds. You can "
-            " also refresh this page manually to check the current status. ",
-            title="Processing started"
+        alerts.flash_success(SUCCESS_MARKUP, title="Processing started"
         )
 
     return stay_on_this_stage((response_data, status.OK, {}))

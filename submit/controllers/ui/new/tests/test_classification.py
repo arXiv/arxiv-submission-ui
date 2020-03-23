@@ -250,9 +250,11 @@ class TestCrossList(TestCase):
         before = mock.MagicMock(submission_id=submission_id,
                                 is_finalized=False,
                                 primary_classification=mock_clsn,
+                                primary_category='astro-ph.EP',
                                 is_announced=False, version=1, arxiv_id=None)
         after = mock.MagicMock(submission_id=submission_id, is_finalized=False,
                                primary_classification=mock_clsn,
+                               primary_category='astro-ph.EP',
                                secondary_categories=[
                                    mock.MagicMock(category='astro-ph.CO')
                                ],

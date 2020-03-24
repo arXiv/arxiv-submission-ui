@@ -26,6 +26,57 @@
     </div>
   </div>
 
+  {% elif status == "failed" and reason %}
+  <div id="status-message" data-status="{{ status }}" class="message is-danger">
+    <div class="message-header">
+      <p>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512" class="icon filter-red" role="presentation"><path d="M569.517 440.013C587.975 472.007 564.806 512 527.94 512H48.054c-36.937 0-59.999-40.055-41.577-71.987L246.423 23.985c18.467-32.009 64.72-31.951 83.154 0l239.94 416.028zM288 354c-25.405 0-46 20.595-46 46s20.595 46 46 46 46-20.595 46-46-20.595-46-46-46zm-43.673-165.346l7.418 136c.347 6.364 5.609 11.346 11.982 11.346h48.546c6.373 0 11.635-4.982 11.982-11.346l7.418-136c.375-6.874-5.098-12.654-11.982-12.654h-63.383c-6.884 0-12.356 5.78-11.981 12.654z"/></svg>
+        {% if "docker" in reason %}
+        Processing Failed:  There was an unrecoverable internal error in the compilation system.
+        {% elif 'produced from TeX source' in reason %}
+        Processing Failed:  {{ reason }}
+        {% else %}
+        Processing Failed:
+        {% endif %}
+      </p>
+    </div>
+    {% if 'produced from TeX source' in reason %}
+    <div class="message-body">
+      <p>What to do next:</p>
+      <ul>
+        <li>upload the TeX source for your submission</li>
+        <li>or contact <a href="mailto:help@arxiv.org">arXiv administrators.</a> for assistance</li>
+      </ul>
+      <p class="has-text-centered"><a class="button is-link" href="{{ url_for('ui.file_upload', submission_id=submission_id) }}">Go back to Upload Files</a></p>
+      <p class="has-text-centered"><a class="button" href="{{ url_for('help_mistakes') }}">Help: Common TeX Errors</a></p>
+    </div>
+    <!-- This is an internal error message from the compilation service. -->
+    {% elif "docker" in reason %}
+     <div class="message-body">
+      <p>What to do next:</p>
+      <ul>
+        <li>There is no end-user solution to this system problem.</li>
+        <li>Please contact <a href="mailto:help@arxiv.org">arXiv administrators.</a> and provide the message above.</li>
+      </ul>
+      <p class="has-text-centered"><a class="button is-link" href="{{ url_for('ui.file_upload', submission_id=submission_id) }}">Go back to Upload Files</a></p>
+      <p class="has-text-centered"><a class="button" href="{{ url_for('help_mistakes') }}">Help: Common TeX Errors</a></p>
+    </div>
+    {% else %}
+    <div class="message-body">
+      <p>What to do next:</p>
+      <ul>
+        <li>review the log warnings and errors</li>
+        <li>correct any missing file problems</li>
+        <li>edit your files if needed</li>
+        <li>re-upload any corrected files</li>
+        <li>process your upload after corrections</li>
+      </ul>
+      <p class="has-text-centered"><a class="button is-link" href="{{ url_for('ui.file_upload', submission_id=submission_id) }}">Go back to Upload Files</a></p>
+      <p class="has-text-centered"><a class="button" href="{{ url_for('help_mistakes') }}">Help: Common TeX Errors</a></p>
+    </div>
+    {% endif %}
+  </div>
+
   {% elif status == "failed" %}
   <div id="status-message" data-status="{{ status }}" class="message is-danger">
     <div class="message-header">

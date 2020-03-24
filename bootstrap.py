@@ -74,7 +74,7 @@ with app.app_context():
             scopes.READ_COMPILE,
             scopes.CREATE_COMPILE,
             scopes.READ_PREVIEW,
-            scopes.CREATE_PREVIEW,
+            scopes.CREATE_PREVIEW
         ]
         for user in created_users:
             token = generate_token(

@@ -23,7 +23,7 @@ from flask import url_for, Markup
 from werkzeug.datastructures import MultiDict
 from werkzeug.exceptions import InternalServerError, NotFound, MethodNotAllowed
 from wtforms import SelectField
-
+from .reasons import TEX_PRODUCED_MARKUP, DOCKER_ERROR_MARKUOP, SUCCESS_MARKUP
 from submit.controllers.ui.util import user_and_client_from_session
 from submit.routes.ui.flow_control import ready_for_next, stay_on_this_stage
 from submit.util import load_submission
@@ -199,13 +199,14 @@ def start_compilation(params: MultiDict, session: Session, submission_id: int,
     response_data.update(**result.extra)
 
     if result.status == process_source.FAILED:
-        alerts.flash_failure(f"Processing failed")
+        if 'reason' in result.extra and "produced from TeX source" in result.extra['reason']:
+            alerts.flash_failure(TEX_PRODUCED_MARKUP)
+        elif 'reason' in result.extra and 'docker' in result.extra['reason']:
+            alerts.flash_failure(DOCKER_ERROR_MARKUOP)
+        else:
+            alerts.flash_failure(f"Processing failed")
     else:
-        alerts.flash_success(
-            "We are processing your submission. This may take a minute or two."
-            " This page will refresh automatically every 5 seconds. You can "
-            " also refresh this page manually to check the current status. ",
-            title="Processing started"
+        alerts.flash_success(SUCCESS_MARKUP, title="Processing started"
         )
 
     return stay_on_this_stage((response_data, status.OK, {}))

@@ -17,6 +17,14 @@ DISABLE_HPDFLATEX = r'(\~+\sRunning hpdflatex.*\s\~+)'
 
 RUN_ORDER = ['last', 'first', 'second', 'third', 'fourth']
 
+def initialize_error_summary() -> str:
+    """Initialize the error_summary string with desired markuop."""
+    error_summary = '\nSummary of <span class="tex-fatal">Critical Errors:</span>\n\n<ul>\n'
+    return error_summary
+
+def finalize_error_summary(error_summary: str) -> str:
+    error_summary = error_summary + "</ul>\n"
+    return error_summary
 
 def compilation_log_display(autotex_log: str, submission_id: int,
                             compilation_status: str) -> str:
@@ -241,16 +249,27 @@ def compilation_log_display(autotex_log: str, submission_id: int,
         ['ignore', 'warning', 'first'],
         ['ignore', 'undefined', 'first'],
     ]
-    abort_markup = False
+
+    # Try to create summary containing errors deemed important for user
+    # to address.
     error_summary = ''
-    missing_font_markup = False
-    rerun_markup = False
+
+    # Keep track of any errors we've already added to error_summary
+    abort_any_further_markup = False
+    have_detected_xetex_luatex = False
+    have_detected_emergency_stop = False
+    have_detected_missing_file = False
+    have_detected_missing_font_markup = False
+    have_detected_rerun_markup = False
+
+    # Collect some state about
 
     final_run_had_errors = False
     final_run_had_warnings = False
 
     line_by_line = autotex_log.splitlines()
 
+    # Enable markup. Program will turn off markup for extraneous run.
     markup_enabled = True
 
     for line in line_by_line:
@@ -258,7 +277,7 @@ def compilation_log_display(autotex_log: str, submission_id: int,
         # Escape any HTML contained in the log
         line = html.escape(line)
 
-        # Disable markup for TeX runs we do not want to markup
+        # Disable markup for TeX runs we do not want to mark up
         for regex in disable_markup:
 
             if re.search(regex, line, re.IGNORECASE):
@@ -317,7 +336,7 @@ def compilation_log_display(autotex_log: str, submission_id: int,
 
             # when we encounter fatal error limit highlighting to fatal
             # messages
-            if abort_markup and level not in ['fatal', 'abort']:
+            if abort_any_further_markup and level not in ['fatal', 'abort']:
                 continue
 
             if not run:
@@ -355,36 +374,41 @@ def compilation_log_display(autotex_log: str, submission_id: int,
                     if level == 'danger' or level == 'fatal':
                         final_run_had_errors = True
 
-                if actual_level == 'abort':
+                # Currently XeTeX/LuaTeX are the only full abort case.
+                if not abort_any_further_markup and actual_level == 'abort' \
+                        and (re.search('Fatal fontspec error: "cannot-use-pdftex"', line)
+                             or re.search("The fontspec package requires either XeTeX or LuaTeX.", line)
+                             or re.search("{cannot-use-pdftex}", line)):
 
                     if error_summary == '':
-                        error_summary = error_summary \
-                                        + '\nSummary of <span class="tex-fatal">Critical Errors:</span>\n\n'
+                        error_summary = initialize_error_summary()
                     else:
                         error_summary = error_summary + '\n'
 
                     error_summary = error_summary + (
-                        "\tAt the current time arXiv does not support XeTeX/LuaTeX.\n\n"
+                        "\t<li>At the current time arXiv does not support XeTeX/LuaTeX.\n\n"
                         '\tIf you believe that your submission requires a compilation '
                         'method \n\tunsupported by arXiv, please contact '
                         '<span class=\"tex-help\">help@arxiv.org</span> for '
                         '\n\tmore information and provide us with this '
-                        f'submit/{submission_id} identifier.\n\n')
-                    abort_markup = True
+                        f'submit/{submission_id} identifier.</li>')
+
+                    have_detected_xetex_luatex = True
+                    abort_any_further_markup = True
 
                 # Hack alert - Cringe - Handle missfont while I'm working on converter.
                 # TODO: Need to formalize detecting errors that need to be
                 # TODO: reported in error summary
-                if not missing_font_markup and level == 'fatal' and re.search("missfont.log present", line):
+                if not have_detected_missing_font_markup and level == 'fatal' \
+                        and re.search("missfont.log present", line):
 
                     if error_summary == '':
-                        error_summary = error_summary \
-                                        + '\nSummary of <span class="tex-fatal">Critical Errors:</span>\n\n'
+                        error_summary = initialize_error_summary()
                     else:
                         error_summary = error_summary + '\n'
 
                     error_summary = error_summary + (
-                        "\tA font required by your paper is not available. "
+                        "\t<li>A font required by your paper is not available. "
                         "You may try to \n\tinclude a non-standard font or "
                         "substitue an alternative font. \n\tSee <span "
                         "class=\"tex-help\"><a href=\"https://arxiv.org/"
@@ -392,23 +416,24 @@ def compilation_log_display(autotex_log: str, submission_id: int,
                         "this is due to a problem with \n\tour system, please "
                         "contact <span class=\"tex-help\">help@arxiv.org</span>"
                         " with details \n\tand provide us with this "
-                        f'submission identifier: submit/{submission_id}.\n\n')
+                        f'submission identifier: submit/{submission_id}.'
+                        '</li>')
 
-                    missing_font_markup = True
+                    have_detected_missing_font_markup = True
 
                 # Hack alert - detect common problem where we need another TeX run
-                if not rerun_markup and level == 'danger' and re.search("rerunfilecheck|rerun", line) \
+                if not have_detected_rerun_markup and level == 'danger' \
+                        and re.search("rerunfilecheck|rerun", line) \
                         and not re.search(r"get arXiv to do 4 passes\: Label\(s\) may have changed", line) \
                         and not re.search(r"oberdiek", line):
 
                     if error_summary == '':
-                        error_summary = error_summary \
-                                        + '\nSummary of <span class="tex-fatal">Critical Errors:</span>\n\n'
+                        error_summary = initialize_error_summary()
                     else:
                         error_summary = error_summary + '\n'
 
                     error_summary = error_summary + (
-                        "\tAnalysis of the compilation log indicates "
+                        "\t<li>Analysis of the compilation log indicates "
                         "your submission \n\tmay need an additional TeX run. "
                         "Please add the following line \n\tto your source in "
                         "order to force an additional TeX run:\n\n"
@@ -416,18 +441,67 @@ def compilation_log_display(autotex_log: str, submission_id: int,
                         "to do 4 passes: Label(s) may have changed. Rerun}</span>"
                         "\n\n\tAdd the above line just before <span "
                         "class=\"tex-help\">\end{document}</span> directive."
-                        "\n\n.")
+                        "/li>")
 
                     # Significant enough that we should turn on warning
                     final_run_had_warnings = True
 
                     # Only do this once
-                    rerun_markup = True
+                    have_detected_rerun_markup = True
 
+                # Missing file needs to be kicked up in visibility and displayed in
+                # compilation summary.
+                #
+                # There is an issue with the AutoTeX log where parts of the log
+                # may be getting truncated. Therefore, for this error, we will
+                # report the error if it occurs during any run.
+                #
+                # We might want to refine the activiation criteria for this
+                # warning once the issue is resolved with truncated log.
+                if not have_detected_missing_file and level == 'danger' \
+                        and re.search('file (.*) not found', line, re.IGNORECASE):
+
+                    if error_summary == '':
+                        error_summary = initialize_error_summary()
+                    else:
+                        error_summary = error_summary + '\n'
+
+                    error_summary = error_summary + (
+                        "<li>\tA file required by your submission was not found."
+                        f"\n\t{line}\n\tPlease upload any missing files, or "
+                        "correct any file naming issues, and then reprocess"
+                        " your submission.</li>")
+
+                    # Don't activate this so we can see bug I created above...
+                    have_detected_missing_file = True
+
+                # Emergency stop tends to hand-in-hand with the file not found error.
+                # If we havve already reported on the file not found error then
+                # we won't add yet another warning about emergency stop.
+                if not have_detected_missing_file and not have_detected_emergency_stop and level == 'danger' \
+                        and re.search('emergency stop', line, re.IGNORECASE):
+
+                    if error_summary == '':
+                        error_summary = initialize_error_summary()
+                    else:
+                        error_summary = error_summary + '\n'
+
+                    error_summary = error_summary + (
+                        "\t<li>We detected an emergency stop during one of the TeX"
+                        " compilation runs. Please review the compilation log"
+                        " to determie whether there is a serious issue with "
+                        "your submission source.</li>")
+
+                    have_detected_emergency_stop = True
+
+                # We found a match so we are finished with this line
                 break
 
         # Append line to new marked up log
         new_log = new_log + line + '\n'
+
+    if error_summary:
+        error_summary = finalize_error_summary(error_summary)
 
     # Now that we are done highlighting the autotex log we are able to roughly
     # determine/refine the status of a successful compilation.
@@ -437,7 +511,12 @@ def compilation_log_display(autotex_log: str, submission_id: int,
     status_class = 'success'
     if compilation_status == 'failed':
         status_class = 'fatal'
-        display_status = "Failed"
+        if have_detected_xetex_luatex:
+            display_status = "Failed: XeTeX/LuaTeX are not supported at current time."
+        elif have_detected_missing_file:
+            display_status = "Failed: File not found."
+        else:
+            display_status = "Failed"
     elif compilation_status == 'succeeded':
         if final_run_had_errors and not final_run_had_warnings:
             display_status = ("Succeeded with possible errors. "
@@ -464,6 +543,6 @@ def compilation_log_display(autotex_log: str, submission_id: int,
     # Put together a nice report, list TeX runs, markup info, and marked up log.
     # In future we can add 'Recommendation' section or collect critical errors.
     new_log = run_summary + status_line + error_summary + key_summary \
-              + '\n\nMarked Up Log:\n\n' + new_log
+              + '\n\n<b>Marked Up Log:</b>\n\n' + new_log
 
     return new_log

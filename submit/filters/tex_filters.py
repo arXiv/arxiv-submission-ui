@@ -255,12 +255,12 @@ def compilation_log_display(autotex_log: str, submission_id: int,
     error_summary = ''
 
     # Keep track of any errors we've already added to error_summary
-    abort_markup = False
-    xetex_luatex_abort = False
-    emergency_stop = False
-    missing_file = False
-    missing_font_markup = False
-    rerun_markup = False
+    abort_any_further_markup = False
+    have_detected_xetex_luatex = False
+    have_detected_emergency_stop = False
+    have_detected_missing_file = False
+    have_detected_missing_font_markup = False
+    have_detected_rerun_markup = False
 
     # Collect some state about
 
@@ -336,7 +336,7 @@ def compilation_log_display(autotex_log: str, submission_id: int,
 
             # when we encounter fatal error limit highlighting to fatal
             # messages
-            if abort_markup and level not in ['fatal', 'abort']:
+            if abort_any_further_markup and level not in ['fatal', 'abort']:
                 continue
 
             if not run:
@@ -375,7 +375,7 @@ def compilation_log_display(autotex_log: str, submission_id: int,
                         final_run_had_errors = True
 
                 # Currently XeTeX/LuaTeX are the only full abort case.
-                if not abort_markup and actual_level == 'abort' \
+                if not abort_any_further_markup and actual_level == 'abort' \
                         and (re.search('Fatal fontspec error: "cannot-use-pdftex"', line)
                              or re.search("The fontspec package requires either XeTeX or LuaTeX.", line)
                              or re.search("{cannot-use-pdftex}", line)):
@@ -393,13 +393,13 @@ def compilation_log_display(autotex_log: str, submission_id: int,
                         '\n\tmore information and provide us with this '
                         f'submit/{submission_id} identifier.</li>')
 
-                    xetex_luatex_abort = True
-                    abort_markup = True
+                    have_detected_xetex_luatex = True
+                    abort_any_further_markup = True
 
                 # Hack alert - Cringe - Handle missfont while I'm working on converter.
                 # TODO: Need to formalize detecting errors that need to be
                 # TODO: reported in error summary
-                if not missing_font_markup and level == 'fatal' \
+                if not have_detected_missing_font_markup and level == 'fatal' \
                         and re.search("missfont.log present", line):
 
                     if error_summary == '':
@@ -419,10 +419,10 @@ def compilation_log_display(autotex_log: str, submission_id: int,
                         f'submission identifier: submit/{submission_id}.'
                         '</li>')
 
-                    missing_font_markup = True
+                    have_detected_missing_font_markup = True
 
                 # Hack alert - detect common problem where we need another TeX run
-                if not rerun_markup and level == 'danger' \
+                if not have_detected_rerun_markup and level == 'danger' \
                         and re.search("rerunfilecheck|rerun", line) \
                         and not re.search(r"get arXiv to do 4 passes\: Label\(s\) may have changed", line) \
                         and not re.search(r"oberdiek", line):
@@ -447,7 +447,7 @@ def compilation_log_display(autotex_log: str, submission_id: int,
                     final_run_had_warnings = True
 
                     # Only do this once
-                    rerun_markup = True
+                    have_detected_rerun_markup = True
 
                 # Missing file needs to be kicked up in visibility and displayed in
                 # compilation summary.
@@ -458,7 +458,7 @@ def compilation_log_display(autotex_log: str, submission_id: int,
                 #
                 # We might want to refine the activiation criteria for this
                 # warning once the issue is resolved with truncated log.
-                if not missing_file and level == 'danger' \
+                if not have_detected_missing_file and level == 'danger' \
                         and re.search('file (.*) not found', line, re.IGNORECASE):
 
                     if error_summary == '':
@@ -473,12 +473,12 @@ def compilation_log_display(autotex_log: str, submission_id: int,
                         " your submission.</li>")
 
                     # Don't activate this so we can see bug I created above...
-                    missing_file = True
+                    have_detected_missing_file = True
 
                 # Emergency stop tends to hand-in-hand with the file not found error.
                 # If we havve already reported on the file not found error then
                 # we won't add yet another warning about emergency stop.
-                if not missing_file and not emergency_stop and level == 'danger' \
+                if not have_detected_missing_file and not have_detected_emergency_stop and level == 'danger' \
                         and re.search('emergency stop', line, re.IGNORECASE):
 
                     if error_summary == '':
@@ -492,7 +492,7 @@ def compilation_log_display(autotex_log: str, submission_id: int,
                         " to determie whether there is a serious issue with "
                         "your submission source.</li>")
 
-                    emergency_stop = True
+                    have_detected_emergency_stop = True
 
                 # We found a match so we are finished with this line
                 break
@@ -511,9 +511,9 @@ def compilation_log_display(autotex_log: str, submission_id: int,
     status_class = 'success'
     if compilation_status == 'failed':
         status_class = 'fatal'
-        if xetex_luatex_abort:
+        if have_detected_xetex_luatex:
             display_status = "Failed: XeTeX/LuaTeX are not supported at current time."
-        elif missing_file:
+        elif have_detected_missing_file:
             display_status = "Failed: File not found."
         else:
             display_status = "Failed"

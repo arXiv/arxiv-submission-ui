@@ -2,12 +2,12 @@
 
 {% block title -%}Process Files{%- endblock title %}
 
-{% block extra_head %}
+{% block addl_head %}
+  {{ super() }}
   {% if status and status == "in_progress" %}
-  <!-- TODO: make refresh interval configurable. -->
   <meta http-equiv="refresh" content="5;url={{ url_for('ui.file_process', submission_id=submission_id) }}" />
   {% endif %}
-{% endblock extra_head %}
+{% endblock addl_head %}
 
 
 

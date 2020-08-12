@@ -29,7 +29,7 @@ x-base-service:
     VAULT_HOST: "mock-vault"
     VAULT_PORT: "8200"
     VAULT_SCHEME: "http"
-
+    
 services:
 
   filemanager:
@@ -177,8 +177,10 @@ services:
       COMPILER_VERIFY: 0
       PLAINTEXT_ENDPOINT: "http://plaintext-api:8000/"
       PLAINTEXT_VERIFY: 0
-      SUBMISSION_PREVIEW_ENDPOINT: 'http://submission-preview:8000/'
-      SUBMISSION_PREVIEW_VERIFY: 0
+      PREVIEW_ENDPOINT: 'http://submission-preview:8000/'
+      PREVIEW_VERIFY: 0
+      PREVIEW_ENDPOINT: 'http://submission-preview:8000/'
+      PREVIEW_VERIFY: 0
       FILESYSTEM_ENDPOINT: 'http://filesystem:8000/'
       FILESYSTEM_VERIFY: 0
       # CLASSIFIER_ENDPOINT: "http://mock-classifier:8000"
@@ -240,9 +242,9 @@ services:
       PLAINTEXT_ENDPOINT: "http://plaintext-api:8000/"
       PLAINTEXT_VERIFY: 0
 
-      SUBMISSION_PREVIEW_ENDPOINT: 'http://submission-preview:8000/'
-      SUBMISSION_PREVIEW_VERIFY: 0
-
+      PREVIEW_ENDPOINT: 'http://submission-preview:8000/'
+      PREVIEW_VERIFY: 0
+      
       FILESYSTEM_ENDPOINT: 'http://filesystem:8000/'
       FILESYSTEM_VERIFY: 0
 
@@ -297,8 +299,8 @@ services:
       FILEMANAGER_CONTENT_PATH: "/{source_id}/content"
       COMPILER_ENDPOINT: "http://compiler-api:8000/"
       COMPILER_VERIFY: 0
-      SUBMISSION_PREVIEW_ENDPOINT: 'http://submission-preview:8000/'
-      SUBMISSION_PREVIEW_VERIFY: 0
+      PREVIEW_ENDPOINT: 'http://submission-preview:8000/'
+      PREVIEW_VERIFY: 0
       # Kinesis events.
       KINESIS_STREAM: "SubmissionEvents"
       KINESIS_VERIFY: 0
@@ -375,8 +377,8 @@ services:
       # KINESIS_ENDPOINT: "plaintext-test-redis:4568"
       LOGLEVEL: 50
 
-      SUBMISSION_PREVIEW_ENDPOINT: 'http://submission-preview:8000/'
-      SUBMISSION_PREVIEW_VERIFY: 0
+      PREVIEW_ENDPOINT: 'http://submission-preview:8000/'
+      PREVIEW_VERIFY: 0
 
       CANONICAL_AWAIT: 0
 
@@ -412,9 +414,8 @@ services:
       # KINESIS_VERIFY: ""
       # KINESIS_ENDPOINT: "plaintext-test-redis:4568"
 
-      SUBMISSION_PREVIEW_ENDPOINT: 'http://submission-preview:8000/'
-      SUBMISSION_PREVIEW_VERIFY: 0
-
+      PREVIEW_ENDPOINT: 'http://submission-preview:8000/'
+      PREVIEW_VERIFY: 0
       CANONICAL_AWAIT: 0
 
       NAMESPACE: "development"

@@ -122,39 +122,39 @@ SQLALCHEMY_TRACK_MODIFICATIONS = False
 """Track modifications feature should always be disabled."""
 
 # Integration with the preview service.
-SUBMISSION_PREVIEW_HOST = environ.get('SUBMISSION_PREVIEW_SERVICE_HOST', 'localhost')
+PREVIEW_HOST = environ.get('PREVIEW_SERVICE_HOST', 'localhost')
 """Hostname or address of the preview service."""
 
-SUBMISSION_PREVIEW_PORT = environ.get('SUBMISSION_PREVIEW_SERVICE_PORT', '8000')
+PREVIEW_PORT = environ.get('PREVIEW_SERVICE_PORT', '8000')
 """Port for the preview service."""
 
-SUBMISSION_PREVIEW_PROTO = environ.get(
-    f'SUBMISSION_PREVIEW_PORT_{SUBMISSION_PREVIEW_PORT}_PROTO',
-    environ.get('SUBMISSION_PREVIEW_PROTO', 'http')
+PREVIEW_PROTO = environ.get(
+    f'PREVIEW_PORT_{PREVIEW_PORT}_PROTO',
+    environ.get('PREVIEW_PROTO', 'http')
 )
 """Protocol for the preview service."""
 
-SUBMISSION_PREVIEW_PATH = environ.get('SUBMISSION_PREVIEW_PATH', '')
+PREVIEW_PATH = environ.get('PREVIEW_PATH', '')
 """Path at which the preview service is deployed."""
 
-SUBMISSION_PREVIEW_ENDPOINT = environ.get(
-    'SUBMISSION_PREVIEW_ENDPOINT',
-    '%s://%s:%s/%s' % (SUBMISSION_PREVIEW_PROTO, SUBMISSION_PREVIEW_HOST, SUBMISSION_PREVIEW_PORT, SUBMISSION_PREVIEW_PATH)
+PREVIEW_ENDPOINT = environ.get(
+    'PREVIEW_ENDPOINT',
+    '%s://%s:%s/%s' % (PREVIEW_PROTO, PREVIEW_HOST, PREVIEW_PORT, PREVIEW_PATH)
 )
 """
 Full URL to the root preview service API endpoint.
 
-If not explicitly provided, this is composed from :const:`SUBMISSION_PREVIEW_HOST`,
-:const:`SUBMISSION_PREVIEW_PORT`, :const:`SUBMISSION_PREVIEW_PROTO`,
-and :const:`SUBMISSION_PREVIEW_PATH`.
+If not explicitly provided, this is composed from :const:`PREVIEW_HOST`,
+:const:`PREVIEW_PORT`, :const:`PREVIEW_PROTO`,
+and :const:`PREVIEW_PATH`.
 """
 
-SUBMISSION_PREVIEW_VERIFY = bool(int(environ.get('SUBMISSION_PREVIEW_VERIFY', '0')))
+PREVIEW_VERIFY = bool(int(environ.get('PREVIEW_VERIFY', '0')))
 """Enable/disable SSL certificate verification for preview service."""
 
-SUBMISSION_PREVIEW_STATUS_TIMEOUT = float(environ.get('SUBMISSION_PREVIEW_STATUS_TIMEOUT', 1.0))
+PREVIEW_STATUS_TIMEOUT = float(environ.get('PREVIEW_STATUS_TIMEOUT', 1.0))
 
-if SUBMISSION_PREVIEW_PROTO == 'https' and not SUBMISSION_PREVIEW_VERIFY:
+if PREVIEW_PROTO == 'https' and not PREVIEW_VERIFY:
     warnings.warn('Certificate verification for preview service is disabled;'
                   ' this should not be disabled in production.')
 

@@ -60,17 +60,20 @@ class TestSubmissionIntegration(unittest.TestCase):
     @classmethod
     def tearDown(self):
         os.remove(self.db)
-        
-    def user_page(self):
-        res = requests.get(self.url, headers=self.headers)
-        self.log.warning(f'status was {res.status_code}')
-        self.log.warning(f'status was {res.text}')
-        
+
+    def unloggedin_page(self):
+        res = requests.get(self.url, allow_redirects=False)
+        self.log.warn(res.text)
+        self.assertNotEqual(res.status_code, 200,
+                            "page without Authorization credential must not return a 200")
+
+    def home_page(self):
+        res = requests.get(self.url, headers=self.headers)       
         self.assertEqual(res.status_code, 200)
         self.assertEqual(res.headers['content-type'], 'text/html; charset=utf-8')
         self.csrf = parse_csrf_token(res)
 
-
+    
     def verify_user_page(self):
         pass
 
@@ -107,7 +110,8 @@ class TestSubmissionIntegration(unittest.TestCase):
     def test_submission_system_basic(self):
         """Create, upload files, process TeX and submit a submission."""
         page_test_names = [
-            "user_page",
+            "unloggedin_page",
+            "home_page",
             "verify_user_page",
             "authorship_page",
             "license_page",

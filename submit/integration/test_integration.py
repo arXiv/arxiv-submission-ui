@@ -20,47 +20,43 @@ import time
 
 from requests_toolbelt.multipart.encoder import MultipartEncoder
 
-
-from submit.factory import create_ui_web_app
-from arxiv.users.helpers import generate_token
-from arxiv.users.auth import scopes
-from arxiv.users.domain import Category
 from http import HTTPStatus as status
 from submit.tests.csrf_util import parse_csrf_token
 
 
-# def new_user():
-#     app = create_ui_web_app()
-#     os.environ['JWT_SECRET'] = 'foosecret'
-#     _, dbfile = tempfile.mkstemp(suffix='.db')
-#     app.config['CLASSIC_DATABASE_URI'] = f'sqlite:///{dbfile}'
-#     token = generate_token('1', 'foo@bar.com', 'foouser',
-#                            scope=[scopes.CREATE_SUBMISSION,
-#                                   scopes.EDIT_SUBMISSION,
-#                                   scopes.VIEW_SUBMISSION,
-#                                   scopes.READ_UPLOAD,
-#                                   scopes.WRITE_UPLOAD,
-#                                   scopes.DELETE_UPLOAD_FILE],
-#                            endorsements=[
-#                                Category('astro-ph.GA'),
-#                                Category('astro-ph.CO'),
-#                            ])
-#     token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzZXNzaW9uX2lkIjoiODQzYWFjZTYtMGY3My00ODQ1LWJlMDAtNzEwZjZkNjMwYmVjIiwic3RhcnRfdGltZSI6IjIwMjAtMDgtMDNUMTQ6NDE6MTAuMDkwNTk4LTA0OjAwIiwidXNlciI6eyJ1c2VybmFtZSI6ImFydGFiYTE4NjRAeWFob28uY29tIiwiZW1haWwiOiJhcnRhYmExODY0QHlhaG9vLmNvbSIsInVzZXJfaWQiOjEwLCJuYW1lIjp7ImZvcmVuYW1lIjoiXHUwNjQ2XHUwNmNjXHUwNmE5XHUwNmNjIiwic3VybmFtZSI6Ilx1MDY0NVx1MDYyY1x1MDYyYVx1MDY0N1x1MDYyZlx1MDZjYyIsInN1ZmZpeCI6Ilx1MDYyN1x1MDYzM1x1MDYyYVx1MDYyN1x1MDYyZiJ9LCJwcm9maWxlIjp7ImFmZmlsaWF0aW9uIjoiQ29ybmVsbCBVbml2ZXJzaXR5IiwiY291bnRyeSI6InVzIiwicmFuayI6Mywic3VibWlzc2lvbl9ncm91cHMiOlsiZ3JwX3BoeXNpY3MiXSwiZGVmYXVsdF9jYXRlZ29yeSI6ImFzdHJvLXBoLkdBIiwiaG9tZXBhZ2VfdXJsIjoiIiwicmVtZW1iZXJfbWUiOnRydWV9LCJ2ZXJpZmllZCI6ZmFsc2V9LCJjbGllbnQiOm51bGwsImVuZF90aW1lIjoiMjAyMC0wOC0wNFQwMDo0MToxMC4wOTA1OTgtMDQ6MDAiLCJhdXRob3JpemF0aW9ucyI6eyJjbGFzc2ljIjowLCJlbmRvcnNlbWVudHMiOlsiKi4qIl0sInNjb3BlcyI6W3siZG9tYWluIjoicHVibGljIiwiYWN0aW9uIjoicmVhZCIsInJlc291cmNlIjpudWxsfSx7ImRvbWFpbiI6InN1Ym1pc3Npb24iLCJhY3Rpb24iOiJjcmVhdGUiLCJyZXNvdXJjZSI6bnVsbH0seyJkb21haW4iOiJzdWJtaXNzaW9uIiwiYWN0aW9uIjoidXBkYXRlIiwicmVzb3VyY2UiOm51bGx9LHsiZG9tYWluIjoic3VibWlzc2lvbiIsImFjdGlvbiI6InJlYWQiLCJyZXNvdXJjZSI6bnVsbH0seyJkb21haW4iOiJzdWJtaXNzaW9uIiwiYWN0aW9uIjoiZGVsZXRlIiwicmVzb3VyY2UiOm51bGx9LHsiZG9tYWluIjoidXBsb2FkIiwiYWN0aW9uIjoicmVhZCIsInJlc291cmNlIjpudWxsfSx7ImRvbWFpbiI6InVwbG9hZCIsImFjdGlvbiI6InVwZGF0ZSIsInJlc291cmNlIjpudWxsfSx7ImRvbWFpbiI6InVwbG9hZCIsImFjdGlvbiI6ImRlbGV0ZSIsInJlc291cmNlIjpudWxsfSx7ImRvbWFpbiI6InVwbG9hZCIsImFjdGlvbiI6InJlYWRfbG9ncyIsInJlc291cmNlIjpudWxsfSx7ImRvbWFpbiI6ImNvbXBpbGUiLCJhY3Rpb24iOiJyZWFkIiwicmVzb3VyY2UiOm51bGx9LHsiZG9tYWluIjoiY29tcGlsZSIsImFjdGlvbiI6ImNyZWF0ZSIsInJlc291cmNlIjpudWxsfSx7ImRvbWFpbiI6InByZXZpZXciLCJhY3Rpb24iOiJyZWFkIiwicmVzb3VyY2UiOm51bGx9LHsiZG9tYWluIjoicHJldmlldyIsImFjdGlvbiI6ImNyZWF0ZSIsInJlc291cmNlIjpudWxsfV19LCJpcF9hZGRyZXNzIjpudWxsLCJyZW1vdGVfaG9zdCI6bnVsbCwibm9uY2UiOm51bGx9.UsNvIrqCTIAhwd3WU8-zrOAFpgRvi0dgYpY9YMy72EE"
-#     return (token, dbfile)
-
+logging.basicConfig()
+log = logging.getLogger(__name__)
+log.setLevel(logging.DEBUG)
 
 class TestSubmissionIntegration(unittest.TestCase):
     """Tests submission system."""
     @classmethod
     def setUp(self):
         self.token = os.environ.get('INTEGRATION_JWT')
+        self.token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzZXNzaW9uX2lkIjoiODQzYWFjZTYtMGY3My00ODQ1LWJlMDAtNzEwZjZkNjMwYmVjIiwic3RhcnRfdGltZSI6IjIwMjAtMDgtMDNUMTQ6NDE6MTAuMDkwNTk4LTA0OjAwIiwidXNlciI6eyJ1c2VybmFtZSI6ImFydGFiYTE4NjRAeWFob28uY29tIiwiZW1haWwiOiJhcnRhYmExODY0QHlhaG9vLmNvbSIsInVzZXJfaWQiOjEwLCJuYW1lIjp7ImZvcmVuYW1lIjoiXHUwNjQ2XHUwNmNjXHUwNmE5XHUwNmNjIiwic3VybmFtZSI6Ilx1MDY0NVx1MDYyY1x1MDYyYVx1MDY0N1x1MDYyZlx1MDZjYyIsInN1ZmZpeCI6Ilx1MDYyN1x1MDYzM1x1MDYyYVx1MDYyN1x1MDYyZiJ9LCJwcm9maWxlIjp7ImFmZmlsaWF0aW9uIjoiQ29ybmVsbCBVbml2ZXJzaXR5IiwiY291bnRyeSI6InVzIiwicmFuayI6Mywic3VibWlzc2lvbl9ncm91cHMiOlsiZ3JwX3BoeXNpY3MiXSwiZGVmYXVsdF9jYXRlZ29yeSI6ImFzdHJvLXBoLkdBIiwiaG9tZXBhZ2VfdXJsIjoiIiwicmVtZW1iZXJfbWUiOnRydWV9LCJ2ZXJpZmllZCI6ZmFsc2V9LCJjbGllbnQiOm51bGwsImVuZF90aW1lIjoiMjAyMC0wOC0wNFQwMDo0MToxMC4wOTA1OTgtMDQ6MDAiLCJhdXRob3JpemF0aW9ucyI6eyJjbGFzc2ljIjowLCJlbmRvcnNlbWVudHMiOlsiKi4qIl0sInNjb3BlcyI6W3siZG9tYWluIjoicHVibGljIiwiYWN0aW9uIjoicmVhZCIsInJlc291cmNlIjpudWxsfSx7ImRvbWFpbiI6InN1Ym1pc3Npb24iLCJhY3Rpb24iOiJjcmVhdGUiLCJyZXNvdXJjZSI6bnVsbH0seyJkb21haW4iOiJzdWJtaXNzaW9uIiwiYWN0aW9uIjoidXBkYXRlIiwicmVzb3VyY2UiOm51bGx9LHsiZG9tYWluIjoic3VibWlzc2lvbiIsImFjdGlvbiI6InJlYWQiLCJyZXNvdXJjZSI6bnVsbH0seyJkb21haW4iOiJzdWJtaXNzaW9uIiwiYWN0aW9uIjoiZGVsZXRlIiwicmVzb3VyY2UiOm51bGx9LHsiZG9tYWluIjoidXBsb2FkIiwiYWN0aW9uIjoicmVhZCIsInJlc291cmNlIjpudWxsfSx7ImRvbWFpbiI6InVwbG9hZCIsImFjdGlvbiI6InVwZGF0ZSIsInJlc291cmNlIjpudWxsfSx7ImRvbWFpbiI6InVwbG9hZCIsImFjdGlvbiI6ImRlbGV0ZSIsInJlc291cmNlIjpudWxsfSx7ImRvbWFpbiI6InVwbG9hZCIsImFjdGlvbiI6InJlYWRfbG9ncyIsInJlc291cmNlIjpudWxsfSx7ImRvbWFpbiI6ImNvbXBpbGUiLCJhY3Rpb24iOiJyZWFkIiwicmVzb3VyY2UiOm51bGx9LHsiZG9tYWluIjoiY29tcGlsZSIsImFjdGlvbiI6ImNyZWF0ZSIsInJlc291cmNlIjpudWxsfSx7ImRvbWFpbiI6InByZXZpZXciLCJhY3Rpb24iOiJyZWFkIiwicmVzb3VyY2UiOm51bGx9LHsiZG9tYWluIjoicHJldmlldyIsImFjdGlvbiI6ImNyZWF0ZSIsInJlc291cmNlIjpudWxsfV19LCJpcF9hZGRyZXNzIjpudWxsLCJyZW1vdGVfaG9zdCI6bnVsbCwibm9uY2UiOm51bGx9.UsNvIrqCTIAhwd3WU8-zrOAFpgRvi0dgYpY9YMy72EE"
         self.url = os.environ.get('INTEGRATION_URL', 'http://localhost:5000')
         
         self.headers = {'Authorization': self.token}
 
-        logging.basicConfig()
-        self.log = logging.getLogger(__name__)
-        self.log.setLevel(logging.DEBUG)
+
+        self.page_test_names = [
+            "unloggedin_page",
+            "home_page",
+            "create_submission",
+            "verify_user_page",
+            "authorship_page",
+            "license_page",
+            "policy_page",
+            "primary_page",
+            "cross_page",
+            "upload_page",
+            "process_page",
+            "metadata_page",
+            "optional_metadata_page",
+            "final_preview_page",
+            "confirmation"
+        ]
+
         self.next_page = None
         self.process_page_timeout = 120 # sec
 
@@ -69,6 +65,7 @@ class TestSubmissionIntegration(unittest.TestCase):
         self.assertEqual(res.status_code, status.SEE_OTHER, f"Should get SEE_OTHER but was {res.status_code}")
         self.assertIn('Location', res.headers)
         self.next_page = res.headers['Location']
+
 
     def unloggedin_page(self):
         res = requests.get(self.url, allow_redirects=False)
@@ -193,7 +190,6 @@ class TestSubmissionIntegration(unittest.TestCase):
 
         
     def upload_page(self):
-        self.log.debug(f'in upload_page_page {self.next_page}')
         self.assertIn('upload', self.next_page, "URL should be to upload files")
         res = requests.get(self.next_page, headers=self.headers, allow_redirects=False)
         self.assertEqual(res.status_code, 200)
@@ -223,7 +219,6 @@ class TestSubmissionIntegration(unittest.TestCase):
         self.check_response(res)
 
     def process_page(self):
-        self.log.debug(f'in process_page {self.next_page}')
         self.assertIn('process', self.next_page, "URL should be to process step")
         res = requests.get(self.next_page, headers=self.headers, allow_redirects=False)
         self.assertEqual(res.status_code, 200)
@@ -237,7 +232,6 @@ class TestSubmissionIntegration(unittest.TestCase):
         #wait for TeX processing
         success, timeout, start = False, False, time.time()
         while not success and not time.time() > start + self.process_page_timeout:
-            self.log.debug(f'Requesting {self.next_page}')
             res = requests.get(self.next_page,
                                headers=self.headers, allow_redirects=False)
             success = 'TeXLive Compiler Summary' in res.text
@@ -255,35 +249,74 @@ class TestSubmissionIntegration(unittest.TestCase):
         self.check_response(res)
         
     def metadata_page(self):
-        pass
+        self.assertIn('metadata', self.next_page, 'URL should be for metadata page')
+        self.assertNotIn('optional', self.next_page,'URL should NOT be for optional metadata')
+
+        res = requests.get(self.next_page, headers=self.headers, allow_redirects=False)
+        self.assertEqual(res.status_code, 200)
+        self.assertIn('Edit Metadata', res.text)
+
+        res = requests.post(self.next_page,
+                            data= {
+                                'csrf_token': parse_csrf_token(res),
+                                'title': 'Test title',
+                                'authors_display': 'Some authors or other',
+                                'abstract': 'THis is the abstract and we know that it needs to be at least some number of characters.',
+                                'comments': 'comments are optional.',
+                                'action': 'next',
+                            },
+                            headers=self.headers, allow_redirects=False)
+        self.check_response(res)
+                            
 
     def optional_metadata_page(self):
-        pass
+        self.assertIn('optional', self.next_page, 'URL should be for metadata page')
+
+        res = requests.get(self.next_page, headers=self.headers, allow_redirects=False)
+        self.assertEqual(res.status_code, 200)
+        self.assertIn('Optional Metadata', res.text)
+
+        res = requests.post(self.next_page,
+                            data = {
+                                'csrf_token': parse_csrf_token(res),
+                                'doi': '10.1016/S0550-3213(01)00405-9',
+                                'journal_ref': 'Nucl.Phys.Proc.Suppl. 109 (2002) 3-9',
+                                'report_num': 'SU-4240-720; LAUR-01-2140',
+                                'acm_class': 'f.2.2',
+                                'msc_class': '14j650',
+                                'action': 'next'},
+                            headers=self.headers, allow_redirects=False)
+        self.check_response(res)
+
 
     def final_preview_page(self):
-        pass
+        self.assertIn('final_preview', self.next_page, 'URL should be for final preview page')
+
+        res = requests.get(self.next_page, headers=self.headers, allow_redirects=False)
+        self.assertEqual(res.status_code, 200)
+        self.assertIn('Review and Approve Your Submission', res.text)
+
+        res = requests.post(self.next_page,
+                            data= {
+                                'csrf_token': parse_csrf_token(res),
+                                'proceed': 'y',
+                                'action': 'next',
+                            },
+                            headers=self.headers, allow_redirects=False)
+        self.check_response(res)
+
+        
+    def confirmation(self):
+        self.assertIn('confirm', self.next_page, 'URL should be for confirmation page')
+
+        res = requests.get(self.next_page, headers=self.headers, allow_redirects=False)
+        self.assertEqual(res.status_code, 200)
+        self.assertIn('success', res.text)
+
 
     def test_submission_system_basic(self):
         """Create, upload files, process TeX and submit a submission."""
-        page_test_names = [
-            "unloggedin_page",
-            "home_page",
-            "create_submission",
-            "verify_user_page",
-            "authorship_page",
-            "license_page",
-            "policy_page",
-            "primary_page",
-            "cross_page",
-            "upload_page",
-            "process_page",
-            "metadata_page",
-            "optional_metadata_page",
-            "final_preview_page",
-        ]
-        test_methods = [getattr(self, methname)
-                        for methname in page_test_names]
-        for page_test in test_methods:
+        for page_test in [getattr(self, methname) for methname in self.page_test_names]:
             page_test()
 
 

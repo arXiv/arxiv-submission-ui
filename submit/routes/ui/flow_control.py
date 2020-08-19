@@ -186,6 +186,7 @@ def flow_control(blueprint_this_stage: Optional[Stage] = None,
                 return to_stage(workflow.workflow.confirmation, submission_id)
 
             if not workflow.can_proceed_to(this_stage):
+                logger.debug(f'sub {submission_id} cannot proceed to {this_stage}')
                 return to_current(workflow, submission_id)
 
             # If the user selects "go back", we attempt to save their input

@@ -28,6 +28,8 @@ logging.basicConfig()
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
 
+@unittest.skipUnless(os.environ.get('INTEGRATION_TEST', False),
+                     'Only running during integration test')
 class TestSubmissionIntegration(unittest.TestCase):
     """Tests submission system."""
     @classmethod

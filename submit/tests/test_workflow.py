@@ -219,8 +219,7 @@ class TestEndorsementMessaging(TestCase):
 
     def _parse_csrf_token(self, response):
         try:
-            match = re.search(CSRF_PATTERN, response.data.decode('utf-8'))
-            token = match.group(1)
+            return parse_csrf_token(response)
         except AttributeError:
             self.fail('Could not find CSRF token')
         return token
@@ -468,8 +467,7 @@ class TestJREFWorkflow(TestCase):
 
     def _parse_csrf_token(self, response):
         try:
-            match = re.search(CSRF_PATTERN, response.data.decode('utf-8'))
-            token = match.group(1)
+            return parse_csrf_token(response)
         except AttributeError:
             self.fail('Could not find CSRF token')
         return token
@@ -600,8 +598,7 @@ class TestWithdrawalWorkflow(TestCase):
 
     def _parse_csrf_token(self, response):
         try:
-            match = re.search(CSRF_PATTERN, response.data.decode('utf-8'))
-            token = match.group(1)
+            return parse_csrf_token(response)
         except AttributeError:
             self.fail('Could not find CSRF token')
         return token
@@ -732,8 +729,7 @@ class TestUnsubmitWorkflow(TestCase):
 
     def _parse_csrf_token(self, response):
         try:
-            match = re.search(CSRF_PATTERN, response.data.decode('utf-8'))
-            token = match.group(1)
+            return parse_csrf_token(response)
         except AttributeError:
             self.fail('Could not find CSRF token')
         return token

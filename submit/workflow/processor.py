@@ -6,10 +6,6 @@ from arxiv.submission.domain import Submission
 from dataclasses import field, dataclass
 from . import WorkflowDefinition, Stage
 
-from arxiv.base import logging
-
-logger = logging.getLogger(__name__)
-
 
 @dataclass
 class WorkflowProcessor:
@@ -34,10 +30,8 @@ class WorkflowProcessor:
         """Determine whether the user can proceed to a stage."""
         if stage is None:
             return True
-        must_be_done = self.workflow.order if stage == self.workflow.confirmation \
-            else self.workflow.iter_prior(stage)
-        done = [(stage, self.is_done(stage)) for stage in must_be_done]
-        logger.debug(f'in can_proceed_to() done list is {done}')
+        must_be_done = list(self.workflow.order if stage == self.workflow.confirmation \
+            else self.workflow.iter_prior(stage))
         return all(map(self.is_done, must_be_done))
 
     def current_stage(self) -> Optional[Stage]:

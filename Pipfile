@@ -35,6 +35,7 @@ coverage = "*"
 sphinx = "*"
 sphinx-autodoc-typehints = "*"
 beautifulsoup4 = "*"
+requests-toolbelt = "*"
 
 [pipenv]
 allow_prereleases = true

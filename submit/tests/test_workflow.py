@@ -16,9 +16,7 @@ from arxiv.submission.domain.event import *
 from arxiv.submission.domain.agent import User
 from arxiv.submission.domain.submission import Author, SubmissionContent
 from arxiv.submission import save
-
-CSRF_PATTERN = (r'\<input id="csrf_token" name="csrf_token" type="hidden"'
-                r' value="([^\"]+)">')
+from .csrf_util import parse_csrf_token
 
 
 # TODO: finish building out this test suite. The current tests run up to
@@ -33,7 +31,7 @@ class TestSubmissionWorkflow(TestCase):
     def setUp(self):
         """Create an application instance."""
         self.app = create_ui_web_app()
-        os.environ['JWT_SECRET'] = str(self.app.config.get('JWT_SECRET', 'fo'))
+        os.environ['JWT_SECRET'] = str(self.app.config.get('JWT_SECRET'))
         _, self.db = tempfile.mkstemp(suffix='.db')
         self.app.config['CLASSIC_DATABASE_URI'] = f'sqlite:///{self.db}'
         self.token = generate_token('1234', 'foo@bar.com', 'foouser',
@@ -58,11 +56,10 @@ class TestSubmissionWorkflow(TestCase):
 
     def _parse_csrf_token(self, response):
         try:
-            match = re.search(CSRF_PATTERN, response.data.decode('utf-8'))
-            token = match.group(1)
+            return parse_csrf_token(response)
         except AttributeError:
             self.fail('Could not find CSRF token')
-        return token
+
 
     @mock.patch('arxiv.submission.core.StreamPublisher', mock.MagicMock())
     def test_create_submission(self):

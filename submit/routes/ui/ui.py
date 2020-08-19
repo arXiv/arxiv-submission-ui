@@ -132,7 +132,6 @@ def handle(controller: Callable, template: str, title: str,
     else:
         request_data = MultiDict(request.form.items(multi=True))
 
-    form_invalid = False
     context = {'pagetitle': title}
 
     data, code, headers = controller(request.method, request_data,

@@ -5,8 +5,8 @@ services:
     build:
       context: .
       network: host
-      dockerfile: Dockerfile
-    container_name: subui-integration-test
+      dockerfile: Dockerfile-integration-test
+    container_name: submission-integration-test
     environment:
       VAULT_ENABLED: "0"
       NAMESPACE: "development"
@@ -27,16 +27,9 @@ services:
       KINESIS_VERIFY: 0
       KINESIS_ENDPOINT: "https://submission-localstack:4568"
       KINESIS_START_TYPE: "TRIM_HORIZON"
-    # depends_on:
-    #   - submission-ui
+    depends_on:
+      - submission-ui
     networks:
       - arxiv-submission-ui
-    command: /bin/bash -c 'python bootstrap.py --output-single-jwt > jwt.txt && export INTEGRATION_JWT=$$(cat jwt.txt) && pipenv sync -d &&   pipenv run python -m submit.integration.test_integration'
-#    command: /bin/bash -c 'python bootstrap.py --output-single-jwt > jwt.txt '
 
-    # 1  pipenv sync -d
-    # 2  history
-    # 3  python --version
-    # 4  pipenv python --version
-    # 5  pipenv run python --version
-    # 6
+    

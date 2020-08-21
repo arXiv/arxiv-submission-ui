@@ -14,7 +14,7 @@ COPY app.py bootstrap.py /opt/arxiv/
 COPY submit/ /opt/arxiv/submit/
 
 ENV INTEGRATION_TEST=1
-ENV INTEGRATION_URL=http://submission-ui:8000/
+ENV INTEGRATION_URL=http://submission-ui:8000
 
 CMD /bin/bash -c 'wget --max-redirect=0 --retry-connrefused --tries=300 --no-verbose $INTEGRATION_URL ; \
  sleep 3 ; \

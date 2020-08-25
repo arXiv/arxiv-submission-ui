@@ -1,0 +1,23 @@
+FROM arxiv/base:0.16.6
+
+# Docker image for running integration test
+# basicly the same as the submission-ui docker image but
+# with development python libraries installed
+# and integration test env vars.
+
+WORKDIR /opt/arxiv/
+
+COPY Pipfile Pipfile.lock /opt/arxiv/
+RUN pipenv sync -d && rm -rf ~/.cache/pip
+
+COPY app.py bootstrap.py /opt/arxiv/
+COPY submit/ /opt/arxiv/submit/
+
+ENV INTEGRATION_TEST=1
+ENV INTEGRATION_URL=http://submission-ui:8000
+
+CMD /bin/bash -c 'wget --max-redirect=0 --retry-connrefused --tries=300 --no-verbose $INTEGRATION_URL ; \
+ sleep 3 ; \
+ pipenv run python bootstrap.py --output-single-jwt > jwt.txt &&\
+ export INTEGRATION_JWT=$(cat jwt.txt) &&\
+ pipenv run python -m submit.integration.test_integration'

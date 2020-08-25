@@ -110,11 +110,12 @@ def upload_files(method: str, params: MultiDict, session: Session,
                   'submission': submission,
                   'form': UploadForm()})
 
-    if method == 'GET':
+    if method not in ['GET', 'POST']:
+        raise MethodNotAllowed()
+    elif method == 'GET':
         logger.debug('GET; load current upload state')
         return _get_upload(params, session, submission, rdata, token)
     elif method == 'POST':
-        logger.debug('POST; user is uploading file(s)')
         try:    # Make sure that we have a file to work with.
             pointer = files['file']
         except KeyError:   # User is going back, saving/exiting, or next step.
@@ -128,6 +129,9 @@ def upload_files(method: str, params: MultiDict, session: Session,
             if action:
                 logger.debug('User is navigating away from upload UI')
                 return {}, status.SEE_OTHER, {}
+            else:
+                return stay_on_this_stage(_get_upload(params, session,
+                                                      submission, rdata, token))
 
         try:
             if submission.source_content is None:
@@ -147,7 +151,6 @@ def upload_files(method: str, params: MultiDict, session: Session,
                 'There was a problem uploading your file because it exceeds '
                 f'our maximum size limit. {PLEASE_CONTACT_SUPPORT}'))
         return stay_on_this_stage(_get_upload(params, session, submission, rdata, token))
-    raise MethodNotAllowed()
 
 
 class UploadForm(csrf.CSRFForm):

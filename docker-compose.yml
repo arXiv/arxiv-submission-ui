@@ -278,13 +278,10 @@ services:
       - arxiv-submission-ui
 
   submission-ui:
-    # corresponds with commit from 2020-02-27: https://github.com/arXiv/arxiv-submission-ui/commit/22ae284
-    image: arxiv/submission-ui:22ae284
     build:
       context: .
+      network: host
       dockerfile: Dockerfile
-      args:
-        BASE_VERSION: 0.16.6
     container_name: arxiv-submission-ui
     environment:
       VAULT_ENABLED: "0"

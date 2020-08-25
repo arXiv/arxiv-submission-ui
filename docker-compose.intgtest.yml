@@ -1,0 +1,35 @@
+version: '3.4'
+
+services:
+  integration-test:
+    build:
+      context: .
+      network: host
+      dockerfile: Dockerfile-integration-test
+    container_name: submission-integration-test
+    environment:
+      VAULT_ENABLED: "0"
+      NAMESPACE: "development"
+      LOGLEVEL: 10
+      JWT_SECRET: foosecret
+      SESSION_COOKIE_SECURE: 0
+      CLASSIC_DATABASE_URI: "mysql+mysqldb://foouser:foopass@submission-ui-maria:3306/submission?charset=utf8mb4"
+      WAIT_FOR_SERVICES: 1
+      WAIT_ON_STARTUP: 5
+      FILEMANAGER_ENDPOINT: "http://arxiv-filemanager:8000/filemanager/api"
+      FILEMANAGER_CONTENT_PATH: "/{source_id}/content"
+      COMPILER_ENDPOINT: "http://compiler-api:8000/"
+      COMPILER_VERIFY: 0
+      PREVIEW_ENDPOINT: 'http://submission-preview:8000/'
+      PREVIEW_VERIFY: 0
+      # Kinesis events.
+      KINESIS_STREAM: "SubmissionEvents"
+      KINESIS_VERIFY: 0
+      KINESIS_ENDPOINT: "https://submission-localstack:4568"
+      KINESIS_START_TYPE: "TRIM_HORIZON"
+    depends_on:
+      - submission-ui
+    networks:
+      - arxiv-submission-ui
+
+    

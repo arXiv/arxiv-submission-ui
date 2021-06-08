@@ -160,7 +160,9 @@ services:
 
   submission-worker:
     # corresponds with commit from 2020-02-27: https://github.com/arXiv/arxiv-submission-core/commit/9222d6f650d9ce45a1a76961018f2ae562a37e26
-    image: arxiv/submission-agent:9222d6f
+    ##image: arxiv/submission-agent:9222d6f
+    # 0.0.12 comments out wait on legacy
+    image: submission-agent:0.0.15
     command: "/bin/bash -c 'python -m agent.bootstrap && celery worker -A agent.worker.worker_app --loglevel=INFO -E --concurrency=2'"
     container_name: arxiv-submission-worker
     environment:
@@ -194,6 +196,8 @@ services:
       KINESIS_VERIFY: 0
       KINESIS_ENDPOINT: "https://submission-localstack:4568"
       KINESIS_START_TYPE: "TRIM_HORIZON"
+      # Classic database
+      CLASSIC_DATABASE_URI: "mysql+mysqldb://foouser:foopass@submission-ui-maria:3306/submission?charset=utf8mb4"
       # Async config for the submission agent.
       SUBMISSION_AGENT_BROKER_URL: "redis://submission-ui-redis:6379/0"
       SUBMISSION_AGENT_DATABASE_URI: "mysql+mysqldb://foouser:foopass@submission-agent-maria:3306/agent?charset=utf8mb4"
@@ -219,13 +223,15 @@ services:
 
   submission-agent:
     # corresponds with commit from 2020-02-27: https://github.com/arXiv/arxiv-submission-core/commit/9222d6f650d9ce45a1a76961018f2ae562a37e26
-    image: arxiv/submission-agent:9222d6f
+    #image: arxiv/submission-agent:9222d6f
+    #image: submission-agent:0.1.0
+    image: submission-agent:0.0.15
     container_name: arxiv-submission-agent
     command: "/bin/bash -c 'python -m agent.bootstrap && python -m agent.consumer'"
     environment:
       VAULT_ENABLED: "0"
       NAMESPACE: "development"
-      LOGLEVEL: 50
+      LOGLEVEL: 10
       JWT_SECRET: foosecret
 
       WAIT_FOR_SERVICES: 1
@@ -253,6 +259,9 @@ services:
       KINESIS_VERIFY: 0
       KINESIS_ENDPOINT: "https://submission-localstack:4568"
       KINESIS_START_TYPE: "TRIM_HORIZON"
+
+      # legacy
+      CLASSIC_DATABASE_URI: "mysql+mysqldb://foouser:foopass@submission-ui-maria:3306/submission?charset=utf8mb4"
 
       # Async config for the submission agent.
       SUBMISSION_AGENT_BROKER_URL: "redis://submission-ui-redis:6379/0"

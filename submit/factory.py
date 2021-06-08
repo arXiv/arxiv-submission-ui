@@ -47,8 +47,11 @@ def create_ui_web_app() -> Flask:
         app.jinja_env.filters[filter_name] = filter_func
 
     # Initialize services.
+    logger.info('Initialize all upstream services.')
     init_app(app)
+    logger.info('Initialize Compiler services.')
     Compiler.init_app(app)
+    logger.info('Initialize Filemanager service.')
     Filemanager.init_app(app)
 
     if app.config['WAIT_FOR_SERVICES']:

@@ -9,8 +9,7 @@ WORKDIR /opt/arxiv/
 ENV PIPENV_VENV_IN_PROJECT 1
 
 COPY Pipfile Pipfile.lock /opt/arxiv/
-#RUN pipenv sync && rm -rf ~/.cache/pip
-RUN pipenv install --skip-lock && rm -rf ~/.cache/pip
+RUN pipenv sync && rm -rf ~/.cache/pip
 
 ENV PATH "/opt/arxiv:${PATH}"
 

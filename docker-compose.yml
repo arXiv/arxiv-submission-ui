@@ -181,8 +181,6 @@ services:
       PLAINTEXT_VERIFY: 0
       PREVIEW_ENDPOINT: 'http://submission-preview:8000/'
       PREVIEW_VERIFY: 0
-      PREVIEW_ENDPOINT: 'http://submission-preview:8000/'
-      PREVIEW_VERIFY: 0
       FILESYSTEM_ENDPOINT: 'http://filesystem:8000/'
       FILESYSTEM_VERIFY: 0
       # CLASSIFIER_ENDPOINT: "http://mock-classifier:8000"
@@ -196,8 +194,6 @@ services:
       KINESIS_VERIFY: 0
       KINESIS_ENDPOINT: "https://submission-localstack:4568"
       KINESIS_START_TYPE: "TRIM_HORIZON"
-      # Classic database
-      CLASSIC_DATABASE_URI: "mysql+mysqldb://foouser:foopass@submission-ui-maria:3306/submission?charset=utf8mb4"
       # Async config for the submission agent.
       SUBMISSION_AGENT_BROKER_URL: "redis://submission-ui-redis:6379/0"
       SUBMISSION_AGENT_DATABASE_URI: "mysql+mysqldb://foouser:foopass@submission-agent-maria:3306/agent?charset=utf8mb4"
@@ -259,9 +255,6 @@ services:
       KINESIS_VERIFY: 0
       KINESIS_ENDPOINT: "https://submission-localstack:4568"
       KINESIS_START_TYPE: "TRIM_HORIZON"
-
-      # legacy
-      CLASSIC_DATABASE_URI: "mysql+mysqldb://foouser:foopass@submission-ui-maria:3306/submission?charset=utf8mb4"
 
       # Async config for the submission agent.
       SUBMISSION_AGENT_BROKER_URL: "redis://submission-ui-redis:6379/0"

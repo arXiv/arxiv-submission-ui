@@ -160,7 +160,9 @@ services:
 
   submission-worker:
     # corresponds with commit from 2020-02-27: https://github.com/arXiv/arxiv-submission-core/commit/9222d6f650d9ce45a1a76961018f2ae562a37e26
-    image: arxiv/submission-agent:9222d6f
+    ##image: arxiv/submission-agent:9222d6f
+    # 0.0.12 comments out wait on legacy
+    image: submission-agent:0.0.15
     command: "/bin/bash -c 'python -m agent.bootstrap && celery worker -A agent.worker.worker_app --loglevel=INFO -E --concurrency=2'"
     container_name: arxiv-submission-worker
     environment:
@@ -177,8 +179,6 @@ services:
       COMPILER_VERIFY: 0
       PLAINTEXT_ENDPOINT: "http://plaintext-api:8000/"
       PLAINTEXT_VERIFY: 0
-      PREVIEW_ENDPOINT: 'http://submission-preview:8000/'
-      PREVIEW_VERIFY: 0
       PREVIEW_ENDPOINT: 'http://submission-preview:8000/'
       PREVIEW_VERIFY: 0
       FILESYSTEM_ENDPOINT: 'http://filesystem:8000/'
@@ -219,13 +219,15 @@ services:
 
   submission-agent:
     # corresponds with commit from 2020-02-27: https://github.com/arXiv/arxiv-submission-core/commit/9222d6f650d9ce45a1a76961018f2ae562a37e26
-    image: arxiv/submission-agent:9222d6f
+    #image: arxiv/submission-agent:9222d6f
+    #image: submission-agent:0.1.0
+    image: submission-agent:0.0.15
     container_name: arxiv-submission-agent
     command: "/bin/bash -c 'python -m agent.bootstrap && python -m agent.consumer'"
     environment:
       VAULT_ENABLED: "0"
       NAMESPACE: "development"
-      LOGLEVEL: 50
+      LOGLEVEL: 10
       JWT_SECRET: foosecret
 
       WAIT_FOR_SERVICES: 1

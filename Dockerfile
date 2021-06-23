@@ -6,6 +6,8 @@ FROM arxiv/base:${BASE_VERSION}
 
 WORKDIR /opt/arxiv/
 
+ENV PIPENV_VENV_IN_PROJECT 1
+
 COPY Pipfile Pipfile.lock /opt/arxiv/
 RUN pipenv sync && rm -rf ~/.cache/pip
 

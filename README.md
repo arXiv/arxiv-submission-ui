@@ -1,3 +1,5 @@
+# This repository has been archived, and has no ongoing development.
+
 # arXiv Submission UI
 
 This is the primary interface for arXiv users to submit e-prints to arXiv.
